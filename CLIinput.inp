@@ -1,7 +1,7 @@
 # molSimplify input file generated from CLI input
--core co 
--lig cyanide, cyanide, cyanide, cyanide, ammonia, ammonia 
--rundir /home/jp/Dropbox/Main/testGA
+-core fe 
+-lig misc, misc, misc, misc, cyanide, cyanide 
+-rundir /Users/lydiachan/GARuns/GA0
  
 -keepHs yes,yes,yes,yes,yes,yes 
 -jobdir temp 
@@ -9,9 +9,9 @@
 -ligalign 1 
 -ligloc 1 
 -calccharge yes 
--name gen_2_slot_15_3_2_14_6_6_4 
+-name gen_0_slot_19_2_2_16_14_14_5 
 -geometry oct 
--spin 4 
+-spin 5 
 -oxstate II 
 -qccode TeraChem 
 -runtyp energy 
