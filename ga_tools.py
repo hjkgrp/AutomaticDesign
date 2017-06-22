@@ -5,7 +5,7 @@ def ensure_dir(dir_path):
         print('creating' + dir_path)
         os.makedirs(dir_path)
 def get_run_dir():
-    rdir = "/home/jp/Dropbox/Main/testGA/"
+    rdir = "/Users/lydiachan/GARuns/GA0/"
     return rdir
 ########################
 def find_submmited_jobs():
@@ -127,7 +127,7 @@ def get_ligands():
                        ['methylamine',[1]],#13
                        ['cyanide',[1]],#14
                        ['carbonyl',[1]],#15
-                       ['misc',[1]]] #25
+                       ['misc',[1]]] #16
     return ligands_list
 
 
@@ -136,7 +136,7 @@ def write_dictionary(dictionary,path,force_append = False):
     if force_append:
         write_control = 'a'
     else:
-       write_control = 'w' 
+       write_control = 'w'
     try:
        with open(path,write_control) as f:
             for keys in dictionary.keys():

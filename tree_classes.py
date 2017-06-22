@@ -8,7 +8,7 @@ import random
 import shutil
 
 
-from ga_tools import * 
+from ga_tools import *
 
 #ligands_list =[['thiocyanate',[1,'SCN','S',-1]],
 #               ['chloride',[1,'Cl','Cl',-1]],
@@ -152,7 +152,7 @@ class octahedral_complex:
         for i,indices in enumerate(new_ax_ind):
             #print('trying to add ',indices )
             ax_ligand_properties = self.ligands_list[indices][1]
-            ax_dent = ax_ligand_properties[0]  
+            ax_dent = ax_ligand_properties[0]
             #print('ax dent ' + str(ax_dent))
             if (ax_dent > 1):
                 if (ax_dent == 2) and (i == 0):
@@ -208,19 +208,21 @@ class octahedral_complex:
         print("swapping from",partner.name," to ",self.name)
         self.examine()
         child.replace_metal(partner.core)
-        return child
+        child._name_self()
+        return child 
     def exchange_ox(self,partner):
         child = octahedral_complex(self.ligands_list)
         child.copy(self) # copies this parent
         print("swapping from",partner.name," to ",self.name)
         self.examine()
         child.replace_ox(partner.ox)
+        child._name_self()
         return child
 
     def mutate(self):
         ## mutates either the axial
         ## or equitorial ligand a random
-        lig_to_mutate = random.randint(0,3)
+        lig_to_mutate = random.randint(0,2)
         child = octahedral_complex(self.ligands_list)
         child.copy(self) # copies this parent
         n = len(self.ligands_list)
@@ -250,7 +252,7 @@ class octahedral_complex:
                     child.three_bidentate = False
                     ready_flag = True
                 elif (ax_dent  == 2) and (self.ax_dent == 1):
-                    ## here, we want to add a bidentate but 
+                    ## here, we want to add a bidentate but
                     ## need to swap the second ligand too
                     print("swapping both axial ")
                     new_ax_list = [rand_ind,rand_ind]
@@ -262,7 +264,6 @@ class octahedral_complex:
         elif (lig_to_mutate == 2):
             print('mutating metal')
             child._get_random_metal()
-        elif (lig_to_mutate == 3):
             print('mutating ox')
             child._get_random_ox()
         child._name_self()
@@ -286,14 +287,14 @@ class octahedral_complex:
            ligloc = 1
 
         elif self.ax_dent == 2:
-           liglist = (str([str(element).strip("'[]'") for element in (self.eq_ligands)]  + [str(self.ax_ligands[0]).strip("'[]'")]).strip("[]")).replace("'", "") 
+           liglist = (str([str(element).strip("'[]'") for element in (self.eq_ligands)]  + [str(self.ax_ligands[0]).strip("'[]'")]).strip("[]")).replace("'", "")
            ligloc = 0
         geometry = "oct"
         ms_dump_path = path_dictionary["molsimplify_inps"] +  'ms_output.txt'
         jobpath = path_dictionary["job_path"]  + mol_name + '.in'
         ## check if already exists:
         geo_exists = os.path.isfile(path_dictionary["initial_geo_path"] + mol_name + '.xyz')
-        
+
         if not (geo_exists):
                 print('generating '+ str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and'  + str(self.ax_ligands))
                 with open(ms_dump_path,'a') as ms_pipe:
@@ -303,11 +304,11 @@ class octahedral_complex:
                              '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ ox_string,
                              '-qccode TeraChem','-runtyp energy','-method UDFT',"-ffoption B"])
                     print(call)
-                    
+
                     p2 = subprocess.call(call,shell=True)#stdout = ms_pipe
-                    
+
                 shutil.move(rundirpath + 'temp'+'/' + mol_name + '.molinp', path_dictionary["molsimplify_inps"]+'/' + mol_name + '.molinp')
-                shutil.move(rundirpath + 'temp'+'/' + mol_name + '.xyz', path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz')          
+                shutil.move(rundirpath + 'temp'+'/' + mol_name + '.xyz', path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz')
                 with open(rundirpath + 'temp' +'/' + mol_name + '.report') as report_f:
                     for line in report_f:
                             if ("pred_split" in line):
@@ -315,7 +316,7 @@ class octahedral_complex:
                                 print(line)
                                 ANN_split = float(line.split(",")[1])
                                 print('ANN_split is ' +str(ANN_split))
-                                
+
                             if("ANN_dist_to_train" in line):
                                 print('****')
                                 print(line)
@@ -323,10 +324,10 @@ class octahedral_complex:
                                 ANN_distance = float(ll)
                                 print('ANN_distance is ' +str(ANN_distance))
                 shutil.move(rundirpath + 'temp' +'/' + mol_name + '.report', path_dictionary["ms_reps"] +'/'+ mol_name + '.report')
-                
-                    
+
+
                 with open(jobpath,'w') as newf:
-                    with open(rundirpath + 'temp/' + mol_name + '.in','r') as oldf: 
+                    with open(rundirpath + 'temp/' + mol_name + '.in','r') as oldf:
                         for line in oldf:
                             if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line):
                                 newf.writelines(line)
@@ -337,9 +338,9 @@ class octahedral_complex:
             ANN_split = False
             ANN_distance = False
         return jobpath,mol_name,ANN_split,ANN_distance
-        
-        
-  
+
+
+
 #print("\n\n\n\n")
 #susan = octahedral_complex(ligands_list)
 #susan.random_gen()
@@ -358,7 +359,4 @@ class octahedral_complex:
 #fred = fred.mutate()
 #fred.examine()
 #path_dictionary = setup_paths()
-#fred.generate_geometery(prefix = "gen_1_",spin = 3,path_dictionary = path_dictionary) 
-
-
-
+#fred.generate_geometery(prefix = "gen_1_",spin = 3,path_dictionary = path_dictionary)

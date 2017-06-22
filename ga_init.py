@@ -24,7 +24,7 @@ def initialize_GA_calc(npool,ncross,pmut,
         return new_tree
 
 def wake_up_routine():
-        ## set up environment:        
+        ## set up environment:
         path_dictionary = setup_paths()
         ## initialize class
         new_tree = tree_generation('current_tree')
@@ -39,7 +39,7 @@ def wake_up_routine():
         new_tree.assess_fitness()
         print(new_tree.status_dictionary["ready_to_advance"])
         if current_gen <= maxgen:
-               ## check if there is still 
+               ## check if there is still
                 ## work to be done
                 if (new_tree.status_dictionary["ready_to_advance"]):
                         print('ready to advance')
@@ -60,5 +60,3 @@ def wake_up_routine():
                                + ":  Gen  " + str(new_tree.status_dictionary['gen']) + ' has reached maxgen')
 
         return(new_tree)
-
-
