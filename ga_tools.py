@@ -5,7 +5,9 @@ def ensure_dir(dir_path):
         print('creating' + dir_path)
         os.makedirs(dir_path)
 def get_run_dir():
-    rdir = "/Users/lydiachan/GARuns/GA0/"
+   # rdir = "/Users/lydiachan/GARuns/GA0/"
+    rdir = "/home/jp/Dropbox/Main/testGA/scoring/"
+
     return rdir
 ########################
 def find_submmited_jobs():

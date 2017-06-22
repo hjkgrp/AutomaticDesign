@@ -5,7 +5,7 @@ def ensure_dir(dir_path):
         print('creating' + dir_path)
         os.makedirs(dir_path)
 def get_run_dir():
-    rdir = "/home/jp/GA/" 
+    rdir = "/home/jp/Dropbox/Main/tesGA/scoring" 
     return rdir
 
 def translate_job_name(job):

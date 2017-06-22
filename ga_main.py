@@ -23,9 +23,10 @@ class tree_generation:
                 self.status_dictionary = dict()
                 self.gene_compound_dictionary = dict()
 
-        def configure_gen(self,gen_num,npool,ncross,pmut,genmax,RTA = False,mean_fitness =  0):
+        def configure_gen(self,gen_num,npool,ncross,pmut,genmax,scoring_function="split",RTA = False,mean_fitness =  0):
                 self.current_path_dictionary = advance_paths(self.base_path_dictionary,gen_num)
                 self.status_dictionary.update({'gen':gen_num})
+                self.status_dictionary.update({'scoring_function': scoring_function})
                 self.status_dictionary.update({'npool':npool,'genmax':genmax})
                 self.status_dictionary.update({'ncross': ncross})
                 self.status_dictionary.update({'pmut': pmut})
@@ -151,7 +152,12 @@ class tree_generation:
                 for keys in ANN_dict.keys():
                         gene,gen,slot,metal,ox,eq,ax1,ax2,spin,basename = translate_job_name(keys)
                         this_split_energy = float(ANN_dict[keys].split(',')[0])
-                        fitness =  find_fitness(this_split_energy)
+                        this_ann_dist = float(ANN_dict[keys].split(',')[1].strip('\n'))
+                        if self.scoring_function == "spliti+dist":
+                            fitness =  find_split_dist_fitness(this_split_energy,this_ann_dist)
+                        else:
+                            fitness =  find_split_fitness(this_split_energy)
+
                         logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) 
                                + ": Gen " + str(self.status_dictionary['gen'])
                                + " fitness from ANN  " + str(fitness) + ' assigned to  gene ' + str(gene))
