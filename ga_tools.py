@@ -146,9 +146,10 @@ def write_dictionary(dictionary,path,force_append = False):
     except:
         emsg = "Error, could not write state space: " + path
     return emsg
-def find_fitness(split_energy):
+def find_fitness(split_energy,distance):
         ref_value = 15.0
-        en =-1*numpy.power((float(split_energy)/ref_value),2.0)
+        ref_value_2 = 20.0
+        en =-1*numpy.power((float(split_energy)/ref_value),2.0) + numpy.power((float(distance)/ref_value_2))
         fitness = numpy.exp(en)
         return fitness
 
@@ -172,7 +173,7 @@ def read_dictionary(path):
             for lines in f:
                 ll = lines.split(",")
                 key = ll[0]
-                value = ll[1].rstrip("\n")
+                value = (",".join(ll[1:])).rstrip("\n")
                 dictionary[key] = value
     except:
         emsg = "Error, could not read state space: " + path

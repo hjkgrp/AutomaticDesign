@@ -39,7 +39,7 @@ class tree_generation:
                 self.gene_compound_dictionary = dict()
                 self.genes = dict()
 
-                ### fill the pool with random structures 
+                ### fill the pool with random structures
                 for i in range(0,self.status_dictionary['npool']):
                         this_complex = octahedral_complex(self.ligands_list)
                         this_complex.random_gen()
@@ -111,7 +111,7 @@ class tree_generation:
             fitkeys  = self.gene_fitness_dictionary.keys()
             fitness_values  = dict()
             print('is code ready to advance?: '+str(self.status_dictionary["ready_to_advance"]))
-            logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen " 
+            logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen "
                        + str(self.status_dictionary['gen'])
                        + " is code ready to advance? " +str(self.status_dictionary["ready_to_advance"]))
             self.ready_to_advance = False
@@ -124,12 +124,12 @@ class tree_generation:
                     fitness_values[genes] = self.gene_fitness_dictionary[genes]
                 else:
                     self.outstanding_jobs.update({genekeys:self.gene_compound_dictionary[genekeys]})
-            logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen " 
+            logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen "
                        + str(self.status_dictionary['gen'])
                        + " with " + str(len(self.outstanding_jobs.keys())) + " calculations to be completed")
             print('length of outstanding jobskeys',len(self.outstanding_jobs.keys()))
             if (len(self.outstanding_jobs.keys()) ==0):
-                logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) 
+                logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now())
                                + ": Gen " + str(self.status_dictionary['gen'])
                                + " all jobs completed, ranking ")
                 self.status_dictionary["ready_to_advance"] = True
@@ -142,13 +142,13 @@ class tree_generation:
                 for keys in self.genes:
                         gene = self.genes[keys]
                         random_fitness = random.uniform(0,1)
-                        logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) 
+                        logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now())
                                + ": Gen " + str(self.status_dictionary['gen'])
                                + " assign random fitness  " + str(random_fitness) + ' to  gene ' + str(gene))
                         self.gene_fitness_dictionary.update({gene:random_fitness})
         def ANN_fitness(self):
                 msg, ANN_dict = read_dictionary(self.current_path_dictionary["ANN_output"] +'ANN_results.csv')
-                
+
                 for keys in ANN_dict.keys():
                         gene,gen,slot,metal,ox,eq,ax1,ax2,spin,basename = translate_job_name(keys)
                         this_split_energy = float(ANN_dict[keys].split(',')[0])
@@ -166,7 +166,7 @@ class tree_generation:
                 jobpaths = list()
                 print(self.current_path_dictionary["ANN_output"] +'ANN_results.csv')
                 emsg,ANN_results_dict = read_dictionary(self.current_path_dictionary["ANN_output"] +'/ANN_results.csv')
-                
+
                 for keys in self.outstanding_jobs.keys():
                         jobs = self.outstanding_jobs[keys]
                         spins_dict = spin_dictionary()
@@ -175,13 +175,13 @@ class tree_generation:
                         for spins in spin_list:
                                 job_prefix = "gen_" + str(self.status_dictionary["gen"]) + "_slot_" + str(keys) + "_"
                                 ## generate HS/LS
-                                logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen " 
+                                logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen "
                                 + str(self.status_dictionary['gen'])
                                 + " attempt to generate geo for slot" + str(keys) + ' with  name ' + str(jobs.name) )
                                 ## convert the gene into a job file and geometery
                                 jobpath,mol_name,ANN_split,ANN_distance = jobs.generate_geometery(prefix = job_prefix, spin = spins,path_dictionary = self.current_path_dictionary,
                                                                       rundirpath = get_run_dir(), molsimpath = self.base_path_dictionary["molsimp_path"])
-                                                                                      
+
                                 if jobpath:
                                         ## save result
                                         print(",".join([str(ANN_split),str(ANN_distance)]))
@@ -202,9 +202,9 @@ class tree_generation:
                 for keys in self.genes.keys():
                     outcome_list.append((keys,self.genes[keys],float(self.gene_fitness_dictionary[self.genes[keys]])))
                     logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) +
-                               ": Gen " + str(self.status_dictionary['gen']) +  '  gene is   ' + str(keys) 
+                               ": Gen " + str(self.status_dictionary['gen']) +  '  gene is   ' + str(keys)
                              + " fitness is = " +  str(float(self.gene_fitness_dictionary[self.genes[keys]])))
- 
+
                 outcome_list.sort(key=lambda tup: tup[2], reverse = True)
 
                 full_size = len(outcome_list)
@@ -223,13 +223,13 @@ class tree_generation:
                 mean_fitness = mean_fitness/npool # average fitness
                 self.status_dictionary.update({'mean_fitness':mean_fitness})
                 logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) +
-                       ": Gen " + str(self.status_dictionary['gen']) 
+                       ": Gen " + str(self.status_dictionary['gen'])
                      + " complete, mean_fitness = " +  str(mean_fitness))
         def advance_generation(self):
                 ## advance counter
                 self.status_dictionary['gen'] +=1
                 logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) +
-                       ": Gen " + str(self.status_dictionary['gen']-1) 
+                       ": Gen " + str(self.status_dictionary['gen']-1)
                      + " advancing to Gen " +  str(self.status_dictionary['gen']))
                 self.status_dictionary['ready_to_advance'] = False
                 self.current_path_dictionary = advance_paths(self.base_path_dictionary,self.status_dictionary['gen'])
@@ -295,16 +295,8 @@ class tree_generation:
                                 selected_genes[keys] = selected_compound_dictionary[keys].name
                                 logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) +
                                        ":  Gen " + str(self.status_dictionary['gen'])
-                                       + " mutating " + str(keys) + ": "  + old_gene +  " -> " + mutant.name) 
+                                       + " mutating " + str(keys) + ": "  + old_gene +  " -> " + mutant.name)
 
-                ## merge the lists 
+                ## merge the lists
                 self.genes.update(selected_genes)
                 self.gene_compound_dictionary.update(selected_compound_dictionary)
-
-
-
-
-
-
-
-

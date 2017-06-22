@@ -209,7 +209,7 @@ class octahedral_complex:
         self.examine()
         child.replace_metal(partner.core)
         child._name_self()
-        return child 
+        return child
     def exchange_ox(self,partner):
         child = octahedral_complex(self.ligands_list)
         child.copy(self) # copies this parent
