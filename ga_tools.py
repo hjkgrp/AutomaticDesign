@@ -5,9 +5,8 @@ def ensure_dir(dir_path):
         print('creating' + dir_path)
         os.makedirs(dir_path)
 def get_run_dir():
-   # rdir = "/Users/lydiachan/GARuns/GA0/"
-    rdir = "/home/jp/Dropbox/Main/testGA/scoring/"
-
+    rdir = "/Users/lydiachan/GARuns/GA0/"
+   # rdir = "/home/jp/Dropbox/Main/testGA/scoring/"
     return rdir
 ########################
 def find_submmited_jobs():
@@ -146,10 +145,12 @@ def write_dictionary(dictionary,path,force_append = False):
     except:
         emsg = "Error, could not write state space: " + path
     return emsg
-def find_fitness(split_energy,distance):
-        ref_value = 15.0
-        ref_value_2 = 20.0
-        en =-1*numpy.power((float(split_energy)/ref_value),2.0) + numpy.power((float(distance)/ref_value_2))
+def find_split_fitness(split_energy,split_parameter):
+        en =-1*numpy.power((float(split_energy)/split_parameter),2.0) 
+        fitness = numpy.exp(en)
+        return fitness
+def find_split_dist_fitness(split_energy,split_parameter,distance,distance_parameter):
+        en =-1(*numpy.power((float(split_energy)/split_parameter),2.0)+numpy.power(numpy.power(float(distance)/distance_parameter),2.0))
         fitness = numpy.exp(en)
         return fitness
 

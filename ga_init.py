@@ -12,10 +12,10 @@ from tree_classes import *
 from ga_main import *
 
 def initialize_GA_calc(npool,ncross,pmut,
-                      maxgen,scoring_function):
+                      maxgen,scoring_function,split_parameter = 15.0,distance_parameter = 1.0):
         path_dictionary = setup_paths()
         new_tree = tree_generation('current_tree')
-        new_tree.configure_gen(0,npool,ncross,pmut,maxgen,scoring_function)
+        new_tree.configure_gen(0,npool,ncross,pmut,maxgen,scoring_function,split_parameter,distance_parameter = 1)
         new_tree.populate_random()
         new_tree.write_state()
         logger(new_tree.base_path_dictionary['state_path'],str(datetime.datetime.now())
