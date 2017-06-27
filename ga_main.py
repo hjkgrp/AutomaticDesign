@@ -22,8 +22,6 @@ class tree_generation:
                 self.ligands_list = ligands_list
                 self.status_dictionary = dict()
                 self.scoring_function = None
-                self.split_parameter = 15.0
-                self.distance_parameter = 1.0
                 self.gene_compound_dictionary = dict()
 
         def configure_gen(self,gen_num,npool,ncross,pmut,genmax,scoring_function="split",split_parameter = 15.0,distance_parameter = 1, RTA = False,mean_fitness =  0):
@@ -159,10 +157,13 @@ class tree_generation:
                         gene,gen,slot,metal,ox,eq,ax1,ax2,spin,basename = translate_job_name(keys)
                         this_split_energy = float(ANN_dict[keys].split(',')[0])
                         this_ann_dist = float(ANN_dict[keys].split(',')[1].strip('\n'))
-                        if self.scoring_function == "spliti+dist":
-                            fitness =  find_split_dist_fitness(this_split_energy,self.split_parameter,this_ann_dist,self.distance_parameter)
+                        #print "splitParam: " + str(self.status_dictionary['split_parameter']) + "______ split energy: " + str(this_split_energy)
+                        #print "distParam: " + str(self.status_dictionary['distance_parameter']) + "________ ANN dist: " + str(this_ann_dist)
+                        if self.scoring_function == "split+dist":
+
+                            fitness =  find_split_dist_fitness(this_split_energy,self.status_dictionary['split_parameter'],this_ann_dist,self.status_dictionary['distance_parameter'])
                         else:
-                            fitness =  find_split_fitness(this_split_energy,self.split_parameter)
+                            fitness =  find_split_fitness(this_split_energy,self.status_dictionary['split_parameter'])
 
                         logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) 
                                + ": Gen " + str(self.status_dictionary['gen'])

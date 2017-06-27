@@ -112,7 +112,7 @@ def get_ligands():
                        ['tbuc',[2]],#23
                        ['bpabipy',[4]],#24
                        ['porphyrin',[4]]] #25
-    ligands_list =[['thiocyanate',[1]], #0
+    test_ligands_list =[['thiocyanate',[1]], #0
                        ['chloride',[1]],#1
                        ['water',[1]],#2
                        ['acetonitrile',[1]],#3
@@ -129,8 +129,55 @@ def get_ligands():
                        ['cyanide',[1]],#14
                        ['carbonyl',[1]],#15
                        ['misc',[1]]] #16
-    return ligands_list
+    bid_ligands_list = [['cat',[2]], #0
+                    ['mec',[2]], #1
+                    ['tbuc',[2]], #2
+                    ['bipy',[2]], #3
+                    ['phosacidbipyridine',[2]], #4
+                    ['ethOHbipyridine',[2]], #5
+                    ['ethbipyridine',[2]], #6
+                    ['mebipyridine',[2]], #7
+                    ['diaminomethyl',[2]], #8
+                    ['sulfacidbipyridine',[2]], #9
+                    ['phen',[2]], #10
+                    ['en',[2]], #11
+                    ['acac',[2]], #12
+                    ['ox',[2]], #13
+                    ['water',[1]]] #14
+    ligands_list = [['pisc',[1]], #0
+                    ['misc',[1]], #1
+                    ['tbisc',[1]], #2
+                    ['benzisc',[1]], #3
+                    ['phenisc',[1]], #4
+                    ['cat',[2]], #5
+                    ['mec',[2]], #6
+                    ['tbuc',[2]], #7
+                    ['pyridine',[1]], #8
+                    ['chloropyridine',[1]], #9
+                    ['cyanopyridine',[1]], #10
+                    ['thiopyridine',[1]], #11
+                    ['bipy',[2]], #12
+                    ['phosacidbipyridine',[2]], #13
+                    ['ethOHbipyridine',[2]], #14
+                    ['ethbipyridine',[2]], #15
+                    ['mebipyridine',[2]], #16
+                    ['diaminomethyl',[2]], #17
+                    ['sulfacidbipyridine',[2]], #18
+                    ['phen',[2]], #19
+                    ['en',[2]], #20
+                    ['porphyrin',[4]], #21
+                    ['cyanoaceticporphyrin',[4]], #22
+                    ['cyanide',[1]], #23
+                    ['carbonyl',[1]], #24
+                    ['isothiocyanate',[1]], #25
+                    ['ammonia',[1]], #26
+                    ['water',[1]], #27
+                    ['acac',[2]], #28
+                    ['ox',[2]], #29
+                    ['furan',[1]], #30
+                    ['methylamine',[1]]] #31
 
+    return ligands_list
 
 def write_dictionary(dictionary,path,force_append = False):
     emsg =  False
@@ -146,11 +193,11 @@ def write_dictionary(dictionary,path,force_append = False):
         emsg = "Error, could not write state space: " + path
     return emsg
 def find_split_fitness(split_energy,split_parameter):
-        en =-1*numpy.power((float(split_energy)/split_parameter),2.0) 
+        en =-1*numpy.power((float(split_energy)/split_parameter),2.0)
         fitness = numpy.exp(en)
         return fitness
 def find_split_dist_fitness(split_energy,split_parameter,distance,distance_parameter):
-        en =-1(*numpy.power((float(split_energy)/split_parameter),2.0)+numpy.power(numpy.power(float(distance)/distance_parameter),2.0))
+        en =-1*(numpy.power((float(split_energy)/split_parameter),2.0)+numpy.power((float(distance)/distance_parameter),2.0))
         fitness = numpy.exp(en)
         return fitness
 

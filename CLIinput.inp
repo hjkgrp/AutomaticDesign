@@ -1,6 +1,6 @@
 # molSimplify input file generated from CLI input
--core fe 
--lig misc, misc, misc, misc, cyanide, cyanide 
+-core co 
+-lig phenisc, phenisc, phenisc, phenisc, water, water 
 -rundir /Users/lydiachan/GARuns/GA0
  
 -keepHs yes,yes,yes,yes,yes,yes 
@@ -9,11 +9,11 @@
 -ligalign 1 
 -ligloc 1 
 -calccharge yes 
--name gen_0_slot_19_2_2_16_14_14_5 
+-name gen_1_slot_5_3_2_4_27_27_4 
 -geometry oct 
--spin 5 
+-spin 4 
 -oxstate II 
 -qccode TeraChem 
 -runtyp energy 
 -method UDFT 
--ffoption B
+-ffoption A

@@ -285,10 +285,12 @@ class octahedral_complex:
         if self.ax_dent == 1:
            liglist = (str([str(element).strip("'[]'") for element in (self.eq_ligands)]  + [str(element).strip("'[]'") for element in self.ax_ligands]).strip("[]")).replace("'","")
            ligloc = 1
-
+           ligalign = 1
         elif self.ax_dent == 2:
-           liglist = (str([str(element).strip("'[]'") for element in (self.eq_ligands)]  + [str(self.ax_ligands[0]).strip("'[]'")]).strip("[]")).replace("'", "")
-           ligloc = 0
+            half = len(self.eq_ligands)/2
+            liglist = (str([str(element).strip("'[]'") for element in (self.eq_ligands[:half])] + [str(self.ax_ligands[0]).strip("'[]'")] + [str(element).strip("'[]'") for element in (self.eq_ligands[half:])]).strip("[]")).replace("'", "")
+            ligloc = 'false'
+            ligalign = 'false'
         geometry = "oct"
         ms_dump_path = path_dictionary["molsimplify_inps"] +  'ms_output.txt'
         jobpath = path_dictionary["job_path"]  + mol_name + '.in'
@@ -300,9 +302,9 @@ class octahedral_complex:
                 with open(ms_dump_path,'a') as ms_pipe:
                     call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +liglist,
                              '-rundir ' +"'"+ rundirpath.rstrip("/")+"\n'",'-keepHs yes,yes,yes,yes,yes,yes','-jobdir','temp',
-                             '-coord 6','-ligalign 1','-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
+                             '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
                              '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ ox_string,
-                             '-qccode TeraChem','-runtyp energy','-method UDFT',"-ffoption B"])
+                             '-qccode TeraChem','-runtyp energy','-method UDFT',"-ffoption A"])
                     print(call)
 
                     p2 = subprocess.call(call,shell=True)#stdout = ms_pipe

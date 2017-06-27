@@ -17,6 +17,18 @@ def _find_gene(geneName, list):
             return i
     return -1
 
+#Return generation and npool from current_status.csv
+def _get_gen_npool():
+    with open(get_run_dir()+"statespace/current_status.csv",'r') as fi:
+        reader = csv.reader(fi)
+        for row in reader:
+            if row[0] == "gen":
+                lastgen = int(row[1].strip('\n'))
+            elif row[0] == "npool":
+                npool = int(row[1].strip('\n'))
+    return lastgen,npool
+
+#Change mode of writing for outputs.
 def _write_mode(generation):
     if generation == 0:
         return 'w'
@@ -43,6 +55,7 @@ def _write_all_csv(base_path, generation, end_results):
             writer.writerow( (t.generation,t.name,t.fitness,t.frequency) )
     fo.close()
 
+#Write generation, mean fitness, and number of unique genes to .csv file.
 def _gen_gene_fitness_csv(base_path, generation, end_results,sum):
     mean_fitness = sum/float(10)
     csv_results_path = base_path + "_generation_meanFitness_diversity.csv"
@@ -78,38 +91,24 @@ def _get_freq_fitness(lastgen, npool):
         #Second, find fitness values of genes, add to list, and calculate mean fitness.
         sum = 0
         read_path = base_path + "gen_"+str(generation)+"/gene_fitness.csv"
-        fi = open(read_path,'r')
-
-        while True:
-            line = fi.readline()
-            if len(line) < 1:
-                break
-            geneName, fitness = line.split(",")
-            fitness = fitness.strip('\n')
-            index = _find_gene(geneName, end_results)
-            if index >= 0:
-                temp = end_results[index]
-                sum += temp.frequency * float(fitness)
-                temp.fitness = format(float(fitness), '.5f')
-                print temp._long()
+        with open(read_path, 'r') as fi:
+            list_of_lines = fi.readlines()
+            for line in list_of_lines:
+                geneName, fitness = line.split(",")
+                fitness = fitness.strip('\n')
+                index = _find_gene(geneName, end_results)
+                if index >= 0:
+                    temp = end_results[index]
+                    sum += temp.frequency * float(fitness)
+                    temp.fitness = format(float(fitness), '.5f')
+                    print temp._long()
 
         fi.close()
 
-        #Third, output the unique genes and their fitness values to .txt or .csv file.
+        #Third, output the unique genes and their fitness values to .txt and .csv files.
         _write_all_txt(base_path, generation, end_results)
         _write_all_csv(base_path, generation, end_results)
         _gen_gene_fitness_csv(base_path, generation, end_results,sum)
 
-def _get_gen_npool():
-    with open(get_run_dir()+"statespace/current_status.csv",'r') as fi:
-        reader = csv.reader(fi)
-        for row in reader:
-            if row[0] == "gen":
-                lastgen = int(row[1].strip('\n'))
-            elif row[0] == "npool":
-                npool = int(row[1].strip('\n'))
-    return lastgen,npool
-
 lastgen,npool = _get_gen_npool()
 _get_freq_fitness(lastgen, npool)
-###!!!!Would it be good to write a separate file to run these functions?
