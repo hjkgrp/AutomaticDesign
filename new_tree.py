@@ -1,8 +1,8 @@
 from ga_init import *
 maxgen = 200
-npool = 3
-pmut  = 0.15
-ncross = 1
+npool = 20
+pmut  = 0.25
+ncross = 5
 scoring_function = "split"
 #scoring_function = "split+dist"
 split_parameter = 10

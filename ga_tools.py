@@ -197,6 +197,9 @@ def find_split_fitness(split_energy,split_parameter):
         fitness = numpy.exp(en)
         return fitness
 def find_split_dist_fitness(split_energy,split_parameter,distance,distance_parameter):
+
+        ##FITNESS DEBUGGING: print "scoring function: split+dist YAY"
+
         en =-1*(numpy.power((float(split_energy)/split_parameter),2.0)+numpy.power((float(distance)/distance_parameter),2.0))
         fitness = numpy.exp(en)
         return fitness

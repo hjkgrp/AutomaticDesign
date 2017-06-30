@@ -13,7 +13,6 @@ from ga_main import *
 
 def initialize_GA_calc(npool,ncross,pmut,
                       maxgen,scoring_function,split_parameter = 15.0,distance_parameter = 1.0):
-        random.seed(12345)
         path_dictionary = setup_paths()
         new_tree = tree_generation('current_tree')
         new_tree.configure_gen(0,npool,ncross,pmut,maxgen,scoring_function,split_parameter,distance_parameter)

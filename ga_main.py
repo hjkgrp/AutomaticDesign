@@ -21,7 +21,6 @@ class tree_generation:
                 self.gene_fitness_dictionary = dict()
                 self.ligands_list = ligands_list
                 self.status_dictionary = dict()
-                self.scoring_function = None
                 self.gene_compound_dictionary = dict()
 
         def configure_gen(self,gen_num,npool,ncross,pmut,genmax,scoring_function="split",split_parameter = 15.0,distance_parameter = 1, RTA = False,mean_fitness =  0):
@@ -35,6 +34,8 @@ class tree_generation:
                 self.status_dictionary.update({'pmut': pmut})
                 self.status_dictionary.update({'ready_to_advance':RTA})
                 self.status_dictionary.update({'mean_fitness': mean_fitness})
+
+                #FITNESS DEBUGGING  print "______________ scoring function: " + scoring_function
 
         def populate_random(self):
                 ## clear the pool
@@ -157,13 +158,19 @@ class tree_generation:
                         gene,gen,slot,metal,ox,eq,ax1,ax2,spin,basename = translate_job_name(keys)
                         this_split_energy = float(ANN_dict[keys].split(',')[0])
                         this_ann_dist = float(ANN_dict[keys].split(',')[1].strip('\n'))
-                        #print "splitParam: " + str(self.status_dictionary['split_parameter']) + "______ split energy: " + str(this_split_energy)
-                        #print "distParam: " + str(self.status_dictionary['distance_parameter']) + "________ ANN dist: " + str(this_ann_dist)
-                        if self.scoring_function == "split+dist":
 
+                        # FITNESS DEBUGGING
+                        ##print "GENE: " + gene + "scoring fx: " + self.status_dictionary['scoring_function']
+                        ##print "\tsplitParam: " + str(self.status_dictionary['split_parameter']) + "______ split energy: " + str(this_split_energy)
+                        ##print "\tdistParam: " + str(self.status_dictionary['distance_parameter']) + "________ ANN dist: " + str(this_ann_dist)
+
+                        if self.status_dictionary['scoring_function'] == "split+dist":
                             fitness =  find_split_dist_fitness(this_split_energy,self.status_dictionary['split_parameter'],this_ann_dist,self.status_dictionary['distance_parameter'])
                         else:
                             fitness =  find_split_fitness(this_split_energy,self.status_dictionary['split_parameter'])
+
+                        #FITNESS DEBUGGING
+                        ##print gene + " fitness: " + str(fitness)
 
                         logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) 
                                + ": Gen " + str(self.status_dictionary['gen'])
