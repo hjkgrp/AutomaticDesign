@@ -7,15 +7,14 @@ import argparse
 import os
 import random
 import shutil
-from prep_calc import *
 from tree_classes import *
 from ga_main import *
-
+from ga_check_jobs import *
 def initialize_GA_calc(npool,ncross,pmut,
-                      maxgen,scoring_function,split_parameter = 15.0,distance_parameter = 1.0):
+                      maxgen,scoring_function,split_parameter = 15.0,distance_parameter = 1.0,DFT=True):
         path_dictionary = setup_paths()
         new_tree = tree_generation('current_tree')
-        new_tree.configure_gen(0,npool,ncross,pmut,maxgen,scoring_function,split_parameter,distance_parameter)
+        new_tree.configure_gen(0,npool,ncross,pmut,maxgen,scoring_function,split_parameter,distance_parameter,DFT)
         new_tree.populate_random()
         new_tree.write_state()
         logger(new_tree.base_path_dictionary['state_path'],str(datetime.datetime.now())
@@ -36,6 +35,7 @@ def wake_up_routine():
         logger(new_tree.base_path_dictionary['state_path'],str(datetime.datetime.now())
                + ": <resuming>  Gen : " + str(new_tree.status_dictionary['gen']))
         ## assess current fitness
+        new_tree.check_results()
         new_tree.assess_fitness()
         print(new_tree.status_dictionary["ready_to_advance"])
         if current_gen <= maxgen:

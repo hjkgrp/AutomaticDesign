@@ -4,9 +4,11 @@ def ensure_dir(dir_path):
     if not os.path.exists(dir_path):
         print('creating' + dir_path)
         os.makedirs(dir_path)
+########################
+
 def get_run_dir():
-    rdir = "/Users/lydiachan/GARuns/GA0/"
-   # rdir = "/home/jp/Dropbox/Main/testGA/scoring/"
+  #  rdir = "/Users/lydiachan/GARuns/GA0/"
+    rdir = "/home/jp/treetest/GA/t1/"
     return rdir
 ########################
 def find_submmited_jobs():
@@ -28,11 +30,13 @@ def find_live_jobs():
     return live_job_dictionary
 ########################
 def get_metals():
-        metals_list = ['cr','mn','fe','co']
+#        metals_list = ['cr','mn','fe','co']
+        metals_list = ['mn']
+
         return metals_list
 ########################
 def get_ox_states(): # could be made metal dependent like spin
-        ox_list = [2,3]
+        ox_list = [2]
         return ox_list
 ########################
 def spin_dictionary():
@@ -57,9 +61,21 @@ def translate_job_name(job):
     ax1 = int(ll[7])
     ax2 = int(ll[8])
     spin = int(ll[9])
+    metal_list = get_metals()
+    metal_key = metal_list[metal]
+    metal_spin_dictionary  = spin_dictionary()
+    these_states = metal_spin_dictionary[metal_key][ox]
+    if spin < these_states[1]:
+           spin_cat = 'LS'
+    elif spin >= these_states[1]:
+        spin_cat = 'HS'
+    else:
+        print('spin assigned as ll[9]  = ' + str(spin) + ' on  ' +str(ll))
+        print('critical erorr, unknown spin: '+ str(spin))
     gene = "_".join([str(metal),str(ox),str(eq),str(ax1),str(ax2)])
-    return gene,gen,slot,metal,ox,eq,ax1,ax2,spin,basename
+    return gene,gen,slot,metal,ox,eq,ax1,ax2,spin,spin_cat,basename
 
+########################
 
 def setup_paths():
     working_dir = get_run_dir()
@@ -78,6 +94,8 @@ def setup_paths():
     for keys in path_dictionary.keys():
         ensure_dir(path_dictionary[keys])
     return path_dictionary
+########################
+
 def advance_paths(path_dictionary,generation):
     new_dict = dict()
     for keys in path_dictionary.keys():
@@ -85,6 +103,8 @@ def advance_paths(path_dictionary,generation):
             new_dict[keys] = path_dictionary[keys] + "/gen_" +  str(generation) + "/"
             ensure_dir(new_dict[keys])
     return new_dict
+########################
+
 def get_ligands():
     old_ligands_list =[['thiocyanate',[1]], #0
                        ['chloride',[1]],#1
@@ -178,6 +198,7 @@ def get_ligands():
                     ['methylamine',[1]]] #31
 
     return ligands_list
+########################
 
 def write_dictionary(dictionary,path,force_append = False):
     emsg =  False
@@ -192,10 +213,14 @@ def write_dictionary(dictionary,path,force_append = False):
     except:
         emsg = "Error, could not write state space: " + path
     return emsg
+########################
+
 def find_split_fitness(split_energy,split_parameter):
         en =-1*numpy.power((float(split_energy)/split_parameter),2.0)
         fitness = numpy.exp(en)
         return fitness
+########################
+
 def find_split_dist_fitness(split_energy,split_parameter,distance,distance_parameter):
 
         ##FITNESS DEBUGGING: print "scoring function: split+dist YAY"
@@ -203,6 +228,8 @@ def find_split_dist_fitness(split_energy,split_parameter,distance,distance_param
         en =-1*(numpy.power((float(split_energy)/split_parameter),2.0)+numpy.power((float(distance)/distance_parameter),2.0))
         fitness = numpy.exp(en)
         return fitness
+
+########################
 
 def write_summary_list(outcome_list,path):
     emsg =  False
@@ -215,7 +242,7 @@ def write_summary_list(outcome_list,path):
     except:
         emsg = "Error, could not write state space: " + path
     return emsg
-
+########################
 def read_dictionary(path):
     emsg =  False
     dictionary = dict()
@@ -229,42 +256,104 @@ def read_dictionary(path):
     except:
         emsg = "Error, could not read state space: " + path
     return emsg,dictionary
+########################
+
 def logger(path,message):
     ensure_dir(path)
     with open(path + '/log.txt', 'a') as f:
         f.write(message + "\n")
-def add_jobs(list_of_jobs):
-    path_dictionary=setup_paths()
-    path=path_dictionary["job_path"]
-    current_outstanding = fload_jobs()
-    for job in list_of_jobs:
-        if job in current_outstanding:
-            print('*** att skipping '+str(job)+' since it is in list')
-        else:
-            current_outstanding.append(job)
-            print('*** att adding '+str(job)+' since it is not in list')
-    with open(path + '/outstanding_jobs.txt', 'w') as f:
-        for jobs in current_outstanding:
-            f.write(jobs + "\n")
-def fload_jobs():
-    path_dictionary=setup_paths()
-    path=path_dictionary["job_path"]
+########################
+def add_to_outstanding_jobs(job):
+    current_outstanding = get_outstanding_jobs()
+    if job in current_outstanding:
+         print('*** att skipping '+str(job)+' since it is in list')
+    else:
+         current_outstanding.append(job)
+         print('*** att adding '+str(job)+' since it is not in list')
+    set_outstanding_jobs(current_outstanding)
+######################
+def check_job_converged_dictionary(job):
+    converged_job_dictionary = find_converged_job_dictionary()
+    this_status = 'unknown'
+    try:
+        this_status = int(converged_job_dictionary[job])
+    except:
+        print('could not find status for  ' + str(job) + '\n')
+        pass
+    return this_status
+########################
+def get_outstanding_jobs():
+    path_dictionary = setup_paths()
+    path = path_dictionary['job_path']
     ensure_dir(path)
     list_of_jobs = list()
-    if os.path.exists(path + '/outstanding_jobs.txt'):
-        with open(path + '/outstanding_jobs.txt', 'r') as f:
+    if os.path.exists(path + '/outstanding_job_list.txt'):
+        with open(path + '/outstanding_job_list.txt', 'r') as f:
             for lines in f:
-                list_of_jobs.append(lines)
+                list_of_jobs.append(lines.strip('\n'))
     return list_of_jobs
+########################
+def set_outstanding_jobs(list_of_jobs):
+    path_dictionary = setup_paths()
+    path = path_dictionary['job_path']
+    ensure_dir(path)
+    with open(path + '/outstanding_job_list.txt', 'w') as f:
+        for jobs in list_of_jobs:
+            f.write(jobs.strip("\n") + "\n")
+    print('written\n')
+########################
 def remove_outstanding_jobs(job):
+    print('removing job: ' + job)
     path_dictionary=setup_paths()
     path=path_dictionary["job_path"]
-    current_outstanding = fload_jobs()
+    current_outstanding = get_outstanding_jobs()
     if job in current_outstanding:
         print(str(job)+' removed since it is in list')
         current_outstanding.remove(job)
     else:
         print(str(job)+' not removed since it is not in list')
-    with open(path + '/outstanding_jobs.txt', 'w') as f:
+    with open(path + '/outstanding_job_list.txt', 'w') as f:
         for jobs in current_outstanding:
             f.write(jobs + "\n")
+########################
+def find_converged_job_dictionary():
+    path_dictionary = setup_paths()
+    converged_job_dictionary = dict()
+    if os.path.exists(path_dictionary["job_path"]+"/converged_job_dictionary.csv"):
+            emsg,converged_job_dictionary = read_dictionary(path_dictionary["job_path"]+"/converged_job_dictionary.csv")
+    else:
+       converged_job_dictionary = dict()
+    return converged_job_dictionary
+########################
+def update_converged_job_dictionary(jobs,status):
+        path_dictionary = setup_paths()
+        converged_job_dictionary = find_converged_job_dictionary()
+        converged_job_dictionary.update({jobs:status})
+        if status != 0:
+                print(' wrtiting ' +  str(jobs) + ' as status '  + str(status))
+        write_dictionary(converged_job_dictionary,path_dictionary["job_path"]+"/converged_job_dictionary.csv")
+
+########################
+def find_submitted_jobs():
+    path_dictionary = setup_paths()
+    if os.path.exists(path_dictionary["job_path"]+"/submitted_jobs.csv"):
+        emsg,submitted_job_dictionary = read_dictionary(path_dictionary["job_path"]+"/submitted_jobs.csv")
+    else:
+        submitted_job_dictionary = dict()
+
+    return submitted_job_dictionary
+########################
+
+def writeprops(extrct_props,newfile):
+    string_to_write = ','.join([str(word) for word in extrct_props ])
+    newfile.write(string_to_write)
+    newfile.write("\n")
+    return 
+########################
+
+def atrextract(a_run,list_of_props):
+    extrct_props = []
+    for props in list_of_props:
+        extrct_props.append(getattr(a_run,props))
+    return extrct_props
+

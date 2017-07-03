@@ -10,6 +10,8 @@ import random
 import shutil
 from ga_tools import *
 from tree_classes import *
+from ga_check_jobs import *
+
 
 class tree_generation:
         def __init__(self,name):
@@ -23,7 +25,7 @@ class tree_generation:
                 self.status_dictionary = dict()
                 self.gene_compound_dictionary = dict()
 
-        def configure_gen(self,gen_num,npool,ncross,pmut,genmax,scoring_function="split",split_parameter = 15.0,distance_parameter = 1, RTA = False,mean_fitness =  0):
+        def configure_gen(self,gen_num,npool,ncross,pmut,genmax,scoring_function="split",split_parameter = 15.0,distance_parameter = 1,DFT =True, RTA = False,mean_fitness =  0):
                 self.current_path_dictionary = advance_paths(self.base_path_dictionary,gen_num)
                 self.status_dictionary.update({'gen':gen_num})
                 self.status_dictionary.update({'scoring_function': scoring_function})
@@ -34,6 +36,7 @@ class tree_generation:
                 self.status_dictionary.update({'pmut': pmut})
                 self.status_dictionary.update({'ready_to_advance':RTA})
                 self.status_dictionary.update({'mean_fitness': mean_fitness})
+                self.status_dictionary.update({'DFT': DFT})
 
                 #FITNESS DEBUGGING  print "______________ scoring function: " + scoring_function
 
@@ -91,7 +94,8 @@ class tree_generation:
                                    split_parameter = float(read_dict["split_parameter"]),
                                    distance_parameter = float(read_dict["distance_parameter"]),
                                    RTA = bool((read_dict["ready_to_advance"] == 'True')),
-                                   mean_fitness = float(read_dict["mean_fitness"]))
+                                   mean_fitness = float(read_dict["mean_fitness"]),
+                                   DFT =  bool((read_dict["DFT"] == 'True')))
                 ## next read  genes from path
                 state_path = self.current_path_dictionary["state_path"] +"current_genes.csv"
                 emsg,gene_dict = read_dictionary(state_path)
@@ -112,6 +116,28 @@ class tree_generation:
                         print(emsg)
                 self.gene_fitness_dictionary = fit_dict
 
+        def check_results(self):
+                ## load gene fitness dict
+                fitkeys  = self.gene_fitness_dictionary.keys()
+
+                ## if doing a DFT run, we need to check the filestytem for updates
+                if self.status_dictionary["DFT"]:
+                        final_results = check_all_current_convergence()
+                        for genes in final_results.keys():
+                                if genes in fitkeys:
+                                        print('gene ' + str(genes) + ' already in dict, no action')
+                                else:
+                                        this_split_energy = float(final_results[genes].split)
+                                        if self.status_dictionary['scoring_function'] == "split+dist":
+                                                print('error, cannot using aplit+dist fitness with ANN only. Switching to split only.')
+                                                logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ": Gen " +
+                                                       str(self.status_dictionary['gen'] ) +
+                                                      ' error, cannot using aplit+dist fitness with ANN only. Switching to split only')
+                                        fitness =  find_split_fitness(this_split_energy,self.status_dictionary['split_parameter'])
+                                        logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ": Gen " +
+                                               str(self.status_dictionary['gen'] ) +
+                                               ' setting fitness to ' + str(fitness) + ' for new genes ' + str(genes))
+                                        self.gene_fitness_dictionary.update({genes:fitness})
         def assess_fitness(self):
             ## loop all over genes in the pool and the selected set
             fitkeys  = self.gene_fitness_dictionary.keys()
@@ -123,7 +149,7 @@ class tree_generation:
             self.ready_to_advance = False
             self.outstanding_jobs = dict()
             for genekeys in self.genes.keys():
-                print('genekey is ' + str(genekeys))
+#                print('genekey is ' + str(genekeys))
                 genes = self.genes[genekeys]
                 ## see if this gene is in the fitness dictionary
                 if genes in fitkeys:
@@ -141,9 +167,12 @@ class tree_generation:
                 self.status_dictionary["ready_to_advance"] = True
             else:
                 self.job_dispatcher()
-            self.ANN_fitness()
+            ## if we are using the ANN only, populate the gene-fitnes dictionary
+            if self.status_dictionary["DFT"] == False:
+                    self.ANN_fitness()
 
-        def testing_fitness(self):
+        def random_fitness(self):
+                ## test function for validating GA = white noise fitness 
                 for keys in self.genes:
                         gene = self.genes[keys]
                         random_fitness = random.uniform(0,1)
@@ -155,14 +184,9 @@ class tree_generation:
                 msg, ANN_dict = read_dictionary(self.current_path_dictionary["ANN_output"] +'ANN_results.csv')
                 
                 for keys in ANN_dict.keys():
-                        gene,gen,slot,metal,ox,eq,ax1,ax2,spin,basename = translate_job_name(keys)
+                        gene,gen,slot,metal,ox,eq,ax1,ax2,spin,spin_cat,basename = translate_job_name(keys)
                         this_split_energy = float(ANN_dict[keys].split(',')[0])
                         this_ann_dist = float(ANN_dict[keys].split(',')[1].strip('\n'))
-
-                        # FITNESS DEBUGGING
-                        ##print "GENE: " + gene + "scoring fx: " + self.status_dictionary['scoring_function']
-                        ##print "\tsplitParam: " + str(self.status_dictionary['split_parameter']) + "______ split energy: " + str(this_split_energy)
-                        ##print "\tdistParam: " + str(self.status_dictionary['distance_parameter']) + "________ ANN dist: " + str(this_ann_dist)
 
                         if self.status_dictionary['scoring_function'] == "split+dist":
                             fitness =  find_split_dist_fitness(this_split_energy,self.status_dictionary['split_parameter'],this_ann_dist,self.status_dictionary['distance_parameter'])
@@ -178,10 +202,11 @@ class tree_generation:
                         self.gene_fitness_dictionary.update({gene:fitness})
         def job_dispatcher(self):
                 jobpaths = list()
-                print(self.current_path_dictionary["ANN_output"] +'ANN_results.csv')
                 emsg,ANN_results_dict = read_dictionary(self.current_path_dictionary["ANN_output"] +'/ANN_results.csv')
-                
+                current_outstanding = get_outstanding_jobs()
+                converged_jobs = find_converged_job_dictionary()
                 for keys in self.outstanding_jobs.keys():
+
                         jobs = self.outstanding_jobs[keys]
                         spins_dict = spin_dictionary()
                         metal = jobs.metals_list[jobs.core]
@@ -189,22 +214,19 @@ class tree_generation:
                         for spins in spin_list:
                                 job_prefix = "gen_" + str(self.status_dictionary["gen"]) + "_slot_" + str(keys) + "_"
                                 ## generate HS/LS
-                                logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen " 
-                                + str(self.status_dictionary['gen'])
-                                + " attempt to generate geo for slot" + str(keys) + ' with  name ' + str(jobs.name) )
-                                ## convert the gene into a job file and geometery
+                               ## convert the gene into a job file and geometery
                                 jobpath,mol_name,ANN_split,ANN_distance = jobs.generate_geometery(prefix = job_prefix, spin = spins,path_dictionary = self.current_path_dictionary,
                                                                       rundirpath = get_run_dir(), molsimpath = self.base_path_dictionary["molsimp_path"])
-                                                                                      
-                                if jobpath:
+                                if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
                                         ## save result
-                                        print(",".join([str(ANN_split),str(ANN_distance)]))
                                         ANN_results_dict.update({mol_name:",".join([str(ANN_split),str(ANN_distance)])})
                                         jobpaths.append(jobpath)
-
+                                        logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen " 
+                                        + str(self.status_dictionary['gen'])
+                                        + " attempt to generate geo for gene number  " + str(keys) + ' with  name ' + str(jobs.name) )
+ 
                 write_dictionary(ANN_results_dict,self.current_path_dictionary["ANN_output"] +'ANN_results.csv')
-                print(jobpaths)
-                add_jobs(jobpaths)
+                set_outstanding_jobs(jobpaths)
 
 
         def select_best_genes(self):
@@ -267,7 +289,6 @@ class tree_generation:
                 ## populate compound list
                 for keys in selected_genes.keys():
                         genes = selected_genes[keys]
-                        print(genes)
                         this_complex = octahedral_complex(self.ligands_list)
                         this_complex.encode(genes)
                         selected_compound_dictionary[keys] = this_complex
@@ -302,7 +323,6 @@ class tree_generation:
                 for keys in selected_genes.keys():
                         does_mutate = random.uniform(0,1)
                         if does_mutate < pmut:
-                                print("\n")
                                 old_gene = selected_genes[keys]
                                 mutant = selected_compound_dictionary[keys].mutate()
                                 selected_compound_dictionary[keys] = mutant

@@ -222,7 +222,7 @@ class octahedral_complex:
     def mutate(self):
         ## mutates either the axial
         ## or equitorial ligand a random
-        lig_to_mutate = random.randint(0,2)
+        lig_to_mutate = random.randint(0,1)
         child = octahedral_complex(self.ligands_list)
         child.copy(self) # copies this parent
         n = len(self.ligands_list)
@@ -275,7 +275,6 @@ class octahedral_complex:
         ligloc_cont = True
         # set metal properties:
         this_metal = self.metals_list[self.core]
-        print(this_metal)
         # set oxidation state
         if self.ox == 2:
             ox_string = "II"
@@ -305,7 +304,7 @@ class octahedral_complex:
                              '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
                              '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ ox_string,
                              '-qccode TeraChem','-runtyp energy','-method UDFT',"-ffoption A"])
-                    print(call)
+#                    print(call)
 
                     p2 = subprocess.call(call,shell=True)#stdout = ms_pipe
 
@@ -314,14 +313,14 @@ class octahedral_complex:
                 with open(rundirpath + 'temp' +'/' + mol_name + '.report') as report_f:
                     for line in report_f:
                             if ("pred_split" in line):
-                                print('****')
-                                print(line)
+                                #print('****')
+                                #print(line)
                                 ANN_split = float(line.split(",")[1])
                                 print('ANN_split is ' +str(ANN_split))
 
                             if("ANN_dist_to_train" in line):
-                                print('****')
-                                print(line)
+                                #print('****')
+                                #print(line)
                                 ll = line.split(',')[1]
                                 ANN_distance = float(ll)
                                 print('ANN_distance is ' +str(ANN_distance))
@@ -336,7 +335,6 @@ class octahedral_complex:
                     newf.writelines("scrdir scr/sp/" +mol_name+ "\n")
                 os.remove(rundirpath + 'temp/' + mol_name + '.in')
         else:
-            jobpath = False
             ANN_split = False
             ANN_distance = False
         return jobpath,mol_name,ANN_split,ANN_distance
