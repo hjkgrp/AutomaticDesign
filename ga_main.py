@@ -223,10 +223,9 @@ class tree_generation:
                                         jobpaths.append(jobpath)
                                         logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen " 
                                         + str(self.status_dictionary['gen'])
-                                        + " attempt to generate geo for gene number  " + str(keys) + ' with  name ' + str(jobs.name) )
- 
+                                        + " missing information for gene number  " + str(keys) + ' with  name ' + str(jobs.name) )
                 write_dictionary(ANN_results_dict,self.current_path_dictionary["ANN_output"] +'ANN_results.csv')
-                set_outstanding_jobs(jobpaths)
+                set_outstanding_jobs(current_outstanding+jobpaths)
 
 
         def select_best_genes(self):
