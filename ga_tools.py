@@ -5,11 +5,16 @@ def ensure_dir(dir_path):
         print('creating' + dir_path)
         os.makedirs(dir_path)
 ########################
-
 def get_run_dir():
   #  rdir = "/Users/lydiachan/GARuns/GA0/"
     rdir = "/home/jp/treetest/GA/t1/"
     return rdir
+########################
+def get_source_dir():
+  #  rdir = "/Users/lydiachan/GARuns/GA0/"
+    rdir = "/home/jp/treetest/GA/"
+    return rdir
+
 ########################
 def find_submmited_jobs():
     path_dictionary = setup_paths()

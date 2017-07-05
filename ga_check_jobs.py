@@ -32,6 +32,9 @@ def check_all_current_convergence():
     submitted_job_dictionary = find_submitted_jobs()
     ## live jobs:
     live_job_dictionary = find_live_jobs()
+    ## conv'd jobs
+    converged_jobs = find_converged_job_dictionary()
+    ## sub'd jobs
     joblist = submitted_job_dictionary.keys()
     all_runs = dict()
     jobs_complete = 0
@@ -49,9 +52,11 @@ def check_all_current_convergence():
     LS_jobs=dict()
     HS_jobs=dict()
     for jobs in joblist:
-
         print('checking status of ' + str(jobs))
+
         if (jobs not in live_job_dictionary.keys()) and ((len(jobs.strip('\n'))!=0)):
+            print('checking status of ' + str(jobs))
+
             this_run = test_terachem_sp_convergence(jobs)
             update_converged_job_dictionary(jobs,this_run.status) # record converged 
             print("Did this run converge?  " + str(this_run.converged)+' with status  ' + str(this_run.status))
@@ -67,12 +72,12 @@ def check_all_current_convergence():
 
             if this_run.status == 6: ##  convergence is not successful!
                 
-                logger(hctionary['state_path'],str(datetime.datetime.now())
+                logger(path_dictionary['state_path'],str(datetime.datetime.now())
                            + " failure at job : " + str(jobs) + ' with status '+ str(this_run.status))
                 remove_outstanding_jobs(jobs) # take out of pool
-        else:
-                print('job is live')
-        print('\n')
+            print('\n')
+        elif (jobs in live_job_dictionary.keys()):
+                print(str(jobs) + ' is live\n')
     final_results = process_runs_sp(LS_jobs,HS_jobs)
     ## write a file of results
     list_of_props = list()
@@ -87,8 +92,13 @@ def check_all_current_convergence():
     for props in spin_dep_prop_names:
         for spin_cat in ['LS','HS']:
                 list_of_props.append("_".join([spin_cat,props]))
-    with open(get_run_dir() + '/results_post.csv','w') as f:
-        writeprops(list_of_props,f)
+    if not (os.path.isfile(get_run_dir() + '/results_post.csv')):
+            logger(path_dictionary['state_path'],str(datetime.datetime.now())
+                           + " starting output log file at " + get_run_dir() + '/results_post.csv')
+            with open(get_run_dir() + '/results_post.csv','w') as f:
+                writeprops(list_of_props,f)
+ 
+    with open(get_run_dir() + '/results_post.csv','a') as f:
         for reskeys in final_results.keys():
                 values = atrextract(final_results[reskeys],list_of_props)
                 writeprops(values,f)

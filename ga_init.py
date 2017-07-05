@@ -19,6 +19,8 @@ def initialize_GA_calc(npool,ncross,pmut,
         new_tree.write_state()
         logger(new_tree.base_path_dictionary['state_path'],str(datetime.datetime.now())
                + ": <new tree>  Gen : " + str(new_tree.status_dictionary['gen']) + ' commencing')
+        shutil.copyfile(get_source_dir() + 'wake.sh',get_run_dir() + 'wake.sh')
+        shutil.copyfile(get_source_dir() + 'sge_auto.sh',get_run_dir() + 'sge_auto.sh')
 
         return new_tree
 
