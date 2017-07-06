@@ -6,20 +6,20 @@ def ensure_dir(dir_path):
         os.makedirs(dir_path)
 ########################
 def get_run_dir():
-  #  rdir = "/Users/lydiachan/GARuns/GA0/"
-    rdir = "/home/jp/treetest/GA/t1/"
+    rdir = "/home/lchan/GARuns/GAMn20/"
+    #rdir = "/home/jp/treetest/GA/t1/"
     return rdir
 ########################
 def get_source_dir():
-  #  rdir = "/Users/lydiachan/GARuns/GA0/"
-    rdir = "/home/jp/treetest/GA/"
+    rdir = "/home/lchan/GARuns/GA0"
+  #  rdir = "/home/jp/treetest/GA/"
     return rdir
 
 ########################
-def find_submmited_jobs():
+def find_submited_jobs():
     path_dictionary = setup_paths()
-    if os.path.exists(path_dictionary["job_path"]+"/submmitted_jobs.csv"):
-        emsg,submitted_job_dictionary = read_dictionary(path_dictionary["job_path"]+"/submmitted_jobs.csv")
+    if os.path.exists(path_dictionary["job_path"]+"/submitted_jobs.csv"):
+        emsg,submitted_job_dictionary = read_dictionary(path_dictionary["job_path"]+"/submitted_jobs.csv")
     else:
         submitted_job_dictionary = dict()
 
@@ -201,8 +201,56 @@ def get_ligands():
                     ['ox',[2]], #29
                     ['furan',[1]], #30
                     ['methylamine',[1]]] #31
+    mix_ligands_list = [['pisc',[1]], #0
+                        ['ammonia',[1]], #1
+                        ['butylamine',[1]], #2
+                        ['nitrosyl',[1]]] #3
+    mn2_ligands_list =[['pisc',[1]], #0
+                       ['misc',[1]], #1
+                       ['tbisc',[1]], #2
+                       ['benzisc',[1]], #3
+                       ['phenisc',[1]], #4
+                       ['porphyrin',[4]], #5
+                       ['cyanoaceticporphyrin',[4]], #6
+                       ['cyanide',[1]], #7
+                       ['pyridine',[1]], #8
+                       ['chloropyridine',[1]], #9
+                       ['cyanopyridine',[1]], #10
+                       ['thiopyridine',[1]], #11
+                       ['bipy',[2]], #12
+                       ['phosacidbipyridine',[2]], #13
+                       ['ethOHbipyridine',[2]], #14
+                       ['ethbipyridine',[2]], #15
+                       ['mebipyridine',[2]], #16
+                       ['diaminomethyl',[2]], #17
+                       ['sulfacidbipyridine',[2]], #18
+                       ['carbonyl',[1]]] #19
+    co3_ligands_list = [['pisc',[1]], #0
+                        ['misc',[1]], #1
+                        ['tbisc',[1]], #2
+                        ['benzisc',[1]], #3
+                        ['phenisc',[1]], #4
+                        ['cat',[2]], #5
+                        ['mec',[2]], #6
+                        ['tbuc',[2]], #7
+                        ['pyridine',[1]], #8
+                        ['chloropyridine',[1]], #9
+                        ['cyanopyridine',[1]], #10
+                        ['thiopyridine',[1]], #11
+                        ['cyanide',[1]], #12
+                        ['carbonyl',[1]], #13
+                        ['isothiocyanate',[1]], #14
+                        ['ammonia',[1]], #15
+                        ['water',[1]], #16
+                        ['acac',[2]], #17
+                        ['ox',[2]], #18
+                        ['furan',[1]], #19
+                        ['tetrahydrofuran',[1]], #20
+                        ['methylamine',[1]]] #21
+    return mn2_ligands_list
 
-    return ligands_list
+    #return ligands_list
+
 ########################
 
 def write_dictionary(dictionary,path,force_append = False):

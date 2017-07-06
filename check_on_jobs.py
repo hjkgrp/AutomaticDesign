@@ -7,7 +7,6 @@ logger(path_dictionary['state_path'],'******************************************
 logger(path_dictionary['state_path'],str(datetime.datetime.now()) + ' waking up...yawn') 
 live_job_count = check_queue_for_live_jobs()
 logger(path_dictionary['state_path'],str(datetime.datetime.now()) + ' monitoring, number of live jobs ' + str(live_job_count)) 
-
 ## wake the tree
 logger(path_dictionary['state_path'],str(datetime.datetime.now()) + ' waking_tree') 
 wake_up_routine()
