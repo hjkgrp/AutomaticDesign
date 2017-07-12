@@ -98,7 +98,7 @@ def check_all_current_convergence():
             with open(get_run_dir() + '/results_post.csv','w') as f:
                 writeprops(list_of_props,f)
  
-    with open(get_run_dir() + '/results_post.csv','a') as f:
+    with open(get_run_dir() + '/results_post.csv','W') as f:
         for reskeys in final_results.keys():
                 values = atrextract(final_results[reskeys],list_of_props)
                 writeprops(values,f)

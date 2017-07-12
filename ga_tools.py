@@ -6,13 +6,13 @@ def ensure_dir(dir_path):
         os.makedirs(dir_path)
 ########################
 def get_run_dir():
-    rdir = "/home/lchan/GARuns/GAMn20/"
-    #rdir = "/home/jp/treetest/GA/t1/"
+#    rdir = "/home/lchan/GARuns/GAMn20/"
+    rdir = "/home/jp/Dropbox/Main/testGA/mn_again/"
     return rdir
 ########################
 def get_source_dir():
-    rdir = "/home/lchan/GARuns/GA0"
-  #  rdir = "/home/jp/treetest/GA/"
+  #  rdir = "/home/lchan/GARuns/GA0"
+    rdir = "/home/jp/Dropbox/MyGit/genetic/"
     return rdir
 
 ########################
@@ -249,8 +249,7 @@ def get_ligands():
                         ['methylamine',[1]]] #21
     return mn2_ligands_list
 
-    #return ligands_list
-
+    return ligands_list
 ########################
 
 def write_dictionary(dictionary,path,force_append = False):

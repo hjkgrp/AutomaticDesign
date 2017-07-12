@@ -21,12 +21,11 @@ def launch_job(job,sub_num):
     base_name = os.path.basename(job).strip('in')
     if sub_num > 1:
         print(' start rescue')
-        ssdakldjaskl
         ## run rescue and analysis
 #        rescue_cmd_str = './gibraltar_rescue_.sh ' + job
 #        p_res = subprocess.Popen(cmd_str,shell=True,stdout=subprocess.PIPE)
     ## could call different script if resub? currently only calls the same
-    cmd_str ='qsub -j y -N  ' +'GA_'+ str(gene) + '_'+str(spin) + ' ' +get_run_dir() + 'gibraltar_wrap_GA.sh ' + job
+    cmd_str ='qsub -j y -N  ' +'GA_'+ str(gene) + '_'+str(spin) + ' ' +get_run_dir() + 'sge_auto.sh ' + job
     p_sub = subprocess.Popen(cmd_str,shell=True,stdout=subprocess.PIPE)
     ll = p_sub.communicate()[0]
     ll =  ll.split()
@@ -108,61 +107,12 @@ def submit_outstanding_jobs():
     return joblist
 ########################
 
-
-def analyze_all_current_jobs():
-    ## set up environment:        
-    path_dictionary = setup_paths()
-    ## previously dispatched jobs:
-    #submitted_job_dictionary = find_submmited_jobs()
-    ## live jobs:
-    #live_job_dictionary = find_live_jobs()
-    live_job_dictionary = dict()    
-    ## check the status of current jobs
-    joblist  = get_outstanding_jobs() 
-    # this is outstanding jobs
-    #print('joblist is  ' + str(joblist))
-    #all_runs = dict() 
-    #print(live_4job_dictionary.keys())
-    final_results = dict()
-    count = 0
-    for jobs in joblist:
-        if jobs not in live_job_dictionary.keys() and (len(jobs.strip('\n'))!=0):
-            
-            gene,gen,slot,metal,ox,eq,ax1,ax2,spin,basename =  translate_job_name(jobs)
-            
-            ## advance paths
-            current_path_dictionary = advance_paths(path_dictionary,gen)
-            ANN_split = check_ANN_for_job(jobs,current_path_dictionary)
-            this_fitness = find_fitness(ANN_split)
-            update_current_gf_dictionary(gene,this_fitness)
-            remove_outstanding_jobs(jobs)
-            final_results.update({gene:this_fitness})
-            count += 1
-            #this_run = test_terachem_sp_convergence(jobs)
-            #print("is this run conv: ",this_run.converged)
-            #if this_run.converged == True:
-            #    gen,slot,gene,spin,base_name  = translate_job_name(jobs)
-            #    all_runs.update({base_name:this_run})
-    ## process the converged jobs
-    #print(all_runs)
-    #final_results = process_runs(all_runs)
-    #print(final_results)
-    #for keys in final_results.keys():
-    #    print(final_results[keys].splitenergy,final_results[keys].fitness)
-        ## update the gene-fitness dictionary
-    #    update_current_gf_dictionary(keys,final_results[keys].fitness)
-    ## update the jobs file
-    #add_jobs(path_dictionary["job_path"],joblist)
-    #jobs_complete = len(final_results.keys())
-    jobs_complete =  count
-    return jobs_complete
-########################
 def check_queue_for_live_jobs():
     print('\n inspecting queue for live jobs \n')
     ## set up environment:        
     path_dictionary = setup_paths()
     ## previously dispatched jobs:
-    submitted_job_dictionary = find_submmited_jobs()
+    submitted_job_dictionary = find_submited_jobs()
     ## live jobs in on record:
     live_job_dictionary = find_live_jobs()
 

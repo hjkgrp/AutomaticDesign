@@ -110,7 +110,8 @@ def _get_freq_fitness(lastgen, npool,data_dir):
         _write_all_csv(base_path, generation, end_results)
         _gen_gene_fitness_csv(base_path, generation, end_results,sum)
 
-data_dir = raw_input()
+#data_dir = raw_input()
+data_dir = "/home/jp/treetest/GA/t1/"
 print data_dir
 lastgen,npool = _get_gen_npool(data_dir)
 _get_freq_fitness(lastgen, npool,data_dir)
