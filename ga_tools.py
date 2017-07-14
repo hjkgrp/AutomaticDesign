@@ -1,4 +1,5 @@
 import os
+import shutil
 import numpy
 def ensure_dir(dir_path):
     if not os.path.exists(dir_path):
@@ -7,12 +8,12 @@ def ensure_dir(dir_path):
 ########################
 def get_run_dir():
 #    rdir = "/home/lchan/GARuns/GAMn20/"
-    rdir = "/home/jp/Dropbox/Main/testGA/mn_again/"
+    rdir = "/home/jp/treetest/GA/MN-ANNLIGS/"
     return rdir
 ########################
 def get_source_dir():
   #  rdir = "/home/lchan/GARuns/GA0"
-    rdir = "/home/jp/Dropbox/MyGit/genetic/"
+    rdir = "/home/jp/treetest/GA/"
     return rdir
 
 ########################
@@ -98,6 +99,9 @@ def setup_paths():
                    "ms_reps"          : working_dir + "ms_reps"}
     for keys in path_dictionary.keys():
         ensure_dir(path_dictionary[keys])
+    shutil.copyfile(get_source_dir()+'sge_auto.sh',get_run_dir()+'sge_auto.sh')
+#    shutil.copyfile(get_source_dir()+'wake.sh',get_run_dir()+'wake.sh')
+
     return path_dictionary
 ########################
 
