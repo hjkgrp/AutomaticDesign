@@ -12,18 +12,6 @@ from tree_classes import *
 from ga_main import *
 from process_scf import *
 #######################
-def update_current_gf_dictionary(gene,fitness):
-     ## set up environment:        
-     path_dictionary = setup_paths()
-     new_tree = heration('temp tree')
-     ## read in info
-     new_tree.read_state()
-     new_tree.gene_fitness_dictionary.update({gene:fitness})
-     logger(path_dictionary['state_path'],str(datetime.datetime.now())
-                            + " Gen "+ str(new_tree.status_dictionary['gen']) + " :  updating gene-fitness dictionary")
-     ## save
-     new_tree.write_state()
-########################
 def check_all_current_convergence():
     print('\n checking convergence of jobs\n')
     ## set up environment:        

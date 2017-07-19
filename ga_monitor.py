@@ -95,6 +95,7 @@ def submit_outstanding_jobs():
                         logger(path_dictionary['state_path'],str(datetime.datetime.now())
                            + " Giving up on job : " + str(jobs) + ' with '+ str(number_of_attempts) + ' attempts')
                         update_converged_job_dictionary(jobs,6) # mark job as abandoned 
+			gene = "_".join(jobs.split("_")[5:10])
                         update_current_gf_dictionary(gene,0) # zero out fitness
 
             else:
@@ -112,7 +113,7 @@ def check_queue_for_live_jobs():
     ## set up environment:        
     path_dictionary = setup_paths()
     ## previously dispatched jobs:
-    submitted_job_dictionary = find_submited_jobs()
+    submitted_job_dictionary = find_submitted_jobs()
     ## live jobs in on record:
     live_job_dictionary = find_live_jobs()
 

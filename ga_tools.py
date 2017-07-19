@@ -7,24 +7,15 @@ def ensure_dir(dir_path):
         os.makedirs(dir_path)
 ########################
 def get_run_dir():
-#    rdir = "/home/lchan/GARuns/GAMn20/"
-    rdir = "/home/jp/treetest/GA/MN-ANNLIGS/"
+    rdir = "/home/lchan/GARuns/GA1Mn2/"
+ #   rdir = "/home/jp/treetest/GA/MN-ANNLIGS/"
     return rdir
 ########################
 def get_source_dir():
-  #  rdir = "/home/lchan/GARuns/GA0"
-    rdir = "/home/jp/treetest/GA/"
+    rdir = "/home/lchan/GAcode/GA8/"
+  #  rdir = "/home/jp/treetest/GA/"
     return rdir
 
-########################
-def find_submited_jobs():
-    path_dictionary = setup_paths()
-    if os.path.exists(path_dictionary["job_path"]+"/submitted_jobs.csv"):
-        emsg,submitted_job_dictionary = read_dictionary(path_dictionary["job_path"]+"/submitted_jobs.csv")
-    else:
-        submitted_job_dictionary = dict()
-
-    return submitted_job_dictionary
 ########################
 def find_live_jobs():
     path_dictionary = setup_paths()

@@ -12,6 +12,19 @@ from ga_tools import *
 from tree_classes import *
 from ga_check_jobs import *
 
+########################
+def update_current_gf_dictionary(gene,fitness):
+     ## set up environment:        
+     path_dictionary = setup_paths()
+     new_tree = tree_generation('temp tree')
+     ## read in info
+     new_tree.read_state()
+     new_tree.gene_fitness_dictionary.update({gene:fitness})
+     logger(path_dictionary['state_path'],str(datetime.datetime.now())
+                            + " Gen "+ str(new_tree.status_dictionary['gen']) + " :  updating gene-fitness dictionary")
+     ## save
+     new_tree.write_state()
+########################
 
 class tree_generation:
         def __init__(self,name):
