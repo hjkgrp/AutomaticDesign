@@ -299,7 +299,7 @@ class octahedral_complex:
         if not (geo_exists):
                 print('generating '+ str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and'  + str(self.ax_ligands))
                 with open(ms_dump_path,'a') as ms_pipe:
-                    call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +liglist,
+                    call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +liglist,'-ligocc 1,1,1,1,1,1',
                              '-rundir ' +"'"+ rundirpath.rstrip("/")+"\n'",'-keepHs yes,yes,yes,yes,yes,yes','-jobdir','temp',
                              '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
                              '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ ox_string,
