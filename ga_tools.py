@@ -12,7 +12,7 @@ def get_run_dir():
     return rdir
 ########################
 def get_source_dir():
-    rdir = "/home/lchan/GAcode/GA8/"
+    rdir = "/home/lchan/GAcode/GA2/"
   #  rdir = "/home/jp/treetest/GA/"
     return rdir
 
