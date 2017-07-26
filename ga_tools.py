@@ -7,12 +7,12 @@ def ensure_dir(dir_path):
         os.makedirs(dir_path)
 ########################
 def get_run_dir():
-    rdir = "/home/lchan/GARuns/GA1Mn2/"
+    rdir = "/Users/lydiachan/ANN_DIST_FOREST/GADis/GADist3/test/"
  #   rdir = "/home/jp/treetest/GA/MN-ANNLIGS/"
     return rdir
 ########################
 def get_source_dir():
-    rdir = "/home/lchan/GAcode/GA2/"
+    rdir = "/Users/lydiachan/ANN_DIST_Forest/GADis/GA/"
   #  rdir = "/home/jp/treetest/GA/"
     return rdir
 
@@ -27,13 +27,13 @@ def find_live_jobs():
     return live_job_dictionary
 ########################
 def get_metals():
-#        metals_list = ['cr','mn','fe','co']
-        metals_list = ['mn']
+        metals_list = ['cr','mn','fe','co']
+#        metals_list = ['mn']
 
         return metals_list
 ########################
 def get_ox_states(): # could be made metal dependent like spin
-        ox_list = [2]
+        ox_list = [2,3]
         return ox_list
 ########################
 def spin_dictionary():
@@ -242,8 +242,6 @@ def get_ligands():
                         ['furan',[1]], #19
                         ['tetrahydrofuran',[1]], #20
                         ['methylamine',[1]]] #21
-    return mn2_ligands_list
-
     return ligands_list
 ########################
 

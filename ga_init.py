@@ -10,17 +10,18 @@ import shutil
 from tree_classes import *
 from ga_main import *
 from ga_check_jobs import *
-def initialize_GA_calc(npool,ncross,pmut,
-                      maxgen,scoring_function,split_parameter = 15.0,distance_parameter = 1.0,DFT=True):
-        path_dictionary = setup_paths()
+def initialize_GA_calc(npool,ncross,pmut,maxgen,scoring_function,split_parameter = 15.0,distance_parameter = 1.0,DFT=True,monitor_diversity=False,monitor_distance=False):
+	random.seed(1234567890)
+	path_dictionary = setup_paths()
         new_tree = tree_generation('current_tree')
-        new_tree.configure_gen(0,npool,ncross,pmut,maxgen,scoring_function,split_parameter,distance_parameter,DFT)
+        new_tree.configure_gen(0,npool,ncross,pmut,maxgen,scoring_function,split_parameter,distance_parameter,DFT,False,0,monitor_diversity,monitor_distance)
         new_tree.populate_random()
         new_tree.write_state()
         logger(new_tree.base_path_dictionary['state_path'],str(datetime.datetime.now())
                + ": <new tree>  Gen : " + str(new_tree.status_dictionary['gen']) + ' commencing')
-        shutil.copyfile(get_source_dir() + 'wake.sh',get_run_dir() + 'wake.sh')
-        shutil.copyfile(get_source_dir() + 'sge_auto.sh',get_run_dir() + 'sge_auto.sh')
+	if DFT:
+        	shutil.copyfile(get_source_dir() + 'wake.sh',get_run_dir() + 'wake.sh')
+        	shutil.copyfile(get_source_dir() + 'sge_auto.sh',get_run_dir() + 'sge_auto.sh')
 
         return new_tree
 

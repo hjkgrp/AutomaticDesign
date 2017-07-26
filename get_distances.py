@@ -73,5 +73,6 @@ def _mean_distances(gene_dist_dict):
         if emsg:
                 print(emsg)
 
+# Uses the same directory as get_general, which is get_run_dir() from ga_tools
 gene_dist_dict,npool = _find_distances()
 _mean_distances(gene_dist_dict)

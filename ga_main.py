@@ -26,7 +26,7 @@ class tree_generation:
                 self.status_dictionary = dict()
                 self.gene_compound_dictionary = dict()
 
-        def configure_gen(self,gen_num,npool,ncross,pmut,genmax,scoring_function="split",split_parameter = 15.0,distance_parameter = 1,DFT =True, RTA = False,mean_fitness =  0):
+        def configure_gen(self,gen_num,npool,ncross,pmut,genmax,scoring_function="split",split_parameter = 15.0,distance_parameter = 1,DFT =True, RTA = False,mean_fitness =  0,monitor_diversity=False,monitor_distance=False):
                 self.current_path_dictionary = advance_paths(self.base_path_dictionary,gen_num)
                 self.status_dictionary.update({'gen':gen_num})
                 self.status_dictionary.update({'scoring_function': scoring_function})
@@ -38,15 +38,15 @@ class tree_generation:
                 self.status_dictionary.update({'ready_to_advance':RTA})
                 self.status_dictionary.update({'mean_fitness': mean_fitness})
                 self.status_dictionary.update({'DFT': DFT})
-
-                #FITNESS DEBUGGING  print "______________ scoring function: " + scoring_function
+                self.status_dictionary.update({'monitor_diversity': monitor_diversity})
+                self.status_dictionary.update({'monitor_distance': monitor_distance})
 
         def populate_random(self):
                 ## clear the pool
                 self.gene_compound_dictionary = dict()
                 self.genes = dict()
 
-                ### fill the pool with random structures 
+                ### fill the pool with random structures
                 for i in range(0,self.status_dictionary['npool']):
                         this_complex = octahedral_complex(self.ligands_list)
                         this_complex.random_gen()
@@ -78,8 +78,6 @@ class tree_generation:
                 if emsg:
                         print(emsg)
 
-
-
         def read_state(self):
                 ## first read live info from base directory
                 state_path = self.base_path_dictionary["state_path"] +"/current_status.csv"
@@ -96,7 +94,10 @@ class tree_generation:
                                    distance_parameter = float(read_dict["distance_parameter"]),
                                    RTA = bool((read_dict["ready_to_advance"] == 'True')),
                                    mean_fitness = float(read_dict["mean_fitness"]),
-                                   DFT =  bool((read_dict["DFT"] == 'True')))
+                                   DFT =  bool((read_dict["DFT"] == 'True')),
+				   monitor_diversity = bool((read_dict["monitor_diversity"] == 'True')),
+				   monitor_distance = bool((read_dict["monitor_distance"] == 'True')))
+
                 ## next read  genes from path
                 state_path = self.current_path_dictionary["state_path"] +"current_genes.csv"
                 emsg,gene_dict = read_dictionary(state_path)
@@ -144,7 +145,7 @@ class tree_generation:
             fitkeys  = self.gene_fitness_dictionary.keys()
             fitness_values  = dict()
             print('is code ready to advance?: '+str(self.status_dictionary["ready_to_advance"]))
-            logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen " 
+            logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen "
                        + str(self.status_dictionary['gen'])
                        + " is code ready to advance? " +str(self.status_dictionary["ready_to_advance"]))
             self.ready_to_advance = False
@@ -157,12 +158,12 @@ class tree_generation:
                     fitness_values[genes] = self.gene_fitness_dictionary[genes]
                 else:
                     self.outstanding_jobs.update({genekeys:self.gene_compound_dictionary[genekeys]})
-            logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen " 
+            logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen "
                        + str(self.status_dictionary['gen'])
                        + " with " + str(len(self.outstanding_jobs.keys())) + " calculations to be completed")
             print('length of outstanding jobskeys',len(self.outstanding_jobs.keys()))
             if (len(self.outstanding_jobs.keys()) ==0):
-                logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) 
+                logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now())
                                + ": Gen " + str(self.status_dictionary['gen'])
                                + " all jobs completed, ranking ")
                 self.status_dictionary["ready_to_advance"] = True
@@ -173,17 +174,17 @@ class tree_generation:
                     self.ANN_fitness()
 
         def random_fitness(self):
-                ## test function for validating GA = white noise fitness 
+                ## test function for validating GA = white noise fitness
                 for keys in self.genes:
                         gene = self.genes[keys]
                         random_fitness = random.uniform(0,1)
-                        logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) 
+                        logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now())
                                + ": Gen " + str(self.status_dictionary['gen'])
                                + " assign random fitness  " + str(random_fitness) + ' to  gene ' + str(gene))
                         self.gene_fitness_dictionary.update({gene:random_fitness})
         def ANN_fitness(self):
                 msg, ANN_dict = read_dictionary(self.current_path_dictionary["ANN_output"] +'ANN_results.csv')
-                
+
                 for keys in ANN_dict.keys():
                         gene,gen,slot,metal,ox,eq,ax1,ax2,spin,spin_cat,basename = translate_job_name(keys)
                         this_split_energy = float(ANN_dict[keys].split(',')[0])
@@ -194,10 +195,7 @@ class tree_generation:
                         else:
                             fitness =  find_split_fitness(this_split_energy,self.status_dictionary['split_parameter'])
 
-                        #FITNESS DEBUGGING
-                        ##print gene + " fitness: " + str(fitness)
-
-                        logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) 
+                        logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now())
                                + ": Gen " + str(self.status_dictionary['gen'])
                                + " fitness from ANN  " + str(fitness) + ' assigned to  gene ' + str(gene))
                         self.gene_fitness_dictionary.update({gene:fitness})
@@ -222,11 +220,148 @@ class tree_generation:
                                         ## save result
                                         ANN_results_dict.update({mol_name:",".join([str(ANN_split),str(ANN_distance)])})
                                         jobpaths.append(jobpath)
-                                        logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen " 
+                                        logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen "
                                         + str(self.status_dictionary['gen'])
                                         + " missing information for gene number  " + str(keys) + ' with  name ' + str(jobs.name) )
                 write_dictionary(ANN_results_dict,self.current_path_dictionary["ANN_output"] +'ANN_results.csv')
                 set_outstanding_jobs(current_outstanding+jobpaths)
+
+
+#TESTING PHASE ONGOING... Beware
+################################################################
+#Tree doctor will do checkup on tree's diversity and distance. Functionality can be switched on or off. Automatically off if DFT enabled. 
+	def get_full_values(self,curr_gen):
+		full_gene_info = dict()
+        	for gen in xrange(curr_gen+1):
+            		ANN_dir = get_run_dir() + "ANN_ouput/gen_"+str(gen)+"/ANN_results.csv"
+			emsg, ANN_dict = read_dictionary(ANN_dir)
+			for keys in ANN_dict.keys():
+				this_gene = "_".join(keys.split("_")[4:9])
+				this_energy = float(ANN_dict[keys].split(",")[0])
+				this_dist = float(ANN_dict[keys].split(",")[1].strip('\n'))
+				if not(this_gene in full_gene_info.keys()):
+					full_gene_info.update({this_gene:[this_energy,this_dist]})
+        	return full_gene_info
+
+	def calc_mean_dist(self,genes_list,full_gene_info):
+        	mean_dist = 0
+		npool = int(self.status_dictionary['npool'])
+        	for i in range(0,npool):
+			mean_dist += float(full_gene_info[genes_list[i]][1])
+		mean_dist = mean_dist/npool #average distance
+		return mean_dist
+	
+	def update_gene_fitness(self,full_gene_info):
+		# use self.gene_fitness_dictionary	
+		## update gene-fitness
+		for gene in self.gene_fitness_dictionary.keys():
+			this_split_energy = float(full_gene_info[gene][0])
+			this_ann_dist = float(full_gene_info[gene][1])
+                        if self.status_dictionary['scoring_function'] == "split+dist":
+                            fitness =  find_split_dist_fitness(this_split_energy,self.status_dictionary['split_parameter'],this_ann_dist,self.status_dictionary['distance_parameter'])
+                        else:
+                            fitness =  find_split_fitness(this_split_energy,self.status_dictionary['split_parameter'])
+			self.gene_fitness_dictionary.update({gene:fitness})
+	
+	def get_diversity(self):
+		genes = list()
+		gene_dict = self.genes
+
+		for key in gene_dict.keys():
+			this_gene = gene_dict[key]
+			if not (this_gene in genes):
+				genes.append(this_gene)
+
+		diversity = len(genes)
+		return diversity
+	
+	def decide(self):
+		curr_gen = self.status_dictionary["gen"]
+		diagnosis = ['***************************************************************']
+		diagnosis.append("Tree doctor checked on end gen " + str(curr_gen))
+
+		healthy = True
+		## read in scoring function info
+		dist_score = ("dist" in self.status_dictionary['scoring_function'])
+		dist_param = float(self.status_dictionary['distance_parameter'])
+		pmut = float(self.status_dictionary['pmut'])
+
+		## print mean_distance, mean_fitness, and diversity
+		full_gene_info = self.get_full_values(curr_gen)
+		mean_dist = float(self.calc_mean_dist(self.genes,full_gene_info))
+		diversity = self.get_diversity()
+
+		mean_dist_info = ": ".join(["Mean distance",str(mean_dist)])
+		mean_fit_info = ": ".join(["Mean fitness",str(self.status_dictionary['mean_fitness'])])
+		div_info = ": ".join(["Diversity",str(diversity)])
+		diagnosis.extend([mean_dist_info,mean_fit_info,div_info])
+
+		## check and adjust pmut based on diversity
+		### if diversity drops below 25% of npool, pmut will be raised to 0.50
+		### if diveristy is at least 25% of npool, pmut will return to original
+		if (self.status_dictionary['monitor_diversity']):
+			current_pmut = self.status_dictionary['pmut']
+			low_diversity = (diversity < 0.25*(int(self.status_dictionary['npool'])))
+			if (low_diversity) and (current_pmut < 0.50) and (current_pmut >= 0):
+				healthy = False
+				symptom0 = "WARNING: Diversity low (less than 25% of npool): inflating pmut ("+str(current_pmut)+") to 0.50."
+				symptom01 = "WARNING Pmut, in current_status.csv, is (original_pmut - 0.50). It will be shown as negative."
+				diagnosis.extend([symptom0,symptom01])
+				new_pmut = float(current_pmut - 0.50)
+				self.status_dictionary.update({'pmut':new_pmut})
+			elif (low_diversity): #high pmut
+				healthy = False
+				symptom00 = "Diversity low. Pmut already high. No medicine available. Check after a few more generations."
+				diagnosis.append(symptom00)
+			elif (current_pmut < 0): #check if pmut has been inflated - if it has and diversity is ok, restore to original
+				orig_pmut = float(current_pmut + 0.50)
+				diagnosis.append("Low diversity has been cured. Pmut now restored to "+str(orig_pmut))
+				self.status_dictionary.update({'pmut':orig_pmut})
+										
+			
+		## adjust scoring_function based on calculated mean_distance
+		if (self.status_dictionary['monitor_distance']):
+			if (mean_dist > 0.6):
+				healthy = False
+				if dist_score and dist_param > 0.15: #Decrease distance_parameter for tighter control
+					dist_param = dist_param - 0.10
+					symptom1 =  ("Mean distance too high. Lowering distance_parameter to "+str(dist_param))
+					diagnosis.append(symptom1)
+				elif dist_score and dist_param <= 0.15: #distance_parameter too low
+					symptom2 = ("Distance parameter low, but mean distance high. Try a few more generations.") 
+					diagnosis.append(symptom2)
+				else: #Turn on split+dist
+					dist_score = True
+					dist_param = 0.75
+					symptom3 = ("Mean distance high. Using split+dist with dist_param = "+str(dist_param))
+					diagnosis.append(symptom3)
+			elif dist_score:#loosen distance control 
+				dist_score = False
+				treat1 = "Mean distance below 0.6: loosening distance control by using split only."
+				diagnosis.append(treat1)
+		
+			## update scoring function in status_dictionary
+			if dist_score:
+				self.status_dictionary.update({'scoring_function':"split+dist"})
+			else:
+				self.status_dictionary.update({'scoring_function':"split"})
+			self.status_dictionary.update({'distance_parameter':dist_param})
+			diagnosis.append("Update~ Scoring_function: "+self.status_dictionary['scoring_function']+", Dist_param: "+str(dist_param))
+
+			## update gene_fitness
+			diagnosis.append("Updating gene_fitness...")
+			self.update_gene_fitness(full_gene_info)
+			diagnosis.append("Checkup finished.")
+
+		if healthy:
+			diagnosis.append("Tree healthy. Carry on.")
+		
+		diagnosis.append('****************************************************************')
+		for message in diagnosis: 
+			print message
+			logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now())+'   '+str(message))
+
+################################################################
 
 
         def select_best_genes(self):
@@ -238,7 +373,7 @@ class tree_generation:
                 for keys in self.genes.keys():
                     outcome_list.append((keys,self.genes[keys],float(self.gene_fitness_dictionary[self.genes[keys]])))
                     logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) +
-                               ": Gen " + str(self.status_dictionary['gen']) +  '  gene is   ' + str(keys) 
+                               ": Gen " + str(self.status_dictionary['gen']) +  '  gene is   ' + str(keys)
                              + " fitness is = " +  str(float(self.gene_fitness_dictionary[self.genes[keys]])))
  
                 outcome_list.sort(key=lambda tup: tup[2], reverse = True)
@@ -259,13 +394,17 @@ class tree_generation:
                 mean_fitness = mean_fitness/npool # average fitness
                 self.status_dictionary.update({'mean_fitness':mean_fitness})
                 logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) +
-                       ": Gen " + str(self.status_dictionary['gen']) 
-                     + " complete, mean_fitness = " +  str(mean_fitness))
+                       ": Gen " + str(self.status_dictionary['gen'])
+                     + " complete, mean_fitness = " +  str(mean_fitness))	
+
+		if not(self.status_dictionary['DFT']) and (self.status_dictionary['monitor_diversity'] or self.status_dictionary['monitor_distance']):
+			self.decide()
+
         def advance_generation(self):
                 ## advance counter
                 self.status_dictionary['gen'] +=1
                 logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) +
-                       ": Gen " + str(self.status_dictionary['gen']-1) 
+                       ": Gen " + str(self.status_dictionary['gen']-1)
                      + " advancing to Gen " +  str(self.status_dictionary['gen']))
                 self.status_dictionary['ready_to_advance'] = False
                 self.current_path_dictionary = advance_paths(self.base_path_dictionary,self.status_dictionary['gen'])
@@ -273,6 +412,9 @@ class tree_generation:
                 npool  =  self.status_dictionary["npool"]
                 ncross =  self.status_dictionary["ncross"]
                 pmut   =  self.status_dictionary["pmut"]
+		if (pmut < 0):
+			original_pmut = float(pmut+0.50)
+			pmut = 0.50
 
                 ## generation selected set
                 selected_genes = dict()
@@ -329,24 +471,24 @@ class tree_generation:
                                 selected_genes[keys] = selected_compound_dictionary[keys].name
                                 logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) +
                                        ":  Gen " + str(self.status_dictionary['gen'])
-                                       + " mutating " + str(keys) + ": "  + old_gene +  " -> " + mutant.name) 
+                                       + " mutating " + str(keys) + ": "  + old_gene +  " -> " + mutant.name)
 
-                ## merge the lists 
+                ## merge the lists
                 self.genes.update(selected_genes)
                 self.gene_compound_dictionary.update(selected_compound_dictionary)
 
 ########################
 def update_current_gf_dictionary(gene,fitness):
-     ## set up environment:        
-     path_dictionary = setup_paths()
-     new_tree = tree_generation('temp tree')
-     ## read in info
-     new_tree.read_state()
-     new_tree.gene_fitness_dictionary.update({gene:fitness})
-     logger(path_dictionary['state_path'],str(datetime.datetime.now())
+	## set up environment:
+	path_dictionary = setup_paths()
+    	new_tree = tree_generation('temp tree')
+    	 ## read in info
+     	new_tree.read_state()
+     	new_tree.gene_fitness_dictionary.update({gene:fitness})
+     	logger(path_dictionary['state_path'],str(datetime.datetime.now())
                             + " Gen "+ str(new_tree.status_dictionary['gen']) + " :  updating gene-fitness dictionary")
-     ## save
-     new_tree.write_state()
+     	## save
+     	new_tree.write_state()
 
 
 
