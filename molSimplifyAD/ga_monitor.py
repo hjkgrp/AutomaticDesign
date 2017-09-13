@@ -7,10 +7,10 @@ import argparse
 import os
 import random
 import shutil
-from ga_tools import *
-from tree_classes import *
-from ga_main import *
-from process_scf import *
+from molSimplifyAD.ga_tools import *
+from molSimplifyAD.ga_complex import *
+from molSimplifyAD.ga_main import *
+from molSimplifyAD.process_scf import *
 #######################
 #
 def launch_job(job,sub_num):

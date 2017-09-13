@@ -8,7 +8,7 @@ import os
 import random
 import shutil
 from ga_tools import *
-from tree_classes import *
+from ga_complex import *
 from ga_main import *
 from process_scf import *
 #######################
@@ -93,24 +93,4 @@ def check_all_current_convergence():
     print('\n**** end of file inspection **** \n')
 
     return final_results
-###############################
-#def check_ANN_for_job(job,path_dictionary):
-#
-#     path_dictionary = setup_paths()
-#
-#     new_tree = heration('temp tree')
-#     ## read in info
-#     new_tree.read_state()
-#
-#    emsg,ANN_results_dict =  read_dictionary(path_dictionary["ANN_output"]+'/ANN_results.csv')
-#
-#    gene,gen,slot,metal,ox,eq,ax1,ax2,spin,spin_cat,basename =  translate_job_name(job)
-#    #print(ANN_results_dict)
-#    this_result = ANN_results_dict[basename]   
-#    this_split = float(this_result)
-#    base_path_dictionary = setup_paths()
-#    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
-#                            + " Gen "+ str(gen) +   " slot "+ str(slot) + " gen "+ str(gene) + " : split is " +  str(this_split))
-#    return this_split
-    
 

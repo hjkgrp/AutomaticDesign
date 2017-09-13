@@ -1,3 +1,4 @@
+
 import glob
 import operator
 import datetime
@@ -9,12 +10,12 @@ import os
 import random
 import shutil
 from ga_tools import *
-from tree_classes import *
+from ga_complex import *
 from ga_check_jobs import *
 
 ########################
 
-class tree_generation:
+class GA_generation:
         def __init__(self,name):
                 path_dictionary = setup_paths()
                 ligands_list = get_ligands()
@@ -25,14 +26,15 @@ class tree_generation:
                 self.ligands_list = ligands_list
                 self.status_dictionary = dict()
                 self.gene_compound_dictionary = dict()
+                self.total_counter = total_counter = 0
 
-        def configure_gen(self,gen_num,npool,ncross,pmut,genmax,scoring_function="split",split_parameter = 15.0,distance_parameter = 1,DFT =True, RTA = False,mean_fitness =  0,monitor_diversity=False,monitor_distance=False):
+        def configure_gen(self,gen_num,npool,ncross,pmut,maxgen,scoring_function="split",split_parameter = 15.0,distance_parameter = 1,DFT =True, RTA = False,mean_fitness =  0,monitor_diversity=False,monitor_distance=False,**kwargs):
                 self.current_path_dictionary = advance_paths(self.base_path_dictionary,gen_num)
                 self.status_dictionary.update({'gen':gen_num})
                 self.status_dictionary.update({'scoring_function': scoring_function})
                 self.status_dictionary.update({'split_parameter': split_parameter})
                 self.status_dictionary.update({'distance_parameter': distance_parameter})
-                self.status_dictionary.update({'npool':npool,'genmax':genmax})
+                self.status_dictionary.update({'npool':npool,'maxgen':maxgen})
                 self.status_dictionary.update({'ncross': ncross})
                 self.status_dictionary.update({'pmut': pmut})
                 self.status_dictionary.update({'ready_to_advance':RTA})
@@ -45,14 +47,55 @@ class tree_generation:
                 ## clear the pool
                 self.gene_compound_dictionary = dict()
                 self.genes = dict()
-
+                self.total_counter = 0 
                 ### fill the pool with random structures
-                for i in range(0,self.status_dictionary['npool']):
+                counter  = 0
+                while counter < self.status_dictionary['npool']:
                         this_complex = octahedral_complex(self.ligands_list)
                         this_complex.random_gen()
                         this_gene = this_complex.name
-                        self.genes[i] = this_gene
-                        self.gene_compound_dictionary[i] = this_complex
+                        ## check if unique
+                        if not this_gene in self.gene_compound_dictionary.keys():
+                                self.genes[counter] = this_gene
+                                self.gene_compound_dictionary[counter] = this_complex
+                                counter += 1
+                self.total_counter = counter
+        def populate_metal_ox_lig_combo(self,metal,ox,ligs):
+                ### function to add a given complex to the pool 
+                ### arguments are positions in ligand names (1st elemet)
+                ### of ligand list (not smiles)
+                ligands_list_inds = [i[0] for i in self.ligands_list]
+                metal_list_inds = get_metals()
+                ## check if ligs are known
+                if not set([ligs[0][0],ligs[1][0],ligs[1][1]]).issubset(ligands_list_inds):
+                        print('Error: requested ligs not available in list, aborting')
+                        exit() 
+                if not metal in metal_list_inds:
+                        print('Error: requested metal not available in list, aborting')
+                        exit()                         
+                eq_ind = [ligands_list_inds.index(ligs[0][0])]
+                ax_ind = [ligands_list_inds.index(ligs[1][0]),ligands_list_inds.index(ligs[1][1])]
+                metal_ind = metal_list_inds.index(metal)
+                this_complex = octahedral_complex(self.ligands_list)
+                this_complex.random_gen()
+                counter = self.total_counter
+                try:
+                        this_complex.replace_metal(metal_ind)    
+                        this_complex.replace_ox(ox)
+                        this_complex.replace_equitorial(eq_ind)
+                        ## support for  ax1/ax2 asymmetry 
+                        this_complex.replace_axial(sorted(ax_ind)) 
+                        this_gene = this_complex.name
+                        print('this this_unique_name ', this_gene)
+                        if not this_gene in self.gene_compound_dictionary.keys():
+                        ## we can accept this complex
+                            self.genes[counter] = this_gene
+                            self.gene_compound_dictionary[counter] = this_complex
+                            counter += 1
+                            self.total_counter = self.total_counter + 1
+                            print('adding eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) +  ' + '   + str(ligs[1][0]))
+                except:
+                    print('cannot make eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) +  ' + '   + str(ligs[1][0]))
 
         def write_state(self):
                 ## first write genes to path
@@ -88,7 +131,7 @@ class tree_generation:
                                    npool = int(read_dict["npool"]),
                                    ncross = int(read_dict["ncross"]),
                                    pmut = float(read_dict["pmut"]),
-                                   genmax = int(read_dict["genmax"]),
+                                   maxgen = int(read_dict["maxgen"]),
                                    scoring_function =read_dict["scoring_function"],
                                    split_parameter = float(read_dict["split_parameter"]),
                                    distance_parameter = float(read_dict["distance_parameter"]),
@@ -110,7 +153,7 @@ class tree_generation:
                         this_complex = octahedral_complex(self.ligands_list)
                         this_complex.encode(genes)
                         self.gene_compound_dictionary[keys] = this_complex
-
+                self.total_counter = len(self.gene_compound_dictionary.keys())
                 ## third,  read gene-fitness info to path
                 state_path = self.current_path_dictionary["state_path"] +"/gene_fitness.csv"
                 emsg,fit_dict = read_dictionary(state_path)
@@ -141,6 +184,10 @@ class tree_generation:
                                                ' setting fitness to ' + str(fitness) + ' for new genes ' + str(genes))
                                         self.gene_fitness_dictionary.update({genes:fitness})
         def assess_fitness(self):
+            print('***********')
+            print(self.genes)
+            print(self.gene_compound_dictionary)
+            print('***********')
             ## loop all over genes in the pool and the selected set
             fitkeys  = self.gene_fitness_dictionary.keys()
             fitness_values  = dict()
@@ -151,7 +198,7 @@ class tree_generation:
             self.ready_to_advance = False
             self.outstanding_jobs = dict()
             for genekeys in self.genes.keys():
-#                print('genekey is ' + str(genekeys))
+                print('genekey is ' + str(genekeys))
                 genes = self.genes[genekeys]
                 ## see if this gene is in the fitness dictionary
                 if genes in fitkeys:
@@ -227,8 +274,7 @@ class tree_generation:
                 set_outstanding_jobs(current_outstanding+jobpaths)
 
 
-#TESTING PHASE ONGOING... Beware
-################################################################
+
 #Tree doctor will do checkup on tree's diversity and distance. Functionality can be switched on or off. Automatically off if DFT enabled. 
 	def get_full_values(self,curr_gen):
 		full_gene_info = dict()
@@ -278,7 +324,7 @@ class tree_generation:
 	def decide(self):
 		curr_gen = self.status_dictionary["gen"]
 		diagnosis = ['***************************************************************']
-		diagnosis.append("Tree doctor checked on end gen " + str(curr_gen))
+		diagnosis.append("GA doctor checked on end gen " + str(curr_gen))
 
 		healthy = True
 		## read in scoring function info
@@ -323,11 +369,11 @@ class tree_generation:
 		if (self.status_dictionary['monitor_distance']):
 			if (mean_dist > 0.6):
 				healthy = False
-				if dist_score and dist_param > 0.15: #Decrease distance_parameter for tighter control
-					dist_param = dist_param - 0.10
+				if dist_score and dist_param > 0.5: #Decrease distance_parameter for tighter control
+					dist_param = dist_param - 0.05
 					symptom1 =  ("Mean distance too high. Lowering distance_parameter to "+str(dist_param))
 					diagnosis.append(symptom1)
-				elif dist_score and dist_param <= 0.15: #distance_parameter too low
+				elif dist_score and dist_param <= 0.5: #distance_parameter too low
 					symptom2 = ("Distance parameter low, but mean distance high. Try a few more generations.") 
 					diagnosis.append(symptom2)
 				else: #Turn on split+dist
@@ -408,7 +454,7 @@ class tree_generation:
                      + " advancing to Gen " +  str(self.status_dictionary['gen']))
                 self.status_dictionary['ready_to_advance'] = False
                 self.current_path_dictionary = advance_paths(self.base_path_dictionary,self.status_dictionary['gen'])
-
+                print('selected_compound_dictionary is ' + str(self.gene_compound_dictionary))
                 npool  =  self.status_dictionary["npool"]
                 ncross =  self.status_dictionary["ncross"]
                 pmut   =  self.status_dictionary["pmut"]
@@ -416,7 +462,7 @@ class tree_generation:
 			original_pmut = float(pmut+0.50)
 			pmut = 0.50
 
-                ## generation selected set
+                ## generation of selected set
                 selected_genes = dict()
                 selected_compound_dictionary = dict()
                 number_selected = 0
@@ -437,6 +483,7 @@ class tree_generation:
                 ## now perfrom ncross exchanges
                 number_of_crosses = 0
                 while number_of_crosses < ncross:
+                        ## choose partners to exchange
                         these_partners = random.sample(range(npool,(2*npool - 1)),2)
                         keep_axial = selected_compound_dictionary[these_partners[0]]
                         keep_equitorial = selected_compound_dictionary[these_partners[1]]
@@ -454,6 +501,7 @@ class tree_generation:
                         selected_genes[these_partners[1]] = new_gene_2
                         selected_compound_dictionary[these_partners[1]] = new_complex_2
                         new_genes = [selected_genes[key] for key in these_partners]
+
 
                         number_of_crosses +=1
                         logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) +

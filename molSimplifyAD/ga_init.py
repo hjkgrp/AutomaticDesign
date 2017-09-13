@@ -7,33 +7,40 @@ import argparse
 import os
 import random
 import shutil
-from tree_classes import *
-from ga_main import *
-from ga_check_jobs import *
-def initialize_GA_calc(npool,ncross,pmut,maxgen,scoring_function,split_parameter = 15.0,distance_parameter = 1.0,DFT=True,monitor_diversity=False,monitor_distance=False):
-	random.seed(1234567890)
-	path_dictionary = setup_paths()
-        new_tree = tree_generation('current_tree')
-        new_tree.configure_gen(0,npool,ncross,pmut,maxgen,scoring_function,split_parameter,distance_parameter,DFT,False,0,monitor_diversity,monitor_distance)
+from molSimplifyAD.ga_complex import *
+from molSimplifyAD.ga_main import *
+from molSimplifyAD.ga_check_jobs import *
+from molSimplifyAD.ga_io_control import *
+def initialize_GA_calc(path = ''):
+        
+        ## load in run info
+        GA_run = GA_run_defintion()
+        
+
+        GA_run.deserialize(path + '.gaconfig')
+        
+        path_dictionary = setup_paths()
+        
+        new_tree = GA_generation('current_GA')
+        new_tree.configure_gen(0,**GA_run.config)
+        #['npool'],GA_run.config['ncross',
+        #                         GA_run.config['pmut'],GA_run.config['maxgen'],
+        #                         scoring_function,split_parameter,distance_parameter,DFT,False,0,monitor_diversity,monitor_distance)
         new_tree.populate_random()
         new_tree.write_state()
         logger(new_tree.base_path_dictionary['state_path'],str(datetime.datetime.now())
                + ": <new tree>  Gen : " + str(new_tree.status_dictionary['gen']) + ' commencing')
-	if DFT:
-        	shutil.copyfile(get_source_dir() + 'wake.sh',get_run_dir() + 'wake.sh')
-        	shutil.copyfile(get_source_dir() + 'sge_auto.sh',get_run_dir() + 'sge_auto.sh')
-
         return new_tree
 
 def wake_up_routine():
         ## set up environment:
         path_dictionary = setup_paths()
         ## initialize class
-        new_tree = tree_generation('current_tree')
+        new_tree = GA_generation('current_gen')
         ## read in info
         new_tree.read_state()
         current_gen = new_tree.status_dictionary["gen"]
-        maxgen = new_tree.status_dictionary["genmax"]
+        maxgen = new_tree.status_dictionary["maxgen"]
 
         logger(new_tree.base_path_dictionary['state_path'],str(datetime.datetime.now())
                + ": <resuming>  Gen : " + str(new_tree.status_dictionary['gen']))

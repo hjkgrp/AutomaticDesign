@@ -3,17 +3,17 @@
 ##Returns files with genes, their fitnesses, and their frequences per generation.
 import csv
 import os
-from ga_tools import *
-from get_general import _get_gen_npool,data_dir
-
+from molSimplifyAD.ga_tools import *
+from molSimplifyAD.ga_tools import get_run_dir
+from molSimplifyAD.ga_get_general import _get_gen_npool
 ##Finds the ANN distances, writes them to a dictionary and then to a file
 def _find_distances():
-    lastgen,npool = _get_gen_npool(data_dir)
+    lastgen,npool = _get_gen_npool(get_run_dir())
     gene_dist_dict = dict()
 
     #lastgen is the last generation that has been run
     for generation in xrange(lastgen+1):
-        ANN_path = data_dir + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
+        ANN_path = get_run_dir() + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
 
         if os.path.isfile(ANN_path):
             with open(ANN_path, 'r') as fi:
@@ -29,12 +29,12 @@ def _find_distances():
                         pass
                     else:
                         gene_dist_dict.update({geneName:distance})
-                        print geneName + " : " + str(distance)
+                        #print geneName + " : " + str(distance)
 
             fi.close()
 
     ## Writes genes and distances to a .csv file
-    write_path = data_dir + "statespace/all_distances.csv"
+    write_path = get_run_dir() + "statespace/all_distances.csv"
     if not os.path.isfile(write_path):
             open(write_path,'w').close()
     emsg = write_dictionary(gene_dist_dict,write_path)
@@ -44,13 +44,13 @@ def _find_distances():
     return gene_dist_dict,npool
 
 def _mean_distances(gene_dist_dict):
-    lastgen,npool = _get_gen_npool(data_dir)
+    lastgen,npool = _get_gen_npool(get_run_dir())
     mean_dist_dict = dict()
     dist_dict = gene_dist_dict
     dist_sum = 0
     curr_gen = 0
 
-    read_path = data_dir + "statespace/all_results.csv"
+    read_path = get_run_dir() + "statespace/all_results.csv"
     with open(read_path, 'r') as fi:
         list_of_lines = fi.readlines()
         for line in list_of_lines:
@@ -67,12 +67,13 @@ def _mean_distances(gene_dist_dict):
         mean_dist_dict.update({curr_gen:mean_dist})
     fi.close()
 
-    write_path = data_dir + "statespace/_mean_distances.csv"
+    write_path = get_run_dir() + "statespace/_mean_distances.csv"
     with open(write_path, 'w') as fi:
         emsg = write_dictionary(mean_dist_dict,write_path)
         if emsg:
                 print(emsg)
 
 # Uses the same directory as get_general, which is get_run_dir() from ga_tools
-gene_dist_dict,npool = _find_distances()
-_mean_distances(gene_dist_dict)
+def format_distances():
+    gene_dist_dict,npool = _find_distances()
+    _mean_distances(gene_dist_dict)

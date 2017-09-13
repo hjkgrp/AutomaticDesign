@@ -13,10 +13,10 @@ from ga_tools import *
 from molSimplify.Classes import globalvars
 from molSimplify.Classes import mol3D
 from optgeo_extract import *
-#from autocorrelation import*
-#from misc_descriptors import*
-#from coulomb_analyze import*
-#from graph_analyze import*
+from molSimplify.Informatics.autocorrelation import*
+from molSimplify.Informatics.misc_descriptors import*
+
+from molSimplify.Informatics.graph_analyze import*
 HF_to_Kcal_mol = 627.503
 class DFTRun:
     """ This is a class for each run"""
@@ -294,14 +294,10 @@ class Comp:
         self.append_descriptors(results_dictionary['colnames'],results_dictionary['results'],'f','all')
         ### delta metrics 
         results_dictionary = generate_all_ligand_deltametrics(self.mol,depth=3,loud=True,name=name)
-        self.append_descriptors(results_dictionary['colnames'],results_dictionary['result_ax_full'],'D_f','ax')
-        self.append_descriptors(results_dictionary['colnames'],results_dictionary['result_eq_full'],'D_f','eq')
         self.append_descriptors(results_dictionary['colnames'],results_dictionary['result_ax_con'],'D_lc','ax')
         self.append_descriptors(results_dictionary['colnames'],results_dictionary['result_eq_con'],'D_lc','eq')
         results_dictionary = generate_metal_deltametrics(self.mol,depth=3,loud=loud)
         self.append_descriptors(results_dictionary['colnames'],results_dictionary['results'],'D_mc','all')
-        results_dictionary = generate_full_complex_deltametrics(self.mol,depth=3,loud=loud)
-        self.append_descriptors(results_dictionary['colnames'],results_dictionary['results'],'D_f','all')
         self.set_desc = True
     def append_descriptors(self,list_of_names,list_of_props,prefix,suffix):
         for names in list_of_names:
