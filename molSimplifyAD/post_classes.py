@@ -211,7 +211,7 @@ class Comp:
         self.axlig2_ind = 'undef'
         self.eqlig_ind = 'undef'
         self.convergence =  0 
-        self.repmol = mol3D.mol3D()
+        self.repmol = mol3D()
         self.set_desc = False
         self.descriptors =  list()
         self.descriptor_names =  list()

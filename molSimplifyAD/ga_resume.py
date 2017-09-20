@@ -12,6 +12,7 @@ def resume_design()
     GA_run = GA_run_defintion()
     GA_run.deserialize(path)
     if GA_run.config['DFT']:
+        print('DFT ON')
         ## update which jobs are live
         logger(path_dictionary['state_path'],'************************************************') 
         logger(path_dictionary['state_path'],str(datetime.datetime.now()) + ' waking up...yawn') 
