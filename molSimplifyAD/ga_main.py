@@ -445,7 +445,8 @@ class GA_generation:
 
 		if not(self.status_dictionary['DFT']) and (self.status_dictionary['monitor_diversity'] or self.status_dictionary['monitor_distance']):
 			self.decide()
-
+		if self.status_dictionary['DFT'] and (self.status_dictionary['monitor_distance']):
+			self.decide()
         def advance_generation(self):
                 ## advance counter
                 self.status_dictionary['gen'] +=1

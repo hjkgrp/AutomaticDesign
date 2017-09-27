@@ -26,6 +26,8 @@ class GA_run_defintion:
             ## first time start-up function
 #                print('configuring status dictionaty')
 #                print('setting rundir to '+rundir)
+                if DFT:
+                    monitor_distance = False
                 self.config = {'DFT':DFT,
                               'rundir':rundir,
                               'liglist':liglist,
