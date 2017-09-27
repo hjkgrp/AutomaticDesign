@@ -25,7 +25,7 @@ def launch_job(job,sub_num):
 #        rescue_cmd_str = './gibraltar_rescue_.sh ' + job
 #        p_res = subprocess.Popen(cmd_str,shell=True,stdout=subprocess.PIPE)
     ## could call different script if resub? currently only calls the same
-    cmd_str ='qsub -j y -N  ' +'GA_'+ str(gene) + '_'+str(spin) + ' ' +get_run_dir() + 'sge_auto.sh ' + job
+    cmd_str ='qsub -j y -N  ' +'GA_'+ str(gene) + '_'+str(spin) + ' ' +get_run_dir() + 'launch_script.sh ' + job
     p_sub = subprocess.Popen(cmd_str,shell=True,stdout=subprocess.PIPE)
     ll = p_sub.communicate()[0]
     ll =  ll.split()
@@ -82,7 +82,7 @@ def submit_outstanding_jobs():
                 else: # job is a resubmission 
                     number_of_attempts = submitted_job_dictionary[jobs]
                     print('number of attempts = '+ str(number_of_attempts))
-                    if (int(number_of_attempts) <= 30):
+                    if (int(number_of_attempts) <= 2):
                         ## relaunch  
                         submitted_job_dictionary.update({jobs: (int(number_of_attempts)+1)})
                         job_id = launch_job(jobs,int(number_of_attempts) + 1)

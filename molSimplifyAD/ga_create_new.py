@@ -31,7 +31,10 @@ def create_new_run(args):
   else: 
     shutil.copy(configuration["liglist"],configuration["rundir"]+'ligands_list.txt')
     configuration["liglist"] = process_ligands_file(configuration["liglist"])
-
+  if 'DFT' in configuration.keys(): 
+          if configuration['DFT']:
+            print 'Using DFT, copying over launch script'
+            shutil.copy(get_launch_script_file(),configuration["rundir"]+'launch_script.sh')
   print('run config is ' + str(configuration))
   print(configuration['rundir'])
   GA_run = GA_run_defintion()

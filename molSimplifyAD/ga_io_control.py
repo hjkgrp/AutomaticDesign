@@ -170,6 +170,12 @@ def get_default_ligand_file():
     print('default ligands at' + ligand_list)
     return ligand_list
 ########################
+def get_launch_script_file(queue='SGE'):
+    ## returns default ligand input file
+    queue_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/sge_auto.sh")
+    return queue_file
+
+########################
 def process_new_run_input(path):
     ### import and check new run file
     ### note that exsistence of the file
