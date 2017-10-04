@@ -95,7 +95,7 @@ def submit_outstanding_jobs():
                         logger(path_dictionary['state_path'],str(datetime.datetime.now())
                            + " Giving up on job : " + str(jobs) + ' with '+ str(number_of_attempts) + ' attempts')
                         update_converged_job_dictionary(jobs,6) # mark job as abandoned 
-			gene,gen,slot,metal,ox,eq,ax1,ax2,spin,spin_cat,basename=translate_job_name(job)
+			gene,gen,slot,metal,ox,eq,ax1,ax2,spin,spin_cat,basename=translate_job_name(jobs)
                         update_current_gf_dictionary(gene,0) # zero out fitness
 
             else:

@@ -529,7 +529,7 @@ class GA_generation:
 def update_current_gf_dictionary(gene,fitness):
 	## set up environment:
 	path_dictionary = setup_paths()
-    	new_tree = tree_generation('temp tree')
+    	new_tree = GA_generation('temp tree')
     	 ## read in info
      	new_tree.read_state()
      	new_tree.gene_fitness_dictionary.update({gene:fitness})

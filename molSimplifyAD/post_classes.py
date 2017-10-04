@@ -43,6 +43,7 @@ class DFTRun:
         self.geopath = 'undef'
         self.init_geopath = 'undef'               
         ## diagnositcs
+        self.time = 'undef'
         self.progpath  = 'undef'
         self.geostatus = False
         self.thermo_status = False
