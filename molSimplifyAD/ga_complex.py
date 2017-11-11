@@ -246,7 +246,7 @@ class octahedral_complex:
                     ready_flag =  True
             print("trying to add " + str(new_ax_list))
             child.replace_axial(new_ax_list)
-        elif (lig_to_mutate == 2):
+        elif (lig_to_mutate == 3): ## metal mutations not used
             print('mutating metal')
             child._get_random_metal()
             print('mutating ox')
@@ -269,18 +269,22 @@ class octahedral_complex:
         if self.ax_dent == 1:
            liglist = (str([str(element).strip("'[]'") for element in (self.eq_ligands)]  + [str(element).strip("'[]'") for element in self.ax_ligands]).strip("[]")).replace("'","")
            ligloc = 1
-           ligalign = 1
+           ligalign = 0
         elif self.ax_dent == 2:
             half = len(self.eq_ligands)/2
             liglist = (str([str(element).strip("'[]'") for element in (self.eq_ligands[:half])] + [str(self.ax_ligands[0]).strip("'[]'")] + [str(element).strip("'[]'") for element in (self.eq_ligands[half:])]).strip("[]")).replace("'", "")
             ligloc = 'false'
-            ligalign = 'false'
+            ligalign = 0
         ## disable force field opt
         ## if not DFT
         if isDFT():
             ff_opt = 'A'
-        else:
-            ff_opt = 'N'
+        else: # optional denticity based FF control
+            if max([self.ax_dent,self.eq_dent]) ==1:
+                ff_opt = 'N'
+            else:
+                ff_opt = 'N'
+
      #       print('forcefield is OFF')
         geometry = "oct"
         ms_dump_path = path_dictionary["molsimplify_inps"] +  'ms_output.txt'
@@ -290,18 +294,36 @@ class octahedral_complex:
 
         if not (geo_exists):
                 print('generating '+ str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and'  + str(self.ax_ligands))
-                with open(ms_dump_path,'a') as ms_pipe:
-                    call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +liglist,'-ligocc 1,1,1,1,1,1',
-                             '-rundir ' +"'"+ rundirpath.rstrip("/")+"\n'",'-keepHs yes,yes,yes,yes,yes,yes','-jobdir','temp',
-                             '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
-                             '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ ox_string,
-                             '-qccode TeraChem','-runtyp energy','-method UDFT',"-ffoption "+ff_opt])
-#                    print(call),
+                
+                try:
+                    print('1st try')
+                    with open(ms_dump_path,'a') as ms_pipe:
+                        call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +liglist,'-ligocc 1,1,1,1,1,1',
+                                 '-rundir ' +"'"+ rundirpath.rstrip("/")+"\n'",'-keepHs yes,yes,yes,yes,yes,yes','-jobdir','temp',
+                                 '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
+                                 '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ ox_string,
+                                 '-qccode TeraChem','-runtyp energy','-method UDFT',"-ffoption "+ff_opt])
+                        print(call)
+                        p2 = subprocess.call(call,stdout = ms_pipe,shell=True)#
+                    assert(os.path.isfile(rundirpath + 'temp'+'/' + mol_name + '.molinp'))
+ 
+                    shutil.move(rundirpath + 'temp'+'/' + mol_name + '.molinp', path_dictionary["molsimplify_inps"]+'/' + mol_name + '.molinp')
+                    shutil.move(rundirpath + 'temp'+'/' + mol_name + '.xyz', path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz')
+                except:
+                    print('2nd try')
+                    with open(ms_dump_path,'a') as ms_pipe:
+                        call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +liglist,'-ligocc 1,1,1,1,1,1',
+                                 '-rundir ' +"'"+ rundirpath.rstrip("/")+"\n'",'-keepHs yes,yes,yes,yes,yes,yes','-jobdir','temp',
+                                 '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
+                                 '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ ox_string,
+                                 '-qccode TeraChem','-runtyp energy','-method UDFT',"-ffoption "+'A','-ff UFF'])
+                        print(call)
+                        p2 = subprocess.call(call,stdout = ms_pipe,shell=True)#stdout = ms_pipe
+                        print('Error: QVVVF failure')
+                        sardines
+                    shutil.move(rundirpath + 'temp'+'/' + mol_name + '.molinp', path_dictionary["molsimplify_inps"]+'/' + mol_name + '.molinp')
+                    shutil.move(rundirpath + 'temp'+'/' + mol_name + '.xyz', path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz')
 
-                    p2 = subprocess.call(call,shell=True)#stdout = ms_pipe
-
-                shutil.move(rundirpath + 'temp'+'/' + mol_name + '.molinp', path_dictionary["molsimplify_inps"]+'/' + mol_name + '.molinp')
-                shutil.move(rundirpath + 'temp'+'/' + mol_name + '.xyz', path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz')
                 with open(rundirpath + 'temp' +'/' + mol_name + '.report') as report_f:
                     for line in report_f:
                             if ("pred_split" in line):
@@ -327,6 +349,7 @@ class octahedral_complex:
                     newf.writelines("scrdir scr/sp/" +mol_name+ "\n")
                 os.remove(rundirpath + 'temp/' + mol_name + '.in')
         else:
+            
             ANN_split = False
             ANN_distance = False
         return jobpath,mol_name,ANN_split,ANN_distance
