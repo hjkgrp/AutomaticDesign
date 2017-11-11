@@ -103,12 +103,15 @@ def process_runs_sp(LS_runs,HS_runs):
             final_results[this_gene].HS_time = str(float(HS_run.time))
             final_results[this_gene].HS_status = HS_run.status
             final_results[this_gene].LS_status = LS_run.status
-    
+            final_results[this_gene].HS_time = HS_run.time
+            final_results[this_gene].HS_time = HS_run.time
+ 
             final_results[this_gene].process()
             final_results[this_gene].HS_ss_act = HS_run.ss_act
             final_results[this_gene].LS_ss_act = LS_run.ss_act
             final_results[this_gene].LS_ss_target = LS_run.ss_target
             final_results[this_gene].HS_ss_target = HS_run.ss_target
+
             final_results[this_gene].max_spin_error =max(abs( float(HS_run.ss_target) - float(HS_run.ss_act)),abs(float(LS_run.ss_target - LS_run.ss_act)))
 
         else:
