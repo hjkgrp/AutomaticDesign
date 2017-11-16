@@ -22,6 +22,7 @@ class GA_run_defintion:
                       scoring_function = 'split',
                       split_parameter = 15.0,
                       distance_parameter = 1.0,
+                      max_jobs = 20,
                       monitor_diversity=True,monitor_distance= True,**KWARGS):
             ## first time start-up function
 #                print('configuring status dictionaty')
@@ -41,7 +42,8 @@ class GA_run_defintion:
                               'distance_parameter':distance_parameter,
                               'split_parameter':split_parameter,
                               'monitor_diversity':monitor_diversity,
-                              'monitor_distance':monitor_distance}
+                              'monitor_distance':monitor_distance,
+                              'max_jobs':max_jobs}
         def serialize(self):
             ## serialize run info
             print('serialziing to '+str(self.config['rundir'] + '.gaconfig'))
