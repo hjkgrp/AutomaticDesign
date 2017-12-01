@@ -14,6 +14,10 @@ class GA_run_defintion:
 
         def configure(self,DFT = False,
                       rundir = False,
+                      runtype = "split",
+                      optimize = False,
+                      thermo = False,
+                      solvent = False,
                       liglist = False,
                       queue_type = 'SGE',
                       queue_reference = False,
@@ -30,6 +34,10 @@ class GA_run_defintion:
                     monitor_distance = False
                 self.config = {'DFT':DFT,
                               'rundir':rundir,
+                              'runtype':runtype,
+                              'optimize':optimize,
+                              'thermo':thermo,
+                              'solvent':solvent,                              
                               'liglist':liglist,
                               'queue_type':queue_type,
                               'queue_reference':queue_reference,
@@ -44,16 +52,14 @@ class GA_run_defintion:
                               'monitor_distance':monitor_distance}
         def serialize(self):
             ## serialize run info
-            print('serialziing to '+str(self.config['rundir'] + '.gaconfig'))
-            with open(self.config['rundir'] + '.gaconfig', 'w') as handle:
+            print('serialziing to '+str(self.config['rundir'] + '.madconfig'))
+            with open(self.config['rundir'] + '.madconfig', 'w') as handle:
                 json.dump(self.config,handle)
         def deserialize(self,path):
             ## read run info
             with open(path,'r') as instream:
                 ob = json.load(instream)
             self.config = ob
-#            print('read in data:')
-#            print(self.config)
         def create_scripts(self):
             ## copy queue info and modify as needed
             if self.config['DFT']:
@@ -143,9 +149,9 @@ def checkinput(args):
         if not os.path.isdir(str(args.resume)):
             print 'Warning: no resume directory given or does not exist, assume current dir: ' + os.getcwd()
             args.resume = os.getcwd() + '/'  
-        print('looking for '+ args.resume + '.gaconfig')
-        if not os.path.isfile(args.resume + '.gaconfig'):
-            print  'Error: no .gaconfig file in ' + args.resume + ', aborting run'
+        print('looking for '+ args.resume + '.madconfig')
+        if not os.path.isfile(args.resume + '.madconfig'):
+            print  'Error: no .madconfig file in ' + args.resume + ', aborting run'
             exit() 
     if args.reps:
         try:

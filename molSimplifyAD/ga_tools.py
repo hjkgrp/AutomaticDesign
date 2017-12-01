@@ -9,7 +9,7 @@ def ensure_dir(dir_path):
 ########################
 def get_run_dir():
     GA_run = GA_run_defintion()
-    GA_run.deserialize('.gaconfig')
+    GA_run.deserialize('.madconfig')
     rdir = GA_run.config['rundir']
     return rdir
 ########################
@@ -30,7 +30,7 @@ def get_metals():
 ########################
 def get_run_dir():
     GA_run = GA_run_defintion()
-    GA_run.deserialize('.gaconfig')
+    GA_run.deserialize('.madconfig')
     rdir = GA_run.config['rundir']
     return rdir
 ########################
@@ -40,14 +40,14 @@ def get_ox_states(): # could be made metal dependent like spin
 ########################
 def spin_dictionary():
     metal_spin_dictionary = {'co':{2:[2,4],3:[1,5]},
-                              'cr':{2:[1,5],3:[2,4]},
+                              'cr':{2:[3,5],3:[2,4]},
                               'fe':{2:[1,5],3:[2,6]},
                               'mn':{2:[2,6],3:[3,5]}}
     return metal_spin_dictionary
 ########################
 def isDFT():
     GA_run = GA_run_defintion()
-    GA_run.deserialize('.gaconfig')
+    GA_run.deserialize('.madconfig')
     if GA_run.config["DFT"]:
         return True
     else:
@@ -64,9 +64,13 @@ def translate_job_name(job):
     slot = ll[3]
     metal = int(ll[4])
     ox = int(ll[5])
-    eq = int(ll[6])
-    ax1 = int(ll[7])
-    ax2 = int(ll[8])
+    eq_ind = int(ll[6])
+    ax1_ind = int(ll[7])
+    ax2_ind = int(ll[8])
+    ligands_dict = get_ligands()
+    eqlig = ligands_dict[int(eqlig_ind)][0]
+    axlig1 = ligands_dict[int(axlig1_ind)][0]
+    axlig2 = ligands_dict[int(axlig2_ind)][0]
     spin = int(ll[9])
     metal_list = get_metals()
     metal_key = metal_list[metal]
@@ -80,7 +84,7 @@ def translate_job_name(job):
         print('spin assigned as ll[9]  = ' + str(spin) + ' on  ' +str(ll))
         print('critical erorr, unknown spin: '+ str(spin))
     gene = "_".join([str(metal),str(ox),str(eq),str(ax1),str(ax2)])
-    return gene,gen,slot,metal,ox,eq,ax1,ax2,spin,spin_cat,basename
+    return gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,basename
 
 ########################
 
@@ -115,119 +119,8 @@ def advance_paths(path_dictionary,generation):
 ########################
 
 def get_ligands():
-
-    # test_ligands_list =[['thiocyanate',[1]], #0
-                       # ['chloride',[1]],#1
-                       # ['water',[1]],#2
-                       # ['acetonitrile',[1]],#3
-                       # ['ethyl',[1]],#4
-                       # ['imidazole',[1]],#5
-                       # ['ammonia',[1]],#6
-                       # ['tbisc',[1]],#7
-                       # ['pyr',[1]],#8
-                       # ['pisc',[1]],#9
-                       # ['misc',[1]],#10
-                       # ['benzene',[1]],#11
-                       # ['isothiocyanate',[1]],#12
-                       # ['methylamine',[1]],#13
-                       # ['cyanide',[1]],#14
-                       # ['carbonyl',[1]],#15
-                       # ['misc',[1]]] #16
-    # bid_ligands_list = [['cat',[2]], #0
-                    # ['mec',[2]], #1
-                    # ['tbuc',[2]], #2
-                    # ['bipy',[2]], #3
-                    # ['phosacidbipyridine',[2]], #4
-                    # ['ethOHbipyridine',[2]], #5
-                    # ['ethbipyridine',[2]], #6
-                    # ['mebipyridine',[2]], #7
-                    # ['diaminomethyl',[2]], #8
-                    # ['sulfacidbipyridine',[2]], #9
-                    # ['phen',[2]], #10
-                    # ['en',[2]], #11
-                    # ['acac',[2]], #12
-                    # ['ox',[2]], #13
-                    # ['water',[1]]] #14
-    # ligands_list = [['pisc',[1]], #0
-                    # ['misc',[1]], #1
-                    # ['tbisc',[1]], #2
-                    # ['benzisc',[1]], #3
-                    # ['phenisc',[1]], #4
-                    # ['cat',[2]], #5
-                    # ['mec',[2]], #6
-                    # ['tbuc',[2]], #7
-                    # ['pyridine',[1]], #8
-                    # ['chloropyridine',[1]], #9
-                    # ['cyanopyridine',[1]], #10
-                    # ['thiopyridine',[1]], #11
-                    # ['bipy',[2]], #12
-                    # ['phosacidbipyridine',[2]], #13
-                    # ['ethOHbipyridine',[2]], #14
-                    # ['ethbipyridine',[2]], #15
-                    # ['mebipyridine',[2]], #16
-                    # ['diaminomethyl',[2]], #17
-                    # ['sulfacidbipyridine',[2]], #18
-                    # ['phen',[2]], #19
-                    # ['en',[2]], #20
-                    # ['porphyrin',[4]], #21
-                    # ['cyanoaceticporphyrin',[4]], #22
-                    # ['cyanide',[1]], #23
-                    # ['carbonyl',[1]], #24
-                    # ['isothiocyanate',[1]], #25
-                    # ['ammonia',[1]], #26
-                    # ['water',[1]], #27
-                    # ['acac',[2]], #28
-                    # ['ox',[2]], #29
-                    # ['furan',[1]], #30
-                    # ['methylamine',[1]]] #31
-    # mix_ligands_list = [['pisc',[1]], #0
-                        # ['ammonia',[1]], #1
-                        # ['butylamine',[1]], #2
-                        # ['nitrosyl',[1]]] #3
-    # mn2_ligands_list =[['pisc',[1]], #0
-                       # ['misc',[1]], #1
-                       # ['tbisc',[1]], #2
-                       # ['benzisc',[1]], #3
-                       # ['phenisc',[1]], #4
-                       # ['porphyrin',[4]], #5
-                       # ['cyanoaceticporphyrin',[4]], #6
-                       # ['cyanide',[1]], #7
-                       # ['pyridine',[1]], #8
-                       # ['chloropyridine',[1]], #9
-                       # ['cyanopyridine',[1]], #10
-                       # ['thiopyridine',[1]], #11
-                       # ['bipy',[2]], #12
-                       # ['phosacidbipyridine',[2]], #13
-                       # ['ethOHbipyridine',[2]], #14
-                       # ['ethbipyridine',[2]], #15
-                       # ['mebipyridine',[2]], #16
-                       # ['diaminomethyl',[2]], #17
-                       # ['sulfacidbipyridine',[2]], #18
-                       # ['carbonyl',[1]]] #19
-    # co3_ligands_list = [['pisc',[1]], #0
-                        # ['misc',[1]], #1
-                        # ['tbisc',[1]], #2
-                        # ['benzisc',[1]], #3
-                        # ['phenisc',[1]], #4
-                        # ['cat',[2]], #5
-                        # ['mec',[2]], #6
-                        # ['tbuc',[2]], #7
-                        # ['pyridine',[1]], #8
-                        # ['chloropyridine',[1]], #9
-                        # ['cyanopyridine',[1]], #10
-                        # ['thiopyridine',[1]], #11
-                        # ['cyanide',[1]], #12
-                        # ['carbonyl',[1]], #13
-                        # ['isothiocyanate',[1]], #14
-                        # ['ammonia',[1]], #15
-                        # ['water',[1]], #16
-                        # ['acac',[2]], #17
-                        # ['ox',[2]], #18
-                        # ['furan',[1]], #19
-                        # ['tetrahydrofuran',[1]], #20
-                        # ['methylamine',[1]]] #21
     GA_run = GA_run_defintion()
-    GA_run.deserialize('.gaconfig')
+    GA_run.deserialize('.madconfig')
     ligands_list = GA_run.config['liglist']
     return ligands_list
 ########################

@@ -16,7 +16,7 @@ from molSimplifyAD.process_scf import *
 def launch_job(job,sub_num):
     ## code to submit to queue
     print('lauching ' + job + ' sub number: '+ str(sub_num))
-    gene,gen,slot,metal,ox,eq,ax1,ax2,spin,spin_cat,basename = translate_job_name(job)
+    gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,basename = translate_job_name(job)
 
     base_name = os.path.basename(job).strip('in')
     if sub_num > 1:
@@ -95,7 +95,7 @@ def submit_outstanding_jobs():
                         logger(path_dictionary['state_path'],str(datetime.datetime.now())
                            + " Giving up on job : " + str(jobs) + ' with '+ str(number_of_attempts) + ' attempts')
                         update_converged_job_dictionary(jobs,6) # mark job as abandoned 
-			gene,gen,slot,metal,ox,eq,ax1,ax2,spin,spin_cat,basename=translate_job_name(jobs)
+                        gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,basename=translate_job_name(jobs)
                         update_current_gf_dictionary(gene,0) # zero out fitness
 
             else:
@@ -122,7 +122,7 @@ def check_queue_for_live_jobs():
     for jobs in live_job_dictionary.keys():
             this_job_id = live_job_dictionary[jobs]
             this_status = is_job_live(this_job_id)
-            gene,gen,slot,metal,ox,eq,ax1,ax2,spin,spin_cat,basename =  translate_job_name(jobs)
+            gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,basename =  translate_job_name(jobs)
             if this_status:
                 counter += 1
                 print('recording as live:',jobs,this_job_id)

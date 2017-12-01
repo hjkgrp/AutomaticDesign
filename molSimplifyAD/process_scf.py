@@ -7,30 +7,13 @@ import math
 import random
 import string
 import numpy
-import pybel
 from molSimplifyAD.ga_tools import *
 from molSimplifyAD.post_classes import *
 
-
 ########### UNIT CONVERSION
-HF_to_Kcal_mol = 627.503
-def maximum_ML_dist(mol):
-    core = mol.getAtom(mol.findMetal()).coords()
-    max_dist = 0
-    for atom_inds in mol.getBondedAtoms(mol.findMetal()):
-        dist = distance(core,mol.getAtom(atom_inds).coords())
-        if (dist > max_dist):
-            max_dist = dist
-    return max_dist
-
-def minimum_ML_dist(mol):
-    core = mol.getAtom(mol.findMetal()).coords()
-    min_dist = 1000
-    for atom_inds in mol.getBondedAtoms(mol.findMetal()):
-        dist = distance(core,mol.getAtom(atom_inds).coords())
-        if (dist < min_dist) and (dist > 0):
-            min_dist = dist
-    return min_dist
+HF_to_Kcal_mol = 627.509###
+eV_to_Kcal_mol = 23.06055## 
+###########################
 
 def scfextract(a_run,list_of_props):
     extrct_props = []
@@ -42,7 +25,7 @@ def scfextract(a_run,list_of_props):
 def test_terachem_sp_convergence(job):
     ### get paths
     path_dictionary = setup_paths()
-    gene,gen,slot,metal,ox,eq,ax1,ax2,spin,spin_cat,basename = translate_job_name(job)
+    gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,basename = translate_job_name(job)
     ### flag
     converged =  False
     ## set up up
@@ -80,6 +63,7 @@ def test_terachem_sp_convergence(job):
     return this_run
 
 def process_runs_sp(LS_runs,HS_runs):
+    ## this is for GA only 
     final_results=dict()
     matched = False
     number_of_matches  = 0
@@ -117,5 +101,310 @@ def process_runs_sp(LS_runs,HS_runs):
         else:
             print('unmatched ID: '+ str(this_gene) + ' files ' + str(LS_run.name)+ ' has no partner' )
     return final_results
+def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
+    final_results=dict()
+    matched = False
+    number_of_matches  = 0
+    print('processing all converged runs')
+    for runkeys in all_runs.keys():
+        skip = False
+        duplication = False
+        this_run = all_runs[runkeys]
+        this_name = "_".join([str(this_run.metal),'eq',str(this_run.eqlig),'ax1',str(this_run.axlig1),'ax2',str(this_run.axlig2),'ahf',str(this_run.alpha)])
+                ### add alpha value to list owned by this_comp:
+                
+        if this_name not in final_results.keys():
+            ## need to create a new holder to store this gene
+            this_comp = Comp(this_name)
+            this_comp.set_properties(this_run)
+            
+        else:
+            this_comp = final_results[this_name]
+        print(runkeys)
+        this_comp.attempted += 1 # advance number of attempts
+        ## get basic details
+        this_metal = str(this_run.metal)
+        this_ox = int(this_run.ox)
+        metal_spins  = local_spin_dictionary[this_metal][this_ox]
+        if this_run.spin not in metal_spins:
+           print('ERROR! not in metal spins : ' +  str(this_run) + ' not in ' +  str(metal_spins))
+        else:
+            spin_ind = metal_spins.index(this_run.spin)
+            if spin_ind == 0:
+                 spin_cat = 'LS'
+            else:
+                spin_cat = 'HS'
+        print('spin ind is found to be ' + str(this_run.spin) + ' interpretted as ' + str(spin_cat))
+        ## check if this a duplicate:
+        this_attribute = "_".join(['ox',str(this_ox),spin_cat,'converged'])
+        if getattr(this_comp,this_attribute):
+            duplication = True
+            print('DUPLICATION at  ' +str(this_name))
+            if this_ox == 2:
+                this_ox2RN = this_run.number
+                old_ox2RN = this_comp.ox2RN
+                if this_ox2RN <= old_ox2RN:
+                    skip = True
+                    ## use this one, get rid of the old one 
+            else:
+                this_ox3RN = this_run.number
+                old_ox3RN = this_comp.ox3RN
+                if this_ox3RN <= old_ox3RN:
+                    skip = True
+        if not skip:
+            if duplication:
+                # set back conv counter
+                this_comp.convergence -= 1
+                if this_run.coord == 6:
+                    ## replace the descriptor if set
+                    this_comp.set_desc = False
+            
+            ## find oxidation state:
+            if this_ox == 2:
+                 this_comp.ox2RN = max(this_run.number,this_comp.ox2RN)
+            else:
+                 this_comp.ox3RN = max(this_run.number,this_comp.ox3RN)
+            if this_comp.gene =="undef":
+                this_comp.gene = this_run.gene
+            if this_run.converged and this_run.coord == 6:
+                this_comp.convergence += 1
+            if this_run.coord == 6 and not this_comp.set_desc:
+                try:
+                    this_run.mol.writexyz('used_geos/'+this_name+'.xyz')
+                    this_comp.axlig1 = this_run.axlig1
+                    this_comp.axlig2 = this_run.axlig2
+                    this_comp.eqlig = this_run.eqlig
+                    this_comp.set_rep_mol(this_run)
+                    this_comp.get_descriptor_vector(loud=False,name=this_name)
+                except:
+                    this_run.mol.writexyz('bad_geos/'+this_name+'.xyz')
+                    this_comp.convergence -= 1
+                    this_run.coord = 'error'
+            for props in list_of_prop_names:
+                     this_attribute = "_".join(['ox',str(this_ox),spin_cat,props])
+                     #print(this_attribute)
+                     setattr(this_comp,this_attribute,getattr(this_run,props))
+            if this_run.coord == 6 and spin_cat == 'HS' and this_ox == 2:
+                this_run.mol.writexyz('coulomb_geos/'+this_name+'.xyz')
+                this_comp.get_coulomb_descriptor(size=85)
+        final_results.update({this_name:this_comp})
+    return final_results
+    
+def check_solvent_file(this_run):
+	solvent_contribution = False
+	found_solvent_energy = False
+	found_solvent_cont = False
+	if os.path.exists(this_run.solvent_outpath):
+		### file is found, check if converged
+		with open(this_run.solvent_outpath) as f:
+			sol_data=f.readlines()
+			for i,lines in enumerate(sol_data):
+				if str(lines).find('FINAL ENERGY') != -1:
+					found_solvent_energy = True
+					print('found solvent energy ' + this_run.name)
+				if str(lines).find('C-PCM contribution ') != -1:
+						solvent_contribution =str(lines.split()[4]).split(':')[1]
+						found_solvent_cont = True
+						print('found solvent contri ' + this_run.name)
+        			if str(lines).find('Total processing time') != -1:
+	        			this_run.solvent_time = str(lines.split()[3])
+
+        if (found_solvent_energy == True) and (found_solvent_cont == True):
+			this_run.solvent_cont = solvent_contribution
+	return(this_run)
+    
+def check_thermo_file(this_run):
+	found_vib_correction = False
+	found_grad_error = False
+	vib_correction = False
+	if os.path.exists(this_run.thermo_outpath):
+		with open(this_run.thermo_outpath) as f:
+			thermo_data=f.readlines()
+			for i,lines in enumerate(thermo_data):
+				if str(lines).find('Total Vibrational Energy Correction') != -1:
+					vib_correction =str(lines.split()[5])
+					found_vib_correction = True
+				        print('found vib correction ' + this_run.name)
+			        if str(lines).find('imaginary frequencies') != -1:
+				        this_run.imag =str(lines.split()[0])
+		        		print('found imag ' + this_run.name)
+			        	print(lines)
+        			if str(lines).find('Maximum component of gradient is too large') != -1:
+	        			this_run.thermo_status ="GRAD_TOO_LARGE"
+		        		found_grad_error = True
+			        	print('found GRAD error ' + this_run.name)
+				        print(lines)
+        			if str(lines).find('Total processing time') != -1:
+	        			this_run.thermo_time = str(lines.split()[3])
+
+		if (found_vib_correction == True) and (found_grad_error == False):
+			this_run.thermo_cont = vib_correction
+		if (found_vib_correction == True) and (found_grad_error == True):
+			this_run.thermo_cont = "grad_error"
+			this_run.comment +="grad_error\n"
+
+            
+
+	return(this_run)
+
+def check_init_sp(this_run):
+    found_data = False
+    if os.path.exists(this_run.init_outpath):
+        with open(this_run.outpath) as f: 
+            data=f.readlines()
+            found_conv =False 
+            found_data =False
+            found_time = False 
+            for i,lines in enumerate(data):
+                if str(lines).find('FINAL ENERGY') != -1:
+                    energy =str(lines.split()[2])
+                    found_data = True
+        if (found_data == True):
+			this_run.init_energy = energy
+    return this_run
+def check_mopac(this_run):
+    print('hello')
+    print(this_run.moppath)
+    if os.path.exists(this_run.moppath):
+        print('mop file exists')
+        with open(this_run.moppath) as f:
+            conv_flag =  False
+            data=f.readlines()
+            found_geo = False
+            this_geo = list()
+            mop_converged = False
+            in_cord = False
+            for i,lines in enumerate(data):
+                if str(lines).find('TOTAL ENERGY') != -1:
+                    this_run.mop_energy =str(float(lines.split()[3])*eV_to_Kcal_mol)
+                if str(lines).find('Converged!') != -1:
+                    unconv = 0
+                if  (str(lines).find('SCF FIELD WAS ACHIEVED ') != -1):
+                    conv_flag =  True
+                    mop_converged = True
+                if (str(lines).find('CARTESIAN COORDINATES') != -1) and  (conv_flag):
+                    in_cord = True
+                    print('found mopac geo')
+                if in_cord:
+                    if (str(lines).find('Empirical Formula') != -1):
+                        in_cord =  False
+                        found_geo = True
+                        print('final line of mopac of geo')
+                    else:
+                        if lines.strip():
+                            this_geo.append(list(lines[1:]))
+        if mop_converged and found_geo:
+            with open(this_run.mop_geopath,'w') as f:
+                f.write(str(int(len(this_geo))-1)+'\n')
+                f.write('#'+this_run.name+' mopac \n')
+                for i,elements in enumerate(this_geo):
+                    if not i==0:
+                        line_tw = ''.join(elements[5:])
+                        line_tw= line_tw.lstrip()
+                        f.write(line_tw)
+            this_run.obtain_mopac_mol()
+            this_run.check_coordination()
+            
 
 
+
+def test_terachem_go_convergence(this_run):
+    print('have access to function')
+    if not this_run.logpath:
+        this_run.logpath = get_run_dir()
+    print('logging too ' +'this_run.logpath')
+    if os.path.exists(this_run.geopath):
+        this_run.geo_exists = True
+    else:
+        this_run.comment += 'no geo found\n'
+    if os.path.exists(this_run.outpath):
+        read_terachem_go_output(this_run)
+    else:
+        this_run.comment += ' no outfile found\n'
+    if this_run.converged:
+        logger(this_run.logpath, str(this_run.name) + ' run converged ' +  ' and now testing geo '+this_run.geopath )
+        # check the geo
+        if os.path.exists(this_run.geopath):
+                # get mol3D file
+                this_run.obtain_mol3d()
+                # check if inidicators are good
+                # check coordinattion
+                this_run.check_coordination()
+                logger(this_run.logpath, str(this_run.name) + ' cooridination is ' +str(this_run.coord))
+                # ML distances, geo
+                this_run.obtain_ML_dists()
+                
+                ## check intial conditions:
+                if os.path.exists(this_run.init_geopath):
+                    this_run.obtain_init_mol3d()
+                    this_run.obtain_rsmd() # copmare to initial
+        if this_run.coord == 6 and this_run.converged:
+            this_run.status = 0
+            if not this_run.tspin == this_run.spin:
+                print(this_run.tspin)
+                print(this_run.spin)
+                sardines
+                
+        else:
+            this_run.status = 1
+            this_run.comment += 'coord not good ' +str(this_run.coord) +'\n '
+            
+
+def read_terachem_go_output(this_run):
+
+
+    found_conv =False 
+    found_data =False
+    converged = False
+    found_time = False 
+    found_init = False
+    if os.path.exists(this_run.outpath):
+        ### file is found, check if converged
+        with open(this_run.outpath) as f:
+            this_run.attempted  = True
+            data=f.readlines()
+            for i,lines in enumerate(data):
+                if str(lines).find('TeraChem v') != -1:
+                    this_run.terachem_version = lines.split()[2]
+                    print('TeraChem Version: ' + this_run.terachem_version)
+                if str(lines).find('Hg Version') != -1:
+                    this_run.terachem_detailed_version = lines.split()[3]
+                    print('TeraChem Hg build: ' + this_run.terachem_detailed_version)
+                if str(lines).find('Using basis set') != -1:
+                    this_run.basis = lines.split()[3]
+                    print('TeraChem basis: ' + this_run.basis)
+                if str(lines).find('Spin multiplicity') != -1:
+                    this_run.tspin = int(lines.split()[2])
+                    print('TeraChem spin: ' + str(this_run.tspin))
+                if str(lines).find('Total charge:') != -1:
+                    this_run.charge = int(lines.split()[2])
+                    print('TeraChem charge: ' + str(this_run.charge))
+                if str(lines).find('Alpha level shift') != -1:
+                    this_run.alpha_level_shift = float(lines.split()[3])
+                    print('Alpha level: ' + str(this_run.alpha_level_shift)  )
+                if str(lines).find('Beta level shift') != -1:
+                    this_run.beta_level_shift = float(lines.split()[3])
+                if str(lines).find('DFT Functional requested:') != -1:
+                    this_run.functional = lines.split()[3]                    
+                    print('TC functional: ' + this_run.functional  )
+                if (str(lines).find('Optimization Converged.') != -1) or (str(lines).find('Converged!') != -1):
+                   found_conv = True
+                if str(lines).find('FINAL ENERGY') != -1:
+                    this_run.energy =str(lines.split()[2])
+                    found_data = True
+                    if not found_init:
+                        this_run.init_energy = str(lines.split()[2])
+                        found_init = True
+                if str(lines).find('Total processing time') != -1:
+                    this_run.time=str(lines.split()[3])
+                    found_time = True
+                if str(lines).find('SPIN S-SQUARED') != -1:
+                    this_str=(lines.split())
+                    this_run.ss_act =float( this_str[2])
+                    this_run.ss_target = float(this_str[4].strip('()'))
+    else:
+        this_run.attempted  = False
+    if (found_data == True) and (found_time == True) and (found_conv == True):
+        this_run.converged = True
+        
+        
