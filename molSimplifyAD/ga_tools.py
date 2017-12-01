@@ -13,6 +13,12 @@ def get_run_dir():
     rdir = GA_run.config['rundir']
     return rdir
 ########################
+def get_current_GA():
+    GA_run = GA_run_defintion()
+    GA_run.deserialize('.gaconfig')
+    return GA_run
+########################
+
 def find_live_jobs():
     path_dictionary = setup_paths()
     live_job_dictionary = dict()

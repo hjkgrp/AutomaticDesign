@@ -17,7 +17,6 @@ def launch_job(job,sub_num):
     ## code to submit to queue
     print('lauching ' + job + ' sub number: '+ str(sub_num))
     gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,basename = translate_job_name(job)
-
     base_name = os.path.basename(job).strip('in')
     if sub_num > 1:
         print(' start rescue')
@@ -25,7 +24,11 @@ def launch_job(job,sub_num):
 #        rescue_cmd_str = './gibraltar_rescue_.sh ' + job
 #        p_res = subprocess.Popen(cmd_str,shell=True,stdout=subprocess.PIPE)
     ## could call different script if resub? currently only calls the same
-    cmd_str ='qsub -j y -N  ' +'GA_'+ str(gene) + '_'+str(spin) + ' ' +get_run_dir() + 'launch_script.sh ' + job
+    name  = 'GA_'+ str(gene) + '_'+str(spin)
+    opath = get_run_dir()+name + '.o'
+    epath = get_run_dir()+name + '.e'
+    cmd_str ='qsub -j y -N  ' +name + ' -o ' + opath + ' -e '+epath +' ' +get_run_dir() + 'launch_script.sh ' + job
+    print(cmd_str)
     p_sub = subprocess.Popen(cmd_str,shell=True,stdout=subprocess.PIPE)
     ll = p_sub.communicate()[0]
     ll =  ll.split()
@@ -47,6 +50,8 @@ def is_job_live(job_id):
 ########################
 def submit_outstanding_jobs():
     print('submitting outstanding jobs')
+    ## load GA
+    this_GA = get_current_GA()
     ## set up environment:        
     path_dictionary = setup_paths()
     ## previously dispatched jobs:
@@ -61,7 +66,7 @@ def submit_outstanding_jobs():
 
     sub_count = 0;
     resub_count = 0;
-    lmax = 20  #number of live jobs
+    lmax = this_GA.config['max_jobs']  #number of live jobs
     if number_live_jobs < lmax:
         print('space in queue for ' + str(lmax - number_live_jobs) + ' new jobs')
         for jobs in joblist:
