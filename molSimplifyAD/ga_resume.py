@@ -7,7 +7,7 @@ from molSimplifyAD.ga_init import *
 
 
 def resume_design():
-    path =get_run_dir()+ '.gaconfig'
+    path =get_run_dir()+ '.madconfig'
     path_dictionary = setup_paths()
     GA_run = GA_run_defintion()
     GA_run.deserialize(path)

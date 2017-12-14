@@ -17,7 +17,7 @@ def initialize_GA_calc(path = ''):
         GA_run = GA_run_defintion()
         
 
-        GA_run.deserialize(path + '.gaconfig')
+        GA_run.deserialize(path + '.madconfig')
         
         path_dictionary = setup_paths()
         

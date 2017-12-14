@@ -18,7 +18,7 @@ def resume_run(args):
     its = 0
     while its < reps:
       GA_run = GA_run_defintion()
-      GA_run.deserialize(os.getcwd()+'/.gaconfig')
+      GA_run.deserialize(os.getcwd()+'/.madconfig')
       path_dictionary = setup_paths()
       print(GA_run.config)
       if GA_run.config['DFT']:

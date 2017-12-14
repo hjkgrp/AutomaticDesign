@@ -27,6 +27,7 @@ class GA_run_defintion:
                       split_parameter = 15.0,
                       distance_parameter = 1.0,
                       max_jobs = 20,
+                      exchange = 20,
                       monitor_diversity=True,monitor_distance= True,**KWARGS):
             ## first time start-up function
 #                print('configuring status dictionaty')
@@ -46,6 +47,7 @@ class GA_run_defintion:
                               'ncross':ncross,
                               'maxgen':maxgen,
                               'pmut':pmut,
+                              'exchange':exchange,
                               'scoring_function':scoring_function,
                               'distance_parameter':distance_parameter,
                               'split_parameter':split_parameter,
@@ -114,7 +116,7 @@ def process_ligands_file(path):
                 print('understanding ' + str(this_lig)+' as SIMLES' )
                 this_catom =  this_line.strip('\n').split(' ')[1:]
                 #print(this_catom)
-                ligands_list.append([[this_lig,this_catom],int(this_dent)])
+                ligands_list.append([[this_lig,this_catom],[int(this_dent)]])
 
     #print(ligands_list)
     return ligands_list
@@ -187,11 +189,11 @@ def get_launch_script_file(queue='SGE'):
 def process_new_run_input(path):
     ### import and check new run file
     ### note that exsistence of the file
-    ### is alaradya checked in checkinput above
+    ### is already checked in checkinput above
     
     configuration = dict()
     with open(path,'r') as f:
- #       try:
+        try:
             for line in f:
                 if line.strip():
                     if len(line.split())==2:
@@ -217,10 +219,9 @@ def process_new_run_input(path):
                     else:
                         print('Ignoring unknown input line with wrong length : ' + str(line)  )
     
-    
-        #except:
-#            print('Error: processing ' +str(path) + ' failed. Please enusre')
-#            print( ' the file contains one keyword (space) value per line.')
+        except:
+            print('Error: processing ' +str(path) + ' failed. Please enusre')
+            print( ' the file contains one keyword (space) value per line.')
     return configuration
     
     

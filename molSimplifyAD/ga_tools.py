@@ -15,7 +15,7 @@ def get_run_dir():
 ########################
 def get_current_GA():
     GA_run = GA_run_defintion()
-    GA_run.deserialize('.gaconfig')
+    GA_run.deserialize('.madconfig')
     return GA_run
 ########################
 
@@ -65,14 +65,14 @@ def translate_job_name(job):
     base = base.strip("\n")
     basename = base.strip(".in")
     ll = (str(basename)).split("_")
-    print(ll)
+    #print(ll)
     gen = ll[1]
     slot = ll[3]
     metal = int(ll[4])
     ox = int(ll[5])
-    eq_ind = int(ll[6])
-    ax1_ind = int(ll[7])
-    ax2_ind = int(ll[8])
+    eqlig_ind = int(ll[6])
+    axlig1_ind = int(ll[7])
+    axlig2_ind = int(ll[8])
     ligands_dict = get_ligands()
     eqlig = ligands_dict[int(eqlig_ind)][0]
     axlig1 = ligands_dict[int(axlig1_ind)][0]
@@ -89,8 +89,8 @@ def translate_job_name(job):
     else:
         print('spin assigned as ll[9]  = ' + str(spin) + ' on  ' +str(ll))
         print('critical erorr, unknown spin: '+ str(spin))
-    gene = "_".join([str(metal),str(ox),str(eq),str(ax1),str(ax2)])
-    return gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,basename
+    gene = "_".join([str(metal),str(ox),str(eqlig_ind),str(axlig1_ind),str(axlig2_ind)])
+    return gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,basename
 
 ########################
 
@@ -104,7 +104,6 @@ def setup_paths():
                    "state_path"       : working_dir + "statespace",
                    "molsimplify_inps" : working_dir + "ms_inps",
                    "infiles"          : working_dir + "infiles",
-                   "molsimp_path"     : working_dir + "molSimplify",
                    "mopac_path"       : working_dir + "mopac",
                    "ANN_output"       : working_dir + "ANN_ouput",
                    "ms_reps"          : working_dir + "ms_reps"}

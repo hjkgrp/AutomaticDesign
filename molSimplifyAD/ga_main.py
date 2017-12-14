@@ -175,13 +175,13 @@ class GA_generation:
                                         this_split_energy = float(final_results[genes].split)
                                         if self.status_dictionary['scoring_function'] == "split+dist":
                                                 print('error, cannot using aplit+dist fitness with ANN only. Switching to split only.')
-                                                logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ": Gen " +
+                                                logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen " +
                                                        str(self.status_dictionary['gen'] ) +
                                                       ' error, cannot using aplit+dist fitness with ANN only. Switching to split only')
                                         fitness =  find_split_fitness(this_split_energy,self.status_dictionary['split_parameter'])
-                                        logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ": Gen " +
+                                        logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen " +
                                                str(self.status_dictionary['gen'] ) +
-                                               ' setting fitness to ' + str(fitness) + ' for new genes ' + str(genes))
+                                               ' setting fitness to ' + "{0:.2f}".format(fitness) + ' for new genes ' + str(genes))
                                         self.gene_fitness_dictionary.update({genes:fitness})
         def assess_fitness(self):
             print('***********')
@@ -198,13 +198,14 @@ class GA_generation:
             self.ready_to_advance = False
             self.outstanding_jobs = dict()
             for genekeys in self.genes.keys():
-                print('genekey is ' + str(genekeys))
                 genes = self.genes[genekeys]
                 ## see if this gene is in the fitness dictionary
                 if genes in fitkeys:
                     fitness_values[genes] = self.gene_fitness_dictionary[genes]
+                    print('genekey is ' + str(genekeys) + ' gene '+str(genes) + ' present with fitness ' + "{0:.2f}".format(float(fitness_values[genes])))
                 else:
                     self.outstanding_jobs.update({genekeys:self.gene_compound_dictionary[genekeys]})
+                    print('genekey is ' + str(genekeys) + ' gene '+str(genes) + ' fitness  not known')
             logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen "
                        + str(self.status_dictionary['gen'])
                        + " with " + str(len(self.outstanding_jobs.keys())) + " calculations to be completed")
@@ -226,8 +227,8 @@ class GA_generation:
                         gene = self.genes[keys]
                         random_fitness = random.uniform(0,1)
                         logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now())
-                               + ": Gen " + str(self.status_dictionary['gen'])
-                               + " assign random fitness  " + str(random_fitness) + ' to  gene ' + str(gene))
+                               + ":  Gen " + str(self.status_dictionary['gen'])
+                               + " assign random fitness  " + "{0:.2f}".format(random_fitness) + ' to  gene ' + str(gene))
                         self.gene_fitness_dictionary.update({gene:random_fitness})
         def ANN_fitness(self):
                 msg, ANN_dict = read_dictionary(self.current_path_dictionary["ANN_output"] +'ANN_results.csv')
@@ -243,8 +244,8 @@ class GA_generation:
                             fitness =  find_split_fitness(this_split_energy,self.status_dictionary['split_parameter'])
 
                         logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now())
-                               + ": Gen " + str(self.status_dictionary['gen'])
-                               + " fitness from ANN  " + str(fitness) + ' assigned to  gene ' + str(gene))
+                               + ":  Gen " + str(self.status_dictionary['gen'])
+                               + " fitness from ANN  " + "{0:.2f}".format(fitness) + ' assigned to  gene ' + str(gene))
                         self.gene_fitness_dictionary.update({gene:fitness})
         def job_dispatcher(self):
                 jobpaths = list()
@@ -262,7 +263,7 @@ class GA_generation:
                                 ## generate HS/LS
                                ## convert the gene into a job file and geometery
                                 jobpath,mol_name,ANN_split,ANN_distance = jobs.generate_geometery(prefix = job_prefix, spin = spins,path_dictionary = self.current_path_dictionary,
-                                                                      rundirpath = get_run_dir(), molsimpath = self.base_path_dictionary["molsimp_path"])
+                                                                      rundirpath = get_run_dir())
                                 if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
                                         ## save result
                                         ANN_results_dict.update({mol_name:",".join([str(ANN_split),str(ANN_distance)])})
@@ -337,8 +338,8 @@ class GA_generation:
 		mean_dist = float(self.calc_mean_dist(self.genes,full_gene_info))
 		diversity = self.get_diversity()
 
-		mean_dist_info = ": ".join(["Mean distance",str(mean_dist)])
-		mean_fit_info = ": ".join(["Mean fitness",str(self.status_dictionary['mean_fitness'])])
+		mean_dist_info = ": ".join(["Mean distance","{0:.2f}".format((mean_dist))])
+		mean_fit_info = ": ".join(["Mean fitness","{0:.2f}".format(self.status_dictionary['mean_fitness'])])
 		div_info = ": ".join(["Diversity",str(diversity)])
 		diagnosis.extend([mean_dist_info,mean_fit_info,div_info])
 
@@ -419,8 +420,8 @@ class GA_generation:
                 for keys in self.genes.keys():
                     outcome_list.append((keys,self.genes[keys],float(self.gene_fitness_dictionary[self.genes[keys]])))
                     logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) +
-                               ": Gen " + str(self.status_dictionary['gen']) +  '  gene is   ' + str(keys)
-                             + " fitness is = " +  str(float(self.gene_fitness_dictionary[self.genes[keys]])))
+                               ":  Gen " + str(self.status_dictionary['gen']) +  '  gene is ' + str(keys)
+                             + " fitness is = " +  "{0:.2f}".format((float(self.gene_fitness_dictionary[self.genes[keys]]))))
  
                 outcome_list.sort(key=lambda tup: tup[2], reverse = True)
 
@@ -440,8 +441,8 @@ class GA_generation:
                 mean_fitness = mean_fitness/npool # average fitness
                 self.status_dictionary.update({'mean_fitness':mean_fitness})
                 logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) +
-                       ": Gen " + str(self.status_dictionary['gen'])
-                     + " complete, mean_fitness = " +  str(mean_fitness))	
+                       ":  Gen " + str(self.status_dictionary['gen'])
+                     + " complete, mean_fitness = " +  "{0:.2f}".format(mean_fitness))	
 
 		if not(self.status_dictionary['DFT']) and (self.status_dictionary['monitor_diversity'] or self.status_dictionary['monitor_distance']):
 			self.decide()
@@ -451,7 +452,7 @@ class GA_generation:
                 ## advance counter
                 self.status_dictionary['gen'] +=1
                 logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) +
-                       ": Gen " + str(self.status_dictionary['gen']-1)
+                       ":  Gen " + str(self.status_dictionary['gen']-1)
                      + " advancing to Gen " +  str(self.status_dictionary['gen']))
                 self.status_dictionary['ready_to_advance'] = False
                 self.current_path_dictionary = advance_paths(self.base_path_dictionary,self.status_dictionary['gen'])
@@ -485,6 +486,8 @@ class GA_generation:
                 number_of_crosses = 0
                 while number_of_crosses < ncross:
                         ## choose partners to exchange
+                        print('*************************')
+                        print('crossover ' + str(number_of_crosses + 1) + ' :' )
                         these_partners = random.sample(range(npool,(2*npool - 1)),2)
                         keep_axial = selected_compound_dictionary[these_partners[0]]
                         keep_equitorial = selected_compound_dictionary[these_partners[1]]
@@ -492,11 +495,14 @@ class GA_generation:
                         new_complex_1 = keep_axial.exchange_ligands(keep_equitorial,True)
                         new_complex_1 = new_complex_1.exchange_metal(keep_equitorial)
                         new_complex_1 = new_complex_1.exchange_ox(keep_equitorial)
+                        print('FINAL : 1st new gene from this cross ' + str(new_complex_1.name) + '\n')
+                        
                         new_complex_2 = keep_equitorial.exchange_ligands(keep_axial,True)
                         new_complex_2 = new_complex_2.exchange_metal(keep_axial)
                         new_complex_2 = new_complex_2.exchange_ox(keep_axial)
                         new_gene_1 = new_complex_1.name
                         new_gene_2 = new_complex_2.name
+                        print('FINAL : 2nd new gene from this cross ' + str(new_complex_2.name) + '\n')
                         selected_genes[these_partners[0]] = new_gene_1
                         selected_compound_dictionary[these_partners[0]] = new_complex_1
                         selected_genes[these_partners[1]] = new_gene_2
@@ -509,6 +515,7 @@ class GA_generation:
                                ":  Gen " + str(self.status_dictionary['gen'])
                                + " crossing " + str(these_partners) + " " +
                               str(old_genes) + " -> " + str(new_genes)  )
+                        print('\n')
 
                 ## mutate
                 for keys in selected_genes.keys():
@@ -535,7 +542,7 @@ def update_current_gf_dictionary(gene,fitness):
      	new_tree.read_state()
      	new_tree.gene_fitness_dictionary.update({gene:fitness})
      	logger(path_dictionary['state_path'],str(datetime.datetime.now())
-                            + " Gen "+ str(new_tree.status_dictionary['gen']) + " :  updating gene-fitness dictionary")
+                            + "  Gen "+ str(new_tree.status_dictionary['gen']) + " :  updating gene-fitness dictionary")
      	## save
      	new_tree.write_state()
 

@@ -1,2 +1,5 @@
 # molSimplify input file generated from CLI input
--core fe
+-core co 
+-oxstate III 
+-lig water 
+-exchange 0

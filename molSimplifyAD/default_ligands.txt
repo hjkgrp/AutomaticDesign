@@ -12,7 +12,7 @@ cyanopyridine
 thiopyridine
 bipy
 phosacidbipyridine
-ethOHbipyridine
+aceticacidbipyridine
 ethbipyridine
 mebipyridine
 diaminomethyl

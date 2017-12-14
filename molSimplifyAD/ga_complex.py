@@ -59,6 +59,8 @@ class octahedral_complex:
         ### choose the equitorial ligand
         n = len(self.ligands_list)
         eq_ind = numpy.random.randint(low = 0,high = n)
+        print('choosing '+str(eq_ind) + ' from '+str(n))
+        print('name  is ' +str(self.ligands_list[eq_ind][0]))
         eq_ligand_properties  = self.ligands_list[eq_ind][1]
         self.eq_dent = eq_ligand_properties[0]
         self.eq_oc  = int(4/self.eq_dent)
@@ -175,7 +177,7 @@ class octahedral_complex:
     def exchange_ligands(self,partner,eq_swap):
         child = octahedral_complex(self.ligands_list)
         child.copy(self) # copies this parent
-        print("\n")
+        
         print("swapping from",partner.name," to ",self.name)
         self.examine()
         if eq_swap:
@@ -255,7 +257,7 @@ class octahedral_complex:
         child.examine()
         return child
 
-    def generate_geometery(self,prefix,spin,path_dictionary,rundirpath,molsimpath):
+    def generate_geometery(self,prefix,spin,path_dictionary,rundirpath):
         # get path info
         ligloc_cont = True
         # set metal properties:
@@ -285,44 +287,42 @@ class octahedral_complex:
             else:
                 ff_opt = 'N'
 
-     #       print('forcefield is OFF')
+        ## get custom exchange fraction
+        this_GA = get_current_GA()
+        exchange = this_GA.config['exchange']
+        optimize = this_GA.config['optimize']
+        if optimize:
+            print(' setting up GO optimization ')
+            rty = 'minimize'
+        else:
+            rty = 'energy'
         geometry = "oct"
         ms_dump_path = path_dictionary["molsimplify_inps"] +  'ms_output.txt'
+        ms_error_path = path_dictionary["molsimplify_inps"] +  'ms_errors.txt'
         jobpath = path_dictionary["job_path"]  + mol_name + '.in'
         ## check if already exists:
         geo_exists = os.path.isfile(path_dictionary["initial_geo_path"] + mol_name + '.xyz')
 
         if not (geo_exists):
                 print('generating '+ str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and'  + str(self.ax_ligands))
-                
                 try:
-                    print('1st try')
                     with open(ms_dump_path,'a') as ms_pipe:
-                        call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +liglist,'-ligocc 1,1,1,1,1,1',
-                                 '-rundir ' +"'"+ rundirpath.rstrip("/")+"\n'",'-keepHs yes,yes,yes,yes,yes,yes','-jobdir','temp',
-                                 '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
-                                 '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ ox_string,
-                                 '-qccode TeraChem','-runtyp energy','-method UDFT',"-ffoption "+ff_opt])
-                        print(call)
-                        p2 = subprocess.call(call,stdout = ms_pipe,shell=True)#
+                        with open(ms_error_path,'a') as ms_error_pipe:
+                            call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +liglist,'-ligocc 1,1,1,1,1,1',
+                                     '-rundir ' +"'"+ rundirpath.rstrip("/")+"'",'-keepHs yes,yes,yes,yes,yes,yes','-jobdir','temp',
+                                     '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
+                                     '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ ox_string, '-exchange '+str(exchange),
+                                     '-qccode TeraChem','-runtyp '+rty,'-method UDFT',"-ffoption "+ff_opt])
+                            #print(call)
+                            p2 = subprocess.call(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
                     assert(os.path.isfile(rundirpath + 'temp'+'/' + mol_name + '.molinp'))
- 
                     shutil.move(rundirpath + 'temp'+'/' + mol_name + '.molinp', path_dictionary["molsimplify_inps"]+'/' + mol_name + '.molinp')
                     shutil.move(rundirpath + 'temp'+'/' + mol_name + '.xyz', path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz')
                 except:
-                    print('2nd try')
-                    with open(ms_dump_path,'a') as ms_pipe:
-                        call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +liglist,'-ligocc 1,1,1,1,1,1',
-                                 '-rundir ' +"'"+ rundirpath.rstrip("/")+"\n'",'-keepHs yes,yes,yes,yes,yes,yes','-jobdir','temp',
-                                 '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
-                                 '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ ox_string,
-                                 '-qccode TeraChem','-runtyp energy','-method UDFT',"-ffoption "+'A','-ff UFF'])
+                        print('Error: molSimplify failure when calling ')
                         print(call)
-                        p2 = subprocess.call(call,stdout = ms_pipe,shell=True)#stdout = ms_pipe
-                        print('Error: QVVVF failure')
-                        sardines
-                    shutil.move(rundirpath + 'temp'+'/' + mol_name + '.molinp', path_dictionary["molsimplify_inps"]+'/' + mol_name + '.molinp')
-                    shutil.move(rundirpath + 'temp'+'/' + mol_name + '.xyz', path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz')
+                        sys.exit()
+                    
 
                 with open(rundirpath + 'temp' +'/' + mol_name + '.report') as report_f:
                     for line in report_f:
@@ -330,14 +330,13 @@ class octahedral_complex:
                                 #print('****')
                                 #print(line)
                                 ANN_split = float(line.split(",")[1])
-                                print('ANN_split is ' +str(ANN_split))
-
+                                print('ANN_split is ' +"{0:.2f}".format(ANN_split))
                             if("ANN_dist_to_train" in line):
                                 #print('****')
                                 #print(line)
                                 ll = line.split(',')[1]
                                 ANN_distance = float(ll)
-                                print('ANN_distance is ' +str(ANN_distance))
+                                print('ANN_distance is ' +"{0:.2f}".format(ANN_distance))
                 shutil.move(rundirpath + 'temp' +'/' + mol_name + '.report', path_dictionary["ms_reps"] +'/'+ mol_name + '.report')
 
 
