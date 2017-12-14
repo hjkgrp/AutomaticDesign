@@ -26,6 +26,9 @@ def test_terachem_sp_convergence(job):
     ### get paths
     path_dictionary = setup_paths()
     gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,basename = translate_job_name(job)
+    this_GA = get_current_GA()
+    exchange = this_GA.config['exchange']
+    alpha=float(exchange)
     ### flag
     converged =  False
     ## set up up
