@@ -345,7 +345,10 @@ class octahedral_complex:
                         for line in oldf:
                             if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line):
                                 newf.writelines(line)
-                    newf.writelines("scrdir scr/sp/" +mol_name+ "\n")
+                    if optimize:
+                        newf.writelines("scrdir scr/geo/" +mol_name+ "\n")
+                    else:
+                        newf.writelines("scrdir scr/sp/" +mol_name+ "\n")
                 os.remove(rundirpath + 'temp/' + mol_name + '.in')
         else:
             
