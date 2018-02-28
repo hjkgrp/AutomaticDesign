@@ -120,7 +120,7 @@ def process_ligands_file(path):
                 #print(this_catom)
                 ligands_list.append([[this_lig,this_catom],[int(this_dent)]])
 
-    #print(ligands_list)
+    print(ligands_list)
     return ligands_list
 ########################
 def parseall(parser):

@@ -67,8 +67,8 @@ def translate_job_name(job):
     base = os.path.basename(job)
     base = base.strip("\n")
     basename = base.strip(".in")
-    basename = base.strip(".xyz")
-    basename = base.strip(".out")
+    basename = basename.strip(".xyz")
+    basename = basename.strip(".out")
     ll = (str(basename)).split("_")
     #print(ll)
     gen = ll[1]
@@ -128,6 +128,7 @@ def setup_paths():
                    "optimial_geo_path": working_dir + "optimized_geo",
                    "prog_geo_path": working_dir + "prog_geo",
                    "stalled_jobs": working_dir + "stalled_jobs",
+                   "archive_path":  working_dir + "archive_resubs",
                    "state_path"       : working_dir + "statespace",
                    "molsimplify_inps" : working_dir + "ms_inps",
                    "infiles"          : working_dir + "infiles",
