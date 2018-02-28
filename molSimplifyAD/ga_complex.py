@@ -39,11 +39,8 @@ class octahedral_complex:
     def _name_self(self):
         ## this creates the gene for a given complex
         GA_run = get_current_GA()
-        runtype = GA_run.config["runtype"]
-        if runtype == "split":
-            self.name = "_".join([str(self.core),str(self.ox),str(self.eq_inds[0]),str(self.ax_inds[0]),str(self.ax_inds[1]),str(self.ahf)])
-        elif runtype == "redox":
-            self.name = "_".join([str(self.core),str(self.ox),str(self.eq_inds[0]),str(self.ax_inds[0]),str(self.ax_inds[1]),str(self.ahf)])
+        self.name = "_".join([str(self.core),str(self.ox),str(self.eq_inds[0]),str(self.ax_inds[0]),str(self.ax_inds[1]),str(self.ahf)])
+
     def copy(self,partner):
          self.core = partner.core
          self.ox = partner.ox

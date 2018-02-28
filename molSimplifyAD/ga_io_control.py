@@ -70,11 +70,7 @@ class GA_run_defintion:
             with open(path,'r') as instream:
                 ob = json.load(instream)
             self.config = ob
-        def create_scripts(self):
-            ## copy queue info and modify as needed
-            if self.config['DFT']:
-                shutil.copyfile(get_source_dir()+'sge_auto.sh',self.config['rundir']+'sge_auto.sh')
-            shutil.copyfile(get_source_dir() + 'wake.sh',self.config['rundir'] + 'wake.sh')
+    
             
 ########################
 class switch_to_rundir:

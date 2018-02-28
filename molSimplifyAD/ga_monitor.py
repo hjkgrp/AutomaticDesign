@@ -34,7 +34,7 @@ def launch_job(job,sub_num):
     else:
         GA_run = get_current_GA()
         if GA_run.config["optimize"]:
-            cmd_script = "launch_script_optimize.sh"
+            cmd_script = "launch_script_geo.sh"
         else:
             cmd_script = "launch_script_sp.sh"
     cmd_str ='qsub -j y -N  ' +name + ' -o ' + opath + ' -e '+epath +' ' +get_run_dir() + cmd_script + ' ' + job
