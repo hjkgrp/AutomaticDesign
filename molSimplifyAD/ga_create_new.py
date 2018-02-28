@@ -36,11 +36,11 @@ def create_new_run(args):
             print 'Using DFT, copying over launch script'
             sp_file,geo_file,thermo_file,solvent_file = get_launch_script_file()
             shutil.copy(sp_file,configuration["rundir"]+'launch_script_sp.sh')
-            if configuration["optimize"]:
+            if 'optimize' in configuration.keys():
               shutil.copy(geo_file,configuration["rundir"]+'launch_script_geo.sh')
-            if configuration["solvent"]:
+            if  'solvent' in configuration.keys():
               shutil.copy(thermo_file,configuration["rundir"]+'launch_script_solvent.sh')
-            if configuration["thermo"]:
+            if 'thermo' in configuration.keys():
               shutil.copy(solvent_file,configuration["rundir"]+'launch_script_thermo.sh')
   if 'DFT' in configuration.keys() and 'runype' in configuration.keys():
       if configuration['runtype'] == 'redox' and not configuration['DFT']:

@@ -129,10 +129,12 @@ class octahedral_complex:
         self.random_gen()
         ll = gene.split("_")
         ll = [int(item) for item in ll]
+        print('ll is '+str(ll))
         self.replace_metal(ll[0])
         self.replace_ox(ll[1])
         self.replace_equitorial([ll[2]])
-        self.replace_axial(ll[3:])
+        self.replace_axial(ll[3:5])
+        self.ahf=ll[5]
         self._name_self()
     def replace_metal(self,new_metal_ind):
         self.core = new_metal_ind

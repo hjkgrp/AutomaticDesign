@@ -10,7 +10,6 @@ from molSimplifyAD.ga_get_general import _get_gen_npool
 def _find_distances():
     lastgen,npool = _get_gen_npool(get_run_dir())
     gene_dist_dict = dict()
-
     #lastgen is the last generation that has been run
     for generation in xrange(lastgen+1):
         ANN_path = get_run_dir() + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
@@ -24,10 +23,10 @@ def _find_distances():
                 for line in lol:
                     gene, energy, distance = line.split(",")
                     ll = gene.split("_")
-                    if runtype == "split":
-                        geneName = "_".join(ll[4:10])
-                    elif runtype == "redox":
-                        geneName = "_".join(ll[4:9])
+#                    if runtype == "split":
+                    geneName = "_".join(ll[4:10])
+#                    elif runtype == "redox":
+#                        geneName = "_".join(ll[4:9])
                     
                     distance = float(distance.strip('\n'))
                     if geneName in gene_dist_dict.keys():
@@ -54,7 +53,6 @@ def _mean_distances(gene_dist_dict):
     dist_dict = gene_dist_dict
     dist_sum = 0
     curr_gen = 0
-
     read_path = get_run_dir() + "statespace/all_results.csv"
     with open(read_path, 'r') as fi:
         list_of_lines = fi.readlines()
