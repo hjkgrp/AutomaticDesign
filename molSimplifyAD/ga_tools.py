@@ -67,6 +67,8 @@ def translate_job_name(job):
     base = os.path.basename(job)
     base = base.strip("\n")
     basename = base.strip(".in")
+    basename = base.strip(".xyz")
+    basename = base.strip(".out")
     ll = (str(basename)).split("_")
     #print(ll)
     gen = ll[1]
@@ -95,6 +97,20 @@ def translate_job_name(job):
         print('critical erorr, unknown spin: '+ str(spin))
     gene = "_".join([str(metal),str(ox),str(eqlig_ind),str(axlig1_ind),str(axlig2_ind),str(ahf)])
     return gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,basename
+########################
+def renameHFX(job,newHFX):
+    # renames job to a new HFX fraction
+    base = os.path.basename(job)
+    base = base.strip("\n")
+    basename = base.strip(".in")
+    basename = base.strip(".xyz")
+    basename = base.strip(".out")
+    ll = (str(basename)).split("_")
+    ## replace alpha
+    ll[9] = newHFX
+    new_name = "_".join(ll)
+    return new_name
+    
 
 ########################
 

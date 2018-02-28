@@ -23,9 +23,7 @@ def initialize_GA_calc(path = ''):
         
         new_tree = GA_generation('current_GA')
         new_tree.configure_gen(0,**GA_run.config)
-        #['npool'],GA_run.config['ncross',
-        #                         GA_run.config['pmut'],GA_run.config['maxgen'],
-        #                         scoring_function,split_parameter,distance_parameter,DFT,False,0,monitor_diversity,monitor_distance)
+
         new_tree.populate_random()
         new_tree.write_state()
         logger(new_tree.base_path_dictionary['state_path'],str(datetime.datetime.now())

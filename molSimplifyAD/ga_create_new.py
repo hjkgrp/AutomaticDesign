@@ -37,11 +37,11 @@ def create_new_run(args):
             sp_file,geo_file,thermo_file,solvent_file = get_launch_script_file()
             shutil.copy(sp_file,configuration["rundir"]+'launch_script_sp.sh')
             if configuration["optimize"]:
-              shutil.copy(sp_file,configuration["rundir"]+'launch_script_geo.sh')
+              shutil.copy(geo_file,configuration["rundir"]+'launch_script_geo.sh')
             if configuration["solvent"]:
-              shutil.copy(sp_file,configuration["rundir"]+'launch_script_solvent.sh')
+              shutil.copy(thermo_file,configuration["rundir"]+'launch_script_solvent.sh')
             if configuration["thermo"]:
-              shutil.copy(sp_file,configuration["rundir"]+'launch_script_thermo.sh')
+              shutil.copy(solvent_file,configuration["rundir"]+'launch_script_thermo.sh')
   if 'DFT' in configuration.keys() and 'runype' in configuration.keys():
       if configuration['runtype'] == 'redox' and not configuration['DFT']:
         print('unable to run ANN based GA using redox at this time, changing to spin splitting')
