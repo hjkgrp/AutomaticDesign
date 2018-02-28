@@ -7,11 +7,11 @@ import argparse
 import os
 import random
 import shutil
-from ga_tools import *
-from ga_complex import *
-from ga_main import *
-from process_scf import *
-from post_classes import *
+from molSimplifyAD.ga_tools import *
+from molSimplifyAD.ga_complex import *
+from molSimplifyAD.ga_main import *
+from molSimplifyAD.process_scf import *
+from molSimplifyAD.post_classes import *
 #######################
 def check_all_current_convergence():
     print('\n checking convergence of jobs\n')
@@ -141,53 +141,53 @@ def check_all_current_convergence():
 
                         except:
                                 print("ERROR: scr not found for" + str(this_run.scrpath))
-            update_converged_job_dictionary(jobs,this_run.status) # record converged 
-            if this_run.status in [0,1,12,13,14]: ##  convergence is successful!
-                    print('removing job from OSL due to status  '+str(this_run.status))
-                    jobs_complete += 1
-                    remove_outstanding_jobs(jobs) # take out of queue
-                    if GA_run.config["solvent"]:
-                        if this_run.status ==13: ## need solvent:
-                            print('addding based on ' + str(jobs))
-                            add_to_outstanding_jobs(this_run.solvent_inpath)
-                    if GA_run.config["thermo"]:
-                        if this_run.status ==12: ## needs thermo:
-                            print('addding based on ' + str(jobs))
-                            add_to_outstanding_jobs(this_run.thermo_inpath)
-            if this_run.status in [3,5,6]: ##  convergence is not successful!                    
+                update_converged_job_dictionary(jobs,this_run.status) # record converged 
+                if this_run.status in [0,1,12,13,14]: ##  convergence is successful!
+                        print('removing job from OSL due to status  '+str(this_run.status))
+                        jobs_complete += 1
+                        remove_outstanding_jobs(jobs) # take out of queue
+                        if GA_run.config["solvent"]:
+                            if this_run.status ==13: ## need solvent:
+                                print('addding based on ' + str(jobs))
+                                add_to_outstanding_jobs(this_run.solvent_inpath)
+                        if GA_run.config["thermo"]:
+                            if this_run.status ==12: ## needs thermo:
+                                print('addding based on ' + str(jobs))
+                                add_to_outstanding_jobs(this_run.thermo_inpath)
+                if this_run.status in [3,5,6]: ##  convergence is not successful!                    
+                        logger(path_dictionary['state_path'],str(datetime.datetime.now())
+                                   + " failure at job : " + str(jobs) + ' with status '+ str(this_run.status))
+                        remove_outstanding_jobs(jobs) # take out of pool
+            print('\n')
+            list_of_props = list()
+            list_of_props.append('name')
+            list_of_props.append('convergence')
+            list_of_props.append('gene')
+            list_of_props.append('metal')
+            list_of_props.append('alpha')
+            list_of_props.append('ox2RN')
+            list_of_props.append('ox3RN')
+            list_of_props.append('axlig1')
+            list_of_props.append('axlig2')
+            list_of_props.append('eqlig')  
+            list_of_prop_names =['converged','energy','init_energy','coord','rmsd','maxd','status','time','spin','ss_act','ss_target','ax1_MLB','ax2_MLB','eq_MLB',
+                        'init_ax1_MLB','init_ax2_MLB','init_eq_MLB','thermo_cont','imag','solvent_cont','geopath','terachem_version','terachem_detailed_version',
+                        'basis','charge','alpha_level_shift','beta_level_shift','functional','mop_energy','mop_coord','attempted']
+            for props in list_of_prop_names:
+                for spin_cat in ['LS','HS']:
+                    for ox in ['2','3']:
+                        list_of_props.append("_".join(['ox',str(ox),spin_cat,props]))
+            list_of_props.append('attempted')
+            final_results = process_runs_geo(all_runs,list_of_prop_names,spin_dictionary())
+            if not (os.path.isfile(get_run_dir() + '/results_post.csv')):
                     logger(path_dictionary['state_path'],str(datetime.datetime.now())
-                               + " failure at job : " + str(jobs) + ' with status '+ str(this_run.status))
-                    remove_outstanding_jobs(jobs) # take out of pool
-        print('\n')
-        list_of_props = list()
-        list_of_props.append('name')
-        list_of_props.append('convergence')
-        list_of_props.append('gene')
-        list_of_props.append('metal')
-        list_of_props.append('alpha')
-        list_of_props.append('ox2RN')
-        list_of_props.append('ox3RN')
-        list_of_props.append('axlig1')
-        list_of_props.append('axlig2')
-        list_of_props.append('eqlig')  
-        list_of_prop_names =['converged','energy','init_energy','coord','rmsd','maxd','status','time','spin','ss_act','ss_target','ax1_MLB','ax2_MLB','eq_MLB',
-                    'init_ax1_MLB','init_ax2_MLB','init_eq_MLB','thermo_cont','imag','solvent_cont','geopath','terachem_version','terachem_detailed_version',
-                    'basis','charge','alpha_level_shift','beta_level_shift','functional','mop_energy','mop_coord','attempted']
-        for props in list_of_prop_names:
-            for spin_cat in ['LS','HS']:
-                for ox in ['2','3']:
-                    list_of_props.append("_".join(['ox',str(ox),spin_cat,props]))
-        list_of_props.append('attempted')
-        final_results = process_runs_geo(all_runs,list_of_prop_names,spin_dictionary())
-        if not (os.path.isfile(get_run_dir() + '/results_post.csv')):
-                logger(path_dictionary['state_path'],str(datetime.datetime.now())
-                               + " starting output log file at " + get_run_dir() + '/results_post.csv')
-        with open('unified_results_post.csv','w') as f:
-            writeprops(list_of_props,f)
-            for reskeys in final_results.keys():
-                values = atrextract(final_results[reskeys],list_of_props)
-                writeprops(values,f)
-            print('\n**** end of file inspection **** \n')
+                                   + " starting output log file at " + get_run_dir() + '/results_post.csv')
+            with open('unified_results_post.csv','w') as f:
+                writeprops(list_of_props,f)
+                for reskeys in final_results.keys():
+                    values = atrextract(final_results[reskeys],list_of_props)
+                    writeprops(values,f)
+                print('\n**** end of file inspection **** \n')
     else:
         print('post processing SP/spin files')    
         LS_jobs=dict()

@@ -9,9 +9,9 @@ import argparse
 import os
 import random
 import shutil
-from ga_tools import *
-from ga_complex import *
-from ga_check_jobs import *
+from molSimplifyAD.ga_tools import *
+from molSimplifyAD.ga_complex import *
+from molSimplifyAD.ga_check_jobs import *
 
 ########################
 
@@ -165,7 +165,6 @@ class GA_generation:
         def check_results(self):
                 ## load gene fitness dict
                 fitkeys  = self.gene_fitness_dictionary.keys()
-
                 ## if doing a DFT run, we need to check the filestytem for updates
                 if self.status_dictionary["DFT"]:
                         final_results = check_all_current_convergence()
@@ -212,6 +211,7 @@ class GA_generation:
                     fitness_values[genes] = self.gene_fitness_dictionary[genes]
                     print('genekey is ' + str(genekeys) + ' gene '+str(genes) + ' present with fitness ' + "{0:.2f}".format(float(fitness_values[genes])))
                 else:
+                    ## add to outstanding jobs
                     self.outstanding_jobs.update({genekeys:self.gene_compound_dictionary[genekeys]})
                     print('genekey is ' + str(genekeys) + ' gene '+str(genes) + ' fitness  not known')
             logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen "

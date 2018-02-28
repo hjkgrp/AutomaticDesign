@@ -234,7 +234,7 @@ class octahedral_complex:
     def mutate(self):
         ## mutates either the axial
         ## or equitorial ligand a random
-        lig_to_mutate = random.randint(0,1)
+        lig_to_mutate = random.randint(0,2)
         child = octahedral_complex(self.ligands_list)
         child.copy(self) # copies this parent
         n = len(self.ligands_list)
@@ -255,11 +255,17 @@ class octahedral_complex:
                 if (ax_dent == self.ax_dent):
                     if (lig_to_mutate == 1):
                         print("mutating axial 1 ")
-                        new_ax_list = [rand_ind,rand_ind]
+                        if this_GA.config['symclass'] =="strong":
+                            new_ax_list = [rand_ind,rand_ind]
+                        else:
+                            new_ax_list = [rand_ind,self.ax_inds[1]]
                     elif (lig_to_mutate == 2):
                         print("mutating axial 2 ")
-                        #new_ax_list = [self.ax_inds[0],rand_ind]
-                        new_ax_list = [rand_ind,rand_ind]
+                        if this_GA.config['symclass'] =="strong":
+                            new_ax_list = [rand_ind,rand_ind]
+                        else:
+                            new_ax_list = [self.ax_inds[0],rand_ind]
+                        
                     child.ax_dent = 1
                     child.three_bidentate = False
                     ready_flag = True
@@ -318,6 +324,7 @@ class octahedral_complex:
         this_GA = get_current_GA()
         exchange = this_GA.config['exchange']
         optimize = this_GA.config['optimize']
+        
         if optimize:
             print(' setting up GO optimization ')
             rty = 'minimize'
@@ -350,20 +357,20 @@ class octahedral_complex:
                         print(call)
                         sys.exit()
                     
-
-                with open(rundirpath + 'temp' +'/' + mol_name + '.report') as report_f:
-                    for line in report_f:
-                            if ("pred_split" in line):
-                                #print('****')
-                                #print(line)
-                                ANN_split = float(line.split(",")[1])
-                                print('ANN_split is ' +"{0:.2f}".format(ANN_split))
-                            if("ANN_dist_to_train" in line):
-                                #print('****')
-                                #print(line)
-                                ll = line.split(',')[1]
-                                ANN_distance = float(ll)
-                                print('ANN_distance is ' +"{0:.2f}".format(ANN_distance))
+                if this_GA.config['symclass']=="weak":                        
+                    with open(rundirpath + 'temp' +'/' + mol_name + '.report') as report_f:
+                        for line in report_f:
+                                if ("pred_split" in line):
+                                    #print('****')
+                                    #print(line)
+                                    ANN_split = float(line.split(",")[1])
+                                    print('ANN_split is ' +"{0:.2f}".format(ANN_split))
+                                if("ANN_dist_to_train" in line):
+                                    #print('****')
+                                    #print(line)
+                                    ll = line.split(',')[1]
+                                    ANN_distance = float(ll)
+                                    print('ANN_distance is ' +"{0:.2f}".format(ANN_distance))
                 shutil.move(rundirpath + 'temp' +'/' + mol_name + '.report', path_dictionary["ms_reps"] +'/'+ mol_name + '.report')
 
 

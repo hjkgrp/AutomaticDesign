@@ -39,8 +39,9 @@ def resume_run(args):
         logger(path_dictionary['state_path'],str(datetime.datetime.now()) + ' going back to sleep, number of live jobs ' + str(live_job_count)) 
         logger(path_dictionary['state_path'],str(datetime.datetime.now()) + ' going back to sleep') 
         logger(path_dictionary['state_path'],'************************************************') 
-      format_freqeuncies()
-      format_distances()
+      if GA_run.config['runtype']=="split":
+        format_freqeuncies()
+        format_distances()
       its +=1
       if args.sleep:
         print('sleeping for '+ str(args.sleep))
