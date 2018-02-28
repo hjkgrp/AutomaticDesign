@@ -16,8 +16,11 @@ class GA_run_defintion:
                       rundir = False,
                       runtype = "split",
                       optimize = False,
+                      use_singlets = False,
+                      symclass ="strong",
                       thermo = False,
                       solvent = False,
+                      HFXsample = False,
                       liglist = False,
                       queue_type = 'SGE',
                       queue_reference = False,
@@ -38,9 +41,12 @@ class GA_run_defintion:
                               'rundir':rundir,
                               'runtype':runtype,
                               'optimize':optimize,
+                              'use_singlets':use_singlets,
                               'thermo':thermo,
                               'solvent':solvent,                              
                               'liglist':liglist,
+                              'symclass' =symclass,
+                              'HFXsample'=HFXsample,
                               'queue_type':queue_type,
                               'queue_reference':queue_reference,
                               'npool':npool,
@@ -182,8 +188,11 @@ def get_default_ligand_file():
 ########################
 def get_launch_script_file(queue='SGE'):
     ## returns default ligand input file
-    queue_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/sge_auto.sh")
-    return queue_file
+    sp_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/sge_sp.sh")
+    geo_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/sge_geo.sh")
+    thermo_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/sge_thermo.sh")
+    solvent_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/sge_solvent.sh")
+    return sp_file,geo_file,thermo_file,solvent_file
 
 ########################
 def process_new_run_input(path):

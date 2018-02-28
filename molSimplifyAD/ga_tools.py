@@ -18,7 +18,6 @@ def get_current_GA():
     GA_run.deserialize('.madconfig')
     return GA_run
 ########################
-
 def find_live_jobs():
     path_dictionary = setup_paths()
     live_job_dictionary = dict()
@@ -30,8 +29,6 @@ def find_live_jobs():
 ########################
 def get_metals():
         metals_list = ['cr','mn','fe','co']
-#        metals_list = ['mn']
-
         return metals_list
 ########################
 def get_run_dir():
@@ -45,15 +42,21 @@ def get_ox_states(): # could be made metal dependent like spin
         return ox_list
 ########################
 def spin_dictionary():
-    metal_spin_dictionary = {'co':{2:[2,4],3:[1,5]},
-                              'cr':{2:[3,5],3:[2,4]},
-                              'fe':{2:[1,5],3:[2,6]},
-                              'mn':{2:[2,6],3:[3,5]}}
+    GA_run =  get_current_GA() 
+    if GA_run.config["use_singlets"]:
+        metal_spin_dictionary = {'co':{2:[2,4],3:[1,5]},
+                                'cr':{2:[1,5],3:[2,4]},
+                                'fe':{2:[1,5],3:[2,6]},
+                                'mn':{2:[2,6],3:[1,5]}}
+    else:
+        metal_spin_dictionary = {'co':{2:[2,4],3:[1,5]},
+                                'cr':{2:[3,5],3:[2,4]},
+                                'fe':{2:[1,5],3:[2,6]},
+                                'mn':{2:[2,6],3:[3,5]}}
     return metal_spin_dictionary
 ########################
 def isDFT():
-    GA_run = GA_run_defintion()
-    GA_run.deserialize('.madconfig')
+    GA_run =  get_current_GA()
     if GA_run.config["DFT"]:
         return True
     else:
@@ -76,8 +79,9 @@ def translate_job_name(job):
     ligands_dict = get_ligands()
     eqlig = ligands_dict[int(eqlig_ind)][0]
     axlig1 = ligands_dict[int(axlig1_ind)][0]
-    axlig2 = ligands_dict[int(axlig2_ind)][0]
-    spin = int(ll[9])
+    axlig2 = ligands_dict[int(axlig2_ind)][0]   
+    ahf = int(ll[9])
+    spin = int(ll[10])
     metal_list = get_metals()
     metal_key = metal_list[metal]
     metal_spin_dictionary  = spin_dictionary()
@@ -89,18 +93,25 @@ def translate_job_name(job):
     else:
         print('spin assigned as ll[9]  = ' + str(spin) + ' on  ' +str(ll))
         print('critical erorr, unknown spin: '+ str(spin))
-    gene = "_".join([str(metal),str(ox),str(eqlig_ind),str(axlig1_ind),str(axlig2_ind)])
-    return gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,basename
+    gene = "_".join([str(metal),str(ox),str(eqlig_ind),str(axlig1_ind),str(axlig2_ind),str(ahf)])
+    return gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,basename
 
 ########################
 
 def setup_paths():
     working_dir = get_run_dir()
-    path_dictionary = {"out_path"     : working_dir + "outfiles",
+    path_dictionary = {
+                   "geo_out_path"     : working_dir + "geo_outfiles",
+                   "sp_out_path"     : working_dir + "sp_outfiles",
+                   "scr_path"     : working_dir + "scr/geo/",
+                   "thermo_out_path"     : working_dir + "thermo_outfiles",                   
+                   "solvent_out_path"     : working_dir + "solvent_outfiles",                   
                    "job_path"         : working_dir + "jobs",
                    "done_path"        : working_dir + "completejobs",
                    "initial_geo_path" : working_dir + "initial_geo",
                    "optimial_geo_path": working_dir + "optimized_geo",
+                   "prog_geo_path": working_dir + "prog_geo",
+                   "stalled_jobs": working_dir + "stalled_jobs",
                    "state_path"       : working_dir + "statespace",
                    "molsimplify_inps" : working_dir + "ms_inps",
                    "infiles"          : working_dir + "infiles",

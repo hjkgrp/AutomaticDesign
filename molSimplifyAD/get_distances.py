@@ -19,11 +19,16 @@ def _find_distances():
             with open(ANN_path, 'r') as fi:
                 #lol stands for list_of_lines
                 lol = fi.readlines()
-
+                GA_run = get_current_GA()
+                runtype = GA_run.config["runtype"]
                 for line in lol:
                     gene, energy, distance = line.split(",")
                     ll = gene.split("_")
-                    geneName = "_".join(ll[4:9])
+                    if runtype == "split":
+                        geneName = "_".join(ll[4:10])
+                    elif runtype == "redox":
+                        geneName = "_".join(ll[4:9])
+                    
                     distance = float(distance.strip('\n'))
                     if geneName in gene_dist_dict.keys():
                         pass

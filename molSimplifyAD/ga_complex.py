@@ -28,6 +28,8 @@ class octahedral_complex:
         self.ax_ligands= list()
         self.ax_inds = list()
         self.eq_inds = list()
+        GA_run = get_current_GA()
+        self.ahf = int(GA_run.config["exchange"]) # % HFX, B3LYP = 20 
     def random_gen(self):
         self._get_random_metal()
         self._get_random_ox()
@@ -35,7 +37,13 @@ class octahedral_complex:
         self._get_random_axial()
         self._name_self()
     def _name_self(self):
-        self.name = "_".join([str(self.core),str(self.ox),str(self.eq_inds[0]),str(self.ax_inds[0]),str(self.ax_inds[1])])
+        ## this creates the gene for a given complex
+        GA_run = get_current_GA()
+        runtype = GA_run.config["runtype"]
+        if runtype == "split":
+            self.name = "_".join([str(self.core),str(self.ox),str(self.eq_inds[0]),str(self.ax_inds[0]),str(self.ax_inds[1]),str(self.ahf)])
+        elif runtype == "redox":
+            self.name = "_".join([str(self.core),str(self.ox),str(self.eq_inds[0]),str(self.ax_inds[0]),str(self.ax_inds[1]),str(self.ahf)])
     def copy(self,partner):
          self.core = partner.core
          self.ox = partner.ox
@@ -47,6 +55,7 @@ class octahedral_complex:
          self.eq_oc = partner.eq_oc
          self.eq_ligands = partner.eq_ligands
          self.three_bidentate = partner.three_bidentate
+         self.ahf = partner.ahf
          self._name_self()
     def _get_random_metal(self):
         n = len(self.metals_list)
@@ -86,13 +95,33 @@ class octahedral_complex:
                     self.ax_oc = [2]
                 else:
                     self.ready_for_assembly = False
-            else:
-                self.ax_ligands = [self.ligands_list[ax_ind][0],self.ligands_list[ax_ind][0]]
-                self.ax_inds = [ax_ind, ax_ind]
-                if (len(self.ax_ligands) ==2):
-                    self.ax_dent = 1
-                    self.ax_oc = [1,1]
-                    self.ready_for_assembly = True
+            elif ax_dent == 1:
+                GA_run = get_current_GA()
+                if GA_run.config["symclass"] == "strong":
+                    self.ax_ligands = [self.ligands_list[ax_ind][0],self.ligands_list[ax_ind][0]]
+                    self.ax_inds = [ax_ind, ax_ind]
+                    if (len(self.ax_ligands) ==2):
+                        self.ax_dent = 1
+                        self.ax_oc = [1,1]
+                        self.ready_for_assembly = True
+                else:
+#                    This section is intended to allow for vacant axial sites
+#                    It is not currently implemented               
+#                    if ((ax_ind == 0) and (not has_zero)):
+#                        has_zero = True
+#                        self.ax_ligands.append(self.ligands_dict[ax_ind][0])
+#                        self.ax_inds.append(ax_ind)
+#                        self.geo = "spy"
+#         
+#                    elif ax_ind !=  0:
+                    self.ax_ligands.append(self.ligands_list[ax_ind][0])
+                    self.ax_inds.append(ax_ind)
+                    if (len(self.ax_ligands) ==2):
+                        self.ax_dent = 1
+                        self.ax_oc = [1,1]
+                        self.ready_for_assembly = True
+                    else:
+                         self.ready_for_assembly = False
 
     def examine(self):
         print("name is " + self.name)
@@ -108,7 +137,6 @@ class octahedral_complex:
         self.replace_equitorial([ll[2]])
         self.replace_axial(ll[3:])
         self._name_self()
-
     def replace_metal(self,new_metal_ind):
         self.core = new_metal_ind
     def replace_ox(self,new_ox):
@@ -268,6 +296,8 @@ class octahedral_complex:
         elif self.ox == 3:
             ox_string = "III"
         mol_name = prefix + self.name + "_" + str(spin)
+        
+        
         if self.ax_dent == 1:
            liglist = (str([str(element).strip("'[]'") for element in (self.eq_ligands)]  + [str(element).strip("'[]'") for element in self.ax_ligands]).strip("[]")).replace("'","")
            ligloc = 1

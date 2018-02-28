@@ -16,7 +16,7 @@ from molSimplifyAD.process_scf import *
 def launch_job(job,sub_num):
     ## code to submit to queue
     print('lauching ' + job + ' sub number: '+ str(sub_num))
-    gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,basename = translate_job_name(job)
+    gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename = translate_job_name(job)
     base_name = os.path.basename(job).strip('in')
     if sub_num > 1:
         print(' start rescue')
@@ -27,7 +27,17 @@ def launch_job(job,sub_num):
     name  = 'GA_'+ str(gene) + '_'+str(spin)
     opath = get_run_dir()+name + '.o'
     epath = get_run_dir()+name + '.e'
-    cmd_str ='qsub -j y -N  ' +name + ' -o ' + opath + ' -e '+epath +' ' +get_run_dir() + 'launch_script.sh ' + job
+    if "thermo" in job:
+         cmd_script = "launch_script_thermo.sh"
+    elif "solvent" in job:
+        cmd_script = "launch_script_solvent.sh"
+    else:
+        GA_run = get_current_GA()
+        if GA_run.config["optimize"]:
+            cmd_script = "launch_script_optimize.sh"
+        else:
+            cmd_script = "launch_script_sp.sh"
+    cmd_str ='qsub -j y -N  ' +name + ' -o ' + opath + ' -e '+epath +' ' +get_run_dir() + cmd_script + ' ' + job
     print(cmd_str)
     p_sub = subprocess.Popen(cmd_str,shell=True,stdout=subprocess.PIPE)
     ll = p_sub.communicate()[0]
@@ -100,9 +110,10 @@ def submit_outstanding_jobs():
                         logger(path_dictionary['state_path'],str(datetime.datetime.now())
                            + " Giving up on job : " + str(jobs) + ' with '+ str(number_of_attempts) + ' attempts')
                         update_converged_job_dictionary(jobs,6) # mark job as abandoned 
-                        gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,basename=translate_job_name(jobs)
-                        update_current_gf_dictionary(gene,0) # zero out fitness
-
+                        if not "thermo" in job and not "solvent" in job:
+                            gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename=translate_job_name(jobs)
+                            if ahf == float(GA_run.config["exchange"]): # if this is the target HFX frac
+                                update_current_gf_dictionary(gene,0) # zero out fitness
             else:
                 print('job is live or empty or queue is full')
     write_dictionary(submitted_job_dictionary, path_dictionary["job_path"] + "/submitted_jobs.csv")
@@ -127,7 +138,7 @@ def check_queue_for_live_jobs():
     for jobs in live_job_dictionary.keys():
             this_job_id = live_job_dictionary[jobs]
             this_status = is_job_live(this_job_id)
-            gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,basename =  translate_job_name(jobs)
+            gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename =  translate_job_name(jobs)
             if this_status:
                 counter += 1
                 print('recording as live:',jobs,this_job_id)

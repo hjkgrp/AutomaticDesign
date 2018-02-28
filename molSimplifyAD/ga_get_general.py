@@ -1,5 +1,5 @@
 import csv
-from molSimplifyAD.ga_tools import get_run_dir, isDFT, read_dictionary
+from molSimplifyAD.ga_tools import *
 
 class gene:
     def __init__(self,name,fitness,frequency,generation):
@@ -78,11 +78,16 @@ def _get_freq_fitness(lastgen, npool):
     if not isDFT():
             full_gene_info = dict()
             ANN_split_dict = dict()
+            GA_run = get_current_GA()
+            runtype = GA_run.config["runtype"]
             for generation in xrange(lastgen+1):
                 ANN_dir = get_run_dir() + "ANN_ouput/gen_"+str(generation)+"/ANN_results.csv"
                 emsg, ANN_dict = read_dictionary(ANN_dir)
                 for keys in ANN_dict.keys():
-                    this_gene = "_".join(keys.split("_")[4:9])
+                    if runtype == "split":
+                        this_gene = "_".join(keys.split("_")[4:10])
+                    elif runtype == "redox":
+                        this_gene = "_".join(keys.split("_")[4:9])                    
                     this_energy = float(ANN_dict[keys].split(",")[0])
                     this_dist = float(ANN_dict[keys].split(",")[1].strip('\n'))
                     if not(this_gene in ANN_split_dict.keys()):
@@ -140,7 +145,10 @@ def _get_freq_fitness(lastgen, npool):
         if not isDFT():
             mean_split = 0.0 
             count = 0
+            print('ANN keys are ')
+            print(ANN_split_dict.keys())
             for geneName in current_gene_list:
+                
                 if geneName in ANN_split_dict.keys():
                     mean_split += abs(ANN_split_dict[geneName])
                     count += 1

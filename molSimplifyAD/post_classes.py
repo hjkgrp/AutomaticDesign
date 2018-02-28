@@ -141,7 +141,10 @@ class DFTRun:
                                 counter += 1
                 self.eq_MLB = total_eq_distance/counter
         except: 
-                self.coord = 'unknown'
+                #self.coord = 'error'
+                self.eq_MLB = 'error'
+                self.ax1_MLB = 'error'
+                self.ax2_MLB = 'error'
         try:
                 ## get init data if avail
                 ax_dist,eq_dist = getOctBondDistances(self.init_mol)
@@ -157,7 +160,10 @@ class DFTRun:
                                 counter += 1
                 self.init_eq_MLB = total_eq_distance/counter
         except:
-                self.init_coord = 'unknown'
+                #self.init_coord = 'error'
+                self.init_eq_MLB = 'error'
+                self.init_ax1_MLB = 'error'
+                self.init_ax2_MLB = 'error'
         
              
     def configure(self,metal,ox,eqlig,axlig1,axlig2,spin,alpha,spin_cat):
@@ -194,19 +200,19 @@ class DFTRun:
     def check_coordination(self):
         try:
             this_metal = self.mol.findMetal()[0]
-            these_neighbours = self.mol.getBondedAtoms(this_metal)
+            these_neighbours = self.mol.getBondedAtomsOct(this_metal)
             self.coord = len(these_neighbours)	
         except:
             self.coord = 0
         try:
             this_metal = self.mop_mol.findMetal()[0]
-            these_neighbours = self.mop_mol.getBondedAtoms(this_metal)
+            these_neighbours = self.mop_mol.getBondedAtomsOct(this_metal)
             self.mop_coord = len(these_neighbours)	
         except:
             self.mop_coord = 0
         try:
             this_metal = self.init_mol.findMetal()[0]
-            these_neighbours = self.init_mol.getBondedAtoms(this_metal)
+            these_neighbours = self.init_mol.getBondedAtomsOct(this_metal)
             self.init_coord = len(these_neighbours)	
         except:
             self.init_coord = 0
@@ -266,6 +272,28 @@ class DFTRun:
                         f_solvent.write(line)
             f_solvent.write('end')
             f_solvent.close()
+
+    def write_HFX_inputs(self):
+        path_dictionary = setup_paths()
+        guess_string = 'guess ' + get_run_dir() + 'scr/geo/' +self.name + '/ca0'+ ' '+ get_run_dir() + 'scr/geo/' +self.name + '/cb0'
+        self.thermo_inpath = path_dictionary['thermo_infiles'] + self.name + '.in'
+        ### check thermo
+        if not os.path.exists(self.thermo_inpath):
+            f_thermo = open(self.thermo_inpath,'w')
+            f_thermo.write('run frequencies \n')
+            f_thermo.write('coordinates '+self.geopath + ' \n')
+            f_thermo.write('scrdir scr/thermo/  \n')
+            f_thermo.write(guess_string)
+            with open(self.inpath,'r') as ref:
+                for line in ref:
+                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not("run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
+                     ## these lines should be common 
+                        f_thermo.write(line)
+            f_thermo.write('end')
+            f_thermo.close()
+
+        
+            
     def append_descriptors(self,list_of_names,list_of_props,prefix,suffix):
         for names in list_of_names:
             if hasattr(names, '__iter__'):

@@ -28,7 +28,8 @@ class GA_generation:
                 self.gene_compound_dictionary = dict()
                 self.total_counter = total_counter = 0
 
-        def configure_gen(self,gen_num,npool,ncross,pmut,maxgen,scoring_function="split",split_parameter = 15.0,distance_parameter = 1,DFT =True, RTA = False,mean_fitness =  0,monitor_diversity=False,monitor_distance=False,**kwargs):
+        def configure_gen(self,gen_num,npool,ncross,pmut,maxgen,scoring_function="split",split_parameter = 15.0,distance_parameter = 1,DFT =True, 
+                                RTA = False,mean_fitness =  0,monitor_diversity=False,monitor_distance=False,**kwargs):
                 self.current_path_dictionary = advance_paths(self.base_path_dictionary,gen_num)
                 self.status_dictionary.update({'gen':gen_num})
                 self.status_dictionary.update({'scoring_function': scoring_function})
@@ -85,8 +86,8 @@ class GA_generation:
                         this_complex.replace_equitorial(eq_ind)
                         ## support for  ax1/ax2 asymmetry 
                         this_complex.replace_axial(sorted(ax_ind)) 
-                        this_gene = this_complex.name
                         print('this this_unique_name ', this_gene)
+                        this_gene = this_complex.name
                         if not this_gene in self.gene_compound_dictionary.keys():
                         ## we can accept this complex
                             self.genes[counter] = this_gene
@@ -186,10 +187,16 @@ class GA_generation:
         def assess_fitness(self):
             print('***********')
             print(self.genes)
-            print(self.gene_compound_dictionary)
+            print(self.gene_compound_dictionary.keys())
+            print('now printing what the gene-compound dictionary knows:')
+            for keys in self.gene_compound_dictionary.keys():
+                    print('key: ' + str(keys) + ' val is  ' +  str(self.gene_compound_dictionary[keys]))
             print('***********')
             ## loop all over genes in the pool and the selected set
             fitkeys  = self.gene_fitness_dictionary.keys()
+            print('now printing what the gene-fitness dictionary knows:')
+            for keys in fitkeys:
+                    print('key: ' + str(keys) + ' val is  ' +  str(self.gene_fitness_dictionary[keys]))
             fitness_values  = dict()
             print('is code ready to advance?: '+str(self.status_dictionary["ready_to_advance"]))
             logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen "
@@ -198,6 +205,7 @@ class GA_generation:
             self.ready_to_advance = False
             self.outstanding_jobs = dict()
             for genekeys in self.genes.keys():
+                print('gene is ' + self.genes[genekeys])
                 genes = self.genes[genekeys]
                 ## see if this gene is in the fitness dictionary
                 if genes in fitkeys:
@@ -234,7 +242,7 @@ class GA_generation:
                 msg, ANN_dict = read_dictionary(self.current_path_dictionary["ANN_output"] +'ANN_results.csv')
 
                 for keys in ANN_dict.keys():
-                        gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,basename = translate_job_name(keys)
+                        gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename = translate_job_name(keys)
                         this_split_energy = float(ANN_dict[keys].split(',')[0])
                         this_ann_dist = float(ANN_dict[keys].split(',')[1].strip('\n'))
 
@@ -266,6 +274,7 @@ class GA_generation:
                                                                       rundirpath = get_run_dir())
                                 if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
                                         ## save result
+                                        print('saving result in ANN dict: ' + mol_name)
                                         ANN_results_dict.update({mol_name:",".join([str(ANN_split),str(ANN_distance)])})
                                         jobpaths.append(jobpath)
                                         logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen "
@@ -279,11 +288,17 @@ class GA_generation:
 #Tree doctor will do checkup on tree's diversity and distance. Functionality can be switched on or off. Automatically off if DFT enabled. 
 	def get_full_values(self,curr_gen):
 		full_gene_info = dict()
-        	for gen in xrange(curr_gen+1):
-            		ANN_dir = get_run_dir() + "ANN_ouput/gen_"+str(gen)+"/ANN_results.csv"
+		GA_run = get_current_GA()
+		runtype = GA_run.config["runtype"]
+		for gen in xrange(curr_gen+1):
+			ANN_dir = get_run_dir() + "ANN_ouput/gen_"+str(gen)+"/ANN_results.csv"
 			emsg, ANN_dict = read_dictionary(ANN_dir)
 			for keys in ANN_dict.keys():
-				this_gene = "_".join(keys.split("_")[4:9])
+				if runtype == "split":
+					this_gene = "_".join(keys.split("_")[4:10])
+					print('using split : '"_".join(keys.split("_")))
+				elif runtype == "redox":
+					this_gene = "_".join(keys.split("_")[4:9])   
 				this_energy = float(ANN_dict[keys].split(",")[0])
 				this_dist = float(ANN_dict[keys].split(",")[1].strip('\n'))
 				if not(this_gene in full_gene_info.keys()):
