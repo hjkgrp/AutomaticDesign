@@ -128,6 +128,8 @@ def check_all_current_convergence():
                         logger(path_dictionary['state_path'],str(datetime.datetime.now()) + ' job  ' + str(this_run.outpath) + ' not converged')
                         this_run.extract_prog()
                         if this_run.progstatus ==0:
+                            this_run.archive()
+                            this_run.write_modifed_infile()
                             this_run.status = 2
                         else:
                             this_run.status = 6 ## no prog!
