@@ -28,7 +28,6 @@ def check_all_current_convergence():
     all_runs = dict()
     jobs_complete = 0
     GA_run = get_current_GA()
-    
     if GA_run.config["optimize"]:
         print('post processing geometry files')    
         ### return codes:
@@ -46,7 +45,7 @@ def check_all_current_convergence():
         for jobs in joblist:
             if  (jobs not in live_job_dictionary.keys()) and (len(jobs.strip('\n'))!=0) and not ("thermo" in jobs) and not ("solvent" in jobs):
                 ## upack job name
-                gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,basename = local_translate_job_name(jobs)
+                gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,base_name = translate_job_name(jobs)
                 ## create run
                 this_run=DFTRun(base_name)
                 ## add info
@@ -56,25 +55,28 @@ def check_all_current_convergence():
                 this_run.logpath = get_run_dir() + 'post_process_log.txt'
                 ## populate run 
                 this_run.configure(metal,ox,eqlig,axlig1,axlig2,spin,alpha,spin_cat)        
-                ## nmake unique gene
+                ## make unique gene
                 name = "_".join([str(metal),'eq',str(eqlig),'ax1',str(axlig1),'ax2',str(axlig2),'ahf',str(alpha)])
+
                 ## set file paths
-                path_dictionary =  local_setup_paths()
-                this_run.geopath = (path_dictionary["optimial_geo_path" ] + base_name + ".xyz")
-                this_run.progpath = (path_dictionary["progress_geo_path" ] + base_name + ".xyz")
-                this_run.init_geopath = (path_dictionary["initial_geo_path" ] + base_name + ".xyz")
+                path_dictionary =  setup_paths()
+                path_dictionar=advance_paths(path_dictionary,gen) ## this adds the /gen_x/ to the paths
 
-                this_run.outpath = (path_dictionary["geo_out_path" ] + base_name + ".out")
-                this_run.thermo_outpath = (path_dictionary["themo_out_path" ] + base_name + ".out")
-                this_run.solvent_outpath = (path_dictionary["solvent_out_path" ] + base_name + ".out")
-                this_run.sp_outpath = (path_dictionary["sp_out_path" ] + base_name + ".out")
+                this_run.geopath = (path_dictionary["optimial_geo_path" ] +'/'+ base_name + ".xyz")
+                this_run.progpath = (path_dictionary["prog_geo_path" ] +'/'+ base_name + ".xyz")
+                this_run.init_geopath = (path_dictionary["initial_geo_path" ]+'/' + base_name + ".xyz")
+
+                this_run.outpath = (path_dictionary["geo_out_path" ]+'/' + base_name + ".out")
+                this_run.thermo_outpath = (path_dictionary["thermo_out_path" ] +'/'+ base_name + ".out")
+                this_run.solvent_outpath = (path_dictionary["solvent_out_path" ]+'/' + base_name + ".out")
+                this_run.sp_outpath = (path_dictionary["sp_out_path" ]+ '/' + base_name + ".out")
             
-                this_run.scrpath = path_dictionary["scr_path" ]  + base_name +"/optim.xyz"
-                this_run.inpath = path_dictionary["job_path" ] + base_name +".in"
-                this_run.comppath = path_dictionary["done_path" ] + base_name +".in"
+                this_run.scrpath = path_dictionary["scr_path" ] +'/' + base_name +"/optim.xyz"
+                this_run.inpath = path_dictionary["job_path" ]+'/' + base_name +".in"
+                this_run.comppath = path_dictionary["done_path" ]+'/' + base_name +".in"
 
-                this_run.moppath = path_dictionary["mopac_path" ] + base_name + ".out"
-                this_run.mop_geopath = path_dictionary["mopac_path" ] + base_name + ".xyz"
+                this_run.moppath = path_dictionary["mopac_path" ] +'/'+ base_name + ".out"
+                this_run.mop_geopath = path_dictionary["mopac_path" ]+'/' + base_name + ".xyz"
                 
                 this_run.estimate_if_job_live()
                 if this_run.islive:

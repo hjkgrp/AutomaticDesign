@@ -37,7 +37,7 @@ inpath=$generalpath/infiles/$gennumpath/$namebase.in
 opt_geo_path=$generalpath/optimized_geo/$gennumpath/$namebase.xyz
 prog_geo_path=$generalpath/prog_geo/$gennumpath/$namebase.xyz
 initial_geo_path=$generalpath/initial_geo/$gennumpath/$namebase.xyz
-outpath=$generalpath/outfiles/$gennumpath/$namebase.out
+outpath=$generalpath/geo_outfiles/$gennumpath/$namebase.out
 completepath=$generalpath/completejobs/$gennumpath/$namebase.done
 scrpath=$generalpath
 echo "scr will be copied to  $scrpath"
