@@ -27,17 +27,20 @@ def launch_job(job,sub_num):
     name  = 'GA_'+ str(gene) + '_'+str(spin)
     opath = get_run_dir()+name + '.o'
     epath = get_run_dir()+name + '.e'
+    GA_run = get_current_GA()
     if "thermo" in job:
          cmd_script = "launch_script_thermo.sh"
     elif "solvent" in job:
         cmd_script = "launch_script_solvent.sh"
     else:
-        GA_run = get_current_GA()
         if GA_run.config["optimize"]:
             cmd_script = "launch_script_geo.sh"
         else:
             cmd_script = "launch_script_sp.sh"
-    cmd_str ='qsub -j y -N  ' +name + ' -o ' + opath + ' -e '+epath +' ' +get_run_dir() + cmd_script + ' ' + job
+    if GA_run.config["queue_type"] == "SGE":
+        cmd_str ='qsub -j y -N  ' +name + ' '+ '-o ' + opath + ' ' +'-e '+epath +' ' +get_run_dir() + cmd_script + ' ' + job
+    else:
+        cmd_str ='sbatch -J' + name + ' ' + ' -o ' + opath + ' ' + '-e '+epath + ' '+ get_run_dir() + cmd_script + ' ' + job 
     print(cmd_str)
     p_sub = subprocess.Popen(cmd_str,shell=True,stdout=subprocess.PIPE)
     ll = p_sub.communicate()[0]
@@ -46,7 +49,11 @@ def launch_job(job,sub_num):
     return job_id
 ########################
 def is_job_live(job_id):
-    cmd_str = ('qstat -j '+ str(job_id))
+    GA_run = get_current_GA()
+    if GA_run.config["queue_type"] == "SGE":
+        cmd_str = ('qstat -j '+ str(job_id))
+    else:
+        cmd_str = ('squeue -j '+ str(job_id))
     p1 = subprocess.Popen(cmd_str,shell=True,
                           stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     rt,ll = p1.communicate()
