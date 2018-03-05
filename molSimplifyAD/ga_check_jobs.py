@@ -25,11 +25,13 @@ def check_all_current_convergence():
     converged_jobs = find_converged_job_dictionary()
     ## sub'd jobs
     joblist = submitted_job_dictionary.keys()
-    all_runs = dict()
+    
     jobs_complete = 0
     GA_run = get_current_GA()
     ## allocate holder for result list
     final_results = dict()
+    all_runs = dict()
+    print('found '+str(len(joblist)) + 'jobs to check')
     if GA_run.config["optimize"]:
         print('post processing geometry files')    
         ### return codes:
@@ -43,8 +45,7 @@ def check_all_current_convergence():
         ## 6 -> give up, no progress
         ## 12-> job requests thermo
         ## 13-> job requests solvent
-        all_runs = dict()      
-        print('found '+str(len(joblist)) + 'jobs to check')
+        
         for jobs in joblist:
             if  (jobs not in live_job_dictionary.keys()) and (len(jobs.strip('\n'))!=0) and not ("thermo" in jobs) and not ("solvent" in jobs):
                 ## upack job name
@@ -166,36 +167,36 @@ def check_all_current_convergence():
                         logger(path_dictionary['state_path'],str(datetime.datetime.now())
                                    + " failure at job : " + str(jobs) + ' with status '+ str(this_run.status))
                         remove_outstanding_jobs(jobs) # take out of pool
-            print('\n')
-            list_of_props = list()
-            list_of_props.append('name')
-            list_of_props.append('convergence')
-            list_of_props.append('gene')
-            list_of_props.append('metal')
-            list_of_props.append('alpha')
-            list_of_props.append('ox2RN')
-            list_of_props.append('ox3RN')
-            list_of_props.append('axlig1')
-            list_of_props.append('axlig2')
-            list_of_props.append('eqlig')  
-            list_of_prop_names =['converged','energy','init_energy','coord','rmsd','maxd','status','time','spin','ss_act','ss_target','ax1_MLB','ax2_MLB','eq_MLB',
-                        'init_ax1_MLB','init_ax2_MLB','init_eq_MLB','thermo_cont','imag','solvent_cont','geopath','terachem_version','terachem_detailed_version',
-                        'basis','charge','alpha_level_shift','beta_level_shift','functional','mop_energy','mop_coord','attempted']
-            for props in list_of_prop_names:
-                for spin_cat in ['LS','HS']:
-                    for ox in ['2','3']:
-                        list_of_props.append("_".join(['ox',str(ox),spin_cat,props]))
-            list_of_props.append('attempted')
-            final_results = process_runs_geo(all_runs,list_of_prop_names,spin_dictionary())
-            if not (os.path.isfile(get_run_dir() + '/results_post.csv')):
-                    logger(path_dictionary['state_path'],str(datetime.datetime.now())
-                                   + " starting output log file at " + get_run_dir() + '/results_post.csv')
-            with open('unified_results_post.csv','w') as f:
-                writeprops(list_of_props,f)
-                for reskeys in final_results.keys():
-                    values = atrextract(final_results[reskeys],list_of_props)
-                    writeprops(values,f)
-                print('\n**** end of file inspection **** \n')
+        print('\n')
+        list_of_props = list()
+        list_of_props.append('name')
+        list_of_props.append('convergence')
+        list_of_props.append('gene')
+        list_of_props.append('metal')
+        list_of_props.append('alpha')
+        list_of_props.append('ox2RN')
+        list_of_props.append('ox3RN')
+        list_of_props.append('axlig1')
+        list_of_props.append('axlig2')
+        list_of_props.append('eqlig')  
+        list_of_prop_names =['converged','energy','init_energy','coord','rmsd','maxd','status','time','spin','ss_act','ss_target','ax1_MLB','ax2_MLB','eq_MLB',
+                    'init_ax1_MLB','init_ax2_MLB','init_eq_MLB','thermo_cont','imag','solvent_cont','geopath','terachem_version','terachem_detailed_version',
+                    'basis','charge','alpha_level_shift','beta_level_shift','functional','mop_energy','mop_coord','attempted']
+        for props in list_of_prop_names:
+            for spin_cat in ['LS','HS']:
+                for ox in ['2','3']:
+                    list_of_props.append("_".join(['ox',str(ox),spin_cat,props]))
+        list_of_props.append('attempted')
+        final_results = process_runs_geo(all_runs,list_of_prop_names,spin_dictionary())
+        if not (os.path.isfile(get_run_dir() + '/results_post.csv')):
+                logger(path_dictionary['state_path'],str(datetime.datetime.now())
+                               + " starting output log file at " + get_run_dir() + '/results_post.csv')
+        with open('unified_results_post.csv','w') as f:
+            writeprops(list_of_props,f)
+            for reskeys in final_results.keys():
+                values = atrextract(final_results[reskeys],list_of_props)
+                writeprops(values,f)
+            print('\n**** end of file inspection **** \n')
     else:
         print('post processing SP/spin files')    
         LS_jobs=dict()
