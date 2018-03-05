@@ -39,7 +39,7 @@ prog_geo_path=$generalpath/prog_geo/$gennumpath/$namebase.xyz
 initial_geo_path=$generalpath/initial_geo/$gennumpath/$namebase.xyz
 outpath=$generalpath/geo_outfiles/$gennumpath/$namebase.out
 completepath=$generalpath/completejobs/$gennumpath/$namebase.done
-scrpath=$generalpath/scr/sp/$gennumpath/
+scrpath=$generalpath/scr/geo/$gennumpath/
 echo "scr will be copied to  $scrpath"
 echo "paths set"
 ## sett local, workdir related paths and copy files
@@ -51,7 +51,7 @@ echo "copied"
 echo "inpath is $inpath"
 echo "Initializing local run, finding input files..."
 mkdir -p scr
-mkdir -p scr/geo
+mkdir -p scr/geo/$gennumpath
 spacer='_'
 echo "begining"
 echo "file is  $namebase"
@@ -77,7 +77,7 @@ EOF
 ## copy infile back to path
 cp $inpath $localinpath
 
-echo "Launching SP calc: $namebase"
+echo "Launching geo calc: $namebase"
 
 terachem $localinpath >  $localoutpath
 echo "Complete"
