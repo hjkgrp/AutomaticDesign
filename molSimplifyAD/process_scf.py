@@ -198,6 +198,8 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
                 this_comp.convergence += 1
             if this_run.coord == 6 and not this_comp.set_desc:
                 try:
+                    if not os.path.isdir('used_geos/'):
+                        os.makedir('used_geos/')
                     this_run.mol.writexyz('used_geos/'+this_name+'.xyz')
                     this_comp.axlig1 = this_run.axlig1
                     this_comp.axlig2 = this_run.axlig2
@@ -205,6 +207,8 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
                     this_comp.set_rep_mol(this_run)
                     this_comp.get_descriptor_vector(loud=False,name=this_name)
                 except:
+                    if not os.path.isdir('bad_geos/'):
+                        os.makedir('bad_geos/')
                     this_run.mol.writexyz('bad_geos/'+this_name+'.xyz')
                     this_comp.convergence -= 1
                     this_run.coord = 'error'
