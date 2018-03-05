@@ -14,7 +14,7 @@ from molSimplifyAD.process_scf import *
 from molSimplifyAD.post_classes import *
 #######################
 def check_all_current_convergence():
-    print('\n checking convergence of jobs\n')
+    print('\nchecking convergence of jobs\n')
     ## set up environment:        
     path_dictionary = setup_paths()
     ## previously dispatched jobs:
@@ -28,6 +28,8 @@ def check_all_current_convergence():
     all_runs = dict()
     jobs_complete = 0
     GA_run = get_current_GA()
+    ## allocate holder for result list
+    final_results = dict()
     if GA_run.config["optimize"]:
         print('post processing geometry files')    
         ### return codes:
@@ -42,6 +44,7 @@ def check_all_current_convergence():
         ## 12-> job requests thermo
         ## 13-> job requests solvent
         all_runs = dict()      
+        print('found '+str(len(joblist)) + 'jobs to check')
         for jobs in joblist:
             if  (jobs not in live_job_dictionary.keys()) and (len(jobs.strip('\n'))!=0) and not ("thermo" in jobs) and not ("solvent" in jobs):
                 ## upack job name
@@ -60,30 +63,31 @@ def check_all_current_convergence():
 
                 ## set file paths
                 path_dictionary =  setup_paths()
-                path_dictionar=advance_paths(path_dictionary,gen) ## this adds the /gen_x/ to the paths
+                path_dictionary =advance_paths(path_dictionary,gen) ## this adds the /gen_x/ to the paths
 
-                this_run.geopath = (path_dictionary["optimial_geo_path" ] +'/'+ base_name + ".xyz")
-                this_run.progpath = (path_dictionary["prog_geo_path" ] +'/'+ base_name + ".xyz")
-                this_run.init_geopath = (path_dictionary["initial_geo_path" ]+'/' + base_name + ".xyz")
+                this_run.geopath = (path_dictionary["optimial_geo_path" ] + base_name + ".xyz")
+                this_run.progpath = (path_dictionary["prog_geo_path" ] + base_name + ".xyz")
+                this_run.init_geopath = (path_dictionary["initial_geo_path" ]+ base_name + ".xyz")
 
-                this_run.outpath = (path_dictionary["geo_out_path" ]+'/' + base_name + ".out")
-                this_run.thermo_outpath = (path_dictionary["thermo_out_path" ] +'/'+ base_name + ".out")
-                this_run.solvent_outpath = (path_dictionary["solvent_out_path" ]+'/' + base_name + ".out")
+                this_run.outpath = (path_dictionary["geo_out_path" ]+ base_name + ".out")
+                this_run.thermo_outpath = (path_dictionary["thermo_out_path" ] + base_name + ".out")
+                this_run.solvent_outpath = (path_dictionary["solvent_out_path" ]+ base_name + ".out")
                 this_run.sp_outpath = (path_dictionary["sp_out_path" ]+ '/' + base_name + ".out")
             
-                this_run.scrpath = path_dictionary["scr_path" ] +'/' + base_name +"/optim.xyz"
-                this_run.inpath = path_dictionary["job_path" ]+'/' + base_name +".in"
-                this_run.comppath = path_dictionary["done_path" ]+'/' + base_name +".in"
+                this_run.scrpath = path_dictionary["scr_path" ]  + base_name +"/optim.xyz"
+                this_run.inpath = path_dictionary["job_path" ]+ base_name +".in"
+                this_run.comppath = path_dictionary["done_path" ] + base_name +".in"
 
-                this_run.moppath = path_dictionary["mopac_path" ] +'/'+ base_name + ".out"
-                this_run.mop_geopath = path_dictionary["mopac_path" ]+'/' + base_name + ".xyz"
-                
-                this_run.estimate_if_job_live()
-                if this_run.islive:
-                        this_run.status = 4 ## mark as live
-                        print('run: ' + this_run.name +" is live ? " + str(this_run.islive))
-                else:
-                    test_terachem_go_convergence(this_run)
+                this_run.moppath = path_dictionary["mopac_path" ]+ base_name + ".out"
+                this_run.mop_geopath = path_dictionary["mopac_path" ] + base_name + ".xyz"
+                if os.path.isfile(this_run.outpath): 
+                        this_run.estimate_if_job_live()
+                        if this_run.islive :
+                                this_run.status = 4 ## mark as live
+                                print('run: ' + this_run.name +" is live ? " + str(this_run.islive))
+                        else:
+                            test_terachem_go_convergence(this_run)
+
                 all_runs.update({this_run.name:this_run})
                 print('added ' + this_run.name + ' to all_runs')
                 logger(path_dictionary['state_path'],str(datetime.datetime.now())
@@ -120,7 +124,7 @@ def check_all_current_convergence():
                     else: # not B3LYP, check coord only:
                         if run_success:
                                 this_run.status=0 #all done
-                    if this_run.success:
+                    if run_success:
                         if not os.path.exists(this_run.comppath):
                                     print('this run does not have finished files')
                                     shutil.copy(this_run.inpath,this_run.comppath)

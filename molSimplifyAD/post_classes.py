@@ -113,9 +113,10 @@ class DFTRun:
         self.mol = this_mol
     def obtain_init_mol3d(self):
         this_mol = mol3D()
+        print('looking for init mol at ' +self.init_geopath)
         if os.path.exists(self.init_geopath):
                 this_mol.readfromxyz(self.init_geopath)
-                print('looking for init mol at ' +self.init_geopath)
+                print('found  init mol at ' +self.init_geopath)
         self.init_mol = this_mol
     def extract_prog(self):
          self.progstatus = extract_file_check(self.scrpath,self.progpath)

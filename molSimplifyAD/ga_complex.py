@@ -328,7 +328,7 @@ class octahedral_complex:
         optimize = this_GA.config['optimize']
         
         if optimize:
-            print(' setting up GO optimization ')
+            print(' setting up GEO optimization ')
             rty = 'minimize'
         else:
             rty = 'energy'
@@ -359,7 +359,7 @@ class octahedral_complex:
                         print(call)
                         sys.exit()
                     
-                if this_GA.config['symclass']=="weak":                        
+                if this_GA.config['symclass']=="strong":                        
                     with open(rundirpath + 'temp' +'/' + mol_name + '.report') as report_f:
                         for line in report_f:
                                 if ("pred_split" in line):
@@ -373,6 +373,11 @@ class octahedral_complex:
                                     ll = line.split(',')[1]
                                     ANN_distance = float(ll)
                                     print('ANN_distance is ' +"{0:.2f}".format(ANN_distance))
+                elif this_GA.config['symclass']=="weak": ## ANN not currently supported!
+                    ANN_split = False
+                    ANN_distance = False
+                       
+
                 shutil.move(rundirpath + 'temp' +'/' + mol_name + '.report', path_dictionary["ms_reps"] +'/'+ mol_name + '.report')
 
 

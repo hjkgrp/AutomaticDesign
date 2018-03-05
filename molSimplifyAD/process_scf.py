@@ -132,6 +132,7 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
     final_results=dict()
     matched = False
     number_of_matches  = 0
+    print(local_spin_dictionary)
     print('processing all converged runs')
     for runkeys in all_runs.keys():
         skip = False
@@ -150,7 +151,7 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
         print(runkeys)
         this_comp.attempted += 1 # advance number of attempts
         ## get basic details
-        this_metal = str(this_run.metal)
+        this_metal = get_metals()[int(this_run.metal)]
         this_ox = int(this_run.ox)
         metal_spins  = local_spin_dictionary[this_metal][this_ox]
         if this_run.spin not in metal_spins:
@@ -368,6 +369,9 @@ def test_terachem_go_convergence(this_run):
         if os.path.exists(this_run.scrpath):
             this_run.extract_geo()
             print('  geo extracted to  ' +this_run.geopath)
+        else:
+            print(' cannot find scr:   ' +this_run.scrpath)
+
     if os.path.exists(this_run.outpath):
         read_terachem_go_output(this_run)
     else:
