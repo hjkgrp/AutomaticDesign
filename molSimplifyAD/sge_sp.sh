@@ -38,7 +38,7 @@ opt_geo_path=$generalpath/optimized_geo/$gennumpath/$namebase.xyz
 initial_geo_path=$generalpath/initial_geo/$gennumpath/$namebase.xyz
 outpath=$generalpath/outfiles/$gennumpath/$namebase.out
 completepath=$generalpath/completejobs/$gennumpath/$namebase.done
-scrpath=$generalpath
+scrpath=$generalpath/scr/sp/$gennumpath/
 echo "scr will be copied to  $scrpath"
 echo "paths set"
 ## sett local, workdir related paths and copy files
@@ -83,4 +83,4 @@ echo "Complete"
 
 ## copy back complete cases 
 cp $localoutpath $outpath
-cp -r scr $scrpath
+cp -r scr/sp/$namebase $scrpath

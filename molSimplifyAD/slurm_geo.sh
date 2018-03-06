@@ -5,39 +5,52 @@
 #SBATCH --time 40:00:00
 #SBATCH -A p-che140105
 #SBATCH -p normal
-fullpath="$1"
 
 
-echo $fullpath
-namebase=`echo $fullpath | sed "s/[.]in//"| sed "s:.*/::"`
-echo "namebase = $namebase" 
-generalpathn="/cstor/xsede/users/xs-jpjanet/xstream_redox"
-generalpath="/cstor/xsede/users/xs-jpjanet/xstream_redox/"
-echo "Beginingi xstream geometry optimization run"
+
 export OMP_NUM_THREADS=1
 module load terachem
 export TeraChem="/cstor/xsede/users/xs-jpjanet"
+
+fullpath="$1"
+
+
+echo "full path is $fullpath"
+generalpath=`echo $(dirname $fullpath) | sed "s,/*[^/]\*$,,"`
+#echo "gen path is $generalpath"
+
+gennumpath=$(basename $generalpath)
+#echo "gen path is $generalpath"
+
+generalpath=`echo $(dirname $generalpath) | sed "s,/*[^/]\*$,,"`
+#echo "gen path is $generalpath"
+
+generalpath=`echo $(dirname $generalpath) | sed "s,/*[^/]\*$,,"`
+echo "gen path is $generalpath"
+
+namebase=`echo $fullpath | sed "s/[.]in//"| sed "s:.*/::"`
+
+echo "Begining calcualtion run"
+echo "general path is $generalpath"
+
 echo "gen path = $generalpath" 
 echo "namebase = $namebase" 
 echo "TeraChem basis dir = $TeraChem"
-sourcepath=$generalpathn/jobs/$namebase.in
-inpath=$generalpathn/infiles/$namebase.in
-opt_geo_path=$generalpathn/optimized_geo/$namebase.xyz
-prog_geo_path=$generalpathn/prog_geo/$namebase.xyz
+sourcepath=$fullpath
+inpath=$generalpath/infiles/$gennumpath/$namebase.in
+opt_geo_path=$generalpath/optimized_geo/$gennumpath/$namebase.xyz
+prog_geo_path=$generalpath/prog_geo/$gennumpath/$namebase.xyz
+initial_geo_path=$generalpath/initial_geo/$gennumpath/$namebase.xyz
+outpath=$generalpath/geo_outfiles/$gennumpath/$namebase.out
+completepath=$generalpath/completejobs/$gennumpath/$namebase.done
+scrpath=$generalpath/scr/sp/$gennumpath/
+echo "scr will be copied to  $scrpath"
+echo "paths set"
 
-opt_geo_path=`echo "$opt_geo_path" | awk '{print tolower($0)}'`
-echo $opt_geo_path
-
-initial_geo_path=$generalpathn/initial_geo/$namebase.xyz
-outpath=$generalpathn/geo_outfiles/$namebase.out
-localoutpath=$namebase.out
-completepath=$generalpathin/completejobs/$namebase.in
-scrpath=$generalpathn/scr/geo/$namebase
-geoextr=$generalpathn/optgeo_extract.py
 echo "inpath is $inpath"
 echo "Initializing local run, finding input files..."
-mkdir -p $generalpathn/scr
-mkdir -p $generalpathn/scr/geo
+mkdir -p scr
+mkdir -p scr/geo/$gennumpath
 spacer='_'
 echo "begining"
 echo "file is  $namebase"
@@ -54,7 +67,7 @@ echo $coordfile
 if [ -e $prog_geo_path ]; then
 	echo "restarting from previously optimized geo"
 	coordfile=$prog_geo_path #write for continutation in alpha
-	guess_opt="$generalpathn/scr/geo/$namebase/ca0 $generalpathn/scr/geo/$namebase/cb0"
+	guess_opt="$generalpathn/scr/geo/$gennumpath/$namebase/ca0 $generalpathn/scr/geo/$gennumpath/$namebase/cb0"
 	wf_guess_flag=1
 	echo "Since there is no hand-on guess, and optgeo exists \n"
 	echo "I will try to use the scr value. \n"
@@ -85,6 +98,6 @@ if [ -e $scrpath ]; then
 fi
 stringtotest="$scrpath/optim.xyz"
 cp $localoutpath $outpath
-cp -r  scr
+cp -r scr/geo/$namebase $scrpath
 echo "Complete"
 

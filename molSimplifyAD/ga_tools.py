@@ -117,24 +117,24 @@ def renameHFX(job,newHFX):
 def setup_paths():
     working_dir = get_run_dir()
     path_dictionary = {
-                   "geo_out_path"     : working_dir + "geo_outfiles",
-                   "sp_out_path"      : working_dir + "sp_outfiles",
+                   "geo_out_path"     : working_dir + "geo_outfiles/",
+                   "sp_out_path"      : working_dir + "sp_outfiles/",
                    "scr_path"         : working_dir + "scr/geo/",
-                   "thermo_out_path"  : working_dir + "thermo_outfiles",                   
-                   "solvent_out_path" : working_dir + "solvent_outfiles",                   
-                   "job_path"         : working_dir + "jobs",
-                   "done_path"        : working_dir + "completejobs",
-                   "initial_geo_path" : working_dir + "initial_geo",
-                   "optimial_geo_path": working_dir + "optimized_geo",
-                   "prog_geo_path"    : working_dir + "prog_geo",
-                   "stalled_jobs"     : working_dir + "stalled_jobs",
-                   "archive_path"     : working_dir + "archive_resubs",
-                   "state_path"       : working_dir + "statespace",
-                   "molsimplify_inps" : working_dir + "ms_inps",
-                   "infiles"          : working_dir + "infiles",
-                   "mopac_path"       : working_dir + "mopac",
-                   "ANN_output"       : working_dir + "ANN_ouput",
-                   "ms_reps"          : working_dir + "ms_reps"}
+                   "thermo_out_path"  : working_dir + "thermo_outfiles/",                   
+                   "solvent_out_path" : working_dir + "solvent_outfiles/",                   
+                   "job_path"         : working_dir + "jobs/",
+                   "done_path"        : working_dir + "completejobs/",
+                   "initial_geo_path" : working_dir + "initial_geo/",
+                   "optimial_geo_path": working_dir + "optimized_geo/",
+                   "prog_geo_path"    : working_dir + "prog_geo/",
+                   "stalled_jobs"     : working_dir + "stalled_jobs/",
+                   "archive_path"     : working_dir + "archive_resub/s",
+                   "state_path"       : working_dir + "statespace/",
+                   "molsimplify_inps" : working_dir + "ms_inps/",
+                   "infiles"          : working_dir + "infiles/",
+                   "mopac_path"       : working_dir + "mopac/",
+                   "ANN_output"       : working_dir + "ANN_ouput/",
+                   "ms_reps"          : working_dir + "ms_reps/"}
     for keys in path_dictionary.keys():
         ensure_dir(path_dictionary[keys])
 #    shutil.copyfile(get_source_dir()+'wake.sh',get_run_dir()+'wake.sh')
@@ -146,7 +146,7 @@ def advance_paths(path_dictionary,generation):
     new_dict = dict()
     for keys in path_dictionary.keys():
         if not (keys == "molsimp_path"):
-            new_dict[keys] = path_dictionary[keys] + "/gen_" +  str(generation) + "/"
+            new_dict[keys] = path_dictionary[keys] + "gen_" +  str(generation) + "/"
             ensure_dir(new_dict[keys])
     return new_dict
 ########################

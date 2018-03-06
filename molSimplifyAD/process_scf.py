@@ -132,6 +132,7 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
     final_results=dict()
     matched = False
     number_of_matches  = 0
+    print(local_spin_dictionary)
     print('processing all converged runs')
     for runkeys in all_runs.keys():
         skip = False
@@ -150,7 +151,7 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
         print(runkeys)
         this_comp.attempted += 1 # advance number of attempts
         ## get basic details
-        this_metal = str(this_run.metal)
+        this_metal = get_metals()[int(this_run.metal)]
         this_ox = int(this_run.ox)
         metal_spins  = local_spin_dictionary[this_metal][this_ox]
         if this_run.spin not in metal_spins:
@@ -197,6 +198,8 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
                 this_comp.convergence += 1
             if this_run.coord == 6 and not this_comp.set_desc:
                 try:
+                    if not os.path.isdir('used_geos/'):
+                        os.makedir('used_geos/')
                     this_run.mol.writexyz('used_geos/'+this_name+'.xyz')
                     this_comp.axlig1 = this_run.axlig1
                     this_comp.axlig2 = this_run.axlig2
@@ -204,6 +207,8 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
                     this_comp.set_rep_mol(this_run)
                     this_comp.get_descriptor_vector(loud=False,name=this_name)
                 except:
+                    if not os.path.isdir('bad_geos/'):
+                        os.makedir('bad_geos/')
                     this_run.mol.writexyz('bad_geos/'+this_name+'.xyz')
                     this_comp.convergence -= 1
                     this_run.coord = 'error'
@@ -368,6 +373,9 @@ def test_terachem_go_convergence(this_run):
         if os.path.exists(this_run.scrpath):
             this_run.extract_geo()
             print('  geo extracted to  ' +this_run.geopath)
+        else:
+            print(' cannot find scr:   ' +this_run.scrpath)
+
     if os.path.exists(this_run.outpath):
         read_terachem_go_output(this_run)
     else:

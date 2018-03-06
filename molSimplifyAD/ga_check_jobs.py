@@ -14,7 +14,7 @@ from molSimplifyAD.process_scf import *
 from molSimplifyAD.post_classes import *
 #######################
 def check_all_current_convergence():
-    print('\n checking convergence of jobs\n')
+    print('\nchecking convergence of jobs\n')
     ## set up environment:        
     path_dictionary = setup_paths()
     ## previously dispatched jobs:
@@ -25,9 +25,13 @@ def check_all_current_convergence():
     converged_jobs = find_converged_job_dictionary()
     ## sub'd jobs
     joblist = submitted_job_dictionary.keys()
-    all_runs = dict()
+    
     jobs_complete = 0
     GA_run = get_current_GA()
+    ## allocate holder for result list
+    final_results = dict()
+    all_runs = dict()
+    print('found '+str(len(joblist)) + 'jobs to check')
     if GA_run.config["optimize"]:
         print('post processing geometry files')    
         ### return codes:
@@ -41,7 +45,7 @@ def check_all_current_convergence():
         ## 6 -> give up, no progress
         ## 12-> job requests thermo
         ## 13-> job requests solvent
-        all_runs = dict()      
+        
         for jobs in joblist:
             if  (jobs not in live_job_dictionary.keys()) and (len(jobs.strip('\n'))!=0) and not ("thermo" in jobs) and not ("solvent" in jobs):
                 ## upack job name
@@ -60,30 +64,31 @@ def check_all_current_convergence():
 
                 ## set file paths
                 path_dictionary =  setup_paths()
-                path_dictionar=advance_paths(path_dictionary,gen) ## this adds the /gen_x/ to the paths
+                path_dictionary =advance_paths(path_dictionary,gen) ## this adds the /gen_x/ to the paths
 
-                this_run.geopath = (path_dictionary["optimial_geo_path" ] +'/'+ base_name + ".xyz")
-                this_run.progpath = (path_dictionary["prog_geo_path" ] +'/'+ base_name + ".xyz")
-                this_run.init_geopath = (path_dictionary["initial_geo_path" ]+'/' + base_name + ".xyz")
+                this_run.geopath = (path_dictionary["optimial_geo_path" ] + base_name + ".xyz")
+                this_run.progpath = (path_dictionary["prog_geo_path" ] + base_name + ".xyz")
+                this_run.init_geopath = (path_dictionary["initial_geo_path" ]+ base_name + ".xyz")
 
-                this_run.outpath = (path_dictionary["geo_out_path" ]+'/' + base_name + ".out")
-                this_run.thermo_outpath = (path_dictionary["thermo_out_path" ] +'/'+ base_name + ".out")
-                this_run.solvent_outpath = (path_dictionary["solvent_out_path" ]+'/' + base_name + ".out")
+                this_run.outpath = (path_dictionary["geo_out_path" ]+ base_name + ".out")
+                this_run.thermo_outpath = (path_dictionary["thermo_out_path" ] + base_name + ".out")
+                this_run.solvent_outpath = (path_dictionary["solvent_out_path" ]+ base_name + ".out")
                 this_run.sp_outpath = (path_dictionary["sp_out_path" ]+ '/' + base_name + ".out")
             
-                this_run.scrpath = path_dictionary["scr_path" ] +'/' + base_name +"/optim.xyz"
-                this_run.inpath = path_dictionary["job_path" ]+'/' + base_name +".in"
-                this_run.comppath = path_dictionary["done_path" ]+'/' + base_name +".in"
+                this_run.scrpath = path_dictionary["scr_path" ]  + base_name +"/optim.xyz"
+                this_run.inpath = path_dictionary["job_path" ]+ base_name +".in"
+                this_run.comppath = path_dictionary["done_path" ] + base_name +".in"
 
-                this_run.moppath = path_dictionary["mopac_path" ] +'/'+ base_name + ".out"
-                this_run.mop_geopath = path_dictionary["mopac_path" ]+'/' + base_name + ".xyz"
-                
-                this_run.estimate_if_job_live()
-                if this_run.islive:
-                        this_run.status = 4 ## mark as live
-                        print('run: ' + this_run.name +" is live ? " + str(this_run.islive))
-                else:
-                    test_terachem_go_convergence(this_run)
+                this_run.moppath = path_dictionary["mopac_path" ]+ base_name + ".out"
+                this_run.mop_geopath = path_dictionary["mopac_path" ] + base_name + ".xyz"
+                if os.path.isfile(this_run.outpath): 
+                        this_run.estimate_if_job_live()
+                        if this_run.islive :
+                                this_run.status = 4 ## mark as live
+                                print('run: ' + this_run.name +" is live ? " + str(this_run.islive))
+                        else:
+                            test_terachem_go_convergence(this_run)
+
                 all_runs.update({this_run.name:this_run})
                 print('added ' + this_run.name + ' to all_runs')
                 logger(path_dictionary['state_path'],str(datetime.datetime.now())
@@ -120,7 +125,7 @@ def check_all_current_convergence():
                     else: # not B3LYP, check coord only:
                         if run_success:
                                 this_run.status=0 #all done
-                    if this_run.success:
+                    if run_success:
                         if not os.path.exists(this_run.comppath):
                                     print('this run does not have finished files')
                                     shutil.copy(this_run.inpath,this_run.comppath)
@@ -162,36 +167,36 @@ def check_all_current_convergence():
                         logger(path_dictionary['state_path'],str(datetime.datetime.now())
                                    + " failure at job : " + str(jobs) + ' with status '+ str(this_run.status))
                         remove_outstanding_jobs(jobs) # take out of pool
-            print('\n')
-            list_of_props = list()
-            list_of_props.append('name')
-            list_of_props.append('convergence')
-            list_of_props.append('gene')
-            list_of_props.append('metal')
-            list_of_props.append('alpha')
-            list_of_props.append('ox2RN')
-            list_of_props.append('ox3RN')
-            list_of_props.append('axlig1')
-            list_of_props.append('axlig2')
-            list_of_props.append('eqlig')  
-            list_of_prop_names =['converged','energy','init_energy','coord','rmsd','maxd','status','time','spin','ss_act','ss_target','ax1_MLB','ax2_MLB','eq_MLB',
-                        'init_ax1_MLB','init_ax2_MLB','init_eq_MLB','thermo_cont','imag','solvent_cont','geopath','terachem_version','terachem_detailed_version',
-                        'basis','charge','alpha_level_shift','beta_level_shift','functional','mop_energy','mop_coord','attempted']
-            for props in list_of_prop_names:
-                for spin_cat in ['LS','HS']:
-                    for ox in ['2','3']:
-                        list_of_props.append("_".join(['ox',str(ox),spin_cat,props]))
-            list_of_props.append('attempted')
-            final_results = process_runs_geo(all_runs,list_of_prop_names,spin_dictionary())
-            if not (os.path.isfile(get_run_dir() + '/results_post.csv')):
-                    logger(path_dictionary['state_path'],str(datetime.datetime.now())
-                                   + " starting output log file at " + get_run_dir() + '/results_post.csv')
-            with open('unified_results_post.csv','w') as f:
-                writeprops(list_of_props,f)
-                for reskeys in final_results.keys():
-                    values = atrextract(final_results[reskeys],list_of_props)
-                    writeprops(values,f)
-                print('\n**** end of file inspection **** \n')
+        print('\n')
+        list_of_props = list()
+        list_of_props.append('name')
+        list_of_props.append('convergence')
+        list_of_props.append('gene')
+        list_of_props.append('metal')
+        list_of_props.append('alpha')
+        list_of_props.append('ox2RN')
+        list_of_props.append('ox3RN')
+        list_of_props.append('axlig1')
+        list_of_props.append('axlig2')
+        list_of_props.append('eqlig')  
+        list_of_prop_names =['converged','energy','init_energy','coord','rmsd','maxd','status','time','spin','ss_act','ss_target','ax1_MLB','ax2_MLB','eq_MLB',
+                    'init_ax1_MLB','init_ax2_MLB','init_eq_MLB','thermo_cont','imag','solvent_cont','geopath','terachem_version','terachem_detailed_version',
+                    'basis','charge','alpha_level_shift','beta_level_shift','functional','mop_energy','mop_coord','attempted']
+        for props in list_of_prop_names:
+            for spin_cat in ['LS','HS']:
+                for ox in ['2','3']:
+                    list_of_props.append("_".join(['ox',str(ox),spin_cat,props]))
+        list_of_props.append('attempted')
+        final_results = process_runs_geo(all_runs,list_of_prop_names,spin_dictionary())
+        if not (os.path.isfile(get_run_dir() + '/results_post.csv')):
+                logger(path_dictionary['state_path'],str(datetime.datetime.now())
+                               + " starting output log file at " + get_run_dir() + '/results_post.csv')
+        with open('unified_results_post.csv','w') as f:
+            writeprops(list_of_props,f)
+            for reskeys in final_results.keys():
+                values = atrextract(final_results[reskeys],list_of_props)
+                writeprops(values,f)
+            print('\n**** end of file inspection **** \n')
     else:
         print('post processing SP/spin files')    
         LS_jobs=dict()
