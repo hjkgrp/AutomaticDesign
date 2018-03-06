@@ -34,7 +34,7 @@ def create_new_run(args):
   if 'DFT' in configuration.keys(): 
           if configuration['DFT']:
             print 'Using DFT, copying over launch script'
-            sp_file,geo_file,thermo_file,solvent_file = get_launch_script_file()
+            sp_file,geo_file,thermo_file,solvent_file = get_launch_script_file(configuration["queue_type"])
             shutil.copy(sp_file,configuration["rundir"]+'launch_script_sp.sh')
             if 'optimize' in configuration.keys():
               shutil.copy(geo_file,configuration["rundir"]+'launch_script_geo.sh')

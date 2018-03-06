@@ -40,12 +40,16 @@ class DFTRun:
         self.thermo_cont = False
         self.init_energy = False
         self.spin = 'undef'
+        
+        #ligands and metal
         self.eqlig_ind = 'undef'
         self.axlig1_ind = 'undef'
         self.axlig2_ind = 'undef'
         self.eqlig = 'undef'
         self.axlig1 = 'undef'
         self.axlig2 = 'undef'
+        
+        # bond lengths
         self.ax1_MLB = 'undef'
         self.ax2_MLB = 'undef'
         self.eq_MLB = 'undef'
@@ -55,7 +59,13 @@ class DFTRun:
         ## paths
         self.outpath  = 'undef'
         self.geopath = 'undef'
-        self.init_geopath = 'undef'               
+        self.init_geopath = 'undef'   
+        self.progpath = 'undef'   
+        # mol holders
+        self.mol = False            
+        self.initmol = False
+        self.progmol = False
+        
         ## diagnositcs
         self.time = 'undef'
         self.logpath = False
@@ -85,6 +95,8 @@ class DFTRun:
         self.alpha_level_shift = 'undef'
         self.beta_level_shift = 'undef'
         self.functional = 'undef'
+        self.angletest =  'undef'
+        self.ligrsmd= 'undef'
         self.comment = ''
  
         ## mopac statistics
@@ -120,6 +132,9 @@ class DFTRun:
         self.init_mol = this_mol
     def extract_prog(self):
          self.progstatus = extract_file_check(self.scrpath,self.progpath)
+         if os.path.exists(self.progpath):
+                 self.progmol = mol3D()
+                 self.progmol.readfromxyz(self.progpath)
     def extract_geo(self):
          self.geostatus = extract_file_check(self.scrpath,self.geopath)
     def obtain_rsmd(self):
@@ -218,8 +233,13 @@ class DFTRun:
         except:
             self.init_coord = 0
     def write_new_inputs(self):
-        path_dictionary = setup_paths()
-        guess_string = 'guess ' + get_run_dir() + 'scr/geo/' +self.name + '/ca0'+ ' '+ get_run_dir() + 'scr/geo/' +self.name + '/cb0'
+        path_dictionary =  setup_paths()
+        path_dictionary =advance_paths(path_dictionary,self.gen) ## this adds the /gen_x/ to the paths
+        oldHFX = 20
+        newHFX= 15
+        new_name = renameHFX(self.job,newHFX)
+        guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_'+str(self.gen)+ '/' +self.name + '/ca0'+
+                '              '+ get_run_dir() + 'scr/geo/gen_'+str(self.gen)+ '/' +self.name + '/cb0'
         self.thermo_inpath = path_dictionary['thermo_infiles'] + self.name + '.in'
         self.solvent_inpath =path_dictionary['solvent_infiles'] + self.name + '.in'  
         self.init_sp_inpath =path_dictionary['sp_infiles']  + self.name + '.in'
@@ -274,24 +294,33 @@ class DFTRun:
             f_solvent.write('end')
             f_solvent.close()
 
-    def write_HFX_inputs(self):
-        path_dictionary = setup_paths()
-        guess_string = 'guess ' + get_run_dir() + 'scr/geo/' +self.name + '/ca0'+ ' '+ get_run_dir() + 'scr/geo/' +self.name + '/cb0'
-        self.thermo_inpath = path_dictionary['thermo_infiles'] + self.name + '.in'
+    def write_HFX_inputs(self,newHFX,refHFX):
+        ## set file paths for HFX resampling
+        ## the fixed ordering is 
+        ## 20 -> 25 -> 30, 20->15->10->05->00
+        path_dictionary =  setup_paths()
+        path_dictionary =advance_paths(path_dictionary,self.gen) ## this adds the /gen_x/ to the paths
+        new_name = renameHFX(self.job,newHFX)
+        reference_name = renameHFX(self.job,refHFX)
+        guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_'+str(self.gen)+ '/' + reference_name + '/ca0'+
+                '              '+ get_run_dir() + 'scr/geo/gen_'+str(self.gen)+ '/' + reference_name + '/cb0'
+        self.HFX_inpath = path_dictionary['geo_infiles'] + new_name + '.in'
         ### check thermo
-        if not os.path.exists(self.thermo_inpath):
-            f_thermo = open(self.thermo_inpath,'w')
-            f_thermo.write('run frequencies \n')
-            f_thermo.write('coordinates '+self.geopath + ' \n')
-            f_thermo.write('scrdir scr/thermo/  \n')
-            f_thermo.write(guess_string)
+        if not os.path.exists(self.HFX_inpath):
+            f_HFX = open(self.HFX_inpath,'w')
+            f_HFX.write('run minimize \n')
+            f_HFX.write('coordinates '+self.geopath + ' \n')
+            f_HFX.write('HFX '+to_decimal_string(newHFX)+ ' \n')
+            f_HFX.write('scrdir scr/geo/gen_'+str(self.gen)+ '/\n')
+            f_HFX.write(guess_string)
             with open(self.inpath,'r') as ref:
                 for line in ref:
-                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not("run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
+                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not("run" in line) and not ("HFX" in line):
                      ## these lines should be common 
                         f_thermo.write(line)
-            f_thermo.write('end')
-            f_thermo.close()
+            f_HFX.write('end')
+            f_HFX.close()
+        return(HFX_inpath)
 
         
             
