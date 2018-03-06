@@ -84,4 +84,4 @@ echo "Complete"
 
 ## copy back complete cases 
 cp $localoutpath $outpath
-cp -r scr/geo/$namebase $scrpath
+cp -r scr/geo/$gennumpath/$namebase $scrpath
