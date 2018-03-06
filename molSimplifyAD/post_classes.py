@@ -328,8 +328,18 @@ class Comp:
         self.set_desc = False
         self.descriptors =  list()
         self.descriptor_names =  list()
-        self.ox2RN = 0;
+        self.ox2RN = 0
         self.ox3RN = 0
+        #### MUST REMOVE
+        ## this is a hack
+        ## needed to fool
+        ## the spin 
+        ## spliting logic
+        ## should only use
+        ## ox2_split
+        #3 or ox3_split
+        self.split =0 
+
         ## spins_and_charge
         self.ox_2_HS_spin = 'undef'
         self.ox_2_LS_spin = 'undef'
@@ -550,7 +560,25 @@ class Comp:
             else:
                 self.descriptors.append(values)
     def get_ox2_split(self):
-		self.ox2split = float(self.ox_2_HS_energy) - float(self.ox_2_LS_energy)  
+            try:
+		self.ox2split = float(self.ox_2_HS_energy) - float(self.ox_2_LS_energy)
+            except:
+               	self.ox2split = 777
+
+    def get_ox3_split(self):
+            try:
+		self.ox3split = float(self.ox_3_HS_energy) - float(self.ox_3_LS_energy)
+            except:
+               	self.ox3split = 777
+
+    def get_some_split(self):
+        ## this function is part 
+        ## of the hack that this needed
+        ## to handle splitting energy
+        ## in 4-class redox cases
+                self.get_ox2_split()
+                self.get_ox3_split()
+                self.split =  min(self.ox2split,self.ox3split)
     def get_coulomb_descriptor(self,size):
 		self.cmol = pad_mol(self.mol,size)
 		self.cmmat = create_columb_matrix(self.cmol)

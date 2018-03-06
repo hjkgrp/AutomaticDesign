@@ -138,7 +138,9 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
         skip = False
         duplication = False
         this_run = all_runs[runkeys]
-        this_name = "_".join([str(this_run.metal),'eq',str(this_run.eqlig),'ax1',str(this_run.axlig1),'ax2',str(this_run.axlig2),'ahf',str(this_run.alpha)])
+        this_metal = get_metals()[int(this_run.metal)]
+
+        this_name = "_".join([this_metal,'eq',str(this_run.eqlig),'ax1',str(this_run.axlig1),'ax2',str(this_run.axlig2),'ahf',str(this_run.alpha)])
                 ### add alpha value to list owned by this_comp:
                 
         if this_name not in final_results.keys():
@@ -151,7 +153,6 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
         print(runkeys)
         this_comp.attempted += 1 # advance number of attempts
         ## get basic details
-        this_metal = get_metals()[int(this_run.metal)]
         this_ox = int(this_run.ox)
         metal_spins  = local_spin_dictionary[this_metal][this_ox]
         if this_run.spin not in metal_spins:
@@ -199,7 +200,7 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
             if this_run.coord == 6 and not this_comp.set_desc:
                 try:
                     if not os.path.isdir('used_geos/'):
-                        os.makedir('used_geos/')
+                        os.mkdir('used_geos/')
                     this_run.mol.writexyz('used_geos/'+this_name+'.xyz')
                     this_comp.axlig1 = this_run.axlig1
                     this_comp.axlig2 = this_run.axlig2
@@ -208,7 +209,7 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
                     this_comp.get_descriptor_vector(loud=False,name=this_name)
                 except:
                     if not os.path.isdir('bad_geos/'):
-                        os.makedir('bad_geos/')
+                        os.mkdir('bad_geos/')
                     this_run.mol.writexyz('bad_geos/'+this_name+'.xyz')
                     this_comp.convergence -= 1
                     this_run.coord = 'error'
@@ -216,9 +217,15 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
                      this_attribute = "_".join(['ox',str(this_ox),spin_cat,props])
                      #print(this_attribute)
                      setattr(this_comp,this_attribute,getattr(this_run,props))
-            if this_run.coord == 6 and spin_cat == 'HS' and this_ox == 2:
-                this_run.mol.writexyz('coulomb_geos/'+this_name+'.xyz')
-                this_comp.get_coulomb_descriptor(size=85)
+#            if this_run.coord == 6 and spin_cat == 'HS' and this_ox == 2:
+#                if not os.path.isdir('coulomb_geos/'):
+#                        os.mkdir('coulomb_geos/')
+#                this_run.mol.writexyz('coulomb_geos/'+this_name+'.xyz')
+#                this_comp.get_coulomb_descriptor(size=85)
+        ## the hack to get around expecting 
+        ## spins
+        this_comp.get_some_split()
+        ###
         final_results.update({this_name:this_comp})
     return final_results
     
