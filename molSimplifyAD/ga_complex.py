@@ -8,10 +8,6 @@ import os
 import random
 import shutil
 import sys
-<<<<<<< HEAD
-
-=======
->>>>>>> b1519f91b2b1e597354cf203fec72255256a6f73
 
 from ga_tools import *
 
