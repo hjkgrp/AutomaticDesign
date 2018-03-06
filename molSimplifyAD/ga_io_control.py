@@ -182,12 +182,14 @@ def get_default_ligand_file():
     print('default ligands at' + ligand_list)
     return ligand_list
 ########################
-def get_launch_script_file(queue='SGE'):
+def get_launch_script_file(queue_type='SGE'):
     ## returns default ligand input file
-    sp_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/sge_sp.sh")
-    geo_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/sge_geo.sh")
-    thermo_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/sge_thermo.sh")
-    solvent_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/sge_solvent.sh")
+    if queue_type.lower() != 'sge' or queue_type.lower() != 'slurm':
+      print('Queue_type is not valid, user provided: ', queue_type)
+    sp_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/" +queue_type.lower()+"_sp.sh")
+    geo_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/"+queue_type.lower()+"_geo.sh")
+    thermo_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/"+queue_type.lower()+"_thermo.sh")
+    solvent_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/"+queue_type.lower()+"_solvent.sh")
     return sp_file,geo_file,thermo_file,solvent_file
 
 ########################
