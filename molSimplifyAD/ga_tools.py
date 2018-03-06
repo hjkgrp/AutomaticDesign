@@ -110,6 +110,28 @@ def renameHFX(job,newHFX):
     ll[9] = newHFX
     new_name = "_".join(ll)
     return new_name
+#######################
+def to_decimal_string(inp)
+    # nusiance function to convert
+    # int strings (in %) to decimal strings
+    out = str(float(inp)/100)
+    return out
+
+
+def HFXordering():
+    # this function returns the dictionary
+    # of HFX fractions used, where the keys
+    # represent the just finshed calculation
+    # and the values are:
+    # [next job to run, guess for next job]
+    HFXdictionary = {"20":["25","20"]}
+    #HFXdictionary = {"20":["25","20"],
+    #                 "25":["30","25"],
+    #                 "30":["15","20"],
+    #                 "15":["10","15"],
+    #                 "10":["05","10"],
+    #                 "05":["00","05"]}
+    return(HFXdictionary)
     
 
 ########################
@@ -308,10 +330,30 @@ def writeprops(extrct_props,newfile):
     newfile.write("\n")
     return 
 ########################
-
 def atrextract(a_run,list_of_props):
     extrct_props = []
     for props in list_of_props:
         extrct_props.append(getattr(a_run,props))
     return extrct_props
-
+########################
+def write_descriptor_csv(list_of_runs):
+	nl = len(list_of_runs[0].descriptor_names)
+	with open('consistent_descriptor_file.csv','w') as f:
+		f.write('runs,')
+		n_cols = len(list_of_runs[0].descriptor_names)
+		if n_cols == 0:
+				f.write('\n')
+		for i,names in enumerate(list_of_runs[0].descriptor_names):
+			if i<(n_cols-1):
+				f.write(names+',')
+			else:
+				f.write(names+'\n')
+		for runs in list_of_runs:
+			try:
+				f.write(runs.name)
+				counter  = 0 
+				for properties in runs.descriptors:
+						f.write(','+str(properties))
+				f.write('\n')
+			except:
+				pass

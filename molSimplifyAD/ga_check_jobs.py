@@ -17,6 +17,7 @@ def check_all_current_convergence():
     print('\nchecking convergence of jobs\n')
     ## set up environment:        
     path_dictionary = setup_paths()
+    base_path_dictionary = setup_paths()
     ## previously dispatched jobs:
     submitted_job_dictionary = find_submitted_jobs()
     ## live jobs:
@@ -25,6 +26,8 @@ def check_all_current_convergence():
     converged_jobs = find_converged_job_dictionary()
     ## sub'd jobs
     joblist = submitted_job_dictionary.keys()
+    ## outstanding jobs:
+    outstanding_jobs = get_outstanding_jobs()
     
     jobs_complete = 0
     GA_run = get_current_GA()
@@ -52,13 +55,20 @@ def check_all_current_convergence():
                 gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,base_name = translate_job_name(jobs)
                 ## create run
                 this_run=DFTRun(base_name)
+                
                 ## add info
                 this_run.gene = gene
                 this_run.number = slot
+                this_run.gen= gen
+                this_run.job = jobs 
+                
                 alpha = float(ahf)
                 this_run.logpath = get_run_dir() + 'post_process_log.txt'
-                ## populate run 
-                this_run.configure(metal,ox,eqlig,axlig1,axlig2,spin,alpha,spin_cat)        
+                
+                ## populate run with properies
+                this_run.configure(metal,ox,eqlig,axlig1,axlig2,spin,alpha,spin_cat)     
+                
+                  
                 ## make unique gene
                 name = "_".join([str(metal),'eq',str(eqlig),'ax1',str(axlig1),'ax2',str(axlig2),'ahf',str(alpha)])
 
@@ -81,25 +91,34 @@ def check_all_current_convergence():
 
                 this_run.moppath = path_dictionary["mopac_path" ]+ base_name + ".out"
                 this_run.mop_geopath = path_dictionary["mopac_path" ] + base_name + ".xyz"
+                
+                ## check if outpath exists
                 if os.path.isfile(this_run.outpath): 
-                        this_run.estimate_if_job_live()
+                        this_run.estimate_if_job_live() # test if live
                         if this_run.islive :
                                 this_run.status = 4 ## mark as live
                                 print('run: ' + this_run.name +" is live ? " + str(this_run.islive))
                         else:
+                            # if NOT live, test convergance
                             test_terachem_go_convergence(this_run)
-
+                # store the status
                 all_runs.update({this_run.name:this_run})
                 print('added ' + this_run.name + ' to all_runs')
                 logger(path_dictionary['state_path'],str(datetime.datetime.now())
                                    + 'added ' + this_run.name + ' to all_runs')
+                
+                # if we are doing HFX resampling, need the list of target
+                # HFX values
+                HFXorderingdict = HFXordering()
+                
                 if this_run.status == 0:
                     run_success = False
+                    # perfrom health checks on complex here
                     if this_run.coord == 6:
                         run_success = True
                     # check run is complete?
                     if this_run.alpha == 20: #only thermo and solvent for
-                                            # B3LYP
+                                            # B3LYP, also check HFX sample
                         if GA_run.config["thermo"]:
                             this_run = check_thermo_file(this_run)
                             if this_run.thermo_cont and run_success:
@@ -119,9 +138,22 @@ def check_all_current_convergence():
                             elif run_success:
                                 this_run.status = 13
                                 run_success = False
+                        
+                        ## test if we should launch other HFX fractions
+                        if str(this_run.alpha) in HFXorderingdict.keys():
+                                newHFX = HFXorderingdict[this_run.alpha][0]
+                                refHFX = HFXorderingdict[this_run.alpha][1]
+                                print('note: converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref ' refHFX)
+                                if this_run.coord == 6: ## don't bother if failed
+                                        HFX_inpath = this_run.write_HFX_inputs(newHFX,refHFX)              
+                                        logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ 'converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref ' refHFX')
+                                        if (HFX_inpath not in joblist) and (HFX_inpath not in outstanding_jobs) and (HFX_inpath not in converged_jobs.keys()):
+                                        add_to_outstanding_jobs(HFX_inpath)
+                                        
                         if run_success:
                                 this_run.status=0 #all done
                             ## mark as compelete
+                            
                     else: # not B3LYP, check coord only:
                         if run_success:
                                 this_run.status=0 #all done
@@ -196,6 +228,7 @@ def check_all_current_convergence():
             for reskeys in final_results.keys():
                 values = atrextract(final_results[reskeys],list_of_props)
                 writeprops(values,f)
+        write_descriptor_csv(final_results.values())
             print('\n**** end of file inspection **** \n')
     else:
         print('post processing SP/spin files')    
