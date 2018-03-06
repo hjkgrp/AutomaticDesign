@@ -91,7 +91,9 @@ def check_all_current_convergence():
 
                 all_runs.update({this_run.name:this_run})
                 print('added ' + this_run.name + ' to all_runs')
-                logger(path_dictionary['state_path'],str(datetime.datetime.now())
+
+                base_path_dictionary = setup_paths()
+                logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                                    + 'added ' + this_run.name + ' to all_runs')
                 if this_run.status == 0:
                     run_success = False
@@ -132,7 +134,7 @@ def check_all_current_convergence():
                                     logger(path_dictionary['state_path'],str(datetime.datetime.now()) + " moving  " + str(this_run.name) + " to " + str(this_run.comppath))
                 if not this_run.converged and not this_run.islive:
                         print(' job  ' + str(this_run.outpath) + ' not converged')
-                        logger(path_dictionary['state_path'],str(datetime.datetime.now()) + ' job  ' + str(this_run.outpath) + ' not converged')
+                        logger(base_path_dictionary['state_path'],str(datetime.datetime.now()) + ' job  ' + str(this_run.outpath) + ' not converged')
                         this_run.extract_prog()
                         if this_run.progstatus ==0:
                             this_run.archive()
@@ -164,7 +166,7 @@ def check_all_current_convergence():
                                 print('addding based on ' + str(jobs))
                                 add_to_outstanding_jobs(this_run.thermo_inpath)
                 if this_run.status in [3,5,6]: ##  convergence is not successful!                    
-                        logger(path_dictionary['state_path'],str(datetime.datetime.now())
+                        logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                                    + " failure at job : " + str(jobs) + ' with status '+ str(this_run.status))
                         remove_outstanding_jobs(jobs) # take out of pool
         print('\n')
@@ -189,8 +191,8 @@ def check_all_current_convergence():
         list_of_props.append('attempted')
         final_results = process_runs_geo(all_runs,list_of_prop_names,spin_dictionary())
         if not (os.path.isfile(get_run_dir() + '/results_post.csv')):
-                logger(path_dictionary['state_path'],str(datetime.datetime.now())
-                               + " starting output log file at " + get_run_dir() + '/results_post.csv')
+                logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
+                               + " starting output log file at " + get_run_dir() + '/unified_results_post.csv')
         with open('unified_results_post.csv','w') as f:
             writeprops(list_of_props,f)
             for reskeys in final_results.keys():
@@ -222,7 +224,7 @@ def check_all_current_convergence():
 
                 if this_run.status == 6: ##  convergence is not successful!
                     
-                    logger(path_dictionary['state_path'],str(datetime.datetime.now())
+                    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                                + " failure at job : " + str(jobs) + ' with status '+ str(this_run.status))
                     remove_outstanding_jobs(jobs) # take out of pool
                 print('\n')
@@ -243,7 +245,7 @@ def check_all_current_convergence():
             for spin_cat in ['LS','HS']:
                     list_of_props.append("_".join([spin_cat,props]))
         if not (os.path.isfile(get_run_dir() + '/results_post.csv')):
-                logger(path_dictionary['state_path'],str(datetime.datetime.now())
+                logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                                + " starting output log file at " + get_run_dir() + '/results_post.csv')
         with open(get_run_dir() + '/results_post.csv','w') as f:
             writeprops(list_of_props,f)
