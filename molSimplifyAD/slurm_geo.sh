@@ -43,7 +43,7 @@ prog_geo_path=$generalpath/prog_geo/$gennumpath/$namebase.xyz
 initial_geo_path=$generalpath/initial_geo/$gennumpath/$namebase.xyz
 outpath=$generalpath/geo_outfiles/$gennumpath/$namebase.out
 completepath=$generalpath/completejobs/$gennumpath/$namebase.done
-scrpath=$generalpath/scr/sp/$gennumpath/
+scrpath=$generalpath/scr/geo/$gennumpath/
 echo "scr will be copied to  $scrpath"
 echo "paths set"
 
