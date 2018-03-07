@@ -54,7 +54,10 @@ def launch_job(job,sub_num):
     p_sub = subprocess.Popen(cmd_str,shell=True,stdout=subprocess.PIPE)
     ll = p_sub.communicate()[0]
     ll =  ll.split()
-    job_id = ll[2]
+    if GA_run.config["queue_type"] == "SGE":
+        job_id = ll[2]
+    else:
+        job_id = ll[3]
     return job_id
 ########################
 def is_job_live(job_id):

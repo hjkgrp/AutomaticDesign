@@ -387,24 +387,27 @@ def atrextract(a_run,list_of_props):
     return extrct_props
 ########################
 def write_descriptor_csv(list_of_runs):
-	nl = len(list_of_runs[0].descriptor_names)
-	with open('consistent_descriptor_file.csv','w') as f:
-		f.write('runs,')
-		n_cols = len(list_of_runs[0].descriptor_names)
-		if n_cols == 0:
-				f.write('\n')
-		for i,names in enumerate(list_of_runs[0].descriptor_names):
-			if i<(n_cols-1):
-				f.write(names+',')
-			else:
-				f.write(names+'\n')
-		for runs in list_of_runs:
-			try:
-				f.write(runs.name)
-				counter  = 0 
-				for properties in runs.descriptors:
-						f.write(','+str(properties))
-				f.write('\n')
-			except:
-				pass
+    if list_of_runs:
+        nl = len(list_of_runs[0].descriptor_names)
+        with open('consistent_descriptor_file.csv','w') as f:
+            f.write('runs,')
+            n_cols = len(list_of_runs[0].descriptor_names)
+            if n_cols == 0:
+                f.write('\n')
+            for i,names in enumerate(list_of_runs[0].descriptor_names):
+                if i<(n_cols-1):
+                    f.write(names+',')
+                else:
+                    f.write(names+'\n')
+            for runs in list_of_runs:
+                try:
+                    f.write(runs.name)
+                    counter  = 0 
+                    for properties in runs.descriptors:
+                        f.write(','+str(properties))
+                    f.write('\n')
+                except:
+                    pass
+    else:
+        pass
 ########################

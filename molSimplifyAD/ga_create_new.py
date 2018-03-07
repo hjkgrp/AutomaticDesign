@@ -13,7 +13,10 @@ def create_new_run(args):
   if 'rundir' not in configuration.keys():
     print 'Using default run dir of ' + os.getcwd() + '/GA_run/'
     configuration["rundir"] = os.getcwd() +'/GA_run/'
-  
+  if 'queue_type' not in configuration.keys():
+    print 'Using default queue_type of SGE'
+    configuration["queue_type"] = "SGE"
+    
   ## ensure unique new rundir exists  
   counter = 0
   org_name =configuration["rundir"]
