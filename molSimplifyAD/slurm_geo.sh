@@ -20,7 +20,7 @@ generalpath=`echo $(dirname $fullpath) | sed "s,/*[^/]\*$,,"`
 #echo "gen path is $generalpath"
 
 gennumpath=$(basename $generalpath)
-#echo "gen path is $generalpath"
+#echo "gennumpath is $gennumpath"
 
 generalpath=`echo $(dirname $generalpath) | sed "s,/*[^/]\*$,,"`
 #echo "gen path is $generalpath"
@@ -44,19 +44,22 @@ initial_geo_path=$generalpath/initial_geo/$gennumpath/$namebase.xyz
 outpath=$generalpath/geo_outfiles/$gennumpath/$namebase.out
 completepath=$generalpath/completejobs/$gennumpath/$namebase.done
 scrpath=$generalpath/scr/geo/$gennumpath/
+localoutpath=$namebase.out
 echo "scr will be copied to  $scrpath"
 echo "paths set"
 
 echo "inpath is $inpath"
 echo "Initializing local run, finding input files..."
 mkdir -p scr
-mkdir -p scr/geo/$gennumpath
+mkdir -p scr/geo/
 spacer='_'
 echo "begining"
 echo "file is  $namebase"
 echo "this current home: $HOME"
 echo "outpath is $outpath"
 echo "optGpath is $opt_geo_path"
+echo "daemon is in "
+pwd
 
 #echo "this current env: $SGE_JOB_SPOOL_DIR"
 wf_guess_flag=0
@@ -98,6 +101,6 @@ if [ -e $scrpath ]; then
 fi
 stringtotest="$scrpath/optim.xyz"
 cp $localoutpath $outpath
-cp -r scr/geo/$gennumpath $scrpath
+cp -r scr/geo/$namebase $scrpath
 echo "Complete"
 
