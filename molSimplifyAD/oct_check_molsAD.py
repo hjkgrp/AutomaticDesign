@@ -71,6 +71,7 @@ def sort_sec_ele(ele):
 ## input: a xyz file
 ## output: coordination number for metal, and their indexes.
 def get_num_coord_metal(file_in):
+    print('file_in is '  + str(file_in))
     my_mol = create_mol_with_xyz(_file_in=file_in)
     metal_ind = my_mol.findMetal()[0]
     metal_coord = my_mol.getAtomCoords(metal_ind)
@@ -230,6 +231,7 @@ def oct_comp(file_in):
 ##         flag_list: if structure is bad, which test it fails
 ##         dict_oct_info: values for each metric we check.
 def IsOct(file_in, file_init_geo=None, dict_check=dict_oct_check_st):
+    print('isoct called on '+file_in)
     num_coord_metal, catoms = get_num_coord_metal(file_in)
 
     if file_init_geo != None:
@@ -283,19 +285,3 @@ def IsOct(file_in, file_init_geo=None, dict_check=dict_oct_check_st):
 
 
 
-##########################
-## ---batch processing----
-_path = './fe_optimized_geometry'
-path_init_geo = './fe_init_geo'
-# loop_structure(_path, path_init_geo)
-
-## --For single complex-----
-# file_in = '1694_co_eq_40_ax1_47_ax2_49_2_2.xyz'
-# file_org = '1694_co_eq_40_ax1_47_ax2_49_2_2_origin.xyz'
-file_in = '10016_fe_smi16_ligcharge-4_c2_sm5_optgeo.xyz'
-file_org = '10016_fe_smi16_ligcharge-4_c2_sm5_mols.xyz'
-flag_oct, flag_list, dict_oct_info = IsOct(file_in, file_org)
-print('=====molecule: %s, flag_oct: %d' % (file_in, flag_oct))
-if not flag_oct:
-    print('=====flag_list:', flag_list)
-    print('=====dict_oct_info:', dict_oct_info)

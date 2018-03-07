@@ -162,7 +162,7 @@ class DFTRun:
         self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
         self.dist_del_eq = dict_oct_info['dist_del_eq']
         self.dist_del_ax = dict_oct_info['dist_del_ax']
-        self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ac']
+        self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
 
 
     def check_oct_needs_init(self):
@@ -179,7 +179,7 @@ class DFTRun:
         self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
         self.dist_del_eq = dict_oct_info['dist_del_eq']
         self.dist_del_ax = dict_oct_info['dist_del_ax']
-        self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ac']
+        self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
 
 
     def check_oct_on_prog(self):
@@ -195,7 +195,7 @@ class DFTRun:
             self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
             self.dist_del_eq = dict_oct_info['dist_del_eq']
             self.dist_del_ax = dict_oct_info['dist_del_ax']
-            self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ac']
+            self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
         else:
             flag_oct, flag_list, dict_oct_info = IsOct(self.progpath, dict_check=dict_oct_check_loose)
             self.flag_oct = flag_oct
@@ -204,7 +204,7 @@ class DFTRun:
             self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
             self.dist_del_eq = dict_oct_info['dist_del_eq']
             self.dist_del_ax = dict_oct_info['dist_del_ax']
-            self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ac']
+            self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
         if self.flag_oct == 1:
             self.progstatus = 0
         else:
