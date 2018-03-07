@@ -323,7 +323,6 @@ def find_submitted_jobs():
 
     return submitted_job_dictionary
 ########################
-
 def writeprops(extrct_props,newfile):
     string_to_write = ','.join([str(word) for word in extrct_props ])
     newfile.write(string_to_write)
@@ -357,3 +356,4 @@ def write_descriptor_csv(list_of_runs):
 				f.write('\n')
 			except:
 				pass
+########################

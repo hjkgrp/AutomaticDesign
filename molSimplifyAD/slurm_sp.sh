@@ -41,16 +41,16 @@ inpath=$generalpath/infiles/$gennumpath/$namebase.in
 opt_geo_path=$generalpath/optimized_geo/$gennumpath/$namebase.xyz
 prog_geo_path=$generalpath/prog_geo/$gennumpath/$namebase.xyz
 initial_geo_path=$generalpath/initial_geo/$gennumpath/$namebase.xyz
-outpath=$generalpath/geo_outfiles/$gennumpath/$namebase.out
+outpath=$generalpath/sp_outfiles/$gennumpath/$namebase.out
 completepath=$generalpath/completejobs/$gennumpath/$namebase.done
-scrpath=$generalpath/scr/geo/$gennumpath/
+scrpath=$generalpath/scr/sp/$gennumpath/
 echo "scr will be copied to  $scrpath"
 echo "paths set"
 
 echo "inpath is $inpath"
 echo "Initializing local run, finding input files..."
 mkdir -p scr
-mkdir -p scr/geo/$gennumpath
+mkdir -p scr/sp/$gennumpath
 spacer='_'
 echo "begining"
 echo "file is  $namebase"
@@ -61,32 +61,17 @@ echo "optGpath is $opt_geo_path"
 #echo "this current env: $SGE_JOB_SPOOL_DIR"
 wf_guess_flag=0
 ##begin geo-optimization
-
+localoutpath=$namebase.out
+localinpath=$namebase.in
 coordfile=$initial_geo_path
-echo $coordfile
-if [ -e $prog_geo_path ]; then
-	echo "restarting from previously optimized geo"
-	coordfile=$prog_geo_path #write for continutation in alpha
-	guess_opt="$generalpathn/scr/geo/$gennumpath/$namebase/ca0 $generalpathn/scr/geo/$gennumpath/$namebase/cb0"
-	wf_guess_flag=1
-	echo "Since there is no hand-on guess, and optgeo exists \n"
-	echo "I will try to use the scr value. \n"
-fi
 
-if [ $wf_guess_flag -eq 0 ]; then ## see if we load in a guess file
-	guess_opt="generate"
-	echo "wf from scratch"
-fi
-if [ -e $inpath ]; then
-	rm $inpath
-fi
 echo "copying from $sourcepath to $inpath"
 cp $sourcepath $inpath 
 sed -i '/min_coordinates cartesian/d' $inpath 
 cat >> $inpath <<-EOF
 	scf diis+a 
 	coordinates $coordfile
-	guess $guess_opt
+	guess generate
 	end
 EOF
 echo "inpath is $inpath"
@@ -98,6 +83,6 @@ if [ -e $scrpath ]; then
 fi
 stringtotest="$scrpath/optim.xyz"
 cp $localoutpath $outpath
-cp -r scr/geo/$namebase $scrpath
+cp -r scr/sp/$gennumpath/$namebase $scrpath
 echo "Complete"
 
