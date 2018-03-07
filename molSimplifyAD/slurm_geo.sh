@@ -3,7 +3,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --gres gpu:1
 #SBATCH --time 40:00:00
-#SBATCH -A p-che140105
+#SBATCH -A p-che140073
 #SBATCH -p normal
 
 
@@ -98,6 +98,6 @@ if [ -e $scrpath ]; then
 fi
 stringtotest="$scrpath/optim.xyz"
 cp $localoutpath $outpath
-cp -r scr/geo/$namebase $scrpath
+cp -r scr/geo/$gennumpath $scrpath
 echo "Complete"
 
