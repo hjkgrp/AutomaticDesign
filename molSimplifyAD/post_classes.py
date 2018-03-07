@@ -235,10 +235,10 @@ class DFTRun:
     def write_new_inputs(self):
         path_dictionary =  setup_paths()
         path_dictionary =advance_paths(path_dictionary,self.gen) ## this adds the /gen_x/ to the paths
-        oldHFX = 20
-        newHFX= 15
+        oldHFX = '20'
+        newHFX= '15'
         new_name = renameHFX(self.job,newHFX)
-        guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_'+str(self.gen)+ '/' +self.name + '/ca0'+
+        guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_'+str(self.gen)+ '/' +self.name + '/ca0'+\
                 '              '+ get_run_dir() + 'scr/geo/gen_'+str(self.gen)+ '/' +self.name + '/cb0'
         self.thermo_inpath = path_dictionary['thermo_infiles'] + self.name + '.in'
         self.solvent_inpath =path_dictionary['solvent_infiles'] + self.name + '.in'  
@@ -302,9 +302,9 @@ class DFTRun:
         path_dictionary =advance_paths(path_dictionary,self.gen) ## this adds the /gen_x/ to the paths
         new_name = renameHFX(self.job,newHFX)
         reference_name = renameHFX(self.job,refHFX)
-        guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_'+str(self.gen)+ '/' + reference_name + '/ca0'+
+        guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_'+str(self.gen)+ '/' + reference_name + '/ca0'+\
                 '              '+ get_run_dir() + 'scr/geo/gen_'+str(self.gen)+ '/' + reference_name + '/cb0'
-        self.HFX_inpath = path_dictionary['geo_infiles'] + new_name + '.in'
+        self.HFX_inpath = path_dictionary['infiles'] + new_name + '.in'
         ### check thermo
         if not os.path.exists(self.HFX_inpath):
             f_HFX = open(self.HFX_inpath,'w')
