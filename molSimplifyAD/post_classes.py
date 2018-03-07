@@ -16,6 +16,7 @@ from molSimplify.Informatics.misc_descriptors import*
 from molSimplify.Informatics.coulomb_analyze import*
 from molSimplify.Informatics.graph_analyze import*
 from molSimplify.Informatics.geo_analyze import *
+from molSimplifyAD.oct_check_molsAD import *
 
 ########### UNIT CONVERSION
 
@@ -40,7 +41,7 @@ class DFTRun:
         self.thermo_cont = False
         self.init_energy = False
         self.spin = 'undef'
-        
+
         #ligands and metal
         self.eqlig_ind = 'undef'
         self.axlig1_ind = 'undef'
@@ -48,7 +49,7 @@ class DFTRun:
         self.eqlig = 'undef'
         self.axlig1 = 'undef'
         self.axlig2 = 'undef'
-        
+
         # bond lengths
         self.ax1_MLB = 'undef'
         self.ax2_MLB = 'undef'
@@ -59,13 +60,13 @@ class DFTRun:
         ## paths
         self.outpath  = 'undef'
         self.geopath = 'undef'
-        self.init_geopath = 'undef'   
-        self.progpath = 'undef'   
+        self.init_geopath = 'undef'
+        self.progpath = 'undef'
         # mol holders
-        self.mol = False            
+        self.mol = False
         self.initmol = False
         self.progmol = False
-        
+
         ## diagnositcs
         self.time = 'undef'
         self.logpath = False
@@ -80,12 +81,12 @@ class DFTRun:
         self.progstatus = False
         self.prog_exists = False
         self.output_exists = False
-        self.converged = False 
-        self.mop_converged = False 
+        self.converged = False
+        self.mop_converged = False
         self.islive = False
         self.ss_target = 0
         self.ss_act =   0
-        self.coord = 0 
+        self.coord = 0
         self.maxd = 'undef' #max dist to detect detected atoms
         self.thermo_time = 'undef'
         self.solvent_time = 'undef'
@@ -98,11 +99,23 @@ class DFTRun:
         self.angletest =  'undef'
         self.ligrsmd= 'undef'
         self.comment = ''
- 
+        self.flag_oct = 'undef'
+        self.flag_oct_list = 'undef'
+        self.num_coord_metal = 'undef'
+        self.rmsd_max = 'undef'
+        self.atom_dist_max = 'undef'
+        self.oct_angle_devi_max = 'undef'
+        self.dist_del_eq = 'undef'
+        self.dist_del_ax = 'undef'
+        self.dist_del_eq_ax = 'undef'
+
+
+
+
         ## mopac statistics
         self.mop_energy = 'undef'
         self.mop_coord = 0
-        
+
         ## descriptors
         self.set_desc = False
         self.descriptors =  list()
@@ -135,6 +148,69 @@ class DFTRun:
          if os.path.exists(self.progpath):
                  self.progmol = mol3D()
                  self.progmol.readfromxyz(self.progpath)
+
+    def check_oct_needs_final_only(self):
+        # self.geopath
+        # self.mol
+        flag_oct, flag_list, dict_oct_info = IsOct(self.geopath)
+        self.flag_oct = flag_oct
+        self.flag_oct_list = ', '.join(flag_list)
+        self.num_coord_metal = dict_oct_info['num_coord_metal']
+        # self.rmsd_max = dict_oct_info['rmsd_max']
+        # self.atom_dist_max = dict_oct_info['atom_dist_max']
+        self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
+        self.dist_del_eq = dict_oct_info['dist_del_eq']
+        self.dist_del_ax = dict_oct_info['dist_del_ax']
+        self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ac']
+
+
+    def check_oct_needs_init(self):
+        # self.geopath
+        # self.init_geopath
+        # self.mol
+        # self.init
+        flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, self.init_geopath)
+        self.flag_oct = flag_oct
+        self.flag_oct_list = ', '.join(flag_list)
+        self.num_coord_metal = dict_oct_info['num_coord_metal']
+        self.rmsd_max = dict_oct_info['rmsd_max']
+        self.atom_dist_max = dict_oct_info['atom_dist_max']
+        self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
+        self.dist_del_eq = dict_oct_info['dist_del_eq']
+        self.dist_del_ax = dict_oct_info['dist_del_ax']
+        self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ac']
+
+
+    def check_oct_on_prog(self):
+        # self.progmol
+        # self.progpath
+        if os.path.exists(self.init_geopath):
+            flag_oct, flag_list, dict_oct_info = IsOct(self.progpath, self.init_geopath)
+            self.flag_oct = flag_oct
+            self.flag_oct_list = ', '.join(flag_list)
+            self.num_coord_metal = dict_oct_info['num_coord_metal']
+            self.rmsd_max = dict_oct_info['rmsd_max']
+            self.atom_dist_max = dict_oct_info['atom_dist_max']
+            self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
+            self.dist_del_eq = dict_oct_info['dist_del_eq']
+            self.dist_del_ax = dict_oct_info['dist_del_ax']
+            self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ac']
+        else:
+            flag_oct, flag_list, dict_oct_info = IsOct(self.progpath)
+            self.flag_oct = flag_oct
+            self.flag_oct_list = ', '.join(flag_list)
+            self.num_coord_metal = dict_oct_info['num_coord_metal']
+            self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
+            self.dist_del_eq = dict_oct_info['dist_del_eq']
+            self.dist_del_ax = dict_oct_info['dist_del_ax']
+            self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ac']
+        if self.flag_oct == 1:
+            self.progstatus = 0
+        else:
+            self.progstatus = 1
+
+
+
     def extract_geo(self):
          self.geostatus = extract_file_check(self.scrpath,self.geopath)
     def obtain_rsmd(self):
@@ -156,7 +232,7 @@ class DFTRun:
                                 total_eq_distance+=bonds
                                 counter += 1
                 self.eq_MLB = total_eq_distance/counter
-        except: 
+        except:
                 #self.coord = 'error'
                 self.eq_MLB = 'error'
                 self.ax1_MLB = 'error'
@@ -180,8 +256,8 @@ class DFTRun:
                 self.init_eq_MLB = 'error'
                 self.init_ax1_MLB = 'error'
                 self.init_ax2_MLB = 'error'
-        
-             
+
+
     def configure(self,metal,ox,eqlig,axlig1,axlig2,spin,alpha,spin_cat):
         self.metal = metal
         self.ox = ox
@@ -191,7 +267,7 @@ class DFTRun:
         self.axlig2 = axlig2
         self.spin_cat=spin_cat
         self.alpha=alpha
-        
+
     def test_prog(self):
         ok = False
         natoms = 0
@@ -204,8 +280,8 @@ class DFTRun:
             pass
         if natoms >0:
             ok = True
-        return(ok)    
-    def estimate_if_job_live(self):	
+        return(ok)
+    def estimate_if_job_live(self):
         modtime = os.stat(self.outpath).st_mtime
 #        print('opttest modifed on '+ str(modtime))
         print('age is '+ str((time.time() - modtime)))
@@ -217,19 +293,19 @@ class DFTRun:
         try:
             this_metal = self.mol.findMetal()[0]
             these_neighbours = self.mol.getBondedAtomsOct(this_metal)
-            self.coord = len(these_neighbours)	
+            self.coord = len(these_neighbours)
         except:
             self.coord = 0
         try:
             this_metal = self.mop_mol.findMetal()[0]
             these_neighbours = self.mop_mol.getBondedAtomsOct(this_metal)
-            self.mop_coord = len(these_neighbours)	
+            self.mop_coord = len(these_neighbours)
         except:
             self.mop_coord = 0
         try:
             this_metal = self.init_mol.findMetal()[0]
             these_neighbours = self.init_mol.getBondedAtomsOct(this_metal)
-            self.init_coord = len(these_neighbours)	
+            self.init_coord = len(these_neighbours)
         except:
             self.init_coord = 0
     def write_new_inputs(self):
@@ -241,7 +317,7 @@ class DFTRun:
         guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_'+str(self.gen)+ '/' +self.name + '/ca0'+\
                 '              '+ get_run_dir() + 'scr/geo/gen_'+str(self.gen)+ '/' +self.name + '/cb0'
         self.thermo_inpath = path_dictionary['thermo_infiles'] + self.name + '.in'
-        self.solvent_inpath =path_dictionary['solvent_infiles'] + self.name + '.in'  
+        self.solvent_inpath =path_dictionary['solvent_infiles'] + self.name + '.in'
         self.init_sp_inpath =path_dictionary['sp_infiles']  + self.name + '.in'
         ### check thermo
         if not os.path.exists(self.thermo_inpath):
@@ -253,7 +329,7 @@ class DFTRun:
             with open(self.inpath,'r') as ref:
                 for line in ref:
                      if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not("run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
-                     ## these lines should be common 
+                     ## these lines should be common
                         f_thermo.write(line)
             f_thermo.write('end')
             f_thermo.close()
@@ -261,14 +337,14 @@ class DFTRun:
         if not os.path.exists(self.init_sp_inpath):
             f_insp = open(self.init_sp_inpath,'w')
             ## write solvent
-            f_insp.write('run energy \n') 
+            f_insp.write('run energy \n')
             f_insp.write('scrdir scr/init_sp/  \n')
             f_insp.write('coordinates '+self.init_geopath + ' \n')
             f_insp.write('guess ' + get_run_dir() + 'scr/geo/' +self.name + '/ca0'+ ' '+ get_run_dir() + 'scr/geo/' +self.name + '/cb0')
             with open(self.inpath,'r') as ref:
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not("run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
-                    ## these lines should be common 
+                    ## these lines should be common
                         f_insp.write(line)
             f_insp.write('end')
             f_insp.close()
@@ -276,7 +352,7 @@ class DFTRun:
         if not os.path.exists(self.solvent_inpath):
             f_solvent = open(self.solvent_inpath,'w')
             ## write solvent
-            f_solvent.write('run energy \n') 
+            f_solvent.write('run energy \n')
             f_solvent.write('pcm cosmo \n')
             f_solvent.write('pcm_grid iswig \n')
             f_solvent.write('epsilon 78.39 \n')
@@ -289,7 +365,7 @@ class DFTRun:
             with open(self.inpath,'r') as ref:
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not("run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
-                    ## these lines should be common 
+                    ## these lines should be common
                         f_solvent.write(line)
             f_solvent.write('end')
             f_solvent.close()
@@ -316,7 +392,7 @@ class DFTRun:
             with open(self.inpath,'r') as ref:
                 for line in ref:
                      if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not("run" in line) and not ("HFX" in line):
-                     ## these lines should be common 
+                     ## these lines should be common
                         f_HFX.write(line)
             f_HFX.write('end')
             f_HFX.close()
@@ -327,18 +403,18 @@ class DFTRun:
                         with open(self.HFX_job,'r') as ref:
                                 for line in ref:
                                          if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
-                                                ## these lines should be common 
+                                                ## these lines should be common
                                                 f.write(line)
                         f.write('coordinates '+geo_ref + ' \n')
                         f.write(guess_string)
                         f.write('end\n')
-                        
-            
-        return(self.HFX_job)
-    
-    
 
-            
+
+        return(self.HFX_job)
+
+
+
+
     def append_descriptors(self,list_of_names,list_of_props,prefix,suffix):
         for names in list_of_names:
             if hasattr(names, '__iter__'):
@@ -367,7 +443,7 @@ class Comp:
         self.axlig2_ind = 'undef'
         self.eqlig_ind = 'undef'
         self.convergence =  0
-        self.attempted = 0        
+        self.attempted = 0
         self.repmol = mol3D()
         self.set_desc = False
         self.descriptors =  list()
@@ -382,7 +458,7 @@ class Comp:
         ## should only use
         ## ox2_split
         #3 or ox3_split
-        self.split =0 
+        self.split =0
 
         ## spins_and_charge
         self.ox_2_HS_spin = 'undef'
@@ -467,7 +543,7 @@ class Comp:
         self.ox_2_HS_comment  = 'undef'
         self.ox_3_LS_comment =  'undef'
         self.ox_3_HS_comment  = 'undef'
-        
+
         ### MOPAC
         self.mop_convergence = 0
         ### Coulomb
@@ -476,34 +552,34 @@ class Comp:
         ### spin splitting
         self.ox2split = 'undef'
         self.ox3split = 'undef'
-        
+
         ### bond lengths 
         self.ox_3_LS_ax1_MLB = 'undef'
         self.ox_3_HS_ax1_MLB = 'undef'
         self.ox_2_LS_ax1_MLB = 'undef'
         self.ox_2_HS_ax1_MLB = 'undef'
-        
+
         self.ox_3_LS_ax2_MLB = 'undef'
         self.ox_3_HS_ax2_MLB = 'undef'
         self.ox_2_LS_ax2_MLB = 'undef'
         self.ox_2_HS_ax2_MLB = 'undef'
-        
+
         self.ox_3_LS_eq_MLB = 'undef'
         self.ox_3_HS_eq_MLB = 'undef'
         self.ox_2_LS_eq_MLB = 'undef'
         self.ox_2_HS_eq_MLB = 'undef'
-        
+
         ### initial bond lengths
         self.ox_3_LS_init_ax1_MLB = 'undef'
         self.ox_3_HS_init_ax1_MLB = 'undef'
         self.ox_2_LS_init_ax1_MLB = 'undef'
         self.ox_2_HS_init_ax1_MLB = 'undef'
-        
+
         self.ox_3_LS_init_ax2_MLB = 'undef'
         self.ox_3_HS_init_ax2_MLB = 'undef'
         self.ox_2_LS_init_ax2_MLB = 'undef'
         self.ox_2_HS_init_ax2_MLB = 'undef'
-        
+
         self.ox_3_LS_init_eq_MLB = 'undef'
         self.ox_3_HS_init_eq_MLB = 'undef'
         self.ox_2_LS_init_eq_MLB = 'undef'
@@ -514,12 +590,12 @@ class Comp:
         self.ox_3_HS_ss_act = 'undef'
         self.ox_2_LS_ss_act = 'undef'
         self.ox_2_HS_ss_act = 'undef'
-        
+
         self.ox_3_LS_ss_target = 'undef'
         self.ox_3_HS_ss_target = 'undef'
         self.ox_2_LS_ss_target = 'undef'
         self.ox_2_HS_ss_target = 'undef'
-        
+
         ### geopaths
         self.ox_3_LS_geopath = 'undef'
         self.ox_3_HS_geopath = 'undef'
@@ -532,7 +608,7 @@ class Comp:
         self.ox_2_LS_spin = 'undef'
         self.ox_2_HS_spin= 'undef'
 
-       ### data provenance 
+       ### data provenance
         self.ox_3_LS_terachem_version = 'undef'
         self.ox_3_HS_terachem_version = 'undef'
         self.ox_2_LS_terachem_version = 'undef'

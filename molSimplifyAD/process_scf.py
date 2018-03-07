@@ -392,6 +392,7 @@ def test_terachem_go_convergence(this_run):
         logger(this_run.logpath, str(this_run.name) + ' run converged ' +  ' and now testing geo '+this_run.geopath )
         # check the geo
         if os.path.exists(this_run.geopath):
+
                 print(this_run.geopath + ' found')
                 # get mol3D file
                 this_run.obtain_mol3d()
@@ -405,18 +406,22 @@ def test_terachem_go_convergence(this_run):
                 
                 ## check intial conditions:
                 if os.path.exists(this_run.init_geopath):
+                    this_run.check_oct_needs_inital()
                     this_run.obtain_init_mol3d()
                     this_run.obtain_rsmd() # copmare to initial
-        if this_run.coord == 6 and this_run.converged:
+                else:
+                    this_run.check_oct_needs_final_only()
+        if this_run.coord == 6 and this_run.converged and this_run.flag_oct == 1:
             this_run.status = 0
             if not this_run.tspin == this_run.spin:
                 print(this_run.tspin)
                 print(this_run.spin)
-                sardines
+                # sardines
                 
         else:
             this_run.status = 1
             this_run.comment += 'coord not good ' +str(this_run.coord) +'\n '
+            this_run.comment += 'flag_oct_list: %s\n'%(this_run.flag_oct_list)
             
 
 def read_terachem_go_output(this_run):
