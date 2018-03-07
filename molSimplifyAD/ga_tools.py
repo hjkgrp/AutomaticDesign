@@ -111,7 +111,7 @@ def renameHFX(job,newHFX):
     new_name = "_".join(ll)
     return new_name
 #######################
-def to_decimal_string(inp)
+def to_decimal_string(inp):
     # nusiance function to convert
     # int strings (in %) to decimal strings
     out = str(float(inp)/100)
