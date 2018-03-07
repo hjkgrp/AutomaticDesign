@@ -300,12 +300,12 @@ class DFTRun:
         ## 20 -> 25 -> 30, 20->15->10->05->00
         path_dictionary =  setup_paths()
         path_dictionary =advance_paths(path_dictionary,self.gen) ## this adds the /gen_x/ to the paths
-        new_name = renameHFX(self.job,newHFX)
-        reference_name = renameHFX(self.job,refHFX)
+        new_name = renameHFX(self.job,newHFX).strip('.in')
+        reference_name = renameHFX(self.job,refHFX).strip('.in')
         guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_'+str(self.gen)+ '/' + reference_name + '/ca0'+\
-                '              '+ get_run_dir() + 'scr/geo/gen_'+str(self.gen)+ '/' + reference_name + '/cb0'
+                       ' '+ get_run_dir() + 'scr/geo/gen_'+str(self.gen)+ '/' + reference_name + '/cb0\n'
         geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
-        self.HFX_inpath = path_dictionary['geo_infiles'] + new_name + '.in'
+        self.HFX_inpath = path_dictionary['infiles'] + new_name+ '.in'
         self.HFX_job = path_dictionary['job_path'] + new_name + '.in'
         ### write files
         if not os.path.exists(self.HFX_job):
@@ -322,19 +322,19 @@ class DFTRun:
             f_HFX.close()
 
         ## create infile:
-        if not os.path.exists(self.HFX_job):
-                with open(HFX_inpath) as f:
-                        with open(HFX_job) as ref:
+        if not os.path.exists(self.HFX_inpath):
+                with open(self.HFX_inpath,'w') as f:
+                        with open(self.HFX_job,'r') as ref:
                                 for line in ref:
                                          if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
                                                 ## these lines should be common 
                                                 f.write(line)
-                f.write('coordinates '+geo_ref + ' \n')
-                f.write(guess_string)
-                                
+                        f.write('coordinates '+geo_ref + ' \n')
+                        f.write(guess_string)
+                        f.write('end\n')
                         
             
-        return(HFX_job)
+        return(self.HFX_job)
     
     
 
