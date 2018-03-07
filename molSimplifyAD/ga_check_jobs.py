@@ -142,16 +142,22 @@ def check_all_current_convergence():
                                 run_success = False
                         
                         ## test if we should launch other HFX fractions
-                        if str(this_run.alpha) in HFXorderingdict.keys():
-                                newHFX = HFXorderingdict[this_run.alpha][0]
-                                refHFX = HFXorderingdict[this_run.alpha][1]
+                        print('this run alpha: ' + str(ahf))
+                        print('keys : ' + str(HFXorderingdict.keys()))
+                        ## check alpha HFX against dictionary of strings:
+                        ahf=str(ahf)
+                        if ahf in HFXorderingdict.keys():
+                                newHFX = HFXorderingdict[ahf][0]
+                                refHFX = HFXorderingdict[ahf][1]
                                 print('note: converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref '+ refHFX)
                                 if this_run.coord == 6: ## don't bother if failed
-                                        HFX_inpath = this_run.write_HFX_inputs(newHFX,refHFX)              
+                                        HFX_inpath = this_run.write_HFX_inputs(newHFX,refHFX)
                                         logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ 'converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref ' + refHFX)
                                         if (HFX_inpath not in joblist) and (HFX_inpath not in outstanding_jobs) and (HFX_inpath not in converged_jobs.keys()):
                                                 add_to_outstanding_jobs(HFX_inpath)
                                         
+
+                        sardines
                         if run_success:
                                 this_run.status=0 #all done
                             ## mark as compelete
@@ -231,7 +237,7 @@ def check_all_current_convergence():
                 values = atrextract(final_results[reskeys],list_of_props)
                 writeprops(values,f)
         write_descriptor_csv(final_results.values())
-            print('\n**** end of file inspection **** \n')
+        print('\n**** end of file inspection **** \n')
     else:
         print('post processing SP/spin files')    
         LS_jobs=dict()
