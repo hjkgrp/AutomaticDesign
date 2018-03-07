@@ -142,6 +142,7 @@ def setup_paths():
                    "geo_out_path"     : working_dir + "geo_outfiles/",
                    "sp_out_path"      : working_dir + "sp_outfiles/",
                    "scr_path"         : working_dir + "scr/geo/",
+                   "queue_output"     : working_dir + "queue_output/",
                    "thermo_out_path"  : working_dir + "thermo_outfiles/",                   
                    "solvent_out_path" : working_dir + "solvent_outfiles/",                   
                    "job_path"         : working_dir + "jobs/",
