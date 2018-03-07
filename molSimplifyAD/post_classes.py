@@ -304,25 +304,40 @@ class DFTRun:
         reference_name = renameHFX(self.job,refHFX)
         guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_'+str(self.gen)+ '/' + reference_name + '/ca0'+
                 '              '+ get_run_dir() + 'scr/geo/gen_'+str(self.gen)+ '/' + reference_name + '/cb0'
+        geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
         self.HFX_inpath = path_dictionary['geo_infiles'] + new_name + '.in'
-        ### check thermo
-        if not os.path.exists(self.HFX_inpath):
-            f_HFX = open(self.HFX_inpath,'w')
+        self.HFX_job = path_dictionary['job_path'] + new_name + '.in'
+        ### write files
+        if not os.path.exists(self.HFX_job):
+            f_HFX = open(self.HFX_job,'w')
             f_HFX.write('run minimize \n')
-            f_HFX.write('coordinates '+self.geopath + ' \n')
             f_HFX.write('HFX '+to_decimal_string(newHFX)+ ' \n')
             f_HFX.write('scrdir scr/geo/gen_'+str(self.gen)+ '/\n')
-            f_HFX.write(guess_string)
             with open(self.inpath,'r') as ref:
                 for line in ref:
                      if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not("run" in line) and not ("HFX" in line):
                      ## these lines should be common 
-                        f_thermo.write(line)
+                        f_HFX.write(line)
             f_HFX.write('end')
             f_HFX.close()
-        return(HFX_inpath)
 
-        
+        ## create infile:
+        if not os.path.exists(self.HFX_job):
+                with open(HFX_inpath) as f:
+                        with open(HFX_job) as ref:
+                                for line in ref:
+                                         if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
+                                                ## these lines should be common 
+                                                f.write(line)
+                f.write('coordinates '+geo_ref + ' \n')
+                f.write(guess_string)
+                                
+                        
+            
+        return(HFX_job)
+    
+    
+
             
     def append_descriptors(self,list_of_names,list_of_props,prefix,suffix):
         for names in list_of_names:
