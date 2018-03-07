@@ -69,7 +69,7 @@ def create_generic_infile(job,restart=False):
     ## copy file to infiles
     shutil.copy(job, target_inpath)
     ## append geo
-    with open(inpath,'a') as newf:
+    with open(target_inpath,'a') as newf:
                     newf.write('coordinates '+ geometry_path+ '\n')
                     newf.write(guess_string)
                     newf.write('end')  
