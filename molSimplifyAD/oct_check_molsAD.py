@@ -4,9 +4,7 @@ import numpy as np
 from molSimplify.Classes.globalvars import globalvars
 from molSimplify.Classes.ligand import *
 from molSimplify.Scripts.geometry import vecangle, distance
-from openpyxl import load_workbook
-from openpyxl import Workbook
-import json
+
 
 ### Check whether the complex form an octahedral.
 ### Written by Chenru Duan
@@ -281,81 +279,8 @@ def IsOct(file_in, file_init_geo=None, dict_check=dict_oct_check_st):
     return flag_oct, flag_list, dict_oct_info
 
 
-## input: _path: path for opt geo
-##         path_init_geo: path for init geo
-## generate and xlsx file of ['unique_num', 'oxstate', 'spinmult', 'flag_oct', 'flag_list', 'dict_oct_info']
-def loop_structure(_path, path_init_geo):
-    charac = ['unique_num', 'oxstate', 'spinmult', 'flag_oct', 'flag_list']
-    info_tot = []
-    for dirpath, dirs, files in sorted(os.walk(_path)):
-        for name in sorted(files):
-            if name.split('.')[1] == 'xyz':
-                unique_num, oxstate, spinmult = name.split('_')[0], name.split('_')[4][1:], name.split('_')[5][2:]
-                print(unique_num, oxstate, spinmult)
-                file_in = '%s/%s' % (dirpath, name)
-                file_init_geo = find_file_with_unique_num(path_init_geo, unique_num)
-                # file_init_geo = gen_file_with_name(path_init_geo, name)
-                print('!!!!file info:!!!!!', file_in, file_init_geo)
-                if os.path.exists(file_init_geo):
-                    flag_oct, flag_list, dict_oct_info = IsOct(file_in, file_init_geo)
-                else:
-                    print('No init_geo!', name)
-                    flag_oct, flag_list, dict_oct_info = IsOct(file_in)
-                # dict_oct_info = json.dumps(dict_oct_info) # dictionary to string
-                _c, _dict = [], []
-                for key, value in dict_oct_info.items():
-                    _c.append(key)
-                    _dict.append(value)
-                info = [unique_num, oxstate, spinmult, flag_oct, flag_list] + _dict
-                info_tot.append(info)
-    charac += _c  # append dict_oct_info
-    write_list_2_xlsx(charac, info_tot)
-    return 0
-
-## find the file name by matching unique_ID and spin mulplicity
-def find_file_with_unique_num(_path, unique_num):
-    filename = None
-    for dirpath, dirs, files in sorted(os.walk(_path)):
-        for name in sorted(files):
-            if name.split('_')[0] == str(unique_num):
-                filename = '%s/%s' % (dirpath, name)
-                break
-    return filename
 
 
-def gen_file_with_name(path_init_geo, name_opt):
-    name_opt = name_opt.split('_')
-    name_opt = '_'.join(name_opt[:len(name_opt) - 1])
-    name_init = '%s/%s_mols.xyz' % (path_init_geo, name_opt)
-    return name_init
-
-
-def write_list_2_xlsx(charac, txt_list, filename_save='new.xlsx', title='new'):
-    wb_write = Workbook()
-    ws_write = wb_write.active
-    ws_write.title = title
-
-    ws_write.append(charac)
-    for info in txt_list:
-        ws_write.append(info)
-    wb_write.save(filename=filename_save)
-
-
-def final_status(filename, sheetname):
-    charac, txt_list = read_xlsx_2_list(filename, sheetname)
-    for idx, ele in enumerate(txt_list):
-        flag_oct = ele[charac.index('flag_oct')]
-        run_status = ele[charac.index('run_status')]
-        if flag_oct == '1' and run_status == 'Y':
-            _status = 1
-        elif flag_oct == '0':
-            _status = 0
-        else:
-            _status = 'DN'
-        txt_list[idx].append(_status)
-    charac.append('_status')
-    write_list_2_xlsx(charac, txt_list, filename_save='new_status.xlsx', title='new')
-    return 0
 
 
 ##########################

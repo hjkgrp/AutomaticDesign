@@ -112,6 +112,7 @@ class DFTRun:
 
 
 
+
         ## mopac statistics
         self.mop_energy = 'undef'
         self.mop_coord = 0
@@ -152,7 +153,7 @@ class DFTRun:
     def check_oct_needs_final_only(self):
         # self.geopath
         # self.mol
-        flag_oct, flag_list, dict_oct_info = IsOct(self.geopath)
+        flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, dict_check=dict_oct_check_st)
         self.flag_oct = flag_oct
         self.flag_oct_list = ', '.join(flag_list)
         self.num_coord_metal = dict_oct_info['num_coord_metal']
@@ -169,7 +170,7 @@ class DFTRun:
         # self.init_geopath
         # self.mol
         # self.init
-        flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, self.init_geopath)
+        flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, self.init_geopath, dict_check=dict_oct_check_st)
         self.flag_oct = flag_oct
         self.flag_oct_list = ', '.join(flag_list)
         self.num_coord_metal = dict_oct_info['num_coord_metal']
@@ -185,7 +186,7 @@ class DFTRun:
         # self.progmol
         # self.progpath
         if os.path.exists(self.init_geopath):
-            flag_oct, flag_list, dict_oct_info = IsOct(self.progpath, self.init_geopath)
+            flag_oct, flag_list, dict_oct_info = IsOct(self.progpath, self.init_geopath, dict_check=dict_oct_check_loose)
             self.flag_oct = flag_oct
             self.flag_oct_list = ', '.join(flag_list)
             self.num_coord_metal = dict_oct_info['num_coord_metal']
@@ -196,7 +197,7 @@ class DFTRun:
             self.dist_del_ax = dict_oct_info['dist_del_ax']
             self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ac']
         else:
-            flag_oct, flag_list, dict_oct_info = IsOct(self.progpath)
+            flag_oct, flag_list, dict_oct_info = IsOct(self.progpath, dict_check=dict_oct_check_loose)
             self.flag_oct = flag_oct
             self.flag_oct_list = ', '.join(flag_list)
             self.num_coord_metal = dict_oct_info['num_coord_metal']

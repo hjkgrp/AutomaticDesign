@@ -12,6 +12,7 @@ from molSimplifyAD.ga_complex import *
 from molSimplifyAD.ga_main import *
 from molSimplifyAD.process_scf import *
 from molSimplifyAD.post_classes import *
+from molSimplifyAD.oct_check_molsAD import *
 #######################
 def check_all_current_convergence():
     print('\nchecking convergence of jobs\n')
