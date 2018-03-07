@@ -8,8 +8,7 @@ def ensure_dir(dir_path):
         os.makedirs(dir_path)
 ########################
 def get_run_dir():
-    GA_run = GA_run_defintion()
-    GA_run.deserialize('.madconfig')
+    GA_run = get_current_GA()
     rdir = GA_run.config['rundir']
     return rdir
 ########################
@@ -17,6 +16,64 @@ def get_current_GA():
     GA_run = GA_run_defintion()
     GA_run.deserialize('.madconfig')
     return GA_run
+########################
+def get_infile_from_job(job):
+    ## given a job (file under jobs/gen_x/
+    ## this returns the appropraite infile/gen_x file
+    ## if there is no infile, this will make one
+    ## using progress geometry if available
+    ## else intital only
+    ## process job name
+    _,gen,_,_,_,_,_,_,_,_,_,_,_,_,base_name = translate_job_name(job)
+    ## create paths
+    path_dictionary = setup_paths()
+    path_dictionary = advance_paths(path_dictionary,gen)
+    target_inpath = path_dictionary["infiles"] +base_name + '.in'
+    path_dictionary = setup_paths()
+    ll  = os.path.split(job)
+    base_name= ll[1]
+    ll =os.path.split(ll[0])
+    generation_folder = ll[1]
+    target_inpath = path_dictionary["infiles"]+generation_folder +'/' +base_name
+    if os.path.isfile(target_inpath):
+        infile = target_inpath
+    else:
+        print('no infile found for job ' + job + ' , creating a new one ')
+        create_generic_infile(job,restart = True)
+    return target_inpath
+########################
+def create_generic_infile(job,restart=False):
+    ## guess is ANOTHER JOB NAME, from which the geom and wavefunction guess
+    ## will attempt to be extracted
+    ## process job name
+    _,gen,_,_,_,_,_,_,_,_,_,_,_,_,base_name = translate_job_name(job)
+    ## create paths
+    path_dictionary = setup_paths()
+    path_dictionary = advance_paths(path_dictionary,gen)
+    target_inpath = path_dictionary["infiles"] +base_name + '.in'
+    initial_geo_path = path_dictionary["initial_geo_path"]+ base_name + '.xyz'
+    prog_geo_path = path_dictionary["prog_geo_path"]+ base_name + '.xyz'
+    guess_path = path_dictionary["scr_path"]+base_name+'/'
+    
+    ## set up guess:
+    if restart:
+        if os.path.isfile(prog_geo_path):
+            geometry_path = prog_geo_path
+            guess_string = "guess " + guess_path +'ca0' +  ' ' + guess_path +'cb0\n'
+        else:
+            geometry_path = initial_geo_path
+            guess_string = "guess generate \n"                
+    else:
+        guess_string = "guess generate \n"
+        geometry_path = initial_geo_path                
+    ## copy file to infiles
+    shutil.copy(job, target_inpath)
+    ## append geo
+    with open(inpath,'a') as newf:
+                    newf.write('coordinates '+ geometry_path+ '\n')
+                    newf.write(guess_string)
+                    newf.write('end')  
+
 ########################
 def find_live_jobs():
     path_dictionary = setup_paths()
@@ -30,12 +87,6 @@ def find_live_jobs():
 def get_metals():
         metals_list = ['cr','mn','fe','co']
         return metals_list
-########################
-def get_run_dir():
-    GA_run = GA_run_defintion()
-    GA_run.deserialize('.madconfig')
-    rdir = GA_run.config['rundir']
-    return rdir
 ########################
 def get_ox_states(): # could be made metal dependent like spin
         ox_list = [2,3]

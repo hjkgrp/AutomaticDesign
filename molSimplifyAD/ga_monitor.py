@@ -30,17 +30,26 @@ def launch_job(job,sub_num):
     GA_run = get_current_GA()
     if "thermo" in job:
          cmd_script = "launch_script_thermo.sh"
+         infile = job # for thermo/solvent
+                      # these are stored as 
+                      # infiles onlt
     elif "solvent" in job:
         cmd_script = "launch_script_solvent.sh"
+        infile = job
+                      # for thermo/solvent
+                      # these are stored as 
+                      # infiles onlt
     else:
         if GA_run.config["optimize"]:
             cmd_script = "launch_script_geo.sh"
+            infile = get_infile_from_job(job)
         else:
             cmd_script = "launch_script_sp.sh"
+            infile = get_infile_from_job(job)
     if GA_run.config["queue_type"] == "SGE":
-        cmd_str ='qsub -j y -N  ' +name + ' '+ '-o ' + opath + ' ' +'-e '+epath +' ' +get_run_dir() + cmd_script + ' ' + job
+        cmd_str ='qsub -j y -N  ' +name + ' '+ '-o ' + opath + ' ' +'-e '+epath +' ' +get_run_dir() + cmd_script + ' ' + infile
     else:
-        cmd_str ='sbatch -J' + name + ' ' + ' -o ' + opath + ' ' + '-e '+epath + ' '+ get_run_dir() + cmd_script + ' ' + job 
+        cmd_str ='sbatch -J' + name + ' ' + ' -o ' + opath + ' ' + '-e '+epath + ' '+ get_run_dir() + cmd_script + ' ' + infile
     print(cmd_str)
     p_sub = subprocess.Popen(cmd_str,shell=True,stdout=subprocess.PIPE)
     ll = p_sub.communicate()[0]

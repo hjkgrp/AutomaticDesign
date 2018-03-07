@@ -177,10 +177,14 @@ def check_all_current_convergence():
                         print(' job  ' + str(this_run.outpath) + ' not converged')
                         logger(base_path_dictionary['state_path'],str(datetime.datetime.now()) + ' job  ' + str(this_run.outpath) + ' not converged')
                         this_run.extract_prog()
-                        if this_run.progstatus ==0:
-                            this_run.archive()
-                            this_run.write_modifed_infile()
-                            this_run.status = 2
+                        if this_run.progstatus ==0:                            
+                            if this_run.progstatus ==0:
+                                this_run.archive()
+                                this_run.write_modifed_infile()
+                                this_run.status = 2
+                            else:
+                                this_run.status = 6     
+                                        
                         else:
                             this_run.status = 6 ## no prog!
                             shutil.copy(this_run.init_geopath,path_dictionary['stalled_jobs'] + this_run.name + '.xyz')

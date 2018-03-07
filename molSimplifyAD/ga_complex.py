@@ -333,9 +333,14 @@ class octahedral_complex:
         else:
             rty = 'energy'
         geometry = "oct"
+        
+        ## set paths for generation
         ms_dump_path = path_dictionary["molsimplify_inps"] +  'ms_output.txt'
         ms_error_path = path_dictionary["molsimplify_inps"] +  'ms_errors.txt'
         jobpath = path_dictionary["job_path"]  + mol_name + '.in'
+        inpath = path_dictionary["infiles"]  + mol_name + '.in'
+        geometry_path = path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz'
+        
         ## check if already exists:
         geo_exists = os.path.isfile(path_dictionary["initial_geo_path"] + mol_name + '.xyz')
 
@@ -353,7 +358,7 @@ class octahedral_complex:
                             p2 = subprocess.call(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
                     assert(os.path.isfile(rundirpath + 'temp'+'/' + mol_name + '.molinp'))
                     shutil.move(rundirpath + 'temp'+'/' + mol_name + '.molinp', path_dictionary["molsimplify_inps"]+'/' + mol_name + '.molinp')
-                    shutil.move(rundirpath + 'temp'+'/' + mol_name + '.xyz', path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz')
+                    shutil.move(rundirpath + 'temp'+'/' + mol_name + '.xyz', geometry_path)
                 except:
                         print('Error: molSimplify failure when calling ')
                         print(call)
@@ -380,7 +385,7 @@ class octahedral_complex:
 
                 shutil.move(rundirpath + 'temp' +'/' + mol_name + '.report', path_dictionary["ms_reps"] +'/'+ mol_name + '.report')
 
-
+                ## write the job file
                 with open(jobpath,'w') as newf:
                     with open(rundirpath + 'temp/' + mol_name + '.in','r') as oldf:
                         for line in oldf:
@@ -391,6 +396,11 @@ class octahedral_complex:
                     else:
                         newf.writelines("scrdir scr/sp/" +mol_name+ "\n")
                 os.remove(rundirpath + 'temp/' + mol_name + '.in')
+                
+                ### make an infile!
+                create_generic_infile(jobpath,restart=False)
+                    
+                
         else:
             
             ANN_split = False
