@@ -25,8 +25,10 @@ def launch_job(job,sub_num):
 #        p_res = subprocess.Popen(cmd_str,shell=True,stdout=subprocess.PIPE)
     ## could call different script if resub? currently only calls the same
     name  = 'GA_'+ str(gene) + '_'+str(spin)
-    opath = get_run_dir()+name + '.o'
-    epath = get_run_dir()+name + '.e'
+    path_dictionary =setup_paths()
+    
+    opath = path_dictionary["queue_output"]+name + '.o'
+    epath = path_dictionary["queue_output"]+name + '.e'
     GA_run = get_current_GA()
     if "thermo" in job:
          cmd_script = "launch_script_thermo.sh"
@@ -62,8 +64,9 @@ def is_job_live(job_id):
     rt,ll = p1.communicate()
     verdict = True
     ll=ll.split('\n')
+    print(ll)
     for lines in ll:
-            if str(lines).find('Following jobs do not exist:') != -1:
+            if (str(lines).find('Following jobs do not exist:') != -1) or (str(lines).find("slurm_load_jobs error: Invalid job id") != -1):
                     print('job ' + str(job_id) + ' is not live')
                     verdict = False
     return verdict
