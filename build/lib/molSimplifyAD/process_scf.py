@@ -15,30 +15,19 @@ HF_to_Kcal_mol = 627.509###
 eV_to_Kcal_mol = 23.06055## 
 ###########################
 
-
 def scfextract(a_run,list_of_props):
-    ## function to create a list of run properties
-    ##  from a dft run
-    #  @param a_run the dft run 
-    #  @param list_of_props list of keywords for properties
-    #  @return list of properties
     extrct_props = []
     for keys in list_of_props:
         extrct_props.append(a_run.__dict__[str(keys)])
-    
     return extrct_props
 
-
+# pass the name of the species/test to the script as only agrument
 def test_terachem_sp_convergence(job):
-    ## function to test single point convergence
-    ##  for terachem files
-    #  @param job a job name
-    #  @return this_run populated run class
     ### get paths
     path_dictionary = setup_paths()
-    gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename = translate_job_name(job)
+    gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,basename = translate_job_name(job)
     this_GA = get_current_GA()
-    exchange = ahf
+    exchange = this_GA.config['exchange']
     alpha=float(exchange)
     ### flag
     converged =  False
@@ -77,12 +66,6 @@ def test_terachem_sp_convergence(job):
     return this_run
 
 def process_runs_sp(LS_runs,HS_runs):
-    ## function to compare HS/LS
-    ##  runs and calc splitting energies
-    #  @param LS_runs low spin runs
-    #  @param HS_runs high spin runs
-    #  @return final_results dictionary 
-    #          of comparison classes
     ## this is for GA only 
     final_results=dict()
     matched = False
@@ -109,38 +92,28 @@ def process_runs_sp(LS_runs,HS_runs):
             final_results[this_gene].LS_status = LS_run.status
             final_results[this_gene].HS_time = HS_run.time
             final_results[this_gene].HS_time = HS_run.time
+ 
             final_results[this_gene].process()
             final_results[this_gene].HS_ss_act = HS_run.ss_act
             final_results[this_gene].LS_ss_act = LS_run.ss_act
             final_results[this_gene].LS_ss_target = LS_run.ss_target
             final_results[this_gene].HS_ss_target = HS_run.ss_target
+
             final_results[this_gene].max_spin_error =max(abs( float(HS_run.ss_target) - float(HS_run.ss_act)),abs(float(LS_run.ss_target - LS_run.ss_act)))
+
         else:
             print('unmatched ID: '+ str(this_gene) + ' files ' + str(LS_run.name)+ ' has no partner' )
     return final_results
 def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
-    ## function to find mathcing runs by gene
-    ## and extract their properties
-    ##  for terachem GO runs
-    #  @param all_runs list of runs
-    #  @param list_of_prop_names list of properties
-    #                            to carry over
-    #  @param local_spin_dictionary metals and spin states
-    #                               used to define low and
-    #                               high spins expected
-    #  @return final_results dictionary of comparisons keyed by gene
     final_results=dict()
     matched = False
     number_of_matches  = 0
-    print(local_spin_dictionary)
     print('processing all converged runs')
     for runkeys in all_runs.keys():
         skip = False
         duplication = False
         this_run = all_runs[runkeys]
-        this_metal = get_metals()[int(this_run.metal)]
-
-        this_name = "_".join([this_metal,'eq',str(this_run.eqlig),'ax1',str(this_run.axlig1),'ax2',str(this_run.axlig2),'ahf',str(this_run.alpha)])
+        this_name = "_".join([str(this_run.metal),'eq',str(this_run.eqlig),'ax1',str(this_run.axlig1),'ax2',str(this_run.axlig2),'ahf',str(this_run.alpha)])
                 ### add alpha value to list owned by this_comp:
                 
         if this_name not in final_results.keys():
@@ -153,6 +126,7 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
         print(runkeys)
         this_comp.attempted += 1 # advance number of attempts
         ## get basic details
+        this_metal = str(this_run.metal)
         this_ox = int(this_run.ox)
         metal_spins  = local_spin_dictionary[this_metal][this_ox]
         if this_run.spin not in metal_spins:
@@ -168,7 +142,7 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
         this_attribute = "_".join(['ox',str(this_ox),spin_cat,'converged'])
         if getattr(this_comp,this_attribute):
             duplication = True
-            print('run duplication at  ' +str(this_name))
+            print('DUPLICATION at  ' +str(this_name))
             if this_ox == 2:
                 this_ox2RN = this_run.number
                 old_ox2RN = this_comp.ox2RN
@@ -199,8 +173,6 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
                 this_comp.convergence += 1
             if this_run.coord == 6 and not this_comp.set_desc:
                 try:
-                    if not os.path.isdir('used_geos/'):
-                        os.mkdir('used_geos/')
                     this_run.mol.writexyz('used_geos/'+this_name+'.xyz')
                     this_comp.axlig1 = this_run.axlig1
                     this_comp.axlig2 = this_run.axlig2
@@ -208,8 +180,6 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
                     this_comp.set_rep_mol(this_run)
                     this_comp.get_descriptor_vector(loud=False,name=this_name)
                 except:
-                    if not os.path.isdir('bad_geos/'):
-                        os.mkdir('bad_geos/')
                     this_run.mol.writexyz('bad_geos/'+this_name+'.xyz')
                     this_comp.convergence -= 1
                     this_run.coord = 'error'
@@ -217,23 +187,13 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
                      this_attribute = "_".join(['ox',str(this_ox),spin_cat,props])
                      #print(this_attribute)
                      setattr(this_comp,this_attribute,getattr(this_run,props))
-#            if this_run.coord == 6 and spin_cat == 'HS' and this_ox == 2:
-#                if not os.path.isdir('coulomb_geos/'):
-#                        os.mkdir('coulomb_geos/')
-#                this_run.mol.writexyz('coulomb_geos/'+this_name+'.xyz')
-#                this_comp.get_coulomb_descriptor(size=85)
-        ## the hack to get around expecting 
-        ## spins
-        this_comp.get_some_split()
-        ###
+            if this_run.coord == 6 and spin_cat == 'HS' and this_ox == 2:
+                this_run.mol.writexyz('coulomb_geos/'+this_name+'.xyz')
+                this_comp.get_coulomb_descriptor(size=85)
         final_results.update({this_name:this_comp})
     return final_results
     
 def check_solvent_file(this_run):
-    ## function to test solvent single point convergence
-    ##  for terachem files
-    #  @param this_run a run class
-    #  @return this_run populated run class
 	solvent_contribution = False
 	found_solvent_energy = False
 	found_solvent_cont = False
@@ -257,10 +217,6 @@ def check_solvent_file(this_run):
 	return(this_run)
     
 def check_thermo_file(this_run):
-    ## function to test thermodynamic contribution
-    ##  for terachem files
-    #  @param this_run a run class
-    #  @return this_run populated run class
 	found_vib_correction = False
 	found_grad_error = False
 	vib_correction = False
@@ -295,10 +251,6 @@ def check_thermo_file(this_run):
 	return(this_run)
 
 def check_init_sp(this_run):
-    ## function to test initial single point convergence
-    ##  for terachem files
-    #  @param this_run a run class
-    #  @return this_run populated run class
     found_data = False
     if os.path.exists(this_run.init_outpath):
         with open(this_run.outpath) as f: 
@@ -314,12 +266,10 @@ def check_init_sp(this_run):
 			this_run.init_energy = energy
     return this_run
 def check_mopac(this_run):
-    ## function to test mopac convergence
-    #  @param this_run a run class
-    #  @return this_run populated run class
+    print('hello')
     print(this_run.moppath)
     if os.path.exists(this_run.moppath):
-        print('mopac file exists')
+        print('mop file exists')
         with open(this_run.moppath) as f:
             conv_flag =  False
             data=f.readlines()
@@ -357,78 +307,55 @@ def check_mopac(this_run):
                         f.write(line_tw)
             this_run.obtain_mopac_mol()
             this_run.check_coordination()
-        return(this_run)
             
 
 
 
 def test_terachem_go_convergence(this_run):
-    ## function to test geometry optimization convergence
-    ##  for terachem files
-    #  @param this_run a run class
-    #  @return this_run populated run class    
-    print('have access go to function' )
+    print('have access to function')
     if not this_run.logpath:
         this_run.logpath = get_run_dir()
-    print('logging too ' +this_run.logpath)
+    print('logging too ' +'this_run.logpath')
     if os.path.exists(this_run.geopath):
         this_run.geo_exists = True
-        print('geo exists ' +this_run.geopath)
     else:
         this_run.comment += 'no geo found\n'
-        print(' no  geo exists ' +this_run.geopath)
-        if os.path.exists(this_run.scrpath):
-            this_run.extract_geo()
-            print('  geo extracted to  ' +this_run.geopath)
-        else:
-            print(' cannot find scr:   ' +this_run.scrpath)
-
     if os.path.exists(this_run.outpath):
         read_terachem_go_output(this_run)
     else:
         this_run.comment += ' no outfile found\n'
-    print('has run converged : ' + str(this_run.converged))
     if this_run.converged:
         logger(this_run.logpath, str(this_run.name) + ' run converged ' +  ' and now testing geo '+this_run.geopath )
         # check the geo
         if os.path.exists(this_run.geopath):
-
-                print(this_run.geopath + ' found')
                 # get mol3D file
                 this_run.obtain_mol3d()
                 # check if inidicators are good
                 # check coordinattion
                 this_run.check_coordination()
                 logger(this_run.logpath, str(this_run.name) + ' cooridination is ' +str(this_run.coord))
-                print(str(this_run.name) + ' cooridination is ' +str(this_run.coord))
                 # ML distances, geo
                 this_run.obtain_ML_dists()
                 
                 ## check intial conditions:
                 if os.path.exists(this_run.init_geopath):
-                    this_run.check_oct_needs_inital()
                     this_run.obtain_init_mol3d()
                     this_run.obtain_rsmd() # copmare to initial
-                else:
-                    this_run.check_oct_needs_final_only()
-        if this_run.coord == 6 and this_run.converged and this_run.flag_oct == 1:
+        if this_run.coord == 6 and this_run.converged:
             this_run.status = 0
             if not this_run.tspin == this_run.spin:
                 print(this_run.tspin)
                 print(this_run.spin)
-                # sardines
+                sardines
                 
         else:
             this_run.status = 1
             this_run.comment += 'coord not good ' +str(this_run.coord) +'\n '
-            this_run.comment += 'flag_oct_list: %s\n'%(this_run.flag_oct_list)
             
 
 def read_terachem_go_output(this_run):
-    ## function to parse geometry optimization outfile
-    ##  for terachem files
-    #  @param this_run a run class
-    #  @return this_run populated run class  
+
+
     found_conv =False 
     found_data =False
     converged = False
@@ -442,27 +369,27 @@ def read_terachem_go_output(this_run):
             for i,lines in enumerate(data):
                 if str(lines).find('TeraChem v') != -1:
                     this_run.terachem_version = lines.split()[2]
-                    #print('TeraChem Version: ' + this_run.terachem_version)
+                    print('TeraChem Version: ' + this_run.terachem_version)
                 if str(lines).find('Hg Version') != -1:
                     this_run.terachem_detailed_version = lines.split()[3]
-                    #print('TeraChem Hg build: ' + this_run.terachem_detailed_version)
+                    print('TeraChem Hg build: ' + this_run.terachem_detailed_version)
                 if str(lines).find('Using basis set') != -1:
                     this_run.basis = lines.split()[3]
-                    #print('TeraChem basis: ' + this_run.basis)
+                    print('TeraChem basis: ' + this_run.basis)
                 if str(lines).find('Spin multiplicity') != -1:
                     this_run.tspin = int(lines.split()[2])
-                    #print('TeraChem spin: ' + str(this_run.tspin))
+                    print('TeraChem spin: ' + str(this_run.tspin))
                 if str(lines).find('Total charge:') != -1:
                     this_run.charge = int(lines.split()[2])
-                    #print('TeraChem charge: ' + str(this_run.charge))
+                    print('TeraChem charge: ' + str(this_run.charge))
                 if str(lines).find('Alpha level shift') != -1:
                     this_run.alpha_level_shift = float(lines.split()[3])
-                    #print('Alpha level: ' + str(this_run.alpha_level_shift)  )
+                    print('Alpha level: ' + str(this_run.alpha_level_shift)  )
                 if str(lines).find('Beta level shift') != -1:
                     this_run.beta_level_shift = float(lines.split()[3])
                 if str(lines).find('DFT Functional requested:') != -1:
                     this_run.functional = lines.split()[3]                    
-                    #print('TC functional: ' + this_run.functional  )
+                    print('TC functional: ' + this_run.functional  )
                 if (str(lines).find('Optimization Converged.') != -1) or (str(lines).find('Converged!') != -1):
                    found_conv = True
                 if str(lines).find('FINAL ENERGY') != -1:
@@ -482,6 +409,5 @@ def read_terachem_go_output(this_run):
         this_run.attempted  = False
     if (found_data == True) and (found_time == True) and (found_conv == True):
         this_run.converged = True
-        print('run outfile converged')
         
         

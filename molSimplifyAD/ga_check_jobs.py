@@ -112,7 +112,6 @@ def check_all_current_convergence():
                 # if we are doing HFX resampling, need the list of target
                 # HFX values
                 HFXorderingdict = HFXordering()
-                
                 if this_run.status == 0:
                     run_success = False
                     # perfrom health checks on complex here
@@ -178,12 +177,14 @@ def check_all_current_convergence():
                         logger(base_path_dictionary['state_path'],str(datetime.datetime.now()) + ' job  ' + str(this_run.outpath) + ' not converged')
                         this_run.extract_prog()
                         if this_run.progstatus ==0:
-                            this_run.archive()
-                            this_run.write_modifed_infile()
-                            this_run.status = 2
-                        else:
-                            this_run.status = 6 ## no prog!
-                            shutil.copy(this_run.init_geopath,path_dictionary['stalled_jobs'] + this_run.name + '.xyz')
+                            this_run.check_oct_on_prog()
+                            if this_run.progstatus ==0:
+                                this_run.archive()
+                                this_run.write_modifed_infile()
+                                this_run.status = 2
+                            else:
+                                this_run.status = 6 ## no prog!
+                                shutil.copy(this_run.init_geopath,path_dictionary['stalled_jobs'] + this_run.name + '.xyz')
                         try:
                                 this_run.obtain_mol3d()
                                 try:
@@ -222,7 +223,9 @@ def check_all_current_convergence():
         list_of_props.append('axlig1')
         list_of_props.append('axlig2')
         list_of_props.append('eqlig')  
-        list_of_prop_names =['converged','energy','init_energy','coord','rmsd','maxd','status','time','spin','ss_act','ss_target','ax1_MLB','ax2_MLB','eq_MLB',
+        list_of_prop_names =['converged','energy','init_energy', 'flag_oct', 'flag_oct_list', 'num_coord_metal',
+                             'rmsd_max', 'atom_dist_max', 'oct_angle_devi_max', 'dist_del_eq', 'dist_del_ax', 'dist_del_eq_ax',
+                             'coord','rmsd','maxd','status','time','spin','ss_act','ss_target','ax1_MLB','ax2_MLB','eq_MLB',
                     'init_ax1_MLB','init_ax2_MLB','init_eq_MLB','thermo_cont','imag','solvent_cont','geopath','terachem_version','terachem_detailed_version',
                     'basis','charge','alpha_level_shift','beta_level_shift','functional','mop_energy','mop_coord','attempted']
         for props in list_of_prop_names:
