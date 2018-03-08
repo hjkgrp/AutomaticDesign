@@ -65,6 +65,6 @@ echo "inpath is $inpath"
 echo "Launching geo calc: $namebase"
 terachem $inpath >  $localoutpath
 mv $localoutpath $outpath
-mv -r scr/geo/$genumpath/$namebase $scrpath
+mv scr/geo/$genumpath/$namebase $scrpath
 echo "Complete"
 
