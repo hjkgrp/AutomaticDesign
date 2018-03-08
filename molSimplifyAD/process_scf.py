@@ -138,7 +138,10 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
         skip = False
         duplication = False
         this_run = all_runs[runkeys]
-        this_metal = get_metals()[int(this_run.metal)]
+        if this_run.metal in get_metals():
+            this_metal = this_run.metal
+        else:
+            this_metal = get_metals()[int(this_run.metal)]
 
         this_name = "_".join([this_metal,'eq',str(this_run.eqlig),'ax1',str(this_run.axlig1),'ax2',str(this_run.axlig2),'ahf',str(this_run.alpha)])
                 ### add alpha value to list owned by this_comp:
@@ -406,8 +409,8 @@ def test_terachem_go_convergence(this_run):
                 
                 ## check intial conditions:
                 if os.path.exists(this_run.init_geopath):
-                    this_run.check_oct_needs_inital()
                     this_run.obtain_init_mol3d()
+                    this_run.check_oct_needs_init()
                     this_run.obtain_rsmd() # copmare to initial
                 else:
                     this_run.check_oct_needs_final_only()
