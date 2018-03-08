@@ -61,4 +61,4 @@ terachem $localinpath >  $localoutpath
 echo "Complete"
 ## copy back complete cases 
 mv $localoutpath $outpath
-mv -r scr/geo/$gennumpath/$namebase $scrpath
+mv scr/geo/$gennumpath/$namebase $scrpath

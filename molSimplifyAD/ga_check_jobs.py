@@ -94,7 +94,7 @@ def check_all_current_convergence():
                 this_run.mop_geopath = path_dictionary["mopac_path" ] + base_name + ".xyz"
                 
                 ## check if outpath exists
-                if os.path.isfile(this_run.outpath): 
+                if os.path.isfile(this_run.outpath):
                         this_run.estimate_if_job_live() # test if live
                         if this_run.islive :
                                 this_run.status = 4 ## mark as live
@@ -105,7 +105,8 @@ def check_all_current_convergence():
                 # store the status
                 all_runs.update({this_run.name:this_run})
                 print('added ' + this_run.name + ' to all_runs')
-
+                print('run status is  ' + str(this_run.status))
+                print('******************************************')
                 base_path_dictionary = setup_paths()
                 logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                                    + ' added ' + this_run.name + ' to all_runs')
@@ -114,6 +115,8 @@ def check_all_current_convergence():
                 # HFX values
                 HFXorderingdict = HFXordering()
                 if this_run.status == 0:
+                    print('converged run, alpha is' + str(this_run.alpha))
+                    sardines
                     run_success = False
                     # perfrom health checks on complex here
                     if this_run.coord == 6:

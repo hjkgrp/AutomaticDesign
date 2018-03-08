@@ -114,6 +114,15 @@ def isDFT():
         return False
     return rdir
 ########################
+def isOptimize():
+    GA_run =  get_current_GA()
+    if GA_run.config["optimize"]:
+        return True
+    else:
+        return False
+    return rdir
+########################
+
 def translate_job_name(job):
     base = os.path.basename(job)
     base = base.strip("\n")
@@ -212,6 +221,10 @@ def setup_paths():
     for keys in path_dictionary.keys():
         ensure_dir(path_dictionary[keys])
 #    shutil.copyfile(get_source_dir()+'wake.sh',get_run_dir()+'wake.sh')
+    ## set scr path to scr/sp for single points
+    if not isOptimize():
+            path_dictionary.update({"scr_path": working_dir + "scr/geo/"})
+
 
     return path_dictionary
 ########################

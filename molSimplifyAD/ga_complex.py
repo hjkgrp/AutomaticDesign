@@ -339,6 +339,8 @@ class octahedral_complex:
         ms_error_path = path_dictionary["molsimplify_inps"] +  'ms_errors.txt'
         jobpath = path_dictionary["job_path"]  + mol_name + '.in'
         inpath = path_dictionary["infiles"]  + mol_name + '.in'
+        scrpath =  path_dictionary["scr_path"]  + mol_name
+
         geometry_path = path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz'
         
         ## check if already exists:
@@ -391,10 +393,7 @@ class octahedral_complex:
                         for line in oldf:
                             if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line):
                                 newf.writelines(line)
-                    if optimize:
-                        newf.writelines("scrdir scr/geo/" +mol_name+ "\n")
-                    else:
-                        newf.writelines("scrdir scr/sp/" +mol_name+ "\n")
+                    newf.writelines("scrdir " +scrpath + "\n")
                 os.remove(rundirpath + 'temp/' + mol_name + '.in')
                 
                 ### make an infile!

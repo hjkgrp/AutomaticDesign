@@ -213,9 +213,10 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
                     this_run.mol.writexyz('bad_geos/'+this_name+'.xyz')
                     this_comp.convergence -= 1
                     this_run.coord = 'error'
+#            print(dir(this_run))
             for props in list_of_prop_names:
                      this_attribute = "_".join(['ox',str(this_ox),spin_cat,props])
-                     #print(this_attribute)
+#                     print(this_attribute)
                      setattr(this_comp,this_attribute,getattr(this_run,props))
 #            if this_run.coord == 6 and spin_cat == 'HS' and this_ox == 2:
 #                if not os.path.isdir('coulomb_geos/'):

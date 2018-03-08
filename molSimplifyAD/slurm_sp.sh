@@ -38,13 +38,8 @@ echo "namebase = $namebase"
 echo "TeraChem basis dir = $TeraChem"
 sourcepath=$fullpath
 inpath=$generalpath/infiles/$gennumpath/$namebase.in
-opt_geo_path=$generalpath/optimized_geo/$gennumpath/$namebase.xyz
-prog_geo_path=$generalpath/prog_geo/$gennumpath/$namebase.xyz
-initial_geo_path=$generalpath/initial_geo/$gennumpath/$namebase.xyz
 outpath=$generalpath/sp_outfiles/$gennumpath/$namebase.out
-completepath=$generalpath/completejobs/$gennumpath/$namebase.done
 scrpath=$generalpath/scr/sp/$gennumpath/
-localoutpath=$namebase.out
 echo "scr will be copied to  $scrpath"
 echo "paths set"
 
@@ -61,30 +56,12 @@ echo "optGpath is $opt_geo_path"
 echo "daemon is in"
 pwd
 
-#echo "this current env: $SGE_JOB_SPOOL_DIR"
-wf_guess_flag=0
-##begin geo-optimization
 localoutpath=$namebase.out
-coordfile=$initial_geo_path
 
-echo "copying from $sourcepath to $inpath"
-cp $sourcepath $inpath 
-sed -i '/min_coordinates cartesian/d' $inpath 
-cat >> $inpath <<-EOF
-	scf diis+a 
-	coordinates $coordfile
-	guess generate
-	end
-EOF
-echo "inpath is $inpath"
 echo "Launching geo calc: $namebase"
 terachem $inpath >  $localoutpath
 msg=$?
-if [ -e $scrpath ]; then
-	echo "we found scr: $scrpath"
-fi
-stringtotest="$scrpath/optim.xyz"
-cp $localoutpath $outpath
-cp -r scr/sp/$namebase $scrpath
+mv $localoutpath $outpath
+mv scr/sp/$namebase $scrpath
 echo "Complete"
 
