@@ -97,7 +97,7 @@ def ligand_comp_org(file_in, file_init_geo):
     if flag_match:
         rmsd_arr, max_atom_dist_arr = [], []
         for idx, lig in enumerate(liglist):
-            print('----This is %d th piece of ligand.' % (idx + 1))
+            print('----This is %d st/nd piece of ligand.' % (idx + 1))
             posi_shift = 2
             start_posi = posi_shift + lig[0]
             end_posi = posi_shift + lig[len(lig) - 1]
@@ -231,7 +231,7 @@ def oct_comp(file_in):
 ##         flag_list: if structure is bad, which test it fails
 ##         dict_oct_info: values for each metric we check.
 def IsOct(file_in, file_init_geo=None, dict_check=dict_oct_check_st):
-    print('isoct called on '+file_in)
+    #print('isoct called on '+file_in)
     num_coord_metal, catoms = get_num_coord_metal(file_in)
 
     if file_init_geo != None:
@@ -250,7 +250,7 @@ def IsOct(file_in, file_init_geo=None, dict_check=dict_oct_check_st):
     dict_oct_info['dist_del_eq'] = oct_dist_del[0]
     dict_oct_info['dist_del_ax'] = oct_dist_del[1]
     dict_oct_info['dist_del_eq_ax'] = oct_dist_del[2]
-    print('dict_oct_info', dict_oct_info)
+    #print('dict_oct_info', dict_oct_info)
     flag_list = []
     ## ---Adjust cutoff value---
     # if dict_oct_info['rmsd_max'] > 0.3:

@@ -35,7 +35,7 @@ def check_all_current_convergence():
     ## allocate holder for result list
     final_results = dict()
     all_runs = dict()
-    print('found '+str(len(joblist)) + 'jobs to check')
+    print('found:  '+str(len(joblist)) + 'jobs to check')
     if GA_run.config["optimize"]:
         print('post processing geometry files')    
         ### return codes:
@@ -106,7 +106,6 @@ def check_all_current_convergence():
                 all_runs.update({this_run.name:this_run})
                 print('added ' + this_run.name + ' to all_runs')
                 print('run status is  ' + str(this_run.status))
-                print('******************************************')
                 base_path_dictionary = setup_paths()
                 logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                                    + ' added ' + this_run.name + ' to all_runs')
@@ -115,8 +114,7 @@ def check_all_current_convergence():
                 # HFX values
                 HFXorderingdict = HFXordering()
                 if this_run.status == 0:
-                    print('converged run, alpha is' + str(this_run.alpha))
-                    sardines
+                    print('converged run, alpha is ' + str(this_run.alpha))
                     run_success = False
                     # perfrom health checks on complex here
                     if this_run.coord == 6:
@@ -145,8 +143,6 @@ def check_all_current_convergence():
                                 run_success = False
                         
                         ## test if we should launch other HFX fractions
-                        print('this run alpha: ' + str(ahf))
-                        print('keys : ' + str(HFXorderingdict.keys()))
                         ## check alpha HFX against dictionary of strings:
                         ahf=str(ahf)
                         if ahf in HFXorderingdict.keys():
@@ -159,11 +155,9 @@ def check_all_current_convergence():
 
                                         logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref ' + refHFX)
                                         if (HFX_job not in joblist) and (HFX_job not in outstanding_jobs) and (HFX_job not in converged_jobs.keys()):
-                                                pass 
-                                                #add_to_outstanding_jobs(HFX_job)
+                                                add_to_outstanding_jobs(HFX_job)
                                        
 
-                        sardines
                         if run_success:
                                 this_run.status=0 #all done
                             ## mark as compelete
@@ -217,7 +211,9 @@ def check_all_current_convergence():
                         logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                                    + " failure at job : " + str(jobs) + ' with status '+ str(this_run.status))
                         remove_outstanding_jobs(jobs) # take out of pool
-        print('\n')
+                print('END OF JOB \n *******************\n')
+
+        print('matching DFT runs ... \n')
         list_of_props = list()
         list_of_props.append('name')
         list_of_props.append('convergence')
@@ -281,6 +277,7 @@ def check_all_current_convergence():
                 print('\n')
             elif (jobs in live_job_dictionary.keys()):
                     print(str(jobs) + ' is live\n')
+            print('END OF JOB \n *******************\n')
         final_results = process_runs_sp(LS_jobs,HS_jobs)
         ## write a file of results
         list_of_props = list()
