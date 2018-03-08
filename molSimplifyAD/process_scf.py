@@ -9,7 +9,7 @@ import string
 import numpy
 from molSimplifyAD.ga_tools import *
 from molSimplifyAD.post_classes import *
-from molSimplifyAD.oct_check_molsAD import *
+from molSimplifyAD.ga_check_molsAD import *
 ########### UNIT CONVERSION
 HF_to_Kcal_mol = 627.509###
 eV_to_Kcal_mol = 23.06055## 
