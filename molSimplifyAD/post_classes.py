@@ -16,7 +16,7 @@ from molSimplify.Informatics.misc_descriptors import*
 from molSimplify.Informatics.coulomb_analyze import*
 from molSimplify.Informatics.graph_analyze import*
 from molSimplify.Informatics.geo_analyze import *
-from molSimplifyAD.oct_check_molsAD import *
+from molSimplifyAD.ga_oct_check import *
 
 ########### UNIT CONVERSION
 
@@ -66,13 +66,20 @@ class DFTRun:
         self.mol = False
         self.initmol = False
         self.progmol = False
-
-        ## diagnositcs
-        self.time = 'undef'
-        self.logpath = False
+        
+        ## run info
         self.attempted  = False
         self.progpath  = 'undef'
-        self.converged  = 'undef'
+        self.logpath = False
+        self.terachem_version = 'undef'
+        self.terachem_detailed_version = 'undef'
+        self.basis = 'undef'
+        self.alpha_level_shift = 'undef'
+        self.beta_level_shift = 'undef'
+        self.functional = 'undef'
+                        
+        ## diagnositcs
+        self.time = 'undef'
         self.geostatus = False
         self.thermo_status = False
         self.imag = False
@@ -90,15 +97,8 @@ class DFTRun:
         self.maxd = 'undef' #max dist to detect detected atoms
         self.thermo_time = 'undef'
         self.solvent_time = 'undef'
-        self.terachem_version = 'undef'
-        self.terachem_detailed_version = 'undef'
-        self.basis = 'undef'
-        self.alpha_level_shift = 'undef'
-        self.beta_level_shift = 'undef'
-        self.functional = 'undef'
         self.angletest =  'undef'
         self.ligrsmd= 'undef'
-        self.comment = ''
         self.flag_oct = 'undef'
         self.flag_oct_list = 'undef'
         self.num_coord_metal = 'undef'
@@ -108,7 +108,7 @@ class DFTRun:
         self.dist_del_eq = 'undef'
         self.dist_del_ax = 'undef'
         self.dist_del_eq_ax = 'undef'
-
+        self.comment = ''
 
 
 
@@ -502,19 +502,81 @@ class Comp:
         self.ox_2_HS_coord  = 'undef'
         self.ox_3_LS_coord  = 'undef'
         self.ox_3_HS_coord  = 'undef'
+        self.ox_2_LS_num_coord_metal  = 'undef'
+        self.ox_2_HS_num_coord_metal  = 'undef'
+        self.ox_3_LS_num_coord_metal  = 'undef'
+        self.ox_3_HS_num_coord_metal  = 'undef'
         self.ox_2_LS_mop_coord  = 'undef'
         self.ox_2_HS_mop_coord  = 'undef'
         self.ox_3_LS_mop_coord  = 'undef'
         self.ox_3_HS_mop_coord  = 'undef'
+        
         ### rmsds
         self.ox_2_LS_rmsd  = 'undef'
         self.ox_2_HS_rmsd  = 'undef'
         self.ox_3_LS_rmsd  = 'undef'
         self.ox_3_HS_rmsd  = 'undef'
+        self.ox_2_LS_rmsd_max  = 'undef'
+        self.ox_2_HS_rmsd_max  = 'undef'
+        self.ox_3_LS_rmsd_max  = 'undef'
+        self.ox_3_HS_rmsd_max  = 'undef'
+        self.ox_2_LS_ligrsmd  = 'undef'
+        self.ox_2_HS_ligrsmd  = 'undef'
+        self.ox_3_LS_ligrsmd  = 'undef'
+        self.ox_3_HS_ligrsmd  = 'undef'
+        
+        ## geometric health indicators
         self.ox_2_LS_maxd  = 'undef'
         self.ox_2_HS_maxd  = 'undef'
         self.ox_3_LS_maxd  = 'undef'
         self.ox_3_HS_maxd  = 'undef'
+        
+        self.ox_2_LS_atom_dist_max  = 'undef'
+        self.ox_2_HS_atom_dist_max = 'undef'
+        self.ox_3_LS_atom_dist_max  = 'undef'
+        self.ox_3_HS_atom_dist_max  = 'undef'
+        
+        self.ox_2_LS_angletest = 'undef'
+        self.ox_2_HS_angletest = 'undef'
+        self.ox_3_LS_angletest = 'undef'
+        self.ox_3_HS_angletest = 'undef'
+        
+        self.ox_2_LS_flag_oct  = 'undef'
+        self.ox_2_HS_flag_oct  = 'undef'
+        self.ox_3_LS_flag_oct  = 'undef'
+        self.ox_3_HS_flag_oct  = 'undef'
+        
+        self.ox_2_LS_flag_oct_list  = 'undef'
+        self.ox_2_HS_flag_oct_list  = 'undef'
+        self.ox_3_LS_flag_oct_list  = 'undef'
+        self.ox_3_HS_flag_oct_list  = 'undef'
+        
+        self.ox_2_LS_oct_angle_devi_max  = 'undef'
+        self.ox_2_HS_oct_angle_devi_max  = 'undef'
+        self.ox_3_LS_oct_angle_devi_max  = 'undef'
+        self.ox_3_HS_oct_angle_devi_max  = 'undef'        
+        
+        self.ox_2_LS_dist_del_ax  = 'undef'
+        self.ox_2_HS_dist_del_ax = 'undef'
+        self.ox_3_LS_dist_del_ax  = 'undef'
+        self.ox_3_HS_dist_del_ax  = 'undef'
+
+        self.ox_2_LS_dist_del_eq  = 'undef'
+        self.ox_2_HS_dist_del_eq  = 'undef'
+        self.ox_3_LS_dist_del_eq  = 'undef'
+        self.ox_3_HS_dist_del_eq  = 'undef'
+
+
+        self.ox_2_LS_oct_angle_devi_max = 'undef'
+        self.ox_2_HS_oct_angle_devi_max  = 'undef'
+        self.ox_3_LS_oct_angle_devi_max  = 'undef'
+        self.ox_3_HS_oct_angle_devi_max  = 'undef'
+
+        self.ox_2_LS_dist_del_eq_ax  = 'undef'
+        self.ox_2_HS_dist_del_eq_ax  = 'undef'
+        self.ox_3_LS_dist_del_eq_ax  = 'undef'
+        self.ox_3_HS_dist_del_eq_ax  = 'undef'
+               
         ### thermo
         self.ox_2_LS_thermo_cont  = 'undef'
         self.ox_2_HS_thermo_cont  = 'undef'
@@ -608,6 +670,14 @@ class Comp:
         self.ox_3_HS_spin= 'undef'
         self.ox_2_LS_spin = 'undef'
         self.ox_2_HS_spin= 'undef'
+        
+        ### r
+        
+
+
+        
+
+        
 
        ### data provenance
         self.ox_3_LS_terachem_version = 'undef'

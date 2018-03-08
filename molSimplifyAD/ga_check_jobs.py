@@ -12,7 +12,7 @@ from molSimplifyAD.ga_complex import *
 from molSimplifyAD.ga_main import *
 from molSimplifyAD.process_scf import *
 from molSimplifyAD.post_classes import *
-from molSimplifyAD.oct_check_molsAD import *
+from molSimplifyAD.ga_oct_check import *
 #######################
 def check_all_current_convergence():
     print('\nchecking convergence of jobs\n')
@@ -226,7 +226,7 @@ def check_all_current_convergence():
         list_of_props.append('axlig1')
         list_of_props.append('axlig2')
         list_of_props.append('eqlig')  
-        list_of_prop_names =['converged','energy','init_energy', 'flag_oct', 'flag_oct_list', 'num_coord_metal',
+        list_of_prop_names =['converged','energy','init_energy', 'flag_oct', 'num_coord_metal',
                              'rmsd_max', 'atom_dist_max', 'oct_angle_devi_max', 'dist_del_eq', 'dist_del_ax', 'dist_del_eq_ax',
                              'coord','rmsd','maxd','status','time','spin','ss_act','ss_target','ax1_MLB','ax2_MLB','eq_MLB',
                     'init_ax1_MLB','init_ax2_MLB','init_eq_MLB','thermo_cont','imag','solvent_cont','geopath','terachem_version','terachem_detailed_version',
