@@ -110,9 +110,7 @@ def check_all_current_convergence():
                 logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                                    + ' added ' + this_run.name + ' to all_runs')
                 
-                # if we are doing HFX resampling, need the list of target
-                # HFX values
-                HFXorderingdict = HFXordering()
+
                 if this_run.status == 0:
                     print('converged run, alpha is ' + str(this_run.alpha))
                     run_success = False
@@ -141,21 +139,21 @@ def check_all_current_convergence():
                             elif run_success:
                                 this_run.status = 13
                                 run_success = False
-                        
-                        ## test if we should launch other HFX fractions
-                        ## check alpha HFX against dictionary of strings:
-                        ahf=str(ahf)
-                        if ahf in HFXorderingdict.keys():
-                                newHFX = HFXorderingdict[ahf][0]
-                                refHFX = HFXorderingdict[ahf][1]
-                                print('note: converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref '+ refHFX)
-                                if this_run.coord == 6: ## don't bother if failed
-                                        HFX_job = this_run.write_HFX_inputs(newHFX,refHFX)              
-                                        HFX_job = this_run.write_HFX_inputs(newHFX,refHFX)              
-
-                                        logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref ' + refHFX)
-                                        if (HFX_job not in joblist) and (HFX_job not in outstanding_jobs) and (HFX_job not in converged_jobs.keys()):
-                                                add_to_outstanding_jobs(HFX_job)
+                    # if we are doing HFX resampling, need the list of target
+                    # HFX values
+                    HFXorderingdict = HFXordering()
+                    ## test if we should launch other HFX fractions
+                    ## check alpha HFX against dictionary of strings:
+                    ahf=str(ahf)
+                    if ahf in HFXorderingdict.keys():
+                            newHFX = HFXorderingdict[ahf][0]
+                            refHFX = HFXorderingdict[ahf][1]
+                            print('note: converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref '+ refHFX)
+                            if this_run.coord == 6: ## don't bother if failed
+                                    HFX_job = this_run.write_HFX_inputs(newHFX,refHFX)              
+                                    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref ' + refHFX)
+                                    if (HFX_job not in joblist) and (HFX_job not in outstanding_jobs) and (HFX_job not in converged_jobs.keys()):
+                                            add_to_outstanding_jobs(HFX_job)
                                        
 
                         if run_success:
