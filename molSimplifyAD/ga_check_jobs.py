@@ -35,7 +35,7 @@ def check_all_current_convergence():
     ## allocate holder for result list
     final_results = dict()
     all_runs = dict()
-    print('found:  '+str(len(joblist)) + 'jobs to check')
+    print('found:  '+str(len(joblist)) + ' jobs to check')
     if GA_run.config["optimize"]:
         print('post processing geometry files')    
         ### return codes:

@@ -389,7 +389,7 @@ class DFTRun:
             f_HFX = open(self.HFX_job,'w')
             f_HFX.write('run minimize \n')
             f_HFX.write('HFX '+to_decimal_string(newHFX)+ ' \n')
-            f_HFX.write('scrdir scr/geo/gen_'+str(self.gen)+ '/\n')
+            f_HFX.write('scrdir scr/geo/gen_'+str(self.gen)+'/'+new_name+ '\n')
             with open(self.inpath,'r') as ref:
                 for line in ref:
                      if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not("run" in line) and not ("HFX" in line):
