@@ -174,7 +174,7 @@ def check_all_current_convergence():
                         if this_run.progstatus ==0:                            
                             if this_run.progstatus ==0:
                                 this_run.archive()
-                                this_run.write_modifed_infile()
+                                create_generic_infile(jobs,restart=True)
                                 this_run.status = 2
                             else:
                                 this_run.status = 6     
