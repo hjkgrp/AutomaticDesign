@@ -30,6 +30,9 @@ echo "gen path is $generalpath"
 
 namebase=`echo $fullpath | sed "s/[.]in//"| sed "s:.*/::"`
 
+
+cd $LSTOR
+
 echo "Begining calcualtion run"
 echo "general path is $generalpath"
 
