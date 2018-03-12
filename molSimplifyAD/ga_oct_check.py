@@ -107,10 +107,14 @@ def ligand_comp_org(file_in, file_init_geo):
             with open(file_in, 'r') as fo:
                 lines = fo.readlines()[start_posi:end_posi + 1]
                 with open('tmp.xyz', 'w') as foo:
+                    foo.write('number of atoms not necessary\n')
+                    foo.write('tmp file for ligands comparison\n')
                     foo.write(''.join(lines))
             with open(file_init_geo, 'r') as fo:
                 lines = fo.readlines()[start_posi_init:end_posi_init + 1]
                 with open('tmp_org.xyz', 'w') as foo:
+                    foo.write('number of atoms not necessary\n')
+                    foo.write('tmp file for ligands comparison\n')
                     foo.write(''.join(lines))
             tmp_mol = create_mol_with_xyz('tmp.xyz')
             tmp_org_mol = create_mol_with_xyz('tmp_org.xyz')
