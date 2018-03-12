@@ -103,13 +103,17 @@ def check_all_current_convergence():
                             # if NOT live, test convergance
                             test_terachem_go_convergence(this_run)
                 # store the status
-                all_runs.update({this_run.name:this_run})
-                print('added ' + this_run.name + ' to all_runs')
-                print('run status is  ' + str(this_run.status))
-                base_path_dictionary = setup_paths()
-                logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
-                                   + ' added ' + this_run.name + ' to all_runs')
-                
+                metal_spin_dictionary = spin_dictionary()
+                these_states = metal_spin_dictionary[metal][ox]
+                if (spin == these_states[0]) or (spin == these_states[-1]):
+                    all_runs.update({this_run.name:this_run})
+                    print('added ' + this_run.name + ' to all_runs')
+                    print('run status is  ' + str(this_run.status))
+                    base_path_dictionary = setup_paths()
+                    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
+                                        + ' added ' + this_run.name + ' to all_runs')
+                else:
+                    print('Intermediate spin')
 
                 if this_run.status == 0:
                     print('converged run, alpha is ' + str(this_run.alpha))
