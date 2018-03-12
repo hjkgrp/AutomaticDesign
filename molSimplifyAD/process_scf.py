@@ -371,10 +371,10 @@ def test_terachem_go_convergence(this_run):
     ##  for terachem files
     #  @param this_run a run class
     #  @return this_run populated run class    
-    print('have access go to function' )
+    print('we have access go to test_terachem_go function' )
     if not this_run.logpath:
         this_run.logpath = get_run_dir()
-    print('logging too ' +this_run.logpath)
+    print('logging to ' +this_run.logpath)
     if os.path.exists(this_run.geopath):
         this_run.geo_exists = True
         print('geo exists ' +this_run.geopath)

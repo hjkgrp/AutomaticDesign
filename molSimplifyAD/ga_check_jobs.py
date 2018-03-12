@@ -35,7 +35,7 @@ def check_all_current_convergence():
     ## allocate holder for result list
     final_results = dict()
     all_runs = dict()
-    print('found:  '+str(len(joblist)) + 'jobs to check')
+    print('found:  '+str(len(joblist)) + ' jobs to check')
     if GA_run.config["optimize"]:
         print('post processing geometry files')    
         ### return codes:
@@ -175,7 +175,7 @@ def check_all_current_convergence():
                         if this_run.progstatus ==0:                            
                             if this_run.progstatus ==0:
                                 this_run.archive()
-                                this_run.write_modifed_infile()
+                                create_generic_infile(jobs,restart=True)
                                 this_run.status = 2
                             else:
                                 this_run.status = 6     
