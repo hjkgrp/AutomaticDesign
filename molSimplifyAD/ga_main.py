@@ -85,18 +85,19 @@ class GA_generation:
                         this_complex.replace_ox(ox)
                         this_complex.replace_equitorial(eq_ind)
                         ## support for  ax1/ax2 asymmetry 
-                        this_complex.replace_axial(sorted(ax_ind)) 
-                        print('this this_unique_name ', this_gene)
+                        this_complex.replace_axial(sorted(ax_ind))
                         this_gene = this_complex.name
+                        print('this this_unique_name ', this_gene)
+                        #this_gene = this_complex.name
                         if not this_gene in self.gene_compound_dictionary.keys():
                         ## we can accept this complex
                             self.genes[counter] = this_gene
                             self.gene_compound_dictionary[counter] = this_complex
                             counter += 1
                             self.total_counter = self.total_counter + 1
-                            print('adding eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) +  ' + '   + str(ligs[1][0]))
+                            print('adding eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) +  ' + '   + str(ligs[1][1]))
                 except:
-                    print('cannot make eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) +  ' + '   + str(ligs[1][0]))
+                    print('cannot make eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) +  ' + '   + str(ligs[1][1]))
 
         def write_state(self):
                 ## first write genes to path
