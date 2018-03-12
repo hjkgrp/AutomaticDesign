@@ -85,7 +85,7 @@ def find_live_jobs():
     return live_job_dictionary
 ########################
 def get_metals():
-        metals_list = ['cr','mn','fe','co']
+        metals_list = ['cr','mn','fe','co','ni']
         return metals_list
 ########################
 def get_ox_states(): # could be made metal dependent like spin
@@ -232,7 +232,7 @@ def setup_paths():
 def advance_paths(path_dictionary,generation):
     new_dict = dict()
     for keys in path_dictionary.keys():
-        if not (keys == "molsimp_path"):
+        if not (keys == "molsimp_path") :
             new_dict[keys] = path_dictionary[keys] + "gen_" +  str(generation) + "/"
             ensure_dir(new_dict[keys])
     return new_dict

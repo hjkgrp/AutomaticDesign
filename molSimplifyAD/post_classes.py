@@ -414,7 +414,29 @@ class DFTRun:
         return(self.HFX_job)
 
 
-
+    def archive(self):
+        # this fuinciton copies all files to arch
+        path_dictionary =  setup_paths()
+        path_dictionary =advance_paths(path_dictionary,self.gen) ## this adds the /gen_x/ to the paths
+        archive_path = path_dictionary["archive_path"] + self.name
+        # ensure unique dir exists  
+        counter = 0
+        org_name = archive_path 
+        while os.path.isdir(configuration["archive_path"]):
+                print 'Warning: '+archive_path+' already exists, generating unique key...'
+                archive_path =  org_name.rstrip('/') +'_'+ str(counter) + '/'
+                counter +=1
+        ensure_dir(archive_path)
+        
+        # copy files:
+        if os.path.isfile(self.progpath):
+                shutil.copy(self.progpath,archive_path+ self.name + '.xyz')
+        if os.path.isdir(self.scrpath):
+                shutil.copy(self.scrpath,archive_path+'scr/'+ self.name)
+        if os.path.isfile(self.outpath):
+                shutil.copy(self.outpath,archive_path+ self.name + '.out')
+                
+        
 
     def append_descriptors(self,list_of_names,list_of_props,prefix,suffix):
         for names in list_of_names:
