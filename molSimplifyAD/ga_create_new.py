@@ -45,7 +45,7 @@ def create_new_run(args):
               shutil.copy(thermo_file,configuration["rundir"]+'launch_script_solvent.sh')
             if 'thermo' in configuration.keys():
               shutil.copy(solvent_file,configuration["rundir"]+'launch_script_thermo.sh')
-  if 'DFT' in configuration.keys() and 'runype' in configuration.keys():
+  if 'DFT' in configuration.keys() and 'runtype' in configuration.keys():
       if configuration['runtype'] == 'redox' and not configuration['DFT']:
         print('unable to run ANN based GA using redox at this time, changing to spin splitting')
         configuration['runtype'] = "split"
