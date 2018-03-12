@@ -95,15 +95,27 @@ def get_ox_states(): # could be made metal dependent like spin
 def spin_dictionary():
     GA_run =  get_current_GA() 
     if GA_run.config["use_singlets"]:
-        metal_spin_dictionary = {'co':{2:[2,4],3:[1,5]},
-                                'cr':{2:[1,5],3:[2,4]},
-                                'fe':{2:[1,5],3:[2,6]},
-                                'mn':{2:[2,6],3:[1,5]}}
+        if GA_run.config["all_spins"]:
+            metal_spin_dictionary = {'co':{2:[2,4],3:[1,3,5]}, 
+                                     'cr':{2:[1,3,5],3:[2,4]},
+                                     'fe':{2:[1,3,5],3:[2,4,6]},
+                                     'mn':{2:[2,4,6],3:[1,3,5]}}
+        else:
+            metal_spin_dictionary = {'co':{2:[2,4],3:[1,5]},
+                                     'cr':{2:[1,5],3:[2,4]},
+                                     'fe':{2:[1,5],3:[2,6]},
+                                     'mn':{2:[2,6],3:[1,5]}}
     else:
-        metal_spin_dictionary = {'co':{2:[2,4],3:[1,5]},
-                                'cr':{2:[3,5],3:[2,4]},
-                                'fe':{2:[1,5],3:[2,6]},
-                                'mn':{2:[2,6],3:[3,5]}}
+        if GA_run.config["all_spins"]:
+            metal_spin_dictionary = {'co':{2:[2,4],3:[1,3,5]},
+                                     'cr':{2:[3,5],3:[2,4]},
+                                     'fe':{2:[1,3,5],3:[2,4,6]},
+                                     'mn':{2:[2,4,6],3:[3,5]}}
+        else:
+            metal_spin_dictionary = {'co':{2:[2,4],3:[1,5]},
+                                     'cr':{2:[3,5],3:[2,4]},
+                                     'fe':{2:[1,5],3:[2,6]},
+                                     'mn':{2:[2,6],3:[3,5]}}
     return metal_spin_dictionary
 ########################
 def isDFT():
@@ -148,13 +160,14 @@ def translate_job_name(job):
     metal_key = metal_list[metal]
     metal_spin_dictionary  = spin_dictionary()
     these_states = metal_spin_dictionary[metal_key][ox]
-    if spin < these_states[1]:
+    if spin == these_states[0]: #First element of list
            spin_cat = 'LS'
-    elif spin >= these_states[1]:
+    elif spin == these_states[-1]: #Last element of list
         spin_cat = 'HS'
     else:
-        print('spin assigned as ll[9]  = ' + str(spin) + ' on  ' +str(ll))
-        print('critical erorr, unknown spin: '+ str(spin))
+        #print('spin assigned as ll[9]  = ' + str(spin) + ' on  ' +str(ll))
+        #print('critical erorr, unknown spin: '+ str(spin))
+        spin_cat = 'IS' #Intermediate Spin
     gene = "_".join([str(metal),str(ox),str(eqlig_ind),str(axlig1_ind),str(axlig2_ind),str(ahf)])
     return gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,basename
 ########################
