@@ -85,7 +85,7 @@ def find_live_jobs():
     return live_job_dictionary
 ########################
 def get_metals():
-        metals_list = ['cr','mn','fe','co','ni']
+        metals_list = ['cr','mn','fe','co']
         return metals_list
 ########################
 def get_ox_states(): # could be made metal dependent like spin

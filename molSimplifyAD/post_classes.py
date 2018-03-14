@@ -418,11 +418,11 @@ class DFTRun:
         # this fuinciton copies all files to arch
         path_dictionary =  setup_paths()
         path_dictionary =advance_paths(path_dictionary,self.gen) ## this adds the /gen_x/ to the paths
-        archive_path = path_dictionary["archive_path"] + self.name
+        archive_path = path_dictionary["archive_path"] + self.name+'/'
         # ensure unique dir exists  
         counter = 0
         org_name = archive_path 
-        while os.path.isdir(configuration["archive_path"]):
+        while os.path.isdir(archive_path):
                 print 'Warning: '+archive_path+' already exists, generating unique key...'
                 archive_path =  org_name.rstrip('/') +'_'+ str(counter) + '/'
                 counter +=1
