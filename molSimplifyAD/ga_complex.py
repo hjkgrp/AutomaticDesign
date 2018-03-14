@@ -326,12 +326,16 @@ class octahedral_complex:
         this_GA = get_current_GA()
         exchange = this_GA.config['exchange']
         optimize = this_GA.config['optimize']
+        gen = this_GA.config['gen']
         
         if optimize:
             print(' setting up GEO optimization ')
             rty = 'minimize'
+            scrpath =  "scr/geo/gen_"+str(gen) + '/'  + mol_name
         else:
             rty = 'energy'
+            scrpath =  "scr/sp/gen_"+str(gen) + '/'  + mol_name
+            
         geometry = "oct"
         
         ## set paths for generation
@@ -339,7 +343,8 @@ class octahedral_complex:
         ms_error_path = path_dictionary["molsimplify_inps"] +  'ms_errors.txt'
         jobpath = path_dictionary["job_path"]  + mol_name + '.in'
         inpath = path_dictionary["infiles"]  + mol_name + '.in'
-        scrpath =  path_dictionary["scr_path"]  + mol_name
+        
+        
 
         geometry_path = path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz'
         
