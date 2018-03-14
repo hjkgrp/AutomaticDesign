@@ -50,7 +50,7 @@ echo "paths set"
 echo "inpath is $inpath"
 echo "Initializing local run, finding input files..."
 mkdir -p scr
-mkdir -p scr/geo/
+mkdir -p scr/geo/$gennumpath/
 spacer='_'
 echo "begining"
 echo "file is  $namebase"
