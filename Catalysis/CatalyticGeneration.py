@@ -3,7 +3,7 @@ from molSimplifyAD.ga_io_control import *
 from molSimplifyAD.ga_tools import *
 import numpy
 import os
-rundir = '/cstor/xsede/users/xs-nandy/catalysis3/'
+rundir = '/cstor/xsede/users/xs-nandy/catalysis/'
 if not os.path.isdir(rundir):
     os.mkdir(rundir)
 shutil.copy("ligands_list.txt",rundir+'ligands_list.txt')
@@ -36,7 +36,7 @@ with switch_to_rundir(rundir):
     full_tree.write_state()
     full_tree.read_state()
     for i, metal_val in enumerate(metal_list):
-        ax_rand_ind = numpy.random.randint(low = 0, high = 4)
+        ax_rand_ind = numpy.random.randint(n)
         eq_rand_ind = numpy.random.randint(n)
         print(ax_rand_ind)
         print(eq_rand_ind)
