@@ -78,6 +78,10 @@ def is_job_live(job_id):
             if (str(lines).find('Following jobs do not exist:') != -1) or (str(lines).find("slurm_load_jobs error: Invalid job id") != -1):
                     print('job ' + str(job_id) + ' is not live')
                     verdict = False
+    if not GA_run.config["queue_type"] == "SGE":
+        if len(ll)==1:
+            verdict = False
+
     return verdict
 ########################
 def submit_outstanding_jobs():
