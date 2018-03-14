@@ -282,6 +282,8 @@ def IsOct(file_in, file_init_geo=None, dict_check=dict_oct_check_st):
     else:
         flag_oct = 0
         flag_list = ', '.join(flag_list)
+        print('bad structure!')
+        print('flag_list:', flag_list)
     return flag_oct, flag_list, dict_oct_info
 
 
