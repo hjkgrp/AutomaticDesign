@@ -290,7 +290,7 @@ class octahedral_complex:
         child.examine()
         return child
 
-    def generate_geometery(self,prefix,spin,path_dictionary,rundirpath):
+    def generate_geometery(self,prefix,spin,path_dictionary,rundirpath,gen):
         # get path info
         ligloc_cont = True
         # set metal properties:
@@ -326,7 +326,6 @@ class octahedral_complex:
         this_GA = get_current_GA()
         exchange = this_GA.config['exchange']
         optimize = this_GA.config['optimize']
-        gen = this_GA.config['gen']
         
         if optimize:
             print(' setting up GEO optimization ')
