@@ -272,7 +272,7 @@ class GA_generation:
                                 ## generate HS/LS
                                ## convert the gene into a job file and geometery
                                 jobpath,mol_name,ANN_split,ANN_distance = jobs.generate_geometery(prefix = job_prefix, spin = spins,path_dictionary = self.current_path_dictionary,
-                                                                      rundirpath = get_run_dir())
+                                                                      rundirpath = get_run_dir(),gen=self.status_dictionary['gen'])
                                 if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
                                         ## save result
                                         print('saving result in ANN dict: ' + mol_name)

@@ -104,6 +104,11 @@ def check_all_current_convergence():
                             test_terachem_go_convergence(this_run)
                 # store the status
                 metal_spin_dictionary = spin_dictionary()
+                metal_list = get_metals()
+                # convert metal from index to str
+                metal = metal_list[metal]
+
+                print('metal is ' +str(metal))
                 these_states = metal_spin_dictionary[metal][ox]
                 if (spin == these_states[0]) or (spin == these_states[-1]):
                     all_runs.update({this_run.name:this_run})
