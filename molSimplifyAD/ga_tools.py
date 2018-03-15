@@ -68,6 +68,13 @@ def create_generic_infile(job,restart=False):
         geometry_path = initial_geo_path                
     ## copy file to infiles
     shutil.copy(job, target_inpath)
+    with open(job,'r') as sourcef:
+            source_lines = sourcef.readlines()
+            with open(target_inpath,'w') as newf:
+                    for line in source_lines:
+                            if not ("coordinates" in line) and (not "end" in line):
+                                    newf.write(line)
+
     ## append geo
     with open(target_inpath,'a') as newf:
                     newf.write('coordinates '+ geometry_path+ '\n')
