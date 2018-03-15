@@ -416,7 +416,6 @@ def test_terachem_go_convergence(this_run):
                 else:
                     this_run.check_oct_needs_final_only()
         print('this flag oct is '+ str(this_run.flag_oct))
-        sardines
         if this_run.coord == 6 and this_run.converged and this_run.flag_oct == 1:
             this_run.status = 0
             if not this_run.tspin == this_run.spin:
