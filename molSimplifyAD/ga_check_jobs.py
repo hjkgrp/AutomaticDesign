@@ -106,7 +106,7 @@ def check_all_current_convergence():
                                         + 'test_go status' + str(this_run.status))
 
                 logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
-                                        + 'test_go oct flag' + str(this_run.oct_flag))
+                                        + 'test_go oct flag' + str(this_run.flag_oct))
 
 
                 # store the status
