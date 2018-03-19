@@ -63,6 +63,7 @@ def launch_job(job,sub_num):
     return job_id
 ########################
 def is_job_live(job_id):
+    print(job_id)
     GA_run = get_current_GA()
     if GA_run.config["queue_type"] == "SGE":
         cmd_str = ('qstat -j '+ str(job_id))
@@ -70,12 +71,13 @@ def is_job_live(job_id):
         cmd_str = ('squeue -j '+ str(job_id))
     p1 = subprocess.Popen(cmd_str,shell=True,
                           stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    rt,ll = p1.communicate()
+    ll,rt = p1.communicate()
     verdict = True
     ll=ll.split('\n')
-    print(ll)
+    #print('rt line is ',rt)
+    print('ll line is ',ll)
     for lines in ll:
-            if (str(lines).find('Following jobs do not exist:') != -1) or (str(lines).find("slurm_load_jobs error: Invalid job id") != -1):
+            if (str(lines).find('Following jobs do not exist:') != -1) or (str(lines).find("slurm_load_jobs error: Invalid job id") != -1) or (len(ll)<=2):
                     print('job ' + str(job_id) + ' is not live')
                     verdict = False
     if not GA_run.config["queue_type"] == "SGE":
