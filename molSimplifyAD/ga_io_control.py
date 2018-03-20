@@ -111,6 +111,7 @@ def process_ligands_file(path):
         lines = f.readlines()
         for this_line in lines:
             this_lig = this_line.strip('\n').split(' ')[0]
+            print('this lig', this_lig)
             if this_lig in licores.keys():
                 #print(this_lig +' is in dictionary')
                 this_db_lig = licores[this_lig] 
@@ -119,7 +120,8 @@ def process_ligands_file(path):
             else:
                 print('understanding ' + str(this_lig)+' as SIMLES' )
                 this_catom =  this_line.strip('\n').split(' ')[1:]
-                #print(this_catom)
+                print(this_catom)
+                this_dent = len(this_catom)
                 ligands_list.append([[this_lig,this_catom],[int(this_dent)]])
 
     print(ligands_list)
