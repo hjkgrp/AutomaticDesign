@@ -181,11 +181,11 @@ def check_all_current_convergence():
                     if ahf in HFXorderingdict.keys():
                             newHFX = HFXorderingdict[ahf][0]
                             refHFX = HFXorderingdict[ahf][1]
-                            print('note: converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref '+ refHFX)
                             if this_run.coord == 6: ## don't bother if failed
                                     HFX_job = this_run.write_HFX_inputs(newHFX,refHFX)              
                                     logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref ' + refHFX)
                                     if (HFX_job not in joblist) and (HFX_job not in outstanding_jobs) and (HFX_job not in converged_jobs.keys()):
+                                            print('note: converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref '+ refHFX)
                                             add_to_outstanding_jobs(HFX_job)
 
                 if not this_run.converged and not this_run.islive:

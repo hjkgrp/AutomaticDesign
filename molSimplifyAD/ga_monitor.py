@@ -75,7 +75,7 @@ def is_job_live(job_id):
     verdict = True
     ll=ll.split('\n')
     #print('rt line is ',rt)
-    print('ll line is ',ll)
+    #print('ll line is ',ll)
     for lines in ll:
             if (str(lines).find('Following jobs do not exist:') != -1) or (str(lines).find("slurm_load_jobs error: Invalid job id") != -1) or (len(ll)<=2):
                     print('job ' + str(job_id) + ' is not live')
