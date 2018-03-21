@@ -55,11 +55,17 @@ class GA_generation:
                         this_complex = octahedral_complex(self.ligands_list)
                         this_complex.random_gen()
                         this_gene = this_complex.name
+
+                        print('trying to add ' +  str(this_gene))
+                        print('list of genes is : '+ str(self.genes.values()))
                         ## check if unique
-                        if not this_gene in self.gene_compound_dictionary.keys():
+                        if not this_gene in self.genes.values():
+                                print('added successfully')
                                 self.genes[counter] = this_gene
                                 self.gene_compound_dictionary[counter] = this_complex
                                 counter += 1
+                                print('total of '+ str(counter)+ ' genes')
+                        print('\n')
                 self.total_counter = counter
         def populate_metal_ox_lig_combo(self,metal,ox,ligs):
                 ### function to add a given complex to the pool 
@@ -89,13 +95,15 @@ class GA_generation:
                         this_gene = this_complex.name
                         print('this this_unique_name ', this_gene)
                         #this_gene = this_complex.name
-                        if not this_gene in self.gene_compound_dictionary.keys():
+                        if not this_gene in self.genes.values():
                         ## we can accept this complex
                             self.genes[counter] = this_gene
                             self.gene_compound_dictionary[counter] = this_complex
                             counter += 1
                             self.total_counter = self.total_counter + 1
                             print('adding eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) +  ' + '   + str(ligs[1][1]))
+                        else:
+                            print(' this gene is a duplicate and is not added')
                 except:
                     print('cannot make eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) +  ' + '   + str(ligs[1][1]))
 
