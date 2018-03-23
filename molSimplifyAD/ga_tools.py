@@ -231,7 +231,7 @@ def setup_paths():
                    "optimial_geo_path": working_dir + "optimized_geo/",
                    "prog_geo_path"    : working_dir + "prog_geo/",
                    "stalled_jobs"     : working_dir + "stalled_jobs/",
-                   "archive_path"     : working_dir + "archive_resub/s",
+                   "archive_path"     : working_dir + "archive_resub/",
                    "state_path"       : working_dir + "statespace/",
                    "molsimplify_inps" : working_dir + "ms_inps/",
                    "infiles"          : working_dir + "infiles/",

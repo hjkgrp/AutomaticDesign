@@ -417,7 +417,7 @@ class DFTRun:
     def archive(self):
         # this fuinciton copies all files to arch
         path_dictionary =  setup_paths()
-        path_dictionary =advance_paths(path_dictionary,self.gen) ## this adds the /gen_x/ to the paths
+        path_dictionary = advance_paths(path_dictionary,self.gen) ## this adds the /gen_x/ to the paths
         archive_path = path_dictionary["archive_path"] + self.name+'/'
         # ensure unique dir exists  
         counter = 0
@@ -427,16 +427,24 @@ class DFTRun:
                 archive_path =  org_name.rstrip('/') +'_'+ str(counter) + '/'
                 counter +=1
         ensure_dir(archive_path)
-        
+        print('archiving too '+archive_path)
         # copy files:
         if os.path.isfile(self.progpath):
+                print('archiving  '+self.progpath)
                 shutil.copy(self.progpath,archive_path+ self.name + '.xyz')
+        else:
+                print('archiving did NOT find  '+self.progpath)              
         if os.path.isdir(self.scrpath):
+                print('archiving  '+self.scrpath)
                 shutil.copy(self.scrpath,archive_path+'scr/'+ self.name)
+        else:
+                print('archiving did NOT find  '+self.scrpath)
         if os.path.isfile(self.outpath):
+                print('archiving  '+self.outpath)
                 shutil.copy(self.outpath,archive_path+ self.name + '.out')
-                
-        
+        else:
+                print('archiving did NOT find  '+self.outpath)                
+        sardines
 
     def append_descriptors(self,list_of_names,list_of_props,prefix,suffix):
         for names in list_of_names:
