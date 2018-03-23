@@ -414,7 +414,7 @@ class DFTRun:
         return(self.HFX_job)
 
 
-    def archive(self):
+    def archive(self,sub_number):
         # this fuinciton copies all files to arch
         path_dictionary =  setup_paths()
         path_dictionary = advance_paths(path_dictionary,self.gen) ## this adds the /gen_x/ to the paths
@@ -422,29 +422,27 @@ class DFTRun:
         # ensure unique dir exists  
         counter = 0
         org_name = archive_path 
-        while os.path.isdir(archive_path):
-                print 'Warning: '+archive_path+' already exists, generating unique key...'
-                archive_path =  org_name.rstrip('/') +'_'+ str(counter) + '/'
-                counter +=1
-        ensure_dir(archive_path)
-        print('archiving too '+archive_path)
-        # copy files:
-        if os.path.isfile(self.progpath):
-                print('archiving  '+self.progpath)
-                shutil.copy(self.progpath,archive_path+ self.name + '.xyz')
-        else:
-                print('archiving did NOT find  '+self.progpath)              
-        if os.path.isdir(self.scrpath):
-                print('archiving  '+self.scrpath)
-                shutil.copy(self.scrpath,archive_path+'scr/'+ self.name)
-        else:
-                print('archiving did NOT find  '+self.scrpath)
-        if os.path.isfile(self.outpath):
-                print('archiving  '+self.outpath)
-                shutil.copy(self.outpath,archive_path+ self.name + '.out')
-        else:
-                print('archiving did NOT find  '+self.outpath)                
-        sardines
+        archive_path =  org_name.rstrip('/') +'_'+ str(sub_number) + '/'
+        if not os.path.isdir(archive_path):
+            ensure_dir(archive_path)
+            print('archiving to '+archive_path)
+            # copy files:
+            if os.path.isfile(self.progpath):
+                    print('archiving  '+self.progpath)
+                    shutil.copy(self.progpath,archive_path+ self.name + '.xyz')
+            else:
+                    print('archiving did NOT find  '+self.progpath)              
+            scrfolder = os.path.dirname(self.scrpath)
+            if os.path.isdir(scrfolder):
+                    print('archiving  '+scrfolder)
+                    shutil.copytree(scrfolder,archive_path+'scr/')
+            else:
+                    print('archiving did NOT find  '+scrfolder)
+            if os.path.isfile(self.outpath):
+                    print('archiving  '+self.outpath)
+                    shutil.copy(self.outpath,archive_path+ self.name + '.out')
+            else:
+                    print('archiving did NOT find  '+self.outpath)                
 
     def append_descriptors(self,list_of_names,list_of_props,prefix,suffix):
         for names in list_of_names:
