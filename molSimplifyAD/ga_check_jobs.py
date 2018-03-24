@@ -102,11 +102,11 @@ def check_all_current_convergence():
                         else:
                             # if NOT live, test convergance
                             test_terachem_go_convergence(this_run)
-                logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
-                                        + 'test_go status' + str(this_run.status))
+                #logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
+                 #                       + 'test_go status' + str(this_run.status))
 
-                logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
-                                        + 'test_go oct flag' + str(this_run.flag_oct))
+                ##logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
+                  #                      + 'test_go oct flag' + str(this_run.flag_oct))
 
 
                 # store the status
@@ -123,7 +123,7 @@ def check_all_current_convergence():
                     print('run status is  ' + str(this_run.status))
                     base_path_dictionary = setup_paths()
                     logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
-                                        + ' added ' + this_run.name + ' to all_runs')
+                                        + ' added ' + this_run.name + ' to all_runs with status '+ str(this_run.status))
                 else:
                     print('Intermediate spin')
                     print('run status is  ' + str(this_run.status))
@@ -183,9 +183,10 @@ def check_all_current_convergence():
                             refHFX = HFXorderingdict[ahf][1]
                             if this_run.coord == 6: ## don't bother if failed
                                     HFX_job = this_run.write_HFX_inputs(newHFX,refHFX)              
-                                    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref ' + refHFX)
                                     if (HFX_job not in joblist) and (HFX_job not in outstanding_jobs) and (HFX_job not in converged_jobs.keys()):
                                             print('note: converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref '+ refHFX)
+                                            logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref ' + refHFX)
+
                                             add_to_outstanding_jobs(HFX_job)
 
                 if not this_run.converged and not this_run.islive:
@@ -202,7 +203,8 @@ def check_all_current_convergence():
                                         
                         else:
                             this_run.status = 6 ## no prog!
-                            shutil.copy(this_run.init_geopath,path_dictionary['stalled_jobs'] + this_run.name + '.xyz')
+                            if this_run.alpha == 20:
+                                    shutil.copy(this_run.init_geopath,path_dictionary['stalled_jobs'] + this_run.name + '.xyz')
                         try:
                                 this_run.obtain_mol3d()
                                 try:
@@ -226,9 +228,18 @@ def check_all_current_convergence():
                                 print('addding based on ' + str(jobs))
                                 add_to_outstanding_jobs(this_run.thermo_inpath)
                 if this_run.status in [3,5,6]: ##  convergence is not successful!                    
+                        number_of_subs = submitted_job_dictionary[jobs]
+                        print(' no result found for job '+str(jobs) + ' after ' + str(number_of_subs))
                         logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
-                                   + " failure at job : " + str(jobs) + ' with status '+ str(this_run.status))
-                        remove_outstanding_jobs(jobs) # take out of pool
+                                   + " failure at job : " + str(jobs) + ' with status '+ str(this_run.status)
+                                   +' after ' + str(number_of_subs))
+                        if number_of_subs >2 :
+                                print(' giving up on job '+str(jobs) + ' after ' + str(number_of_subs))
+                                logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
+                                   + " giving up on job : " + str(jobs) + ' with status '+ str(this_run.status)
+                                   +' after ' + str(number_of_subs))
+                                remove_outstanding_jobs(jobs) # take out of pool
+
                 print('END OF JOB \n *******************\n')
 
         print('matching DFT runs ... \n')

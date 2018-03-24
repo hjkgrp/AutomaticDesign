@@ -4,7 +4,7 @@
 #$ -q gpus	        #gpus
 #$ -l gpus=1            #
 #$ -pe smp 1 		#number parrallel jobs
-
+#$ -cwd
 module load cuda
 module load terachem
 
@@ -40,7 +40,6 @@ echo "scr will be copied to  $scrpath"
 echo "paths set"
 ## set local, workdir related paths and copy files
 localoutpath=$namebase.out
-localinpath=$namebase.in
 mkdir -p scr
 mkdir -p scr/geo/$gennumpath
 spacer='_'
@@ -55,10 +54,9 @@ echo "this SGE shell current DIR: $PWD"
 
 ##begin geo-optimization
 
-cp $inpath $localinpath
 echo "Launching geo calc: $namebase"
-terachem $localinpath >  $localoutpath
+terachem $inpath >  $localoutpath
 echo "Complete"
 ## copy back complete cases 
 mv $localoutpath $outpath
-mv scr/geo/$gennumpath/$namebase $scrpath
+#mv scr/geo/$gennumpath/$namebase $scrpath
