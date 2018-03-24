@@ -194,7 +194,8 @@ def check_all_current_convergence():
                         this_run.extract_prog()
                         if this_run.progstatus ==0:                            
                             if this_run.progstatus ==0:
-                                this_run.archive()
+                                sub_number=submitted_job_dictionary[jobs] 
+                                this_run.archive(sub_number)
                                 create_generic_infile(jobs,restart=True)
                                 this_run.status = 2
                             else:

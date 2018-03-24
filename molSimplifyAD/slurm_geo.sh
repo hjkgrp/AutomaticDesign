@@ -31,8 +31,6 @@ echo "gen path is $generalpath"
 namebase=`echo $fullpath | sed "s/[.]in//"| sed "s:.*/::"`
 
 
-cd $LSTOR
-
 echo "Begining calcualtion run"
 echo "general path is $generalpath"
 
@@ -66,7 +64,7 @@ wf_guess_flag=0
 
 echo "inpath is $inpath"
 echo "Launching geo calc: $namebase"
-terachem $inpath >  $localoutpath
+terachem $inpath >  $outpath
 mv $localoutpath $outpath
 mv scr/geo/$gennumpath/$namebase $scrpath
 echo "Complete"
