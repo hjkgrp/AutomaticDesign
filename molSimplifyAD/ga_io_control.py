@@ -120,8 +120,9 @@ def process_ligands_file(path):
             else:
                 print('understanding ' + str(this_lig)+' as SIMLES' )
                 this_catom =  this_line.strip('\n').split(' ')[1:]
-                print(this_catom)
                 this_dent = len(this_catom)
+                this_catom =  str(this_catom)
+                print('SMILES connection atom selected as ' + this_catom + ' for SMILEs' + str(this_lig))
                 ligands_list.append([[this_lig,this_catom],[int(this_dent)]])
 
     print(ligands_list)
