@@ -158,9 +158,16 @@ def translate_job_name(job):
     axlig1_ind = int(ll[7])
     axlig2_ind = int(ll[8])
     ligands_dict = get_ligands()
+    
     eqlig = ligands_dict[int(eqlig_ind)][0]
+    if hasattr(eqlig,'__iter__'): # SMILEs string
+        eqlig  = eqlig[0]+"_".join([str(x).strip('[]') for x in eqlig[1]])
     axlig1 = ligands_dict[int(axlig1_ind)][0]
+    if hasattr(axlig1,'__iter__'): # SMILEs string
+        axlig1  = axlig1[0]+"_".join([str(x).strip('[]') for x in axlig1[1]])
     axlig2 = ligands_dict[int(axlig2_ind)][0]   
+    if hasattr(axlig2,'__iter__'): # SMILEs string
+        axlig2  = axlig2[0]+"_".join([str(x).strip('[]') for x in axlig2[1]])
     ahf = int(ll[9])
     spin = int(ll[10])
     metal_list = get_metals()
