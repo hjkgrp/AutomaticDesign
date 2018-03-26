@@ -118,7 +118,7 @@ def process_runs_sp(LS_runs,HS_runs):
         else:
             print('unmatched ID: '+ str(this_gene) + ' files ' + str(LS_run.name)+ ' has no partner' )
     return final_results
-def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
+def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary,local_metal_list=False):
     ## function to find mathcing runs by gene
     ## and extract their properties
     ##  for terachem GO runs
@@ -130,6 +130,8 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
     #                               high spins expected
     #  @return final_results dictionary of comparisons keyed by gene
     final_results=dict()
+    if not local_metal_list:
+        local_metal_list = get_metals()
     matched = False
     number_of_matches  = 0
     print(local_spin_dictionary)
@@ -138,10 +140,10 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary):
         skip = False
         duplication = False
         this_run = all_runs[runkeys]
-        if this_run.metal in get_metals():
+        if this_run.metal in local_metal_list:
             this_metal = this_run.metal
         else:
-            this_metal = get_metals()[int(this_run.metal)]
+            this_metal = local_metal_list[int(this_run.metal)]
 
         this_name = "_".join([this_metal,'eq',str(this_run.eqlig),'ax1',str(this_run.axlig1),'ax2',str(this_run.axlig2),'ahf',str(this_run.alpha)])
                 ### add alpha value to list owned by this_comp:
