@@ -39,7 +39,7 @@ def resume_run(args):
         logger(path_dictionary['state_path'],str(datetime.datetime.now()) + ' going back to sleep, number of live jobs ' + str(live_job_count)) 
         logger(path_dictionary['state_path'],str(datetime.datetime.now()) + ' going back to sleep') 
         logger(path_dictionary['state_path'],'************************************************') 
-      if GA_run.config['runtype']=="split":
+      if GA_run.config['runtype']=="split" and not GA_run.config["symclass"]=='weak':
         format_freqeuncies()
         format_distances()
       its +=1
