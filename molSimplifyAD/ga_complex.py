@@ -453,7 +453,7 @@ class octahedral_complex:
                                      '-rundir ' +"'"+ rundirpath.rstrip("/")+"'",'-keepHs yes,yes,yes,yes,yes,yes','-jobdir','temp',
                                      '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
                                      '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ ox_string, '-exchange '+str(exchange),
-                                     '-qccode TeraChem','-runtyp '+rty,'-method UDFT',"-ffoption "+ff_opt,' --ffopt UFF'])
+                                     '-qccode TeraChem','-runtyp '+rty,'-method UDFT',"-ffoption "+ff_opt,' -ff UFF'])
                             if smicat:
                                 call += ' -smicat ' + smicat
                             print(call)
