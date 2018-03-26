@@ -504,6 +504,10 @@ class octahedral_complex:
             
             ANN_split = False
             ANN_distance = False
+        if not 'ANN_split' in dir():
+            ANN_split = False
+            ANN_distance = False
+        print('!!!ANN_split:', ANN_split)
         return jobpath,mol_name,ANN_split,ANN_distance
 
 
