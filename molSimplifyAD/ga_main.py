@@ -304,10 +304,10 @@ class GA_generation:
 			emsg, ANN_dict = read_dictionary(ANN_dir)
 			for keys in ANN_dict.keys():
 				if runtype == "split":
-					this_gene = "_".join(keys.split("_")[4:10])
+					this_gene = "_".join(keys.split("_")[4:9])
 					print('using split : '"_".join(keys.split("_")))
 				elif runtype == "redox":
-					this_gene = "_".join(keys.split("_")[4:10])   
+					this_gene = "_".join(keys.split("_")[4:9])   
 				this_energy = float(ANN_dict[keys].split(",")[0])
 				this_dist = float(ANN_dict[keys].split(",")[1].strip('\n'))
 				if not(this_gene in full_gene_info.keys()):
