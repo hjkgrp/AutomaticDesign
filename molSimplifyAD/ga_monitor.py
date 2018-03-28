@@ -16,7 +16,7 @@ from molSimplifyAD.process_scf import *
 def launch_job(job,sub_num):
     ## code to submit to queue
     print('lauching ' + job + ' sub number: '+ str(sub_num))
-    gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename = translate_job_name(job)
+    gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename,basegene = translate_job_name(job)
     base_name = os.path.basename(job).strip('in')
     if sub_num > 1:
         print(' start rescue')
@@ -24,7 +24,7 @@ def launch_job(job,sub_num):
 #        rescue_cmd_str = './gibraltar_rescue_.sh ' + job
 #        p_res = subprocess.Popen(cmd_str,shell=True,stdout=subprocess.PIPE)
     ## could call different script if resub? currently only calls the same
-    name  = 'GA_'+ str(gene) + '_'+str(spin)
+    name  = 'GA_'+ basename
     path_dictionary =setup_paths()
     
     opath = path_dictionary["queue_output"]+name + '.o'
@@ -139,7 +139,7 @@ def submit_outstanding_jobs():
                            + " Giving up on job : " + str(jobs) + ' with '+ str(number_of_attempts) + ' attempts')
                         update_converged_job_dictionary(jobs,6) # mark job as abandoned 
                         if not "thermo" in jobs and not "solvent" in jobs:
-                            gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename=translate_job_name(jobs)
+                            gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename,basegene=translate_job_name(jobs)
                             if ahf == float(GA_run.config["exchange"]): # if this is the target HFX frac
                                 update_current_gf_dictionary(gene,0) # zero out fitness
             else:
@@ -166,7 +166,7 @@ def check_queue_for_live_jobs():
     for jobs in live_job_dictionary.keys():
             this_job_id = live_job_dictionary[jobs]
             this_status = is_job_live(this_job_id)
-            gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename =  translate_job_name(jobs)
+            gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename,basegene =  translate_job_name(jobs)
             if this_status:
                 counter += 1
                 print('recording as live:',jobs,this_job_id)

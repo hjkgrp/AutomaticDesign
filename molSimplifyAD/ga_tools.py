@@ -24,7 +24,7 @@ def get_infile_from_job(job):
     ## using progress geometry if available
     ## else intital only
     ## process job name
-    _,gen,_,_,_,_,_,_,_,_,_,_,_,_,base_name = translate_job_name(job)
+    _,gen,_,_,_,_,_,_,_,_,_,_,_,_,base_name,_ = translate_job_name(job)
     ## create paths
     path_dictionary = setup_paths()
     path_dictionary = advance_paths(path_dictionary,gen)
@@ -46,7 +46,7 @@ def create_generic_infile(job,restart=False):
     ## guess is ANOTHER JOB NAME, from which the geom and wavefunction guess
     ## will attempt to be extracted
     ## process job name
-    _,gen,_,_,_,_,_,_,_,_,_,_,_,_,base_name = translate_job_name(job)
+    _,gen,_,_,_,_,_,_,_,_,_,_,_,_,base_name,_ = translate_job_name(job)
     ## create paths
     path_dictionary = setup_paths()
     path_dictionary = advance_paths(path_dictionary,gen)
@@ -187,7 +187,8 @@ def translate_job_name(job):
         #print('critical erorr, unknown spin: '+ str(spin))
         spin_cat = 'IS' #Intermediate Spin
     gene = "_".join([str(metal),str(ox),str(eqlig_ind),str(axlig1_ind),str(axlig2_ind),str(ahf)])
-    return gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,basename
+    basegene = "_".join([str(metal),str(eqlig_ind),str(axlig1_ind),str(axlig2_ind)])
+    return gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,basename,basegene
 ########################
 def renameHFX(job,newHFX):
     # renames job to a new HFX fraction

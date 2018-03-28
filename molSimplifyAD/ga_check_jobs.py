@@ -53,12 +53,12 @@ def check_all_current_convergence():
         for jobs in joblist:
             if  (jobs not in live_job_dictionary.keys()) and (len(jobs.strip('\n'))!=0) and not ("thermo" in jobs) and not ("solvent" in jobs):
                 ## upack job name
-                gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,base_name = translate_job_name(jobs)
+                gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,base_name,base_gene = translate_job_name(jobs)
                 ## create run
                 this_run=DFTRun(base_name)
                 
                 ## add info
-                this_run.gene = gene
+                this_run.gene = base_gene
                 this_run.number = slot
                 this_run.gen= gen
                 this_run.job = jobs 
