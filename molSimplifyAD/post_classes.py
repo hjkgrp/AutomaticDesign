@@ -105,9 +105,11 @@ class DFTRun:
         self.rmsd_max = 'undef'
         self.atom_dist_max = 'undef'
         self.oct_angle_devi_max = 'undef'
+        self.max_del_sig_angle = 'undef'
         self.dist_del_eq = 'undef'
-        self.dist_del_ax = 'undef'
-        self.dist_del_eq_ax = 'undef'
+        self.dist_del_all = 'undef'
+        # self.dist_del_ax = 'undef'
+        # self.dist_del_eq_ax = 'undef'
         self.comment = ''
 
 
@@ -157,12 +159,12 @@ class DFTRun:
         self.flag_oct = flag_oct
         self.flag_oct_list = ', '.join(flag_list)
         self.num_coord_metal = dict_oct_info['num_coord_metal']
-        # self.rmsd_max = dict_oct_info['rmsd_max']
-        # self.atom_dist_max = dict_oct_info['atom_dist_max']
         self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
         self.dist_del_eq = dict_oct_info['dist_del_eq']
-        self.dist_del_ax = dict_oct_info['dist_del_ax']
-        self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
+        self.dist_del_all = dict_oct_info['dist_del_all']
+        self.max_del_sig_angle = dict_oct_info['max_del_sig_angle']
+        # self.dist_del_ax = dict_oct_info['dist_del_ax']
+        # self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
         return flag_oct, flag_list, dict_oct_info
 
     def check_oct_needs_init(self):
@@ -178,8 +180,10 @@ class DFTRun:
         self.atom_dist_max = dict_oct_info['atom_dist_max']
         self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
         self.dist_del_eq = dict_oct_info['dist_del_eq']
-        self.dist_del_ax = dict_oct_info['dist_del_ax']
-        self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
+        self.dist_del_all = dict_oct_info['dist_del_all']
+        self.max_del_sig_angle = dict_oct_info['max_del_sig_angle']
+        # self.dist_del_ax = dict_oct_info['dist_del_ax']
+        # self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
         return flag_oct, flag_list, dict_oct_info
 
     def check_oct_on_prog(self):
@@ -194,8 +198,10 @@ class DFTRun:
             self.atom_dist_max = dict_oct_info['atom_dist_max']
             self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
             self.dist_del_eq = dict_oct_info['dist_del_eq']
-            self.dist_del_ax = dict_oct_info['dist_del_ax']
-            self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
+            self.dist_del_all = dict_oct_info['dist_del_all']
+            self.max_del_sig_angle = dict_oct_info['max_del_sig_angle']
+            # self.dist_del_ax = dict_oct_info['dist_del_ax']
+            # self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
         else:
             flag_oct, flag_list, dict_oct_info = IsOct(self.progpath, dict_check=dict_oct_check_loose)
             self.flag_oct = flag_oct
@@ -203,8 +209,10 @@ class DFTRun:
             self.num_coord_metal = dict_oct_info['num_coord_metal']
             self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
             self.dist_del_eq = dict_oct_info['dist_del_eq']
-            self.dist_del_ax = dict_oct_info['dist_del_ax']
-            self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
+            self.dist_del_all = dict_oct_info['dist_del_all']
+            self.max_del_sig_angle = dict_oct_info['max_del_sig_angle']
+            # self.dist_del_ax = dict_oct_info['dist_del_ax']
+            # self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
         if self.flag_oct == 1:
             self.progstatus = 0
         else:
