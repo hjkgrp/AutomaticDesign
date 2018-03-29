@@ -22,7 +22,7 @@ from molSimplify.Scripts.geometry import vecangle, distance
 dict_oct_check_loose = {'rmsd_max': 0.4, 'atom_dist_max': 0.6,
                         'num_coord_metal': 6, 'oct_angle_devi_max': 15,
                         'dist_del_eq': 0.45, 'max_del_sig_angle': 27,
-                        'del_dist_all':1.2}
+                        'dist_del_all':1.2}
 
 dict_oct_check_st = {'rmsd_max': 0.3, 'atom_dist_max': 0.45,
                      'num_coord_metal': 6, 'oct_angle_devi_max': 12,
@@ -382,6 +382,8 @@ def Oct_inspection(file_in, file_init_geo=None, catoms_arr=None, dict_check=dict
     else:
         num_coord_metal = -1
         rmsd_max, atom_dist_max = -1, -1
+        print('!!!!!Should always match. WRONG!!!!!')
+        quit()
     dict_oct_info = {}
     dict_oct_info['num_coord_metal'] = num_coord_metal
     dict_oct_info['rmsd_max'] = rmsd_max
@@ -439,8 +441,6 @@ def IsOct(file_in, file_init_geo=None, dict_check=dict_oct_check_st,
         else:
             num_coord_metal = -1
             rmsd_max, atom_dist_max = -1, -1
-            print('!!!!!Should always match. WRONG!!!!!')
-            quit()
     dict_oct_info = {}
     dict_oct_info['num_coord_metal'] = num_coord_metal
     dict_oct_info['rmsd_max'] = rmsd_max

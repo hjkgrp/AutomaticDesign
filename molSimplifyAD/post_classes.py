@@ -592,10 +592,15 @@ class Comp:
         self.ox_3_LS_oct_angle_devi_max  = 'undef'
         self.ox_3_HS_oct_angle_devi_max  = 'undef'        
         
-        self.ox_2_LS_dist_del_ax  = 'undef'
-        self.ox_2_HS_dist_del_ax = 'undef'
-        self.ox_3_LS_dist_del_ax  = 'undef'
-        self.ox_3_HS_dist_del_ax  = 'undef'
+#        self.ox_2_LS_dist_del_ax  = 'undef'
+#        self.ox_2_HS_dist_del_ax = 'undef'
+#        self.ox_3_LS_dist_del_ax  = 'undef'
+#        self.ox_3_HS_dist_del_ax  = 'undef'
+
+        self.ox_2_LS_dist_del_all  = 'undef'
+        self.ox_2_HS_dist_del_all = 'undef'
+        self.ox_3_LS_dist_del_all  = 'undef'
+        self.ox_3_HS_dist_del_all  = 'undef'
 
         self.ox_2_LS_dist_del_eq  = 'undef'
         self.ox_2_HS_dist_del_eq  = 'undef'
@@ -608,10 +613,15 @@ class Comp:
         self.ox_3_LS_oct_angle_devi_max  = 'undef'
         self.ox_3_HS_oct_angle_devi_max  = 'undef'
 
-        self.ox_2_LS_dist_del_eq_ax  = 'undef'
-        self.ox_2_HS_dist_del_eq_ax  = 'undef'
-        self.ox_3_LS_dist_del_eq_ax  = 'undef'
-        self.ox_3_HS_dist_del_eq_ax  = 'undef'
+        self.ox_2_LS_max_del_sig_angle = 'undef'
+        self.ox_2_HS_max_del_sig_angle  = 'undef'
+        self.ox_3_LS_max_del_sig_angle  = 'undef'
+        self.ox_3_HS_max_del_sig_angle  = 'undef'
+
+#        self.ox_2_LS_dist_del_eq_ax  = 'undef'
+#        self.ox_2_HS_dist_del_eq_ax  = 'undef'
+#        self.ox_3_LS_dist_del_eq_ax  = 'undef'
+#        self.ox_3_HS_dist_del_eq_ax  = 'undef'
                
         ### thermo
         self.ox_2_LS_thermo_cont  = 'undef'
