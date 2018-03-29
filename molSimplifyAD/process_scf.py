@@ -413,10 +413,26 @@ def test_terachem_go_convergence(this_run):
                 ## check intial conditions:
                 if os.path.exists(this_run.init_geopath):
                     this_run.obtain_init_mol3d()
-                    this_run.check_oct_needs_init()
+                    flag_oct, flag_list, dict_oct_info = this_run.check_oct_needs_init()
+                    logger(this_run.logpath, str(datetime.datetime.now())+'Check on coverged_geo with init: flag_oct: %d'%flag_oct)
+                    if not flag_oct:
+                        logger(this_run.logpath, str(datetime.datetime.now())+'Bad geometry because of flag_list: %s'%str(flag_list))
+                        logger(this_run.logpath, str(datetime.datetime.now())+'Metrics : %s'%str(dict_oct_info))
+                    logger(path_dictionary['state_path'], str(datetime.datetime.now())+'Check on coverged_geo with init: flag_oct: %d'%flag_oct)
+                    if not flag_oct:
+                        logger(path_dictionary['state_path'], str(datetime.datetime.now())+'Bad geometry because of flag_list: %s'%str(flag_list))
+                        logger(path_dictionary['state_path'], str(datetime.datetime.now())+'Metrics : %s'%str(dict_oct_info))
                     this_run.obtain_rsmd() # copmare to initial
                 else:
-                    this_run.check_oct_needs_final_only()
+                    flag_oct, flag_list, dict_oct_info = this_run.check_oct_needs_final_only()
+                    logger(this_run.logpath, str(datetime.datetime.now())+'Check on coverged_geo final only: flag_oct: %d'%flag_oct)
+                    if not flag_oct:
+                        logger(this_run.logpath, str(datetime.datetime.now())+'Bad geometry because of flag_list: %s'%str(flag_list))
+                        logger(this_run.logpath, str(datetime.datetime.now())+'Metrics : %s'%str(dict_oct_info))
+                    logger(path_dictionary['state_path'], str(datetime.datetime.now())+'Check on coverged_geo final only: flag_oct: %d'%flag_oct)
+                    if not flag_oct:
+                        logger(path_dictionary['state_path'], str(datetime.datetime.now())+'Bad geometry because of flag_list: %s'%str(flag_list))
+                        logger(path_dictionary['state_path'], str(datetime.datetime.now())+'Metrics : %s'%str(dict_oct_info))
         print('this flag oct is '+ str(this_run.flag_oct))
         if this_run.coord == 6 and this_run.converged and this_run.flag_oct == 1:
             this_run.status = 0
