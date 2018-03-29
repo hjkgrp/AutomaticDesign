@@ -66,9 +66,9 @@ class octahedral_complex:
         ### choose the equitorial ligand
         n = len(self.ligands_list)
         eq_ind = numpy.random.randint(low = 0,high = n)
-        print('choosing '+str(eq_ind) + ' from '+str(n))
+        #print('choosing '+str(eq_ind) + ' from '+str(n))
         # now we test if it is a SMILEs or molsimplify ligand    
-        print('name  is ' +str(self.ligands_list[eq_ind][0]))
+        #print('name  is ' +str(self.ligands_list[eq_ind][0]))
         eq_ligand_properties  = self.ligands_list[eq_ind][1]
         self.eq_dent = eq_ligand_properties[0]
         self.eq_oc  = int(4/self.eq_dent)
@@ -132,7 +132,7 @@ class octahedral_complex:
         self.random_gen()
         ll = gene.split("_")
         ll = [int(item) for item in ll]
-        print('ll is '+str(ll))
+        #print('ll is '+str(ll))
         self.replace_metal(ll[0])
         self.replace_ox(ll[1])
         self.replace_equitorial([ll[2]])
@@ -157,7 +157,7 @@ class octahedral_complex:
                     self.three_bidentate = True
         else: ## this complex cannot exist. keeping  equitorial,
               ## regenerating axial ligands
-           print("complex with" + str(self.eq_ligands) + " and " + str(self.ax_ligands) + " cannot exist, randomizing axial")
+           #print("complex with" + str(self.eq_ligands) + " and " + str(self.ax_ligands) + " cannot exist, randomizing axial")
            self._get_random_axial()
         self._name_self()
 
@@ -190,8 +190,8 @@ class octahedral_complex:
         if (self.three_bidentate) and not (self.eq_dent == 2):
             ## this complex cannot exist
             ## regenerating equitorial ligands
-            print("complex with" + str(self.eq_ligands) + " and " + str(self.ax_ligands) +
-                  " cannot exist, regenerating equitorial ligands")
+            #print("complex with" + str(self.eq_ligands) + " and " + str(self.ax_ligands) +
+            #      " cannot exist, regenerating equitorial ligands")
             self.ready_for_assembly  = False
             while not self.ready_for_assembly:
                 eq_ind = numpy.random.randint(low = 0,high = n)
@@ -314,26 +314,26 @@ class octahedral_complex:
             # assemble SMILEs ligands
             liglist = "" #empty string
             for eq_lig in self.eq_ligands:
-                print('processing ligand ' + str(eq_lig))
+                #print('processing ligand ' + str(eq_lig))
                 if not hasattr(eq_lig,'__iter__'): # test if SMILES:
-                    print('molSimplify ligand in eq position  '+ str(eq_lig))
+                    #print('molSimplify ligand in eq position  '+ str(eq_lig))
                     liglist += " " + str(eq_lig).strip("'[]'")
                 elif  hasattr(eq_lig,'__iter__'): # this is the mark of SMILES strings:
-                    print('SMILEs ligand in eq position  '+ str(eq_lig))
+                    #print('SMILEs ligand in eq position  '+ str(eq_lig))
                     liglist += " " + str(eq_lig[0])
                     if not smicat: # false on first hit 
                         smicat = " ["    + str(eq_lig[1]).replace("'","") # cat list 
                     else:
                         smicat += ",  " + str(eq_lig[1]).replace("'","") # cat list 
-            print(' after eq-shell, liglist is ' + liglist)
-            print(' after eq-shell, smicat is ' + str(smicat))
+            #print(' after eq-shell, liglist is ' + liglist)
+            #print(' after eq-shell, smicat is ' + str(smicat))
             for ax_lig in self.ax_ligands:
-                print('processing ligand ' + str(ax_lig))
+                #print('processing ligand ' + str(ax_lig))
                 if not hasattr(ax_lig,'__iter__'): # test if SMILES:
-                    print('molSimplify ligand in ax position  '+ str(ax_lig))
+                    #print('molSimplify ligand in ax position  '+ str(ax_lig))
                     liglist += " " + str(ax_lig).strip("'[]'")
                 elif  hasattr(ax_lig,'__iter__'): # this is the mark of SMILES strings:
-                    print('SMILEs ligand in ax position  '+ str(ax_lig))
+                    #print('SMILEs ligand in ax position  '+ str(ax_lig))
                     liglist += " " + str(ax_lig[0])
                     if not smicat: # false on first hit 
                         smicat = " [ "    + str(ax_lig[1]).replace("'","") # cat list 
@@ -342,8 +342,8 @@ class octahedral_complex:
             liglist.replace("'","")
             if smicat:
                 smicat += "]"
-            print(' after ax-shell, liglist is ' + liglist)
-            print(' after ax-shell, smicat is ' + str(smicat))            
+            #print(' after ax-shell, liglist is ' + liglist)
+            #print(' after ax-shell, smicat is ' + str(smicat))            
             ligloc = 1
             ligalign = 0
         elif self.ax_dent == 2:
@@ -351,28 +351,28 @@ class octahedral_complex:
             liglist = "" #empty string
             # first eq ligand 
             eq_lig = self.eq_ligands[0]
-            print('processing ligand ' + str(eq_lig))
+            #print('processing ligand ' + str(eq_lig))
             if not hasattr(eq_lig,'__iter__'): # test if SMILES:
-                print('molSimplify ligand in eq position  '+ str(eq_lig))
+                #print('molSimplify ligand in eq position  '+ str(eq_lig))
                 liglist += " " + str(eq_lig).strip("'[]'")
             elif  hasattr(eq_lig,'__iter__'): # this is the mark of SMILES strings:
-                print('SMILEs ligand in eq position  '+ str(eq_lig))
+                #print('SMILEs ligand in eq position  '+ str(eq_lig))
                 liglist += " " + str(eq_lig[0])
                 if not smicat: # false on first hit 
                     smicat = " ["    + str(eq_lig[1]).replace("'","") # cat list 
                 else:
                     smicat += ",  " + str(eq_lig[1]).replace("'","") # cat list 
-            print(' after eq-shell 1, liglist is ' + liglist)
-            print(' after eq-shell 1, smicat is ' + str(smicat))
+            #print(' after eq-shell 1, liglist is ' + liglist)
+            #print(' after eq-shell 1, smicat is ' + str(smicat))
             
             # only one axial ligand allowed
             ax_lig = self.ax_ligands[0]
-            print('processing ligand ' + str(ax_lig))
+            #print('processing ligand ' + str(ax_lig))
             if not hasattr(ax_lig,'__iter__'): # test if SMILES:
-                print('molSimplify ligand in ax position  '+ str(ax_lig))
+                #print('molSimplify ligand in ax position  '+ str(ax_lig))
                 liglist += " " + str(ax_lig).strip("'[]'")
             elif  hasattr(ax_lig,'__iter__'): # this is the mark of SMILES strings:
-                print('SMILEs ligand in ax position  '+ str(ax_lig))
+                #print('SMILEs ligand in ax position  '+ str(ax_lig))
                 liglist += " " + str(ax_lig[0])
                 if not smicat: # false on first hit 
                     smicat = " ["    + str(ax_lig[1]).replace("'","") # cat list 
@@ -380,24 +380,24 @@ class octahedral_complex:
                     smicat += ",  " + str(ax_lig[1]).replace("'","")  # cat list 
             
 
-            print(' after ax-shell, liglist is ' + liglist)
-            print(' after ax-shell, smicat is ' + str(smicat))            
+            #print(' after ax-shell, liglist is ' + liglist)
+            #print(' after ax-shell, smicat is ' + str(smicat))            
             
             # second eq ligand 
             eq_lig = self.eq_ligands[1]
-            print('processing ligand ' + str(eq_lig))
+            #print('processing ligand ' + str(eq_lig))
             if not hasattr(eq_lig,'__iter__'): # test if SMILES:
-                print('molSimplify ligand in eq position  '+ str(eq_lig))
+                #print('molSimplify ligand in eq position  '+ str(eq_lig))
                 liglist += " " + str(eq_lig).strip("'[]'")
             elif  hasattr(eq_lig,'__iter__'): # this is the mark of SMILES strings:
-                print('SMILEs ligand in eq position  '+ str(eq_lig))
+                #print('SMILEs ligand in eq position  '+ str(eq_lig))
                 liglist += " " + str(eq_lig[0])
                 if not smicat: # false on first hit 
                     smicat = " ["    + str(eq_lig[1]).replace("'","") # cat list 
                 else:
                     smicat += ",  " + str(eq_lig[1]).replace("'","") # cat list 
-            print(' after eq-shell 2, liglist is ' + liglist)
-            print(' after eq-shell 2, smicat is ' + str(smicat))
+            #print(' after eq-shell 2, liglist is ' + liglist)
+            #print(' after eq-shell 2, smicat is ' + str(smicat))
             liglist.replace("'","")
             if smicat:
                 smicat += "]"            

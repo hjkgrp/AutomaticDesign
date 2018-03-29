@@ -140,7 +140,7 @@ def submit_outstanding_jobs():
                         update_converged_job_dictionary(jobs,6) # mark job as abandoned 
                         if not "thermo" in jobs and not "solvent" in jobs:
                             gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename,basegene=translate_job_name(jobs)
-                            if ahf == float(GA_run.config["exchange"]): # if this is the target HFX frac
+                            if ahf == float(this_GA.config["exchange"]): # if this is the target HFX frac
                                 update_current_gf_dictionary(gene,0) # zero out fitness
             else:
                 print('job is live or empty or queue is full')

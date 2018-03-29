@@ -64,7 +64,7 @@ def check_all_current_convergence():
                 this_run.job = jobs 
                 
                 alpha = float(ahf)
-                this_run.logpath = get_run_dir() + 'post_process_log.txt'
+                this_run.logpath = path_dictionary['state_path']
                 
                 ## populate run with properies
                 this_run.configure(metal,ox,eqlig,axlig1,axlig2,spin,alpha,spin_cat)     
@@ -193,7 +193,12 @@ def check_all_current_convergence():
                         print(' job  ' + str(this_run.outpath) + ' not converged')
                         logger(base_path_dictionary['state_path'],str(datetime.datetime.now()) + ' job  ' + str(this_run.outpath) + ' not converged')
                         this_run.extract_prog()
-                        if this_run.progstatus ==0:                            
+                        if this_run.progstatus ==0:
+                            flag_oct, flag_list, dict_oct_info = this_run.check_oct_on_prog()
+                            logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+'Check on prog_geo: flag_oct: %d'%flag_oct)
+                            if not flag_oct:
+                                 logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+'Bad geometry because of flag_list: %s'%str(flag_list))
+                                 logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+'Metrics : %s'%str(dict_oct_info))                           
                             if this_run.progstatus ==0:
                                 sub_number=submitted_job_dictionary[jobs] 
                                 this_run.archive(sub_number)
@@ -256,7 +261,7 @@ def check_all_current_convergence():
         list_of_props.append('axlig2')
         list_of_props.append('eqlig')  
         list_of_prop_names =['converged','energy','init_energy', 'flag_oct', 'num_coord_metal',
-                             'rmsd_max', 'atom_dist_max', 'oct_angle_devi_max', 'dist_del_eq', 'dist_del_ax', 'dist_del_eq_ax',
+                             'rmsd_max', 'atom_dist_max', 'oct_angle_devi_max', 'dist_del_eq', 'dist_del_all', 'max_del_sig_angle',
                              'coord','rmsd','maxd','status','time','spin','ss_act','ss_target','ax1_MLB','ax2_MLB','eq_MLB',
                     'init_ax1_MLB','init_ax2_MLB','init_eq_MLB','thermo_cont','imag','solvent_cont','geopath','terachem_version','terachem_detailed_version',
                     'basis','charge','alpha_level_shift','beta_level_shift','functional','mop_energy','mop_coord','attempted']
