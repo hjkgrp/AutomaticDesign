@@ -251,7 +251,7 @@ class GA_generation:
                 msg, ANN_dict = read_dictionary(self.current_path_dictionary["ANN_output"] +'ANN_results.csv')
 
                 for keys in ANN_dict.keys():
-                        gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename = translate_job_name(keys)
+                        gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename,basegene = translate_job_name(keys)
                         this_split_energy = float(ANN_dict[keys].split(',')[0])
                         this_ann_dist = float(ANN_dict[keys].split(',')[1].strip('\n'))
 
