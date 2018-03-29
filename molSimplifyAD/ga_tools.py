@@ -159,9 +159,9 @@ def translate_job_name(job):
     axlig2_ind = int(ll[8])
     ligands_dict = get_ligands()
     if hasattr(ligands_dict[int(eqlig_ind)][0],'__iter__'): # SMILEs string
-        eliq = 'smi' + str(eqlig_ind) 
+        eqlig = 'smi' + str(eqlig_ind) 
     else:
-        eqlig = ligands_dict[int(eqlig_ind)][0]    
+        eqlig = ligands_dict[int(eqlig_ind)][0] 
     if hasattr(ligands_dict[int(axlig1_ind)][0] ,'__iter__'): # SMILEs string
         axlig1 = 'smi' + str(axlig1_ind) 
     else:
