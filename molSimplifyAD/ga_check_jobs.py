@@ -193,7 +193,12 @@ def check_all_current_convergence():
                         print(' job  ' + str(this_run.outpath) + ' not converged')
                         logger(base_path_dictionary['state_path'],str(datetime.datetime.now()) + ' job  ' + str(this_run.outpath) + ' not converged')
                         this_run.extract_prog()
-                        if this_run.progstatus ==0:                            
+                        if this_run.progstatus ==0:
+                            flag_oct, flag_list, dict_oct_info = this_run.check_oct_on_prog()
+                            logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+'Check on prog_geo: flag_oct: %d'%flag_oct)
+                            if not flag_oct:
+                                 logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+'Bad geometry because of flag_list: %s'%str(flag_list))
+                                 logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+'Metrics : %s'%str(dict_oct_info))                           
                             if this_run.progstatus ==0:
                                 sub_number=submitted_job_dictionary[jobs] 
                                 this_run.archive(sub_number)

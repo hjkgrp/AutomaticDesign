@@ -163,7 +163,7 @@ class DFTRun:
         self.dist_del_eq = dict_oct_info['dist_del_eq']
         self.dist_del_ax = dict_oct_info['dist_del_ax']
         self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
-
+        return flag_oct, flag_list, dict_oct_info
 
     def check_oct_needs_init(self):
         # self.geopath
@@ -180,7 +180,7 @@ class DFTRun:
         self.dist_del_eq = dict_oct_info['dist_del_eq']
         self.dist_del_ax = dict_oct_info['dist_del_ax']
         self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
-
+        return flag_oct, flag_list, dict_oct_info
 
     def check_oct_on_prog(self):
         # self.progmol
@@ -209,7 +209,7 @@ class DFTRun:
             self.progstatus = 0
         else:
             self.progstatus = 1
-
+        return flag_oct, flag_list, dict_oct_info
 
 
     def extract_geo(self):
