@@ -216,13 +216,16 @@ def HFXordering():
     # represent the just finshed calculation
     # and the values are:
     # [next job to run, guess for next job]
-    HFXdictionary = {"20":["25","20"]}
-    HFXdictionary = {"20":["25","20"],
-                     "25":["30","25"],
-                     "30":["15","20"],
-                     "15":["10","15"],
-                     "10":["05","10"],
-                     "5":["00","05"]}
+    GA_run = get_current_GA()
+    if not GA_run.config['HFXsample']:
+        HFXdictionary = dict()
+    else:
+        HFXdictionary = {"20":["25","20"],
+                         "25":["30","25"],
+                         "30":["15","20"],
+                         "15":["10","15"],
+                         "10":["05","10"],
+                         "5":["00","05"]}
     return(HFXdictionary)
     
 
