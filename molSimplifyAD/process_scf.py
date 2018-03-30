@@ -145,7 +145,25 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary,local_met
         else:
             this_metal = local_metal_list[int(this_run.metal)]
 
-        this_name = "_".join([this_metal,'eq',str(this_run.eqlig),'ax1',str(this_run.axlig1),'ax2',str(this_run.axlig2),'ahf',str(this_run.alpha)])
+
+        ## special catch of SMILEs ligands:
+        if hasattr(this_run.eqlig,'__iter__'): # SMILEs string
+            eliq_name = 'smi' + str(this_run.eqlig_ind)
+        else:
+            eqlig_name = this_run.eqlig
+
+        if hasattr(this_run.axlig1 ,'__iter__'): # SMILEs string
+            axlig1_name = 'smi' + str(this_run.axlig1_ind)
+        else:
+            axlig1_name = this_run.axlig1
+        
+        if hasattr(this_run.axlig2 ,'__iter__'): # SMILEs string
+            axlig2_name = 'smi' + str(this_run.axlig2_ind)
+        else:
+            axlig2_name = this_run.axlig2
+            
+                
+        this_name = "_".join([this_metal,'eq',str(eqlig_name),'ax1',str(axlig1_name),'ax2',str(axlig2_name),'ahf',str(this_run.alpha)])
                 ### add alpha value to list owned by this_comp:
                 
         if this_name not in final_results.keys():
