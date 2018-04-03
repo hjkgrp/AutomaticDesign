@@ -148,17 +148,17 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary,local_met
 
         ## special catch of SMILEs ligands:
         if hasattr(this_run.eqlig,'__iter__'): # SMILEs string
-            eliq_name = 'smi' + str(this_run.eqlig_ind) 
+            eliq_name = 'smi' + str(this_run.eqlig_ind)
         else:
             eqlig_name = this_run.eqlig
 
         if hasattr(this_run.axlig1 ,'__iter__'): # SMILEs string
-            axlig1_name = 'smi' + str(this_run.axlig1_ind) 
+            axlig1_name = 'smi' + str(this_run.axlig1_ind)
         else:
             axlig1_name = this_run.axlig1
         
         if hasattr(this_run.axlig2 ,'__iter__'): # SMILEs string
-            axlig2_name = 'smi' + str(this_run.axlig2_ind) 
+            axlig2_name = 'smi' + str(this_run.axlig2_ind)
         else:
             axlig2_name = this_run.axlig2
             

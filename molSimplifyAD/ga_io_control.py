@@ -21,7 +21,7 @@ class GA_run_defintion:
                       symclass ="strong",
                       thermo = False,
                       solvent = False,
-                      HFXsample = False,
+                      HFXsample = True,
                       liglist = False,
                       queue_type = 'SGE',
                       queue_reference = False,

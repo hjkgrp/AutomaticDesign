@@ -159,9 +159,9 @@ def translate_job_name(job):
     axlig2_ind = int(ll[8])
     ligands_dict = get_ligands()
     if hasattr(ligands_dict[int(eqlig_ind)][0],'__iter__'): # SMILEs string
-        eliq = 'smi' + str(eqlig_ind) 
+        eqlig = 'smi' + str(eqlig_ind) 
     else:
-        eqlig = ligands_dict[int(eqlig_ind)][0]    
+        eqlig = ligands_dict[int(eqlig_ind)][0] 
     if hasattr(ligands_dict[int(axlig1_ind)][0] ,'__iter__'): # SMILEs string
         axlig1 = 'smi' + str(axlig1_ind) 
     else:
@@ -218,13 +218,16 @@ def HFXordering():
     # represent the just finshed calculation
     # and the values are:
     # [next job to run, guess for next job]
-    HFXdictionary = {"20":["25","20"]}
-    HFXdictionary = {"20":["25","20"],
-                     "25":["30","25"],
-                     "30":["15","20"],
-                     "15":["10","15"],
-                     "10":["05","10"],
-                     "5":["00","05"]}
+    GA_run = get_current_GA()
+    if not GA_run.config['HFXsample']:
+        HFXdictionary = dict()
+    else:
+        HFXdictionary = {"20":["25","20"],
+                         "25":["30","25"],
+                         "30":["15","20"],
+                         "15":["10","15"],
+                         "10":["05","10"],
+                         "5":["00","05"]}
     return(HFXdictionary)
     
 

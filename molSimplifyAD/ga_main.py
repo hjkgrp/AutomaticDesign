@@ -74,6 +74,8 @@ class GA_generation:
                 ligands_list_inds = [i[0] for i in self.ligands_list]
                 metal_list_inds = get_metals()
                 ## check if ligs are known
+                print('!!!!set:', [ligs[0][0],ligs[1][0],ligs[1][1]])
+                print('!!!!!ind:', ligands_list_inds)
                 if not set([ligs[0][0],ligs[1][0],ligs[1][1]]).issubset(ligands_list_inds):
                         print('Error: requested ligs not available in list, aborting')
                         exit() 
