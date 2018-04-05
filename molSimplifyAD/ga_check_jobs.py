@@ -196,6 +196,7 @@ def check_all_current_convergence():
                         if this_run.progstatus ==0:
                             flag_oct, flag_list, dict_oct_info = this_run.check_oct_on_prog()
                             logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+'Check on prog_geo: flag_oct: %d'%flag_oct)
+                            logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+' Current structure is supposed to be octahedral:', this_run.octahedral)
                             if not flag_oct:
                                  logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+'Bad geometry because of flag_list: %s'%str(flag_list))
                                  logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+'Metrics : %s'%str(dict_oct_info))                           
