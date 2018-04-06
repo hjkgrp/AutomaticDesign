@@ -75,11 +75,31 @@ class GA_generation:
                 metal_list_inds = get_metals()
                 ## check if ligs are known
                 print('!!!!set:', [ligs[0][0],ligs[1][0],ligs[1][1]])
-                print('!!!!!ind:', ligands_list_inds)
-                if not set([ligs[0][0],ligs[1][0],ligs[1][1]]).issubset(ligands_list_inds):
-                        print('Error: requested ligs not available in list, aborting')
-                        exit() 
+                print('!!!!!ind:', ligands_list_inds[0:7])
+                print(ligs[0][0])
+                if len(ligs[0][0]) == 1:
+                        this_eq = ligs[0][0]
+                else:
+                        print('smiles lig: ' + str(ligs[0][0]))
+                        this_eq = ligs[0][0][0]
+                if len(ligs[1][0]) == 1:
+                        this_ax1 = ligs[1][0]
+                else:
+                        print('smiles lig: ' + str(ligs[1][0]))
+                        this_ax1 = ligs[1][0][0]
+                if len(ligs[1][1]) == 1:
+                        this_ax2 = ligs[1][1]
+                else:
+                        print('smiles lig: ' + str(ligs[1][1]))
+                        this_ax2 = ligs[1][1][0]
+                try:
+                        if not set([this_eq,this_ax1,this_ax2]).issubset(ligands_list_inds):
+                                        print('Error: requested ligs not available in list, aborting')
+                                        exit() 
+                except:
+                        print('Warning, we cannot check SMILES for ligand uniqueness for SMILEs strings')
                 if not metal in metal_list_inds:
+                        print(metal)
                         print('Error: requested metal not available in list, aborting')
                         exit()                         
                 eq_ind = [ligands_list_inds.index(ligs[0][0])]
