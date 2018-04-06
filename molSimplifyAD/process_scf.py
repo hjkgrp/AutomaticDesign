@@ -435,6 +435,7 @@ def test_terachem_go_convergence(this_run):
                     this_run.obtain_init_mol3d()
                     flag_oct, flag_list, dict_oct_info = this_run.check_oct_needs_init()
                     logger(this_run.logpath, str(datetime.datetime.now())+' Check on coverged_geo with init: flag_oct: %d'%flag_oct)
+                    logger(this_run.logpath, str(datetime.datetime.now())+' Current structure is supposed to be octahedral:', this_run.octahedral)
                     if not flag_oct:
                         logger(this_run.logpath, str(datetime.datetime.now())+' Bad geometry because of flag_list: %s'%str(flag_list))
                         logger(this_run.logpath, str(datetime.datetime.now())+' Metrics : %s'%str(dict_oct_info))
@@ -446,6 +447,7 @@ def test_terachem_go_convergence(this_run):
                 else:
                     flag_oct, flag_list, dict_oct_info = this_run.check_oct_needs_final_only()
                     logger(this_run.logpath, str(datetime.datetime.now())+' Check on coverged_geo final only: flag_oct: %d'%flag_oct)
+                    logger(this_run.logpath, str(datetime.datetime.now())+' Current structure is supposed to be octahedral:', %this_run.octahedral)
                     if not flag_oct:
                         logger(this_run.logpath, str(datetime.datetime.now())+' Bad geometry because of flag_list: %s'%str(flag_list))
                         logger(this_run.logpath, str(datetime.datetime.now())+' Metrics : %s'%str(dict_oct_info))
