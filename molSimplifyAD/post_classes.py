@@ -457,6 +457,69 @@ class DFTRun:
 
         return (self.HFX_job)
 
+    def write_empty_inputs(self):
+        ## set file paths for empty structure gen
+        ## the fixed ordering is 
+        ## HFX20 Oxo --> HFX20 Empty SP + HFX20 Empty Geo --> HFX25 Oxo --> HFX25 Empty SP + HFX25 Empty Geo... etc.
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
+        new_name, reference_name = renameOxoEmpty(self.job)
+        new_name = new_name.strip('.in')
+        reference_name = basename.strip('.in')
+        geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
+        geo_ref_file = open('geo_ref')
+        lines = geo_ref_file.readlines()
+        lines[0] = str(int(lines[0].split()[0])-1)+'\n'
+        new_ref = path_dictionary["initial_geo_path"] + new_name + '.xyz'
+        new_ref_file = open(new_ref, 'w')
+        new_ref_file.writelines([item for item in lines])
+        new_ref_file.close()
+        geo_ref_file.close()
+        self.empty_sp_inpath = path_dictionary['sp_infiles'] + new_name + '.in'
+        self.empty_inpath = path_dictionary['infiles'] + new_name + '.in'
+        self.empty_job = path_dictionary['job_path'] + new_name + '.in'
+        ### write files
+        if not os.path.exists(self.empty_sp_inpath):
+            f_emptysp = open(self.empty_sp_inpath, 'w')
+            ## write SP
+            f_emptysp.write('run energy \n')
+            f_emptysp.write('scrdir scr/init_sp/  \n')
+            f_emptysp.write('coordinates ' + new_ref + ' \n')
+            with open(self.inpath, 'r') as ref:
+                for line in ref:
+                    if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
+                        ## these lines should be common
+                        f_emptysp.write(line)
+            f_emptysp.write('end')
+            f_emptysp.close()
+        if not os.path.exists(self.empty_job):
+            f_empty = open(self.empty_job, 'w')
+            f_empty.write('run minimize \n')
+            f_empty.write('scrdir scr/geo/gen_' + str(self.gen) + '/' + new_name + '\n')
+            with open(self.inpath, 'r') as ref:
+                for line in ref:
+                    if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
+                            "run" in line):
+                        ## these lines should be common
+                        f_empty.write(line)
+            f_empty.write('end')
+            f_empty.close()
+
+        ## create infile:
+        if not os.path.exists(self.empty_inpath):
+            with open(self.empty_inpath, 'w') as f:
+                with open(self.empty_job, 'r') as ref:
+                    for line in ref:
+                        if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
+                            ## these lines should be common
+                            f.write(line)
+                f.write('coordinates ' + new_ref + ' \n')
+                f.write('end\n')
+
+        return (self.empty_job, self.empty_sp_inpath)
+
+
     def archive(self, sub_number):
         # this fuinciton copies all files to arch
         path_dictionary = setup_paths()
