@@ -51,7 +51,9 @@ echo "this SGE WORKDIR: $SGE_O_WORKDIR"
 echo "this SGE_O_PATH: $SGE_O_PATH"
 echo "this SGE shell current DIR: $PWD"
 
-
+cd $SGE_O_WORKDIR
+echo "moved to"
+pwd
 ##begin geo-optimization
 
 echo "Launching geo calc: $namebase"

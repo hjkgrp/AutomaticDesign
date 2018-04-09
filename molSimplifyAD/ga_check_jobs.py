@@ -64,7 +64,7 @@ def check_all_current_convergence():
                 this_run.job = jobs 
                 
                 alpha = float(ahf)
-                this_run.logpath = get_run_dir() + 'post_process_log.txt'
+                this_run.logpath = path_dictionary['state_path']
                 
                 ## populate run with properies
                 this_run.configure(metal,ox,eqlig,axlig1,axlig2,spin,alpha,spin_cat)     
@@ -196,6 +196,7 @@ def check_all_current_convergence():
                         if this_run.progstatus ==0:
                             flag_oct, flag_list, dict_oct_info = this_run.check_oct_on_prog()
                             logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+'Check on prog_geo: flag_oct: %d'%flag_oct)
+                            logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+' Current structure is supposed to be octahedral:', this_run.octahedral)
                             if not flag_oct:
                                  logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+'Bad geometry because of flag_list: %s'%str(flag_list))
                                  logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+'Metrics : %s'%str(dict_oct_info))                           
