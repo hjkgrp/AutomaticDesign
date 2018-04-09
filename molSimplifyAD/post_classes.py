@@ -161,15 +161,17 @@ class DFTRun:
             self.progmol = mol3D()
             self.progmol.readfromxyz(self.progpath)
 
-    def check_oct_needs_final_only(self):
+    def check_oct_needs_final_only(self, debug=False):
         # self.geopath
         # self.mol
         self.set_geo_check_func()
         if self.octahedral:
-            flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, dict_check=dict_oct_check_st)
+            flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, dict_check=dict_oct_check_st,
+                                                       debug=debug)
         else:
             flag_oct, flag_list, dict_oct_info = IsStruct(self.geopath,
-                                                          dict_check=dict_oneempty_check_st)
+                                                          dict_check=dict_oneempty_check_st,
+                                                          debug=debug)
         self.flag_oct = flag_oct
         self.flag_oct_list = ', '.join(flag_list)
         self.num_coord_metal = dict_oct_info['num_coord_metal']
@@ -181,17 +183,19 @@ class DFTRun:
         # self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
         return flag_oct, flag_list, dict_oct_info
 
-    def check_oct_needs_init(self):
+    def check_oct_needs_init(self, debug=False):
         # self.geopath
         # self.init_geopath
         # self.mol
         # self.init
         self.set_geo_check_func()
         if self.octahedral:
-            flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, self.init_geopath, dict_check=dict_oct_check_st)
+            flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, self.init_geopath, dict_check=dict_oct_check_st,
+                                                       debug=debug)
         else:
             flag_oct, flag_list, dict_oct_info = IsStruct(self.geopath, self.init_geopath,
-                                                          dict_check=dict_oneempty_check_st)
+                                                          dict_check=dict_oneempty_check_st,
+                                                          debug=debug)
         self.flag_oct = flag_oct
         self.flag_oct_list = ', '.join(flag_list)
         self.num_coord_metal = dict_oct_info['num_coord_metal']
@@ -205,17 +209,19 @@ class DFTRun:
         # self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
         return flag_oct, flag_list, dict_oct_info
 
-    def check_oct_on_prog(self):
+    def check_oct_on_prog(self, debug=False):
         # self.progmol
         # self.progpath
         self.set_geo_check_func()
         if os.path.exists(self.init_geopath):
             if self.octahedral:
                 flag_oct, flag_list, dict_oct_info = IsOct(self.progpath, self.init_geopath,
-                                                           dict_check=dict_oct_check_loose)
+                                                           dict_check=dict_oct_check_loose,
+                                                           debug=debug)
             else:
                 flag_oct, flag_list, dict_oct_info = IsStruct(self.progpath, self.init_geopath,
-                                                              dict_check=dict_oneempty_check_loose)
+                                                              dict_check=dict_oneempty_check_loose,
+                                                              debug=debug)
             self.flag_oct = flag_oct
             self.flag_oct_list = ', '.join(flag_list)
             self.num_coord_metal = dict_oct_info['num_coord_metal']
@@ -229,10 +235,12 @@ class DFTRun:
             # self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
         else:
             if self.octahedral:
-                flag_oct, flag_list, dict_oct_info = IsOct(self.progpath, dict_check=dict_oct_check_loose)
+                flag_oct, flag_list, dict_oct_info = IsOct(self.progpath, dict_check=dict_oct_check_loose,
+                                                           debug=debug)
             else:
                 flag_oct, flag_list, dict_oct_info = IsStruct(self.progpath,
-                                                              dict_check=dict_oneempty_check_loose)
+                                                              dict_check=dict_oneempty_check_loose,
+                                                              debug=debug)
             self.flag_oct = flag_oct
             self.flag_oct_list = ', '.join(flag_list)
             self.num_coord_metal = dict_oct_info['num_coord_metal']
