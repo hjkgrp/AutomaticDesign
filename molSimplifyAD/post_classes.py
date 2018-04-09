@@ -216,16 +216,16 @@ class DFTRun:
             else:
                 flag_oct, flag_list, dict_oct_info = IsStruct(self.progpath, self.init_geopath,
                                                               dict_check=dict_oneempty_check_loose)
-                self.flag_oct = flag_oct
-                self.flag_oct_list = ', '.join(flag_list)
-                self.num_coord_metal = dict_oct_info['num_coord_metal']
-                self.rmsd_max = dict_oct_info['rmsd_max']
-                self.atom_dist_max = dict_oct_info['atom_dist_max']
-                self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
-                self.dist_del_eq = dict_oct_info['dist_del_eq']
-                self.dist_del_all = dict_oct_info['dist_del_all']
-                self.max_del_sig_angle = dict_oct_info['max_del_sig_angle']
-            # self.dist_del_ax = dict_oct_info['dist_del_ax']
+            self.flag_oct = flag_oct
+            self.flag_oct_list = ', '.join(flag_list)
+            self.num_coord_metal = dict_oct_info['num_coord_metal']
+            self.rmsd_max = dict_oct_info['rmsd_max']
+            self.atom_dist_max = dict_oct_info['atom_dist_max']
+            self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
+            self.dist_del_eq = dict_oct_info['dist_del_eq']
+            self.dist_del_all = dict_oct_info['dist_del_all']
+            self.max_del_sig_angle = dict_oct_info['max_del_sig_angle']
+    # self.dist_del_ax = dict_oct_info['dist_del_ax']
             # self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
         else:
             if self.octahedral:
