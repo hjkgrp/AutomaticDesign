@@ -33,6 +33,7 @@ class GA_run_defintion:
                       distance_parameter = 1.0,
                       max_jobs = 20,
                       exchange = 20,
+                      oxocatalysis = False,
                       monitor_diversity=True,monitor_distance= True,**KWARGS):
             ## first time start-up function
 #                print('configuring status dictionaty')
@@ -58,6 +59,7 @@ class GA_run_defintion:
                               'maxgen':maxgen,
                               'pmut':pmut,
                               'exchange':exchange,
+                              'oxocatalysis':oxocatalysis,
                               'scoring_function':scoring_function,
                               'distance_parameter':distance_parameter,
                               'split_parameter':split_parameter,
@@ -192,7 +194,7 @@ def get_default_ligand_file():
 def get_launch_script_file(queue_type='SGE'):
     ## returns default ligand input file
     if queue_type.lower() != 'sge' or queue_type.lower() != 'slurm':
-      print('Queue_type is not valid, user provided: ', queue_type)
+        print('Queue_type is not valid, user provided: ', queue_type)
     sp_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/" +queue_type.lower()+"_sp.sh")
     geo_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/"+queue_type.lower()+"_geo.sh")
     thermo_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/"+queue_type.lower()+"_thermo.sh")
