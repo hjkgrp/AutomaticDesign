@@ -205,6 +205,25 @@ def renameHFX(job,newHFX):
     new_name = "_".join(ll)
     return new_name
 #######################
+def renameOxoEmpty(job):
+    # renames Oxo job to empty job
+    base = os.path.basename(job)
+    base = base.strip("\n")
+    basename = base.strip(".in")
+    basename = base.strip(".xyz")
+    basename = base.strip(".out")
+    ll = (str(basename)).split("_")
+    ligs = get_ligands()
+    for i, item in enumerate(ligs):
+        if 'x' in item:
+            value = str(i)
+    ## replace ax1 with x index
+    ll[7] = value
+    ## replace metal oxidation with 2 less
+    ll[5] = str(int(ll[5])-2)
+    new_name = "_".join(ll)
+    return new_name, basename
+#######################
 def to_decimal_string(inp):
     # nusiance function to convert
     # int strings (in %) to decimal strings
