@@ -177,12 +177,8 @@ def translate_job_name(job):
     ahf = int(ll[9])
     spin = int(ll[10])
     metal_list = get_metals()
-    print(metal_list)
     metal_key = metal_list[metal]
-    print('metal_key', metal_key)
-    print('ox',ox)
     metal_spin_dictionary  = spin_dictionary()
-    print('spin dict',metal_spin_dictionary)
     these_states = metal_spin_dictionary[metal_key][ox]
     if spin == these_states[0]: #First element of list
            spin_cat = 'LS'
