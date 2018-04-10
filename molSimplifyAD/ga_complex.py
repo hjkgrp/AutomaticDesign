@@ -302,11 +302,7 @@ class octahedral_complex:
         ligloc_cont = True
         # set metal properties:
         this_metal = self.metals_list[self.core]
-        # set oxidation state
-        if self.ox == 2:
-            ox_string = "II"
-        elif self.ox == 3:
-            ox_string = "III"
+        
         mol_name = prefix + self.name + "_" + str(spin)
         
         smicat = False # holder for connection atoms calls for SMILES ligands
@@ -452,7 +448,7 @@ class octahedral_complex:
                             call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +liglist,'-ligocc 1,1,1,1,1,1',
                                      '-rundir ' +"'"+ rundirpath.rstrip("/")+"'",'-keepHs yes,yes,yes,yes,yes,yes','-jobdir','temp',
                                      '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
-                                     '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ ox_string, '-exchange '+str(exchange),
+                                     '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ str(self.ox), '-exchange '+str(exchange),
                                      '-qccode TeraChem','-runtyp '+rty,'-method UDFT',"-ffoption "+ff_opt,' -ff UFF'])
                             if smicat:
                                 call += ' -smicat ' + smicat
