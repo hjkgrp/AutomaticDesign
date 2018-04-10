@@ -473,9 +473,9 @@ class DFTRun:
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         new_name, reference_name = renameOxoEmpty(self.job)
         new_name = new_name.strip('.in')
-        reference_name = basename.strip('.in')
+        reference_name = reference_name.strip('.in')
         geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
-        geo_ref_file = open('geo_ref')
+        geo_ref_file = open(geo_ref)
         lines = geo_ref_file.readlines()
         lines[0] = str(int(lines[0].split()[0])-1)+'\n'
         new_ref = path_dictionary["initial_geo_path"] + new_name + '.xyz'
