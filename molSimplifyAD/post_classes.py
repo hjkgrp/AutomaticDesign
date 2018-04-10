@@ -530,7 +530,7 @@ class DFTRun:
                 temp.readfromxyz(new_ref)
                 metal_ind = temp.findMetal()[0]
                 fixed_atoms = list()
-                fixed_atoms = temp.getBondedAtoms(metal_ind)
+                fixed_atoms = temp.getBondedAtomsSmart(metal_ind) #Smart used so that the correct connecting atom constraints are used
                 planar = fixed_atoms[:4]
                 metal_ind_mod = metal_ind+1 # 1-based indices
                 planar = [str(int(i)+1) for i in planar] # 1-based indices
