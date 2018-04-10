@@ -9,6 +9,7 @@ import string
 import numpy
 import subprocess
 from ga_tools import *
+from molSimplify.Classes.mol3D import mol3D
 from molSimplify.Classes import *
 from optgeo_extract import *
 from molSimplify.Informatics.autocorrelation import *
@@ -19,6 +20,7 @@ from molSimplify.Informatics.geo_analyze import *
 from molSimplifyAD.ga_oct_check import *
 from molSimplifyAD.ga_io_control import *
 from molSimplifyAD.ga_tools import get_current_GA
+
 
 ########### UNIT CONVERSION
 
@@ -886,6 +888,7 @@ class Comp:
 
     def get_descriptor_vector(self, loud=False, name=False):
         results_dictionary = generate_all_ligand_misc(self.mol, loud)
+        self.mol.update_graph_check()
         self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax'], 'misc', 'ax')
         self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq'], 'misc', 'eq')
         results_dictionary = generate_all_ligand_autocorrelations(self.mol, depth=3, loud=True, name=name)
