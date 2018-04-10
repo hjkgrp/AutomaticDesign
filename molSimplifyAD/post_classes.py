@@ -367,7 +367,7 @@ class DFTRun:
                        '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0'
         self.thermo_inpath = path_dictionary['thermo_infiles'] + self.name + '.in'
         self.solvent_inpath = path_dictionary['solvent_infiles'] + self.name + '.in'
-        self.init_sp_inpath = path_dictionary['sp_infiles'] + self.name + '.in'
+        self.init_sp_inpath = path_dictionary['sp_in_path'] + self.name + '.in'
         ### check thermo
         if not os.path.exists(self.thermo_inpath):
             f_thermo = open(self.thermo_inpath, 'w')
@@ -483,7 +483,7 @@ class DFTRun:
         new_ref_file.writelines([item for item in lines])
         new_ref_file.close()
         geo_ref_file.close()
-        self.empty_sp_inpath = path_dictionary['sp_infiles'] + new_name + '.in'
+        self.empty_sp_inpath = path_dictionary['sp_in_path'] + new_name + '.in'
         self.empty_inpath = path_dictionary['infiles'] + new_name + '.in'
         self.empty_job = path_dictionary['job_path'] + new_name + '.in'
         ### write files
