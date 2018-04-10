@@ -96,7 +96,7 @@ def get_metals():
         return metals_list
 ########################
 def get_ox_states(): # could be made metal dependent like spin
-        ox_list = [2,3]
+        ox_list = [2,3,4,5]
         return ox_list
 ########################
 def spin_dictionary():
@@ -105,8 +105,8 @@ def spin_dictionary():
         if GA_run.config["all_spins"]:
             metal_spin_dictionary = {'co':{2:[2,4],3:[1,3,5]}, 
                                      'cr':{2:[1,3,5],3:[2,4]},
-                                     'fe':{2:[1,3,5],3:[2,4,6]},
-                                     'mn':{2:[2,4,6],3:[1,3,5]}}
+                                     'fe':{2:[1,3,5],3:[2,4,6],4:[1,3,5],5:[2,4,6] },
+                                     'mn':{2:[2,4,6],3:[1,3,5],4:[2,4,6],5:[1,3,5]}}
         else:
             metal_spin_dictionary = {'co':{2:[2,4],3:[1,5]},
                                      'cr':{2:[1,5],3:[2,4]},
@@ -116,8 +116,8 @@ def spin_dictionary():
         if GA_run.config["all_spins"]:
             metal_spin_dictionary = {'co':{2:[2,4],3:[1,3,5]},
                                      'cr':{2:[3,5],3:[2,4]},
-                                     'fe':{2:[1,3,5],3:[2,4,6]},
-                                     'mn':{2:[2,4,6],3:[3,5]}}
+                                     'fe':{2:[1,3,5],3:[2,4,6],4:[1,3,5],5:[2,4,6]},
+                                     'mn':{2:[2,4,6],3:[1,3,5],4:[2,4,6],5:[1,3,5]}}
         else:
             metal_spin_dictionary = {'co':{2:[2,4],3:[1,5]},
                                      'cr':{2:[3,5],3:[2,4]},
@@ -177,8 +177,12 @@ def translate_job_name(job):
     ahf = int(ll[9])
     spin = int(ll[10])
     metal_list = get_metals()
+    print(metal_list)
     metal_key = metal_list[metal]
+    print('metal_key', metal_key)
+    print('ox',ox)
     metal_spin_dictionary  = spin_dictionary()
+    print('spin dict',metal_spin_dictionary)
     these_states = metal_spin_dictionary[metal_key][ox]
     if spin == these_states[0]: #First element of list
            spin_cat = 'LS'
@@ -257,6 +261,7 @@ def setup_paths():
     path_dictionary = {
                    "geo_out_path"     : working_dir + "geo_outfiles/",
                    "sp_out_path"      : working_dir + "sp_outfiles/",
+                   "sp_in_path"       : working_dir + "sp_infiles/",
                    "scr_path"         : working_dir + "scr/geo/",
                    "queue_output"     : working_dir + "queue_output/",
                    "thermo_out_path"  : working_dir + "thermo_outfiles/",                   
