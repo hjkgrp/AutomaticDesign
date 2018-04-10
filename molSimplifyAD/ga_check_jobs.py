@@ -64,7 +64,8 @@ def check_all_current_convergence():
                 this_run.job = jobs 
                 
                 ## check empty
-                if axlig1 == 'x':
+                #print('AXLIG2 HERE!!!!!!!',axlig2)
+                if axlig2 == 'x':
                     this_run.octahedral = False
                 else:
                     this_run.octahedral = True
@@ -204,6 +205,17 @@ def check_all_current_convergence():
                                                     print('note: converting from oxo structure to empty structure (SP)')
                                                     logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure (SP)')
                                                     add_to_outstanding_jobs(empty_sp)
+                    elif GA_run.config['oxocatalysis']==True: #Must do this because the empty sites are one step behind the 6-coordinates at different HFX
+                            empty_job, empty_sp = this_run.write_empty_inputs()
+                            if (empty_job not in joblist) and (empty_job not in outstanding_jobs) and (empty_job not in converged_jobs.keys()):
+                                    print('note: converting from oxo structure to empty structure')
+                                    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure')
+                                    add_to_outstanding_jobs(empty_job)
+                            if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (empty_sp not in converged_jobs.keys()):
+                                    print('note: converting from oxo structure to empty structure (SP)')
+                                    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure (SP)')
+                                    add_to_outstanding_jobs(empty_sp)
+
 
                 if not this_run.converged and not this_run.islive:
                         print(' job  ' + str(this_run.outpath) + ' not converged')
