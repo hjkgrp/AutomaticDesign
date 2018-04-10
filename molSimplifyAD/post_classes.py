@@ -524,6 +524,23 @@ class DFTRun:
                             f.write(line)
                 f.write('coordinates ' + new_ref + ' \n')
                 f.write('end\n')
+                f.write('\n')
+                #### We want to freeze the M3L and M4L dihedrals as to how they were for the geo opt for the 6 coord structure
+                temp = mol3D()
+                temp.readfromxyz(new_ref)
+                metal_ind = temp.findMetal()[0]
+                fixed_atoms = list()
+                fixed_atoms = temp.getBondedAtoms(metal_ind)
+                planar = fixed_atoms[:4]
+                metal_ind_mod = metal_ind+1 # 1-based indices
+                planar = [str(int(i)+1) for i in planar] # 1-based indices
+                first_string_to_write = 'dihedral ' + '_'.join(planar[:3])+ '_'+str(metal_ind_mod)+' \n'
+                second_string_to_write = 'dihedral ' + '_'.join(planar[:4])+' \n'
+                f.write('$constraint_freeze \n')
+                f.write(first_string_to_write)
+                f.write(second_string_to_write)
+                f.write('$end')
+                f.close()
 
         return (self.empty_job, self.empty_sp_inpath)
 
