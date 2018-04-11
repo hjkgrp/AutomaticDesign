@@ -9,6 +9,7 @@ import string
 import numpy
 import subprocess
 from ga_tools import *
+from molSimplify.Classes.mol3D import mol3D
 from molSimplify.Classes import *
 from optgeo_extract import *
 from molSimplify.Informatics.autocorrelation import *
@@ -19,6 +20,7 @@ from molSimplify.Informatics.geo_analyze import *
 from molSimplifyAD.ga_oct_check import *
 from molSimplifyAD.ga_io_control import *
 from molSimplifyAD.ga_tools import get_current_GA
+
 
 ########### UNIT CONVERSION
 
@@ -169,7 +171,7 @@ class DFTRun:
             flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, dict_check=dict_oct_check_st,
                                                        debug=debug)
         else:
-            flag_oct, flag_list, dict_oct_info = IsStruct(self.geopath,
+            flag_oct, flag_list, dict_oct_info = IsStructure(self.geopath,
                                                           dict_check=dict_oneempty_check_st,
                                                           debug=debug)
         self.flag_oct = flag_oct
@@ -193,7 +195,7 @@ class DFTRun:
             flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, self.init_geopath, dict_check=dict_oct_check_st,
                                                        debug=debug)
         else:
-            flag_oct, flag_list, dict_oct_info = IsStruct(self.geopath, self.init_geopath,
+            flag_oct, flag_list, dict_oct_info = IsStructure(self.geopath, self.init_geopath,
                                                           dict_check=dict_oneempty_check_st,
                                                           debug=debug)
         self.flag_oct = flag_oct
@@ -219,7 +221,7 @@ class DFTRun:
                                                            dict_check=dict_oct_check_loose,
                                                            debug=debug)
             else:
-                flag_oct, flag_list, dict_oct_info = IsStruct(self.progpath, self.init_geopath,
+                flag_oct, flag_list, dict_oct_info = IsStructure(self.progpath, self.init_geopath,
                                                               dict_check=dict_oneempty_check_loose,
                                                               debug=debug)
             self.flag_oct = flag_oct
@@ -238,7 +240,7 @@ class DFTRun:
                 flag_oct, flag_list, dict_oct_info = IsOct(self.progpath, dict_check=dict_oct_check_loose,
                                                            debug=debug)
             else:
-                flag_oct, flag_list, dict_oct_info = IsStruct(self.progpath,
+                flag_oct, flag_list, dict_oct_info = IsStructure(self.progpath,
                                                               dict_check=dict_oneempty_check_loose,
                                                               debug=debug)
             self.flag_oct = flag_oct
@@ -367,7 +369,7 @@ class DFTRun:
                        '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0'
         self.thermo_inpath = path_dictionary['thermo_infiles'] + self.name + '.in'
         self.solvent_inpath = path_dictionary['solvent_infiles'] + self.name + '.in'
-        self.init_sp_inpath = path_dictionary['sp_infiles'] + self.name + '.in'
+        self.init_sp_inpath = path_dictionary['sp_in_path'] + self.name + '.in'
         ### check thermo
         if not os.path.exists(self.thermo_inpath):
             f_thermo = open(self.thermo_inpath, 'w')
@@ -473,9 +475,9 @@ class DFTRun:
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         new_name, reference_name = renameOxoEmpty(self.job)
         new_name = new_name.strip('.in')
-        reference_name = basename.strip('.in')
+        reference_name = reference_name.strip('.in')
         geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
-        geo_ref_file = open('geo_ref')
+        geo_ref_file = open(geo_ref)
         lines = geo_ref_file.readlines()
         lines[0] = str(int(lines[0].split()[0])-1)+'\n'
         new_ref = path_dictionary["initial_geo_path"] + new_name + '.xyz'
@@ -483,7 +485,7 @@ class DFTRun:
         new_ref_file.writelines([item for item in lines])
         new_ref_file.close()
         geo_ref_file.close()
-        self.empty_sp_inpath = path_dictionary['sp_infiles'] + new_name + '.in'
+        self.empty_sp_inpath = path_dictionary['sp_in_path'] + new_name + '.in'
         self.empty_inpath = path_dictionary['infiles'] + new_name + '.in'
         self.empty_job = path_dictionary['job_path'] + new_name + '.in'
         ### write files
@@ -524,6 +526,23 @@ class DFTRun:
                             f.write(line)
                 f.write('coordinates ' + new_ref + ' \n')
                 f.write('end\n')
+                f.write('\n')
+                #### We want to freeze the M3L and M4L dihedrals as to how they were for the geo opt for the 6 coord structure
+                temp = mol3D()
+                temp.readfromxyz(new_ref)
+                metal_ind = temp.findMetal()[0]
+                fixed_atoms = list()
+                fixed_atoms = temp.getBondedAtomsSmart(metal_ind) #Smart used so that the correct connecting atom constraints are used
+                planar = fixed_atoms[:4]
+                metal_ind_mod = metal_ind+1 # 1-based indices
+                planar = [str(int(i)+1) for i in planar] # 1-based indices
+                first_string_to_write = 'dihedral ' + '_'.join(planar[:3])+ '_'+str(metal_ind_mod)+' \n'
+                second_string_to_write = 'dihedral ' + '_'.join(planar[:4])+' \n'
+                f.write('$constraint_freeze \n')
+                f.write(first_string_to_write)
+                f.write(second_string_to_write)
+                f.write('$end')
+                f.close()
 
         return (self.empty_job, self.empty_sp_inpath)
 
@@ -869,6 +888,7 @@ class Comp:
 
     def get_descriptor_vector(self, loud=False, name=False):
         results_dictionary = generate_all_ligand_misc(self.mol, loud)
+        self.mol.update_graph_check()
         self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax'], 'misc', 'ax')
         self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq'], 'misc', 'eq')
         results_dictionary = generate_all_ligand_autocorrelations(self.mol, depth=3, loud=True, name=name)

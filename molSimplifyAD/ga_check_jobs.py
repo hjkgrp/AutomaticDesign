@@ -46,7 +46,9 @@ def check_all_current_convergence():
         ## 3 -> not converged,  no prog geo found, considered dead
         ## 4 -> job appears to be live
         ## 5 -> unknown result, not assigned
-        ## 6 -> give up, no progress
+        ## 6 -> uncaught error, likely SCF did not converge or other error
+        ## 7 -> allowed submissions exceeded  (in ga_monitor)
+        ## 8 -> prog geo was found, but was a bad geo
         ## 12-> job requests thermo
         ## 13-> job requests solvent
         
@@ -62,6 +64,13 @@ def check_all_current_convergence():
                 this_run.number = slot
                 this_run.gen= gen
                 this_run.job = jobs 
+                
+                ## check empty
+                #print('AXLIG2 HERE!!!!!!!',axlig2)
+                if axlig2 == 'x':
+                    this_run.octahedral = False
+                else:
+                    this_run.octahedral = True
                 
                 alpha = float(ahf)
                 this_run.logpath = path_dictionary['state_path']
@@ -135,7 +144,7 @@ def check_all_current_convergence():
                     print('converged run, alpha is ' + str(this_run.alpha))
                     run_success = False
                     # perfrom health checks on complex here
-                    if this_run.coord == 6:
+                    if (this_run.coord == 6 and this_run.octahedral == True) or (this_run.coord == 5 and this_run.octahedral == False):
                         run_success = True
                     # check run is complete?
                     if this_run.alpha == 20: #only thermo and solvent for
@@ -181,13 +190,34 @@ def check_all_current_convergence():
                     if ahf in HFXorderingdict.keys():
                             newHFX = HFXorderingdict[ahf][0]
                             refHFX = HFXorderingdict[ahf][1]
-                            if this_run.coord == 6: ## don't bother if failed
+                            if this_run.coord == 6 and this_run.octahedral == True: ## don't bother if failed
                                     HFX_job = this_run.write_HFX_inputs(newHFX,refHFX)              
                                     if (HFX_job not in joblist) and (HFX_job not in outstanding_jobs) and (HFX_job not in converged_jobs.keys()):
                                             print('note: converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref '+ refHFX)
                                             logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref ' + refHFX)
 
                                             add_to_outstanding_jobs(HFX_job)
+                                    if GA_run.config['oxocatalysis'] == True:
+                                            empty_job, empty_sp = this_run.write_empty_inputs()
+                                            if (empty_job not in joblist) and (empty_job not in outstanding_jobs) and (empty_job not in converged_jobs.keys()):
+                                                    print('note: converting from oxo structure to empty structure')
+                                                    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure')
+                                                    add_to_outstanding_jobs(empty_job)
+                                            if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (empty_sp not in converged_jobs.keys()):
+                                                    print('note: converting from oxo structure to empty structure (SP)')
+                                                    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure (SP)')
+                                                    add_to_outstanding_jobs(empty_sp)
+                    elif GA_run.config['oxocatalysis']==True: #Must do this because the empty sites are one step behind the 6-coordinates at different HFX
+                            empty_job, empty_sp = this_run.write_empty_inputs()
+                            if (empty_job not in joblist) and (empty_job not in outstanding_jobs) and (empty_job not in converged_jobs.keys()):
+                                    print('note: converting from oxo structure to empty structure')
+                                    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure')
+                                    add_to_outstanding_jobs(empty_job)
+                            if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (empty_sp not in converged_jobs.keys()):
+                                    print('note: converting from oxo structure to empty structure (SP)')
+                                    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure (SP)')
+                                    add_to_outstanding_jobs(empty_sp)
+
 
                 if not this_run.converged and not this_run.islive:
                         print(' job  ' + str(this_run.outpath) + ' not converged')
@@ -195,21 +225,24 @@ def check_all_current_convergence():
                         this_run.extract_prog()
                         if this_run.progstatus ==0:
                             flag_oct, flag_list, dict_oct_info = this_run.check_oct_on_prog()
-                            logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+'Check on prog_geo: flag_oct: %d'%flag_oct)
-                            logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+' Current structure is supposed to be octahedral:', this_run.octahedral)
+                            logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+' Check on prog_geo: flag_oct: '+str(flag_oct))
+                            logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+' Current structure is supposed to be octahedral: '+str(this_run.octahedral))
                             if not flag_oct:
-                                 logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+'Bad geometry because of flag_list: %s'%str(flag_list))
-                                 logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+'Metrics : %s'%str(dict_oct_info))                           
+                                 logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+' Bad geometry because of flag_list: '+str(flag_list))
+                                 logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+' Metrics : '+str(dict_oct_info))                           
                             if this_run.progstatus ==0:
                                 sub_number=submitted_job_dictionary[jobs] 
                                 this_run.archive(sub_number)
                                 create_generic_infile(jobs,restart=True)
-                                this_run.status = 2
+                                this_run.status = 2 ## prog geo is good
+                                logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+' job allowed to restart since good prog geo found ')
                             else:
-                                this_run.status = 6     
+                                logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+' job not allowed to restart since prog geo is not good ')
+                                this_run.status = 8  ## prog geo is bad
                                         
                         else:
-                            this_run.status = 6 ## no prog!
+                            this_run.status = 3 ## no prog found!
+                            logger(base_path_dictionary['state_path'], str(datetime.datetime.now())+' job not allowed to restart since no prog geo could be found')
                             if this_run.alpha == 20:
                                     shutil.copy(this_run.init_geopath,path_dictionary['stalled_jobs'] + this_run.name + '.xyz')
                         try:
@@ -234,19 +267,24 @@ def check_all_current_convergence():
                             if this_run.status ==12: ## needs thermo:
                                 print('addding based on ' + str(jobs))
                                 add_to_outstanding_jobs(this_run.thermo_inpath)
-                if this_run.status in [3,5,6]: ##  convergence is not successful!                    
+                if this_run.status in [3,5,6,8]: ##  convergence is not successful!                    
                         number_of_subs = submitted_job_dictionary[jobs]
-                        print(' no result found for job '+str(jobs) + ' after ' + str(number_of_subs))
-                        logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
-                                   + " failure at job : " + str(jobs) + ' with status '+ str(this_run.status)
-                                   +' after ' + str(number_of_subs))
-                        if number_of_subs >2 :
-                                print(' giving up on job '+str(jobs) + ' after ' + str(number_of_subs))
+                        if this_run.status in [3,5,6]: ## unknown error, allow retry 
+                            print(' no result found for job '+str(jobs) + ' after ' + str(number_of_subs))
+                            logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
+                                       + " failure at job : " + str(jobs) + ' with status '+ str(this_run.status)
+                                       +' after ' + str(number_of_subs)+ ' subs, trying again... ' )
+                            if number_of_subs >2 :
+                                    print(' giving up on job '+str(jobs) + ' after ' + str(number_of_subs))
+                                    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
+                                       + " giving up on job : " + str(jobs) + ' with status '+ str(this_run.status)
+                                       +' after ' + str(number_of_subs) + ' subs ' )
+                                    remove_outstanding_jobs(jobs) # take out of pool
+                        elif this_run.status in [8]: ## bad prog geo, no hope to restart
                                 logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
-                                   + " giving up on job : " + str(jobs) + ' with status '+ str(this_run.status)
-                                   +' after ' + str(number_of_subs))
+                                       + " giving up on job : " + str(jobs) + ' with status '+ str(this_run.status)
+                                       +' after ' + str(number_of_subs) + ' subs since prog geo was bad' )
                                 remove_outstanding_jobs(jobs) # take out of pool
-
                 print('END OF JOB \n *******************\n')
 
         print('matching DFT runs ... \n')

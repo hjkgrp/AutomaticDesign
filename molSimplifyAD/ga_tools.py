@@ -96,7 +96,7 @@ def get_metals():
         return metals_list
 ########################
 def get_ox_states(): # could be made metal dependent like spin
-        ox_list = [2,3]
+        ox_list = [2,3,4,5]
         return ox_list
 ########################
 def spin_dictionary():
@@ -105,8 +105,8 @@ def spin_dictionary():
         if GA_run.config["all_spins"]:
             metal_spin_dictionary = {'co':{2:[2,4],3:[1,3,5]}, 
                                      'cr':{2:[1,3,5],3:[2,4]},
-                                     'fe':{2:[1,3,5],3:[2,4,6]},
-                                     'mn':{2:[2,4,6],3:[1,3,5]}}
+                                     'fe':{2:[1,3,5],3:[2,4,6],4:[1,3,5],5:[2,4,6] },
+                                     'mn':{2:[2,4,6],3:[1,3,5],4:[2,4,6],5:[1,3,5]}}
         else:
             metal_spin_dictionary = {'co':{2:[2,4],3:[1,5]},
                                      'cr':{2:[1,5],3:[2,4]},
@@ -116,8 +116,8 @@ def spin_dictionary():
         if GA_run.config["all_spins"]:
             metal_spin_dictionary = {'co':{2:[2,4],3:[1,3,5]},
                                      'cr':{2:[3,5],3:[2,4]},
-                                     'fe':{2:[1,3,5],3:[2,4,6]},
-                                     'mn':{2:[2,4,6],3:[3,5]}}
+                                     'fe':{2:[1,3,5],3:[2,4,6],4:[1,3,5],5:[2,4,6]},
+                                     'mn':{2:[2,4,6],3:[1,3,5],4:[2,4,6],5:[1,3,5]}}
         else:
             metal_spin_dictionary = {'co':{2:[2,4],3:[1,5]},
                                      'cr':{2:[3,5],3:[2,4]},
@@ -205,6 +205,25 @@ def renameHFX(job,newHFX):
     new_name = "_".join(ll)
     return new_name
 #######################
+def renameOxoEmpty(job):
+    # renames Oxo job to empty job
+    base = os.path.basename(job)
+    base = base.strip("\n")
+    basename = base.strip(".in")
+    basename = base.strip(".xyz")
+    basename = base.strip(".out")
+    ll = (str(basename)).split("_")
+    ligs = get_ligands()
+    for i, item in enumerate(ligs):
+        if 'x' in item:
+            value = str(i)
+    ## replace ax1 with x index
+    ll[7] = value
+    ## replace metal oxidation with 2 less
+    ll[5] = str(int(ll[5])-2)
+    new_name = "_".join(ll)
+    return new_name, basename
+#######################
 def to_decimal_string(inp):
     # nusiance function to convert
     # int strings (in %) to decimal strings
@@ -238,6 +257,7 @@ def setup_paths():
     path_dictionary = {
                    "geo_out_path"     : working_dir + "geo_outfiles/",
                    "sp_out_path"      : working_dir + "sp_outfiles/",
+                   "sp_in_path"       : working_dir + "sp_infiles/",
                    "scr_path"         : working_dir + "scr/geo/",
                    "queue_output"     : working_dir + "queue_output/",
                    "thermo_out_path"  : working_dir + "thermo_outfiles/",                   
