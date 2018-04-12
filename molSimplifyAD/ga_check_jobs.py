@@ -274,7 +274,7 @@ def check_all_current_convergence():
                             logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                                        + " failure at job : " + str(jobs) + ' with status '+ str(this_run.status)
                                        +' after ' + str(number_of_subs)+ ' subs, trying again... ' )
-                            if number_of_subs >2 :
+                            if int(number_of_subs) > 2:
                                     print(' giving up on job '+str(jobs) + ' after ' + str(number_of_subs))
                                     logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                                        + " giving up on job : " + str(jobs) + ' with status '+ str(this_run.status)
