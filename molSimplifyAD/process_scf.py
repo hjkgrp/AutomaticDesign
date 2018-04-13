@@ -36,7 +36,7 @@ def test_terachem_sp_convergence(job):
     #  @return this_run populated run class
     ### get paths
     path_dictionary = setup_paths()
-    gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename = translate_job_name(job)
+    gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename,basegene = translate_job_name(job)
     this_GA = get_current_GA()
     exchange = ahf
     alpha=float(exchange)
@@ -46,7 +46,11 @@ def test_terachem_sp_convergence(job):
     this_run=DFTRun(basename)
     this_run.status = 1
     ### test if outfile exits
-    this_run.outpath = (path_dictionary["out_path" ] + "/gen_" + str(gen) +"/"
+    if this_GA.config["oxocatalysis"]:
+        this_run.outpath = (path_dictionary["sp_out_path"] + "/gen_" + str(gen) +"/"
+                           + basename + ".out")
+    else:
+        this_run.outpath = (path_dictionary["out_path" ] + "/gen_" + str(gen) +"/"
                            + basename + ".out")
     ## load details into run
     this_run.configure(metal,ox,eqlig,axlig1,axlig2,spin,alpha,spin_cat)
@@ -118,6 +122,7 @@ def process_runs_sp(LS_runs,HS_runs):
         else:
             print('unmatched ID: '+ str(this_gene) + ' files ' + str(LS_run.name)+ ' has no partner' )
     return final_results
+
 def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary,local_metal_list=False):
     ## function to find mathcing runs by gene
     ## and extract their properties
@@ -253,6 +258,130 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary,local_met
         ###
         final_results.update({this_name:this_comp})
     return final_results
+
+def process_runs_oxocatalysis(all_runs,list_of_prop_names,local_spin_dictionary,local_metal_list=False):
+    ## function to find matching runs by gene
+    ## and extract their properties
+    ##  for terachem GO runs
+    #  @param all_runs list of runs
+    #  @param list_of_prop_names list of properties
+    #                            to carry over
+    #  @param local_spin_dictionary metals and spin states
+    #                               used to define low and
+    #                               high spins expected
+    #  @return final_results dictionary of comparisons keyed by gene
+    final_results=dict()
+    if not local_metal_list:
+        local_metal_list = get_metals()
+    matched = False
+    number_of_matches  = 0
+    print(local_spin_dictionary)
+    print('processing all converged runs')
+    for runkeys in all_runs.keys():
+        skip = False
+        duplication = False
+        this_run = all_runs[runkeys]
+        if this_run.metal in local_metal_list:
+            this_metal = this_run.metal
+        else:
+            this_metal = local_metal_list[int(this_run.metal)]
+
+
+        ## special catch of SMILEs ligands:
+        if hasattr(this_run.eqlig,'__iter__'): # SMILEs string
+            eliq_name = 'smi' + str(this_run.eqlig_ind)
+        else:
+            eqlig_name = this_run.eqlig
+
+        if hasattr(this_run.axlig1 ,'__iter__'): # SMILEs string
+            axlig1_name = 'smi' + str(this_run.axlig1_ind)
+        else:
+            axlig1_name = this_run.axlig1
+        
+        if hasattr(this_run.axlig2 ,'__iter__'): # SMILEs string
+            axlig2_name = 'smi' + str(this_run.axlig2_ind)
+        else:
+            axlig2_name = this_run.axlig2
+            
+                
+        this_name = "_".join([this_metal,'eq',str(eqlig_name),'ax1',str(axlig1_name),'ahf',str(this_run.alpha)])
+                ### add alpha value to list owned by this_comp:
+        
+        this_ox = int(this_run.ox)
+        if this_ox == 4 or this_ox == 2:
+            this_ox = 2
+        elif this_ox == 5 or this_ox == 3:
+            this_ox = 3 #For now, treating both as this ox
+       
+        metal_spins  = local_spin_dictionary[this_metal][this_ox]
+        
+        print('Metal',this_metal,'Ox',this_ox)
+        print('This_run.spin!!!!',this_run.spin)
+        print('METAL SPINS',metal_spins)
+        if this_run.spin not in metal_spins:
+           print('ERROR! not in metal spins : ' +  str(this_run) + ' not in ' +  str(metal_spins))
+        else:
+            spin_ind = metal_spins.index(this_run.spin)
+            if spin_ind == 0:
+                spin_cat = 'LS'
+            elif spin_ind == 1:
+                spin_cat = 'IS'
+            else:
+                spin_cat = 'HS'
+        print('spin ind is found to be ' + str(this_run.spin) + ' interpretted as ' + str(spin_cat))
+        if this_name not in final_results.keys():
+            ## need to create a new holder to store this gene
+            this_comp = Comp(this_name)
+            this_comp.set_properties(this_run)
+            for props in list_of_prop_names:
+                for spin_val in ['LS','IS','HS']:
+                    for ox_val in ['4','5']:
+                        for catax_val in ['x','oxo']:
+                            this_attribute = "_".join(['ox',str(ox_val),spin_val,str(catax_val),props])
+                            #print(this_attribute)
+                            setattr(this_comp,this_attribute,'undef')
+                            if 'converged' or 'time' or 'set_desc' in this_attribute:
+                                setattr(this_comp,this_attribute,False)
+                            if 'convergence' or 'attempted' in this_attribute or this_attribute == 'split':
+                                setattr(this_comp,this_attribute,0)
+                            if 'descriptor' in this_attribute:
+                                setattr(this_comp,this_attribute,list())
+        else:
+            this_comp = final_results[this_name]
+        print(runkeys)
+        this_comp.attempted += 1 # advance number of attempts
+        ## get basic details
+        ## assuming no duplicates:
+        if True:
+            if this_comp.gene =='undef':
+                this_comp.gene = this_run.gene
+            if this_run.converged and this_run.flag_oct==1:
+                this_comp.convergence += 1
+            if this_run.flag_oct==1 and this_run.num_coord_metal == 6  and not this_comp.set_desc:
+                try:
+                    if not os.path.isdir('used_geos/'):
+                        os.mkdir('used_geos/')
+                    this_run.mol.writexyz('used_geos/'+this_name+'.xyz')
+                    this_comp.axlig1 = this_run.axlig1
+                    this_comp.axlig2 = this_run.axlig2
+                    this_comp.eqlig = this_run.eqlig
+                    this_comp.set_rep_mol(this_run)
+                    this_comp.get_descriptor_vector(loud=False,name=this_name)
+                except:
+                    if not os.path.isdir('bad_geos/'):
+                        os.mkdir('bad_geos/')
+                    this_run.mol.writexyz('bad_geos/'+this_name+'.xyz')
+                    this_comp.convergence -= 1
+                    this_run.coord = 'error'
+            for props in list_of_prop_names:
+                    this_attribute = "_".join(['ox',str(this_ox),spin_cat,str(axlig2_name),props])
+                    setattr(this_comp,this_attribute,getattr(this_run,props))
+        this_comp.get_some_split()
+        ###
+        final_results.update({this_name:this_comp})
+    return final_results
+
+
     
 def check_solvent_file(this_run):
     ## function to test solvent single point convergence
@@ -471,7 +600,7 @@ def test_terachem_go_convergence(this_run):
 
 		
         print('this flag oct is '+ str(this_run.flag_oct))
-        if this_run.coord == 6 and this_run.converged and this_run.flag_oct == 1:
+        if this_run.converged and this_run.flag_oct == 1:
             this_run.status = 0
             if not this_run.tspin == this_run.spin:
                 print(this_run.tspin)
