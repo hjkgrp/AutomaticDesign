@@ -171,7 +171,7 @@ class DFTRun:
             flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, dict_check=dict_oct_check_st,
                                                        debug=debug)
         else:
-            flag_oct, flag_list, dict_oct_info = IsStruct(self.geopath,
+            flag_oct, flag_list, dict_oct_info = IsStructure(self.geopath,
                                                           dict_check=dict_oneempty_check_st,
                                                           debug=debug)
         self.flag_oct = flag_oct
@@ -195,7 +195,7 @@ class DFTRun:
             flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, self.init_geopath, dict_check=dict_oct_check_st,
                                                        debug=debug)
         else:
-            flag_oct, flag_list, dict_oct_info = IsStruct(self.geopath, self.init_geopath,
+            flag_oct, flag_list, dict_oct_info = IsStructure(self.geopath, self.init_geopath,
                                                           dict_check=dict_oneempty_check_st,
                                                           debug=debug)
         self.flag_oct = flag_oct
@@ -221,7 +221,7 @@ class DFTRun:
                                                            dict_check=dict_oct_check_loose,
                                                            debug=debug)
             else:
-                flag_oct, flag_list, dict_oct_info = IsStruct(self.progpath, self.init_geopath,
+                flag_oct, flag_list, dict_oct_info = IsStructure(self.progpath, self.init_geopath,
                                                               dict_check=dict_oneempty_check_loose,
                                                               debug=debug)
             self.flag_oct = flag_oct
@@ -240,7 +240,7 @@ class DFTRun:
                 flag_oct, flag_list, dict_oct_info = IsOct(self.progpath, dict_check=dict_oct_check_loose,
                                                            debug=debug)
             else:
-                flag_oct, flag_list, dict_oct_info = IsStruct(self.progpath,
+                flag_oct, flag_list, dict_oct_info = IsStructure(self.progpath,
                                                               dict_check=dict_oneempty_check_loose,
                                                               debug=debug)
             self.flag_oct = flag_oct

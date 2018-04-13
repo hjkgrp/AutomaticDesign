@@ -139,8 +139,8 @@ def submit_outstanding_jobs():
 
                     else: # give up on this job 
                         logger(path_dictionary['state_path'],str(datetime.datetime.now())
-                           + " Giving up on job : " + str(jobs) + ' with '+ str(number_of_attempts) + ' attempts')
-                        update_converged_job_dictionary(jobs,6) # mark job as abandoned 
+                           + " Giving up on job : " + str(jobs) + ' after '+ str(number_of_attempts) + ' attempts')
+                        update_converged_job_dictionary(jobs,7) # mark job as abandoned 
                         if not "thermo" in jobs and not "solvent" in jobs:
                             gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename,basegene=translate_job_name(jobs)
                             if ahf == float(this_GA.config["exchange"]): # if this is the target HFX frac
