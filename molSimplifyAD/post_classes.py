@@ -482,9 +482,10 @@ class DFTRun:
         lines[0] = str(int(lines[0].split()[0])-1)+'\n'
         new_ref = path_dictionary["initial_geo_path"] + new_name + '.xyz'
         new_ref_file = open(new_ref, 'w')
-        new_ref_file.writelines([item for item in lines])
+        new_ref_file.writelines([item for item in lines[:-1]])
         new_ref_file.close()
         geo_ref_file.close()
+        print('NEW REF is THIS:', new_ref, 'Referenced THIS:',geo_ref)
         self.empty_sp_inpath = path_dictionary['sp_in_path'] + new_name + '.in'
         self.empty_inpath = path_dictionary['infiles'] + new_name + '.in'
         self.empty_job = path_dictionary['job_path'] + new_name + '.in'
@@ -493,7 +494,7 @@ class DFTRun:
             f_emptysp = open(self.empty_sp_inpath, 'w')
             ## write SP
             f_emptysp.write('run energy \n')
-            f_emptysp.write('scrdir scr/init_sp/  \n')
+            f_emptysp.write('scrdir scr/sp/gen_' + str(self.gen) + '/' + new_name + '\n')
             f_emptysp.write('coordinates ' + new_ref + ' \n')
             with open(self.inpath, 'r') as ref:
                 for line in ref:
