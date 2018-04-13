@@ -41,6 +41,9 @@ def launch_job(job,sub_num):
                       # for thermo/solvent
                       # these are stored as 
                       # infiles onlt
+    elif axlig2 == 'x' and "sp_infiles" in job:
+        cmd_script = "launch_script_sp.sh"
+        infile = job
     else:
         if GA_run.config["optimize"]:
             cmd_script = "launch_script_geo.sh"
