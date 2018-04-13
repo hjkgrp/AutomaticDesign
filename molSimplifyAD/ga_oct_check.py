@@ -200,7 +200,7 @@ def ligand_comp_org(file_in, file_init_geo, catoms_arr, flag_deleteH=True, flag_
                     foo.write('number of atoms not necessary\n')
                     foo.write('tmp file for ligands comparison\n')
                     for ii, line in enumerate(fo):
-                        if (ii-posi_shift) in lig:
+                        if (ii - posi_shift) in lig:
                             if debug:
                                 print('line is', line)
                             foo.write(line)
@@ -210,17 +210,18 @@ def ligand_comp_org(file_in, file_init_geo, catoms_arr, flag_deleteH=True, flag_
                     foo.write('number of atoms not necessary\n')
                     foo.write('tmp file for ligands comparison\n')
                     for ii, line in enumerate(fo):
-                        if (ii-posi_shift) in lig_init:
+                        if (ii - posi_shift) in lig_init:
                             foo.write(line)
             tmp_mol = create_mol_with_xyz('tmp.xyz')
             tmp_org_mol = create_mol_with_xyz('tmp_org.xyz')
             if debug:
                 print('# atoms: %d, init: %d' % (tmp_mol.natoms, tmp_org_mol.natoms))
-                print('!!!!atoms:', [x.symbol() for x in tmp_mol.getAtoms()], [x.symbol() for x in tmp_org_mol.getAtoms()])
+                print('!!!!atoms:', [x.symbol() for x in tmp_mol.getAtoms()],
+                      [x.symbol() for x in tmp_org_mol.getAtoms()])
             if flag_deleteH:
                 tmp_mol.deleteHs()
                 tmp_org_mol.deleteHs()
-            # ---openbabel li
+            # ---openbabel alignment
             # tmp_org_mol.convert2OBMol()
             # tmp_mol.convert2OBMol()
             # OBAlign = openbabel.OBAlign(tmp_org_mol.OBMol,tmp_mol.OBMol)
@@ -380,9 +381,37 @@ def oct_comp(file_in, angle_ref=oct_angle_ref, catoms_arr=None,
     return oct_angle_devi, oct_dist_del, max_del_sig_angle, catoms_arr
 
 
+def dict_check_processing(dict_info, dict_check, std_not_use,
+                          num_coord=6, debug=False):
+    if debug:
+        print('dict_oct_info', dict_info)
+    for ele in std_not_use:
+        dict_info[ele] = 'banned_by_user'
+    flag_list = []
+    for key, values in dict_check.items():
+        if not dict_info[key] == 'banned_by_user':
+            if dict_info[key] > values:
+                flag_list.append(key)
+    if dict_info['num_coord_metal'] < 6:
+        flag_list.append('num_coord_metal')
+    if flag_list == ['num_coord_metal'] and \
+            (dict_info['num_coord_metal'] == -1 or dict_info['num_coord_metal'] > num_coord):
+        dict_info['num_coord_metal'] = num_coord
+        flag_list.remove('num_coord_metal')
+    if not len(flag_list):
+        flag_oct = 1  # good structure
+        flag_list = 'None'
+    else:
+        flag_oct = 0
+        flag_list = ', '.join(flag_list)
+        print('------bad structure!-----')
+        print('flag_list:', flag_list)
+    return flag_oct, flag_list, dict_info
+
+
 def Oct_inspection(file_in, file_init_geo=None, catoms_arr=None, dict_check=dict_oct_check_st,
                    std_not_use=[], angle_ref=oct_angle_ref, flag_loose=True, flag_lbd=False,
-                   dict_check_loose=dict_oct_check_loose):
+                   dict_check_loose=dict_oct_check_loose, debug=False):
     if catoms_arr == None:
         print('Error, must have ctoms! If not, please use IsOct.')
         quit()
@@ -392,9 +421,6 @@ def Oct_inspection(file_in, file_init_geo=None, catoms_arr=None, dict_check=dict
     num_coord_metal = 6
     oct_angle_devi, oct_dist_del, max_del_sig_angle = [-1, -1], [-1, -1, -1, -1], -1
     rmsd_max, atom_dist_max = -1, -1
-    if not file_init_geo == None:
-        print('!!!Inspection,flag_loose:', flag_loose)
-        rmsd_max, atom_dist_max = ligand_comp_org(file_in, file_init_geo, flag_loose=flag_loose, flag_lbd=flag_lbd)
     if not rmsd_max == 'lig_mismatch':
         oct_angle_devi, oct_dist_del, max_del_sig_angle, catoms_arr = oct_comp(file_in, angle_ref, catoms_arr)
     else:
@@ -402,6 +428,12 @@ def Oct_inspection(file_in, file_init_geo=None, catoms_arr=None, dict_check=dict
         rmsd_max, atom_dist_max = -1, -1
         print('!!!!!Should always match. WRONG!!!!!')
         quit()
+    if not file_init_geo == None:
+        # print('!!!Inspection,flag_loose:', flag_loose)
+        rmsd_max, atom_dist_max = ligand_comp_org(file_in, file_init_geo,
+                                                  flag_loose=flag_loose,
+                                                  flag_lbd=flag_lbd,
+                                                  catoms_arr=catoms_arr)
     dict_oct_info = {}
     dict_oct_info['num_coord_metal'] = num_coord_metal
     dict_oct_info['rmsd_max'] = rmsd_max
@@ -412,35 +444,43 @@ def Oct_inspection(file_in, file_init_geo=None, catoms_arr=None, dict_check=dict
     dict_oct_info['dist_del_ax'] = oct_dist_del[1]
     dict_oct_info['dist_del_eq_ax'] = oct_dist_del[2]
     dict_oct_info['dist_del_all'] = oct_dist_del[3]
-    print('dict_oct_info', dict_oct_info)
-    for ele in std_not_use:
-        dict_oct_info[ele] = 'banned_by_user'
-    flag_list = []
-    for key, values in dict_check.items():
-        if not dict_oct_info[key] == 'banned_by_user':
-            if dict_oct_info[key] > values:
-                flag_list.append(key)
-    if not len(flag_list):
-        flag_oct = 1  # good structure
-        flag_list = 'None'
-    else:
-        flag_oct = 0
-        flag_list = ', '.join(flag_list)
-        print('------bad structure!-----')
-        print('flag_list:', flag_list)
-    flag_list_loose = []
-    for key, values in dict_check_loose.items():
-        if not dict_oct_info[key] == 'banned_by_user':
-            if dict_oct_info[key] > values:
-                flag_list_loose.append(key)
-    if not len(flag_list_loose):
-        flag_oct_loose = 1  # good structure
-        flag_list_loose = 'None'
-    else:
-        flag_oct_loose = 0
-        flag_list_loose = ', '.join(flag_list_loose)
-        print('------bad structure!-----')
-        print('flag_list_loose:', flag_list_loose)
+    # print('dict_oct_info', dict_oct_info)
+    # for ele in std_not_use:
+    #     dict_oct_info[ele] = 'banned_by_user'
+    # flag_list = []
+    # for key, values in dict_check.items():
+    #     if not dict_oct_info[key] == 'banned_by_user':
+    #         if dict_oct_info[key] > values:
+    #             flag_list.append(key)
+    # if not len(flag_list):
+    #     flag_oct = 1  # good structure
+    #     flag_list = 'None'
+    # else:
+    #     flag_oct = 0
+    #     flag_list = ', '.join(flag_list)
+    #     print('------bad structure!-----')
+    #     print('flag_list:', flag_list)
+    # flag_list_loose = []
+    # for key, values in dict_check_loose.items():
+    #     if not dict_oct_info[key] == 'banned_by_user':
+    #         if dict_oct_info[key] > values:
+    #             flag_list_loose.append(key)
+    # if not len(flag_list_loose):
+    #     flag_oct_loose = 1  # good structure
+    #     flag_list_loose = 'None'
+    # else:
+    #     flag_oct_loose = 0
+    #     flag_list_loose = ', '.join(flag_list_loose)
+    #     print('------bad structure!-----')
+    #     print('flag_list_loose:', flag_list_loose)
+    flag_oct, flag_list, dict_oct_info = dict_check_processing(dict_oct_info,
+                                                               dict_check=dict_check,
+                                                               std_not_use=std_not_use,
+                                                               num_coord=6, debug=debug)
+    flag_oct_loose, flag_list_loose, __ = dict_check_processing(dict_oct_info,
+                                                                dict_check=dict_check_loose,
+                                                                std_not_use=std_not_use,
+                                                                num_coord=6, debug=debug)
     return flag_oct, flag_list, dict_oct_info, flag_oct_loose, flag_list_loose
 
 
@@ -456,10 +496,6 @@ def IsOct(file_in, file_init_geo=None, dict_check=dict_oct_check_st,
         catoms = catoms_arr
         num_coord_metal = len(catoms_arr)
 
-    # if file_init_geo != None and num_coord_metal>=6:
-    #     rmsd_max, atom_dist_max = ligand_comp_org(file_in, file_init_geo)
-    # else:
-    #     rmsd_max, atom_dist_max = -1, -1
     oct_angle_devi, oct_dist_del, max_del_sig_angle = [-1, -1], [-1, -1, -1, -1], -1
     rmsd_max, atom_dist_max = -1, -1
     catoms_arr = catoms
@@ -481,25 +517,9 @@ def IsOct(file_in, file_init_geo=None, dict_check=dict_oct_check_st,
     dict_oct_info['max_del_sig_angle'] = max_del_sig_angle
     dict_oct_info['dist_del_eq'] = oct_dist_del[0]
     dict_oct_info['dist_del_all'] = oct_dist_del[3]
-    if debug:
-        print('dict_oct_info', dict_oct_info)
-    for ele in std_not_use:
-        dict_oct_info[ele] = 'banned_by_user'
-    flag_list = []
-    for key, values in dict_check.items():
-        if not dict_oct_info[key] == 'banned_by_user':
-            if dict_oct_info[key] > values:
-                flag_list.append(key)
-    if num_coord_metal < 6:
-        flag_list.append('num_coord_metal')
-    if not len(flag_list):
-        flag_oct = 1  # good structure
-        flag_list = 'None'
-    else:
-        flag_oct = 0
-        flag_list = ', '.join(flag_list)
-        print('------bad structure!-----')
-        print('flag_list:', flag_list)
+    flag_oct, flag_list, dict_oct_info = dict_check_processing(dict_oct_info, dict_check,
+                                                               std_not_use, num_coord=6,
+                                                               debug=debug)
     if not flag_catoms:
         return flag_oct, flag_list, dict_oct_info
     else:
@@ -529,32 +549,9 @@ def IsStructure(file_in, file_init_geo=None, dict_check=dict_oneempty_check_st,
     dict_struct_info['max_del_sig_angle'] = max_del_sig_angle
     dict_struct_info['dist_del_eq'] = struct_dist_del[0]
     dict_struct_info['dist_del_all'] = struct_dist_del[3]
-    if debug:
-        print('dict_struct_info', dict_struct_info)
-    for ele in std_not_use:
-        dict_struct_info[ele] = 'banned_by_user'
-    flag_list = []
-
-    for key, values in dict_check.items():
-        # print(key)
-        if not dict_struct_info[key] == 'banned_by_user':
-            if dict_struct_info[key] > values:
-                flag_list.append(key)
-    ## Case when the num_coord_metal > 6 but still forms a structahedral.
-    if ('num_coord_metal' in flag_list) and (not 'oct_angle_devi_max' in flag_list) and \
-            (not 'dist_del_eq' in flag_list) and (not 'dist_del_ax' in flag_list) and \
-            (not 'dist_del_eq_ax' in flag_list):
-        dict_struct_info['num_coord_metal'] = num_coord
-        flag_list.remove('num_coord_metal')
-
-    if not len(flag_list):
-        flag_struct = 1  # good structure
-        flag_list = 'None'
-    else:
-        flag_struct = 0
-        flag_list = ', '.join(flag_list)
-        print('------bad structure!-----')
-        print('flag_list:', flag_list)
+    flag_struct, flag_list, dict_struct_info = dict_check_processing(dict_struct_info, dict_check,
+                                                                     std_not_use, num_coord=num_coord,
+                                                                     debug=debug)
     if not flag_catoms:
         return flag_struct, flag_list, dict_struct_info
     else:
