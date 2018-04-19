@@ -453,6 +453,8 @@ class octahedral_complex:
                                      '-qccode TeraChem','-runtyp '+rty,'-method UDFT',"-ffoption "+ff_opt,' -ff UFF'])
                             if smicat:
                                 call += ' -smicat ' + smicat
+                            if this_GA.config['oxocatalysis']:
+                                call += ' -qoption dftd,d3 -qoption min_maxiter,1100'
                             print(call)
                             p2 = subprocess.call(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
                     assert(os.path.isfile(rundirpath + 'temp'+'/' + mol_name + '.molinp'))
@@ -480,7 +482,15 @@ class octahedral_complex:
                 elif this_GA.config['symclass']=="weak": ## ANN not currently supported!
                     ANN_split = False
                     ANN_distance = False
-                       
+                if this_GA.config['oxocatalysis']: #Subbing in 1.65 as Oxo BL
+                    print('Modifying initial oxo geom file '+ mol_name + '.xyz to have oxo BL 1.65')
+                    geo_ref_file = open(path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz','r')
+                    lines = geo_ref_file.readlines()
+                    geo_ref_file.close()
+                    geo_replacement = open(path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz','w')
+                    adjusted_lines = lines[:-1]+[lines[-1][:-9]+'1.650000\n']
+                    geo_replacement.writelines(adjusted_lines)
+                    geo_replacement.close()
                 
                 shutil.move(rundirpath + 'temp' +'/' + mol_name + '.report', path_dictionary["ms_reps"] +'/'+ mol_name + '.report')
 
