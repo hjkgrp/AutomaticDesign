@@ -392,7 +392,7 @@ def dict_check_processing(dict_info, dict_check, std_not_use,
         if not dict_info[key] == 'banned_by_user':
             if dict_info[key] > values:
                 flag_list.append(key)
-    if dict_info['num_coord_metal'] < 6:
+    if dict_info['num_coord_metal'] < num_coord:
         flag_list.append('num_coord_metal')
     if flag_list == ['num_coord_metal'] and \
             (dict_info['num_coord_metal'] == -1 or dict_info['num_coord_metal'] > num_coord):

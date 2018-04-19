@@ -128,9 +128,6 @@ class DFTRun:
         self.descriptors = list()
         self.descriptor_names = list()
 
-    def set_geo_check_func(self):
-        GA_run = get_current_GA()
-        self.octahedral = GA_run.config['octahedral']
 
     def obtain_mopac_mol(self):
         this_mol = mol3D()
@@ -166,7 +163,6 @@ class DFTRun:
     def check_oct_needs_final_only(self, debug=False):
         # self.geopath
         # self.mol
-        self.set_geo_check_func()
         if self.octahedral:
             flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, dict_check=dict_oct_check_st,
                                                        debug=debug)
@@ -190,7 +186,6 @@ class DFTRun:
         # self.init_geopath
         # self.mol
         # self.init
-        self.set_geo_check_func()
         if self.octahedral:
             flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, self.init_geopath, dict_check=dict_oct_check_st,
                                                        debug=debug)
@@ -214,7 +209,6 @@ class DFTRun:
     def check_oct_on_prog(self, debug=False):
         # self.progmol
         # self.progpath
-        self.set_geo_check_func()
         if os.path.exists(self.init_geopath):
             if self.octahedral:
                 flag_oct, flag_list, dict_oct_info = IsOct(self.progpath, self.init_geopath,
