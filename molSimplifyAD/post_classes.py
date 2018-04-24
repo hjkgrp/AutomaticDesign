@@ -129,8 +129,12 @@ class DFTRun:
         self.descriptor_names = list()
 
     def set_geo_check_func(self):
-        GA_run = get_current_GA()
-        self.octahedral = GA_run.config['octahedral']
+        
+        try:
+                GA_run = get_current_GA()
+                self.octahedral = GA_run.config['octahedral']
+        except:
+                self.octahedral = True
 
     def obtain_mopac_mol(self):
         this_mol = mol3D()
