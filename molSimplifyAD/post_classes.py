@@ -170,12 +170,11 @@ class DFTRun:
     def check_oct_needs_final_only(self, debug=False):
         # self.geopath
         # self.mol
-        self.set_geo_check_func()
         if self.octahedral:
             flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, dict_check=dict_oct_check_st,
                                                        debug=debug)
         else:
-            flag_oct, flag_list, dict_oct_info = IsStruct(self.geopath,
+            flag_oct, flag_list, dict_oct_info = IsStructure(self.geopath,
                                                           dict_check=dict_oneempty_check_st,
                                                           debug=debug)
         self.flag_oct = flag_oct
@@ -194,12 +193,11 @@ class DFTRun:
         # self.init_geopath
         # self.mol
         # self.init
-        self.set_geo_check_func()
         if self.octahedral:
             flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, self.init_geopath, dict_check=dict_oct_check_st,
                                                        debug=debug)
         else:
-            flag_oct, flag_list, dict_oct_info = IsStruct(self.geopath, self.init_geopath,
+            flag_oct, flag_list, dict_oct_info = IsStructure(self.geopath, self.init_geopath,
                                                           dict_check=dict_oneempty_check_st,
                                                           debug=debug)
         self.flag_oct = flag_oct
@@ -218,14 +216,13 @@ class DFTRun:
     def check_oct_on_prog(self, debug=False):
         # self.progmol
         # self.progpath
-        self.set_geo_check_func()
         if os.path.exists(self.init_geopath):
             if self.octahedral:
                 flag_oct, flag_list, dict_oct_info = IsOct(self.progpath, self.init_geopath,
                                                            dict_check=dict_oct_check_loose,
                                                            debug=debug)
             else:
-                flag_oct, flag_list, dict_oct_info = IsStruct(self.progpath, self.init_geopath,
+                flag_oct, flag_list, dict_oct_info = IsStructure(self.progpath, self.init_geopath,
                                                               dict_check=dict_oneempty_check_loose,
                                                               debug=debug)
             self.flag_oct = flag_oct
@@ -244,7 +241,7 @@ class DFTRun:
                 flag_oct, flag_list, dict_oct_info = IsOct(self.progpath, dict_check=dict_oct_check_loose,
                                                            debug=debug)
             else:
-                flag_oct, flag_list, dict_oct_info = IsStruct(self.progpath,
+                flag_oct, flag_list, dict_oct_info = IsStructure(self.progpath,
                                                               dict_check=dict_oneempty_check_loose,
                                                               debug=debug)
             self.flag_oct = flag_oct
@@ -486,9 +483,10 @@ class DFTRun:
         lines[0] = str(int(lines[0].split()[0])-1)+'\n'
         new_ref = path_dictionary["initial_geo_path"] + new_name + '.xyz'
         new_ref_file = open(new_ref, 'w')
-        new_ref_file.writelines([item for item in lines])
+        new_ref_file.writelines([item for item in lines[:-1]])
         new_ref_file.close()
         geo_ref_file.close()
+        print('NEW REF is THIS:', new_ref, 'Referenced THIS:',geo_ref)
         self.empty_sp_inpath = path_dictionary['sp_in_path'] + new_name + '.in'
         self.empty_inpath = path_dictionary['infiles'] + new_name + '.in'
         self.empty_job = path_dictionary['job_path'] + new_name + '.in'
@@ -497,7 +495,7 @@ class DFTRun:
             f_emptysp = open(self.empty_sp_inpath, 'w')
             ## write SP
             f_emptysp.write('run energy \n')
-            f_emptysp.write('scrdir scr/init_sp/  \n')
+            f_emptysp.write('scrdir scr/sp/gen_' + str(self.gen) + '/' + new_name + '\n')
             f_emptysp.write('coordinates ' + new_ref + ' \n')
             with open(self.inpath, 'r') as ref:
                 for line in ref:

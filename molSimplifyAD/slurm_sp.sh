@@ -26,27 +26,28 @@ generalpath=`echo $(dirname $generalpath) | sed "s,/*[^/]\*$,,"`
 #echo "gen path is $generalpath"
 
 generalpath=`echo $(dirname $generalpath) | sed "s,/*[^/]\*$,,"`
-echo "gen path is $generalpath"
+echo "gen sp path is $generalpath"
 
 namebase=`echo $fullpath | sed "s/[.]in//"| sed "s:.*/::"`
 
-echo "Begining calcualtion run"
-echo "general path is $generalpath"
+echo "Begining sp calcualtion run"
+echo "general sp path is $generalpath"
 
 echo "gen path = $generalpath" 
 echo "namebase = $namebase" 
 echo "TeraChem basis dir = $TeraChem"
 sourcepath=$fullpath
-inpath=$generalpath/infiles/$gennumpath/$namebase.in
+inpath=$generalpath/sp_infiles/$gennumpath/$namebase.in
 outpath=$generalpath/sp_outfiles/$gennumpath/$namebase.out
 scrpath=$generalpath/scr/sp/$gennumpath/
-echo "scr will be copied to  $scrpath"
-echo "paths set"
+localoutpath=$namebase.out
+echo "sp scr will be copied to  $scrpath"
+echo "sp paths set"
 
-echo "inpath is $inpath"
+echo "sp inpath is $inpath"
 echo "Initializing local run, finding input files..."
 mkdir -p scr
-mkdir -p scr/sp/
+mkdir -p scr/sp/$gennumpath/
 spacer='_'
 echo "begining"
 echo "file is  $namebase"
@@ -56,12 +57,9 @@ echo "optGpath is $opt_geo_path"
 echo "daemon is in"
 pwd
 
-localoutpath=$namebase.out
-
-echo "Launching geo calc: $namebase"
-terachem $inpath >  $localoutpath
-msg=$?
+echo "Launching sp calc: $namebase"
+terachem $inpath >  $outpath
 mv $localoutpath $outpath
-mv scr/sp/$namebase $scrpath
-echo "Complete"
+mv scr/sp/$gennumpath/$namebase $scrpath
+echo "Complete sp"
 

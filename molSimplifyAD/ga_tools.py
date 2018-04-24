@@ -217,8 +217,8 @@ def renameOxoEmpty(job):
     for i, item in enumerate(ligs):
         if 'x' in item:
             value = str(i)
-    ## replace ax1 with x index
-    ll[7] = value
+    ## replace ax2 with x index
+    ll[8] = value
     ## replace metal oxidation with 2 less
     ll[5] = str(int(ll[5])-2)
     new_name = "_".join(ll)

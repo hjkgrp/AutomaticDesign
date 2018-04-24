@@ -57,8 +57,8 @@ pwd
 ##begin geo-optimization
 
 echo "Launching geo calc: $namebase"
-terachem $inpath >  $localoutpath
+terachem $inpath >  $outpath
 echo "Complete"
 ## copy back complete cases 
-mv $localoutpath $outpath
+#mv $localoutpath $outpath
 #mv scr/geo/$gennumpath/$namebase $scrpath

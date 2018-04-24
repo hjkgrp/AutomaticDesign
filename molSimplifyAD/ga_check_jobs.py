@@ -53,7 +53,7 @@ def check_all_current_convergence():
         ## 13-> job requests solvent
         
         for jobs in joblist:
-            if  (jobs not in live_job_dictionary.keys()) and (len(jobs.strip('\n'))!=0) and not ("thermo" in jobs) and not ("solvent" in jobs):
+            if  (jobs not in live_job_dictionary.keys()) and (len(jobs.strip('\n'))!=0) and not ("sp_infiles" in jobs) and not ("thermo" in jobs) and not ("solvent" in jobs):
                 ## upack job name
                 gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,base_name,base_gene = translate_job_name(jobs)
                 ## create run
@@ -134,6 +134,7 @@ def check_all_current_convergence():
                     logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                                         + ' added ' + this_run.name + ' to all_runs with status '+ str(this_run.status))
                 else:
+                    all_runs.update({this_run.name:this_run})
                     print('Intermediate spin')
                     print('run status is  ' + str(this_run.status))
                     base_path_dictionary = setup_paths()
@@ -274,7 +275,7 @@ def check_all_current_convergence():
                             logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                                        + " failure at job : " + str(jobs) + ' with status '+ str(this_run.status)
                                        +' after ' + str(number_of_subs)+ ' subs, trying again... ' )
-                            if number_of_subs >2 :
+                            if int(number_of_subs) > 2:
                                     print(' giving up on job '+str(jobs) + ' after ' + str(number_of_subs))
                                     logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                                        + " giving up on job : " + str(jobs) + ' with status '+ str(this_run.status)
@@ -286,7 +287,24 @@ def check_all_current_convergence():
                                        +' after ' + str(number_of_subs) + ' subs since prog geo was bad' )
                                 remove_outstanding_jobs(jobs) # take out of pool
                 print('END OF JOB \n *******************\n')
-
+            elif "sp_infiles" in jobs:
+                print('checking status of SP job ' + str(jobs))
+                if (jobs not in live_job_dictionary.keys()) and ((len(jobs.strip('\n'))!=0)):
+                    print('checking status of SP job ' + str(jobs))
+                    this_run = test_terachem_sp_convergence(jobs)
+                    update_converged_job_dictionary(jobs,this_run.status) # record converged 
+                    print("Did this SP run converge?  " + str(this_run.converged)+' with status  ' + str(this_run.status))
+                    if this_run.status == 0: ##  convergence is successful!
+                        print('removing job from OSL due to status 0 ')
+                        jobs_complete += 1
+                        remove_outstanding_jobs(jobs) # take out of queue
+                    if this_run.status == 6: ##  convergence is not successful!
+                        logger(base_path_dictionary['state_path'],str(datetime.datetime.now()) + " failure at SP job : " + str(jobs) + ' with status '+ str(this_run.status))
+                        remove_outstanding_jobs(jobs) # take out of pool
+                    print('\n')
+                elif (jobs in live_job_dictionary.keys()):
+                    print(str(jobs) + ' is live\n')
+                print('END OF SP JOB \n *******************\n')
         print('matching DFT runs ... \n')
         list_of_props = list()
         list_of_props.append('name')
@@ -294,8 +312,9 @@ def check_all_current_convergence():
         list_of_props.append('gene')
         list_of_props.append('metal')
         list_of_props.append('alpha')
-        list_of_props.append('ox2RN')
-        list_of_props.append('ox3RN')
+        if not GA_run.config["oxocatalysis"]:
+            list_of_props.append('ox2RN')
+            list_of_props.append('ox3RN')
         list_of_props.append('axlig1')
         list_of_props.append('axlig2')
         list_of_props.append('eqlig')  
@@ -304,12 +323,21 @@ def check_all_current_convergence():
                              'coord','rmsd','maxd','status','time','spin','ss_act','ss_target','ax1_MLB','ax2_MLB','eq_MLB',
                     'init_ax1_MLB','init_ax2_MLB','init_eq_MLB','thermo_cont','imag','solvent_cont','geopath','terachem_version','terachem_detailed_version',
                     'basis','charge','alpha_level_shift','beta_level_shift','functional','mop_energy','mop_coord','attempted']
-        for props in list_of_prop_names:
-            for spin_cat in ['LS','HS']:
-                for ox in ['2','3']:
-                    list_of_props.append("_".join(['ox',str(ox),spin_cat,props]))
-        list_of_props.append('attempted')
-        final_results = process_runs_geo(all_runs,list_of_prop_names,spin_dictionary())
+        if GA_run.config["oxocatalysis"]:
+            for props in list_of_prop_names:
+                for spin_cat in ['LS','IS','HS']:
+                    for ox in ['4','5']:
+                        for catax in ['x','oxo']:
+                            list_of_props.append("_".join(['ox',str(ox),spin_cat,str(catax),props]))
+            list_of_props.append('attempted')
+            final_results = process_runs_oxocatalysis(all_runs,list_of_prop_names,spin_dictionary()) 
+        else:   
+            for props in list_of_prop_names:
+                for spin_cat in ['LS','HS']:
+                    for ox in ['2','3']:
+                        list_of_props.append("_".join(['ox',str(ox),spin_cat,props]))
+            list_of_props.append('attempted')
+            final_results = process_runs_geo(all_runs,list_of_prop_names,spin_dictionary())
         if not (os.path.isfile(get_run_dir() + '/results_post.csv')):
                 logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                                + " starting output log file at " + get_run_dir() + '/unified_results_post.csv')

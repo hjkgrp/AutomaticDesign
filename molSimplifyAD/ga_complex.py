@@ -316,7 +316,7 @@ class octahedral_complex:
                     liglist += " " + str(eq_lig).strip("'[]'")
                 elif  hasattr(eq_lig,'__iter__'): # this is the mark of SMILES strings:
                     #print('SMILEs ligand in eq position  '+ str(eq_lig))
-                    liglist += " " + str(eq_lig[0])
+                    liglist += " " +  "'"+str(eq_lig[0])+ "'"
                     if not smicat: # false on first hit 
                         smicat = " ["    + str(eq_lig[1]).replace("'","") # cat list 
                     else:
@@ -330,12 +330,12 @@ class octahedral_complex:
                     liglist += " " + str(ax_lig).strip("'[]'")
                 elif  hasattr(ax_lig,'__iter__'): # this is the mark of SMILES strings:
                     #print('SMILEs ligand in ax position  '+ str(ax_lig))
-                    liglist += " " + str(ax_lig[0])
+                    liglist += " " +  "'"+ str(ax_lig[0])+  "'"
                     if not smicat: # false on first hit 
                         smicat = " [ "    + str(ax_lig[1]).replace("'","") # cat list 
                     else:
                         smicat += ",  " + str(ax_lig[1]).replace("'","")  # cat list 
-            liglist.replace("'","")
+            #liglist.replace("'","")
             if smicat:
                 smicat += "]"
             #print(' after ax-shell, liglist is ' + liglist)
@@ -443,6 +443,7 @@ class octahedral_complex:
         if not (geo_exists):
                 print('generating '+ str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and'  + str(self.ax_ligands))
                 try:
+                #if True:
                     with open(ms_dump_path,'a') as ms_pipe:
                         with open(ms_error_path,'a') as ms_error_pipe:
                             call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +liglist,'-ligocc 1,1,1,1,1,1',
@@ -452,6 +453,8 @@ class octahedral_complex:
                                      '-qccode TeraChem','-runtyp '+rty,'-method UDFT',"-ffoption "+ff_opt,' -ff UFF'])
                             if smicat:
                                 call += ' -smicat ' + smicat
+                            if this_GA.config['oxocatalysis']:
+                                call += ' -qoption dftd,d3 -qoption min_maxiter,1100'
                             print(call)
                             p2 = subprocess.call(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
                     assert(os.path.isfile(rundirpath + 'temp'+'/' + mol_name + '.molinp'))
@@ -479,7 +482,15 @@ class octahedral_complex:
                 elif this_GA.config['symclass']=="weak": ## ANN not currently supported!
                     ANN_split = False
                     ANN_distance = False
-                       
+                if this_GA.config['oxocatalysis']: #Subbing in 1.65 as Oxo BL
+                    print('Modifying initial oxo geom file '+ mol_name + '.xyz to have oxo BL 1.65')
+                    geo_ref_file = open(path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz','r')
+                    lines = geo_ref_file.readlines()
+                    geo_ref_file.close()
+                    geo_replacement = open(path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz','w')
+                    adjusted_lines = lines[:-1]+[lines[-1][:-9]+'1.650000\n']
+                    geo_replacement.writelines(adjusted_lines)
+                    geo_replacement.close()
                 
                 shutil.move(rundirpath + 'temp' +'/' + mol_name + '.report', path_dictionary["ms_reps"] +'/'+ mol_name + '.report')
 
