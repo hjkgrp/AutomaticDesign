@@ -669,4 +669,43 @@ def read_terachem_go_output(this_run):
         this_run.converged = True
         print('run outfile converged')
         
-        
+def read_terachem_scrlog_output(this_run):
+    ## function to parse scr optlog fiile
+    ##  for terachem 
+    #  @param this_run a run class
+    #  @return this_run populated run class  
+    found_homo =False 
+    found_lumo =False 
+    safe = False
+    current_HOMO = 0 
+    current_LUMO = 0 
+    HOMO_ind = "undef"
+    LUMO_ind = "undef"
+    print('\n checking '+this_run.scrlogpath)
+    if os.path.exists(this_run.scrlogpath):
+        print('logpath exists')
+        ### file is found, check if converged
+        with open(this_run.scrlogpath) as f:            
+            data=f.readlines()
+            for i,lines in enumerate(data):
+                if str(lines).find('E_HOMO') != -1 & str(lines).find('E_LUMO') != -1:
+                    try:
+                        check_line = lines.strip().split()
+                        HOMO_ind = check_line.index("E_HOMO")
+                        LUMO_ind = check_line.index("E_LUMO")
+                    except:
+                        print("cannot understand HOMO/LUMO results")                       
+                    if LUMO_ind & LUMO_ind:                   
+                        print('safe results')
+                        safe = True
+                    else:
+                        print(lines)
+                        print("scr log not understood")
+                elif safe:
+                    current_HOMO = lines.strip().split()[HOMO_ind]
+                    current_LUMO = lines.strip().split()[LUMO_ind]
+    if safe:
+        print('setting HOMO to '+ str(current_HOMO))
+        print('setting LUMO to '+ str(current_LUMO))
+        this_run.HOMO = current_HOMO
+        this_run.LUMO = current_HOMO

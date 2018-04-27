@@ -17,6 +17,7 @@ from molSimplify.Informatics.misc_descriptors import *
 from molSimplify.Informatics.coulomb_analyze import *
 from molSimplify.Informatics.graph_analyze import *
 from molSimplify.Informatics.geo_analyze import *
+from molSimplify.Informatics.RACassemble import *
 from molSimplifyAD.ga_oct_check import *
 from molSimplifyAD.ga_io_control import *
 from molSimplifyAD.ga_tools import get_current_GA
@@ -40,6 +41,8 @@ class DFTRun:
         self.status = 'undef'
         self.time = 'undef'
         self.energy = 'undef'
+        self.HOMO = "undef"
+        self.LUMO = "undef"
         self.initial_energy = 'undef'
         self.charge = 'undef'
         self.idn = 'undef'
@@ -663,6 +666,18 @@ class Comp:
         self.ox_2_LS_mop_energy = 'undef'
         self.ox_3_LS_mop_energy = 'undef'
         self.ox_3_HS_mop_energy = 'undef'
+        
+        ## HOMO/LUMO
+        self.ox_2_HS_HOMO = 'undef'
+        self.ox_2_LS_HOMO = 'undef'
+        self.ox_3_LS_HOMO = 'undef'
+        self.ox_3_HS_HOMO = 'undef'
+        self.ox_2_HS_LUMO = 'undef'
+        self.ox_2_LS_LUMO = 'undef'
+        self.ox_3_LS_LUMO = 'undef'
+        self.ox_3_HS_LUMO = 'undef'
+        
+        
         ### coords
         self.ox_2_LS_coord = 'undef'
         self.ox_2_HS_coord = 'undef'
@@ -889,27 +904,30 @@ class Comp:
         self.mol = this_run.mol
 
     def get_descriptor_vector(self, loud=False, name=False):
-        results_dictionary = generate_all_ligand_misc(self.mol, loud)
         self.mol.update_graph_check()
-        self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax'], 'misc', 'ax')
-        self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq'], 'misc', 'eq')
-        results_dictionary = generate_all_ligand_autocorrelations(self.mol, depth=3, loud=True, name=name)
-        self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax_full'], 'f', 'ax')
-        self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq_full'], 'f', 'eq')
-        self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax_con'], 'lc', 'ax')
-        self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq_con'], 'lc', 'eq')
-        results_dictionary = generate_metal_autocorrelations(self.mol, depth=3, loud=loud)
-        self.append_descriptors(results_dictionary['colnames'], results_dictionary['results'], 'mc', 'all')
-        results_dictionary = generate_full_complex_autocorrelations(self.mol, depth=3, loud=loud)
-        self.append_descriptors(results_dictionary['colnames'], results_dictionary['results'], 'f', 'all')
-        ### delta metrics 
-        results_dictionary = generate_all_ligand_deltametrics(self.mol, depth=3, loud=True, name=name)
-        self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax_con'], 'D_lc', 'ax')
-        self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq_con'], 'D_lc', 'eq')
-        results_dictionary = generate_metal_deltametrics(self.mol, depth=3, loud=loud)
-        self.append_descriptors(results_dictionary['colnames'], results_dictionary['results'], 'D_mc', 'all')
+        descriptor_names, descriptors = get_descriptor_vector(this_complex=self.mol,custom_ligand_dict=False,ox_modifier=False)    
+        self.descriptor_names = descriptor_names
+        self.descriptors = descriptors
         self.set_desc = True
-
+                #results_dictionary = generate_all_ligand_misc(self.mol, loud)
+                #self.mol.update_graph_check()
+                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax'], 'misc', 'ax')
+                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq'], 'misc', 'eq')
+                #results_dictionary = generate_all_ligand_autocorrelations(self.mol, depth=3, loud=True, name=name)
+                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax_full'], 'f', 'ax')
+                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq_full'], 'f', 'eq')
+                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax_con'], 'lc', 'ax')
+                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq_con'], 'lc', 'eq')
+                #results_dictionary = generate_metal_autocorrelations(self.mol, depth=3, loud=loud)
+                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['results'], 'mc', 'all')
+                #results_dictionary = generate_full_complex_autocorrelations(self.mol, depth=3, loud=loud)
+                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['results'], 'f', 'all')
+                #### delta metrics 
+                #results_dictionary = generate_all_ligand_deltametrics(self.mol, depth=3, loud=True, name=name)
+                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax_con'], 'D_lc', 'ax')
+                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq_con'], 'D_lc', 'eq')
+                #results_dictionary = generate_metal_deltametrics(self.mol, depth=3, loud=loud)
+                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['results'], 'D_mc', 'all')
     def append_descriptors(self, list_of_names, list_of_props, prefix, suffix):
         for names in list_of_names:
             if hasattr(names, '__iter__'):
