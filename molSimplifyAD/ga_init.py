@@ -46,7 +46,7 @@ def wake_up_routine():
         new_tree.check_results()
         new_tree.assess_fitness()
         print(new_tree.status_dictionary["ready_to_advance"])
-        if current_gen <= maxgen:
+        if current_gen <= maxgen and GA_run.config["type"]=="split" :
                ## check if there is still
                 ## work to be done
                 if (new_tree.status_dictionary["ready_to_advance"]):

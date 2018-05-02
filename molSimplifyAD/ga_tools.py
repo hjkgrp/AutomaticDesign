@@ -209,8 +209,8 @@ def stripName(job):
     base = os.path.basename(job)
     base = base.strip("\n")
     basename = base.strip(".in")
-    basename = base.strip(".xyz")
-    basename = base.strip(".out")
+    basename = basename.strip(".xyz")
+    basename = basename.strip(".out")
     return basename
 #######################
 def renameOxoEmpty(job):
@@ -288,7 +288,7 @@ def setup_paths():
     ## set scr path to scr/sp for single points
     if not isOptimize():
             path_dictionary.update({"scr_path": working_dir + "scr/geo/"})
-    GA_run.deserialize('.madconfig')
+    GA_run = get_current_GA()
     if "DLPNO" in GA_run.config.keys():
         if GA_run.config["DLPNO"]:
             path_dictionary.update({"DLPNO_path": working_dir + "DLPNO_files/"})
@@ -301,7 +301,7 @@ def setup_paths():
 def advance_paths(path_dictionary,generation):
     new_dict = dict()
     for keys in path_dictionary.keys():
-        if not (keys == "molsimp_path") :
+        if not (keys in ["molsimp_path","DLPNO_path"]) :
             new_dict[keys] = path_dictionary[keys] + "gen_" +  str(generation) + "/"
             ensure_dir(new_dict[keys])
     return new_dict
