@@ -551,7 +551,26 @@ class DFTRun:
 
         return (self.empty_job, self.empty_sp_inpath)
 
-
+    def write_DLPNO_inputs(self):
+        ## set files  for DLNPO calcs 
+        path_dictionary = setup_paths()      
+        reference_name = stripName(self.job)
+        geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
+        ensure_dir(path_dictionary['DLPNO_path'] + reference_name+'/')
+        self.DLPNO_job = path_dictionary['DLPNO_path'] + reference_name+'/'
+        ### write files
+        if not os.path.exists(self.DLPNO_job):
+            f_DLPNO = open(self.DLPNO_job, 'w')
+            f_DLPNO.write('#DLPNO- CCSD(T) single point energy\n')
+            f_DLPNO.write('\n')
+            f_DLPNO.write('! DLPNO-CCSD(T) def2-TZVP def2-TZVP/C sp PAL4\n')
+            f_DLPNO.write('%MaxCore 8192\n')
+            f_DLPNO.write('\n')
+            f_DLPNO.write('!')
+            f_DLPNO.write('\n')
+            f_DLPNO.write(" ".join(['* xyzfile',str(self.charge),str(self.tspin),geo_ref]))
+            f_DLPNO.close()
+            
     def archive(self, sub_number):
         # this fuinciton copies all files to arch
         path_dictionary = setup_paths()

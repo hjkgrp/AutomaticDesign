@@ -203,6 +203,15 @@ def renameHFX(job,newHFX):
     ll[9] = newHFX
     new_name = "_".join(ll)
     return new_name
+########################
+def stripName(job):
+    # gets base job name
+    base = os.path.basename(job)
+    base = base.strip("\n")
+    basename = base.strip(".in")
+    basename = base.strip(".xyz")
+    basename = base.strip(".out")
+    return basename
 #######################
 def renameOxoEmpty(job):
     # renames Oxo job to empty job
@@ -274,14 +283,18 @@ def setup_paths():
                    "mopac_path"       : working_dir + "mopac/",
                    "ANN_output"       : working_dir + "ANN_ouput/",
                    "ms_reps"          : working_dir + "ms_reps/"}
-    for keys in path_dictionary.keys():
-        ensure_dir(path_dictionary[keys])
+
 #    shutil.copyfile(get_source_dir()+'wake.sh',get_run_dir()+'wake.sh')
     ## set scr path to scr/sp for single points
     if not isOptimize():
             path_dictionary.update({"scr_path": working_dir + "scr/geo/"})
-
-
+    GA_run.deserialize('.madconfig')
+    if "DLPNO" in GA_run.config.keys():
+        if GA_run.config["DLPNO"]:
+            path_dictionary.update({"DLPNO_path": working_dir + "DLPNO_files/"})
+    
+    for keys in path_dictionary.keys():
+        ensure_dir(path_dictionary[keys])
     return path_dictionary
 ########################
 
