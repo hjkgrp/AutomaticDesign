@@ -80,7 +80,7 @@ def check_all_current_convergence():
                 
                   
                 ## make unique gene
-                name = "_".join([str(metal),'eq',str(eqlig),'ax1',str(axlig1),'ax2',str(axlig2),'ahf',str(alpha)])
+                name = "_".join([str(metal),'eq',str(eqlig),'ax1',str(axlig1),'ax2',str(axlig2),'ahf',str(int(alpha))])
 
                 ## set file paths
                 path_dictionary =  setup_paths()

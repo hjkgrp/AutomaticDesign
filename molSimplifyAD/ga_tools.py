@@ -174,7 +174,6 @@ def translate_job_name(job):
         axlig2 = ligands_dict[int(axlig2_ind)][0]   
         
     ahf = int(ll[9])
-    ahf = int(ll[9])
     spin = int(ll[10])
     metal_list = get_metals()
     metal_key = metal_list[metal]
