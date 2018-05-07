@@ -103,8 +103,8 @@ def spin_dictionary():
     GA_run =  get_current_GA() 
     if GA_run.config["use_singlets"]:
         if GA_run.config["all_spins"]:
-            metal_spin_dictionary = {'co':{2:[2,4],3:[1,3,5]}, 
-                                     'cr':{2:[1,3,5],3:[2,4]},
+            metal_spin_dictionary = {'co':{2:[2,4],3:[1,3,5],4:[2,4],5:[1,3,5]}, 
+                                     'cr':{2:[1,3,5],3:[2,4],4:[1,3],5:[2]},
                                      'fe':{2:[1,3,5],3:[2,4,6],4:[1,3,5],5:[2,4,6] },
                                      'mn':{2:[2,4,6],3:[1,3,5],4:[2,4,6],5:[1,3,5]}}
         else:
