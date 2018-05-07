@@ -174,7 +174,6 @@ def translate_job_name(job):
         axlig2 = ligands_dict[int(axlig2_ind)][0]   
         
     ahf = int(ll[9])
-    ahf = int(ll[9])
     spin = int(ll[10])
     metal_list = get_metals()
     metal_key = metal_list[metal]
@@ -204,6 +203,15 @@ def renameHFX(job,newHFX):
     ll[9] = newHFX
     new_name = "_".join(ll)
     return new_name
+########################
+def stripName(job):
+    # gets base job name
+    base = os.path.basename(job)
+    base = base.strip("\n")
+    basename = base.strip(".in")
+    basename = basename.strip(".xyz")
+    basename = basename.strip(".out")
+    return basename
 #######################
 def renameOxoEmpty(job):
     # renames Oxo job to empty job
@@ -275,21 +283,25 @@ def setup_paths():
                    "mopac_path"       : working_dir + "mopac/",
                    "ANN_output"       : working_dir + "ANN_ouput/",
                    "ms_reps"          : working_dir + "ms_reps/"}
-    for keys in path_dictionary.keys():
-        ensure_dir(path_dictionary[keys])
+
 #    shutil.copyfile(get_source_dir()+'wake.sh',get_run_dir()+'wake.sh')
     ## set scr path to scr/sp for single points
     if not isOptimize():
             path_dictionary.update({"scr_path": working_dir + "scr/geo/"})
-
-
+    GA_run = get_current_GA()
+    if "DLPNO" in GA_run.config.keys():
+        if GA_run.config["DLPNO"]:
+            path_dictionary.update({"DLPNO_path": working_dir + "DLPNO_files/"})
+    
+    for keys in path_dictionary.keys():
+        ensure_dir(path_dictionary[keys])
     return path_dictionary
 ########################
 
 def advance_paths(path_dictionary,generation):
     new_dict = dict()
     for keys in path_dictionary.keys():
-        if not (keys == "molsimp_path") :
+        if not (keys in ["molsimp_path","DLPNO_path"]) :
             new_dict[keys] = path_dictionary[keys] + "gen_" +  str(generation) + "/"
             ensure_dir(new_dict[keys])
     return new_dict

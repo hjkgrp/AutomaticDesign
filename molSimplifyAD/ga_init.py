@@ -14,10 +14,9 @@ from molSimplifyAD.ga_io_control import *
 def initialize_GA_calc(path = ''):
         
         ## load in run info
-        GA_run = GA_run_defintion()
+        GA_run = get_current_GA()
         
 
-        GA_run.deserialize(path + '.madconfig')
         
         path_dictionary = setup_paths()
         
@@ -33,6 +32,7 @@ def initialize_GA_calc(path = ''):
 def wake_up_routine():
         ## set up environment:
         path_dictionary = setup_paths()
+        GA_run = get_current_GA()
         ## initialize class
         new_tree = GA_generation('current_gen')
         ## read in info
@@ -46,7 +46,7 @@ def wake_up_routine():
         new_tree.check_results()
         new_tree.assess_fitness()
         print(new_tree.status_dictionary["ready_to_advance"])
-        if current_gen <= maxgen:
+        if current_gen <= maxgen and GA_run.config["runtype"]=="split" :
                ## check if there is still
                 ## work to be done
                 if (new_tree.status_dictionary["ready_to_advance"]):

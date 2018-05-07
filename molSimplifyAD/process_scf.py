@@ -222,7 +222,8 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary,local_met
             else:
                  this_comp.ox3RN = max(this_run.number,this_comp.ox3RN)
             if this_comp.gene =="undef":
-                this_comp.gene = this_run.gene
+                #this_comp.gene = this_run.gene
+                this_comp.gene = "_".join([this_metal,str(eqlig_name),str(axlig1_name),str(axlig2_name)])
             if this_run.converged and this_run.coord == 6:
                 this_comp.convergence += 1
             if this_run.coord == 6 and not this_comp.set_desc:
@@ -241,17 +242,12 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary,local_met
                     this_run.mol.writexyz('bad_geos/'+this_name+'.xyz')
                     this_comp.convergence -= 1
                     this_run.coord = 'error'
-#            print(dir(this_run))
+
             for props in list_of_prop_names:
                      this_attribute = "_".join(['ox',str(this_ox),spin_cat,props])
-                     #print('!!!!!this_attribute', this_attribute)
-                     #print('!!!!', this_run.dist_del_all)
                      setattr(this_comp,this_attribute,getattr(this_run,props))
-#            if this_run.coord == 6 and spin_cat == 'HS' and this_ox == 2:
-#                if not os.path.isdir('coulomb_geos/'):
-#                        os.mkdir('coulomb_geos/')
-#                this_run.mol.writexyz('coulomb_geos/'+this_name+'.xyz')
-#                this_comp.get_coulomb_descriptor(size=85)
+            this_attribute = "_".join(['ox',str(this_ox),spin_cat,"DFT_RUN"])
+            setattr(this_comp,this_attribute,this_run)
         ## the hack to get around expecting 
         ## spins
         this_comp.get_some_split()
@@ -673,4 +669,43 @@ def read_terachem_go_output(this_run):
         this_run.converged = True
         print('run outfile converged')
         
-        
+def read_terachem_scrlog_output(this_run):
+    ## function to parse scr optlog fiile
+    ##  for terachem 
+    #  @param this_run a run class
+    #  @return this_run populated run class  
+    found_homo =False 
+    found_lumo =False 
+    safe = False
+    current_HOMO = 0 
+    current_LUMO = 0 
+    HOMO_ind = "undef"
+    LUMO_ind = "undef"
+    print('\n checking '+this_run.scrlogpath)
+    if os.path.exists(this_run.scrlogpath):
+        print('logpath exists')
+        ### file is found, check if converged
+        with open(this_run.scrlogpath) as f:            
+            data=f.readlines()
+            for i,lines in enumerate(data):
+                if str(lines).find('E_HOMO') != -1 & str(lines).find('E_LUMO') != -1:
+                    try:
+                        check_line = lines.strip().split()
+                        HOMO_ind = check_line.index("E_HOMO")
+                        LUMO_ind = check_line.index("E_LUMO")
+                    except:
+                        print("cannot understand HOMO/LUMO results")                       
+                    if LUMO_ind & LUMO_ind:                   
+                        print('safe results')
+                        safe = True
+                    else:
+                        print(lines)
+                        print("scr log not understood")
+                elif safe:
+                    current_HOMO = lines.strip().split()[HOMO_ind]
+                    current_LUMO = lines.strip().split()[LUMO_ind]
+    if safe:
+        print('setting HOMO to '+ str(current_HOMO))
+        print('setting LUMO to '+ str(current_LUMO))
+        this_run.HOMO = current_HOMO
+        this_run.LUMO = current_HOMO

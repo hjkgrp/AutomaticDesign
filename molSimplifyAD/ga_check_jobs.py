@@ -80,7 +80,7 @@ def check_all_current_convergence():
                 
                   
                 ## make unique gene
-                name = "_".join([str(metal),'eq',str(eqlig),'ax1',str(axlig1),'ax2',str(axlig2),'ahf',str(alpha)])
+                name = "_".join([str(metal),'eq',str(eqlig),'ax1',str(axlig1),'ax2',str(axlig2),'ahf',str(int(alpha))])
 
                 ## set file paths
                 path_dictionary =  setup_paths()
@@ -96,6 +96,7 @@ def check_all_current_convergence():
                 this_run.sp_outpath = (path_dictionary["sp_out_path" ]+ '/' + base_name + ".out")
             
                 this_run.scrpath = path_dictionary["scr_path" ]  + base_name +"/optim.xyz"
+                this_run.scrlogpath = path_dictionary["scr_path" ]  + base_name +"/oplog.xls"
                 this_run.inpath = path_dictionary["job_path" ]+ base_name +".in"
                 this_run.comppath = path_dictionary["done_path" ] + base_name +".in"
 
@@ -142,6 +143,8 @@ def check_all_current_convergence():
                                         + ' added ' + this_run.name + ' to all_runs')
 
                 if this_run.status == 0:
+                    # get HOMO/LUMO for successful run
+                    read_terachem_scrlog_output(this_run)
                     print('converged run, alpha is ' + str(this_run.alpha))
                     run_success = False
                     # perfrom health checks on complex here
@@ -318,7 +321,7 @@ def check_all_current_convergence():
         list_of_props.append('axlig1')
         list_of_props.append('axlig2')
         list_of_props.append('eqlig')  
-        list_of_prop_names =['converged','energy','init_energy', 'flag_oct', 'num_coord_metal',
+        list_of_prop_names =['converged','energy','init_energy', 'flag_oct', 'num_coord_metal',"HOMO","LUMO",
                              'rmsd_max', 'atom_dist_max', 'oct_angle_devi_max', 'dist_del_eq', 'dist_del_all', 'max_del_sig_angle',
                              'coord','rmsd','maxd','status','time','spin','ss_act','ss_target','ax1_MLB','ax2_MLB','eq_MLB',
                     'init_ax1_MLB','init_ax2_MLB','init_eq_MLB','thermo_cont','imag','solvent_cont','geopath','terachem_version','terachem_detailed_version',
