@@ -555,8 +555,10 @@ class DFTRun:
         ## set files  for DLNPO calcs 
         path_dictionary = setup_paths()      
         reference_name = stripName(self.job)
-        geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
+        geo_ref = self.geopath
+        geo_name =  reference_name + '.xyz'
         ensure_dir(path_dictionary['DLPNO_path'] + reference_name+'/')
+        shutil.copy(geo_ref,path_dictionary['DLPNO_path'] + reference_name + '/' + geo_name)
         self.DLPNO_job = path_dictionary['DLPNO_path'] + reference_name+'/' + reference_name + '.in'
         ### write files
         if not os.path.exists(self.DLPNO_job):
@@ -565,11 +567,12 @@ class DFTRun:
             f_DLPNO.write('\n')
             f_DLPNO.write('! DLPNO-CCSD(T) def2-TZVP def2-TZVP/C sp PAL4\n')
             f_DLPNO.write('\n')
-            f_DLPNO.write('%MaxCore 8192\n')
+            f_DLPNO.write('%MaxCore 4096\n')
             f_DLPNO.write('\n')
-            f_DLPNO.write('!')
+            f_DLPNO.write('!\n')
             f_DLPNO.write('\n')
-            f_DLPNO.write(" ".join(['* xyzfile',str(self.charge),str(self.tspin),geo_ref]))
+            f_DLPNO.write(" ".join(['* xyzfile',str(self.charge),str(self.tspin),geo_name]))
+            f_DLPNO.write('\n')
             f_DLPNO.close()
             
     def archive(self, sub_number):
