@@ -471,10 +471,11 @@ class DFTRun:
 
         return (self.HFX_job)
 
-    def write_empty_inputs(self):
+    def write_empty_inputs(self, refHFX):
         ## set file paths for empty structure gen
         ## the fixed ordering is 
         ## HFX20 Oxo --> HFX20 Empty SP + HFX20 Empty Geo --> HFX25 Oxo --> HFX25 Empty SP + HFX25 Empty Geo... etc.
+        emptyrefdict = {"25": "20", "30": "25", "15": "20", "10": "15", "05": "10","00":"05" }
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         new_name, reference_name = renameOxoEmpty(self.job)
@@ -506,6 +507,14 @@ class DFTRun:
                             "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
                         ## these lines should be common
                         f_emptysp.write(line)
+            if int(refHFX) != 20: #This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
+                splist = new_name.split('_')
+                emptyrefval = emptyrefdict[splist[-2]]
+                splist[-2] = emptyrefval
+                wfnrefempty = "_".join(splist)
+                guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/'+ wfnrefempty+ '/ca0' + \
+                       ' ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/'+ wfnrefempty + '/cb0\n'
+                f_emptysp.write(guess_string_sp)
             f_emptysp.write('end')
             f_emptysp.close()
         if not os.path.exists(self.empty_job):
@@ -530,6 +539,14 @@ class DFTRun:
                             ## these lines should be common
                             f.write(line)
                 f.write('coordinates ' + new_ref + ' \n')
+                if int(refHFX) != 20:
+                    geolist = new_name.split('_') #Copy without modifying the namelist
+                    emptyrefval = emptyrefdict[geolist[-2]]
+                    geolist[-2] = emptyrefval
+                    wfnrefempty = "_".join(geolist)
+                    guess_string_geo = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/'+ wfnrefempty+ '/ca0' + \
+                           ' ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/'+ wfnrefempty + '/cb0\n'
+                    f.write(guess_string_geo)
                 f.write('end\n')
                 f.write('\n')
                 #### We want to freeze the M3L and M4L dihedrals as to how they were for the geo opt for the 6 coord structure
