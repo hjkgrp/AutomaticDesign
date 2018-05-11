@@ -168,7 +168,7 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary,local_met
             axlig2_name = this_run.axlig2
             
                 
-        this_name = "_".join([this_metal,'eq',str(eqlig_name),'ax1',str(axlig1_name),'ax2',str(axlig2_name),'ahf',str(this_run.alpha)])
+        this_name = "_".join([this_metal,'eq',str(eqlig_name),'ax1',str(axlig1_name),'ax2',str(axlig2_name),'ahf',str(int(this_run.alpha))])
                 ### add alpha value to list owned by this_comp:
                 
         if this_name not in final_results.keys():

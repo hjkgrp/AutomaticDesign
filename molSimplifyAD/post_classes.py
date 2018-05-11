@@ -471,10 +471,11 @@ class DFTRun:
 
         return (self.HFX_job)
 
-    def write_empty_inputs(self):
+    def write_empty_inputs(self, refHFX):
         ## set file paths for empty structure gen
         ## the fixed ordering is 
         ## HFX20 Oxo --> HFX20 Empty SP + HFX20 Empty Geo --> HFX25 Oxo --> HFX25 Empty SP + HFX25 Empty Geo... etc.
+        emptyrefdict = {"25": "20", "30": "25", "15": "20", "10": "15", "05": "10","00":"05" }
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         new_name, reference_name = renameOxoEmpty(self.job)
@@ -506,6 +507,14 @@ class DFTRun:
                             "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
                         ## these lines should be common
                         f_emptysp.write(line)
+            if int(refHFX) != 20: #This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
+                splist = new_name.split('_')
+                emptyrefval = emptyrefdict[splist[-2]]
+                splist[-2] = emptyrefval
+                wfnrefempty = "_".join(splist)
+                guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/'+ wfnrefempty+ '/ca0' + \
+                       ' ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/'+ wfnrefempty + '/cb0\n'
+                f_emptysp.write(guess_string_sp)
             f_emptysp.write('end')
             f_emptysp.close()
         if not os.path.exists(self.empty_job):
@@ -530,6 +539,14 @@ class DFTRun:
                             ## these lines should be common
                             f.write(line)
                 f.write('coordinates ' + new_ref + ' \n')
+                if int(refHFX) != 20:
+                    geolist = new_name.split('_') #Copy without modifying the namelist
+                    emptyrefval = emptyrefdict[geolist[-2]]
+                    geolist[-2] = emptyrefval
+                    wfnrefempty = "_".join(geolist)
+                    guess_string_geo = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/'+ wfnrefempty+ '/ca0' + \
+                           ' ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/'+ wfnrefempty + '/cb0\n'
+                    f.write(guess_string_geo)
                 f.write('end\n')
                 f.write('\n')
                 #### We want to freeze the M3L and M4L dihedrals as to how they were for the geo opt for the 6 coord structure
@@ -553,25 +570,36 @@ class DFTRun:
 
     def write_DLPNO_inputs(self):
         ## set files  for DLNPO calcs 
-        path_dictionary = setup_paths()      
+        path_dictionary = setup_paths()
         reference_name = stripName(self.job)
-        geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
-        ensure_dir(path_dictionary['DLPNO_path'] + reference_name+'/')
-        self.DLPNO_job = path_dictionary['DLPNO_path'] + reference_name+'/' + reference_name + '.in'
-        ### write files
-        if not os.path.exists(self.DLPNO_job):
-            f_DLPNO = open(self.DLPNO_job, 'w')
-            f_DLPNO.write('#DLPNO- CCSD(T) single point energy\n')
-            f_DLPNO.write('\n')
-            f_DLPNO.write('! DLPNO-CCSD(T) def2-TZVP def2-TZVP/C sp PAL4\n')
-            f_DLPNO.write('\n')
-            f_DLPNO.write('%MaxCore 8192\n')
-            f_DLPNO.write('\n')
-            f_DLPNO.write('!')
-            f_DLPNO.write('\n')
-            f_DLPNO.write(" ".join(['* xyzfile',str(self.charge),str(self.tspin),geo_ref]))
-            f_DLPNO.close()
-            
+        geo_ref = self.geopath
+        geo_name =  reference_name + '.xyz'
+        mainbasisList =  ["CC-PVDZ","CC-PVTZ","CC-PVQZ","def2-TZVP","def2-QZVP"]
+        auxs  = [" AutoAux RIJCOSX "," "]
+        baserf = reference_name
+        for i in range(0,len(mainbasisList)):
+                for j,aux in enumerate(auxs):
+                        mainbasis = mainbasisList[i]
+                        reference_name = baserf + '_'+str(i)+'_'+str(j)
+                        self.DLPNO_job = path_dictionary['DLPNO_path'] + reference_name+'/' + reference_name + '.in'
+                        ensure_dir(path_dictionary['DLPNO_path'] + reference_name+'/')
+                        shutil.copy(geo_ref,path_dictionary['DLPNO_path'] + reference_name + '/' + geo_name)
+
+                        ### write files
+                        if not os.path.exists(self.DLPNO_job):
+                            f_DLPNO = open(self.DLPNO_job, 'w')
+                            f_DLPNO.write('#DLPNO-CCSD(T) single point energy\n')
+                            f_DLPNO.write('\n')
+                            f_DLPNO.write('! DLPNO-CCSD(T) ' + mainbasis + aux +'printbasis\n')
+                            f_DLPNO.write('\n')
+                            f_DLPNO.write('%MaxCore 4096\n')
+                            f_DLPNO.write('\n')
+                            f_DLPNO.write('!\n')
+                            f_DLPNO.write('\n')
+                            f_DLPNO.write(" ".join(['* xyzfile',str(self.charge),str(self.tspin),geo_name]))
+                            f_DLPNO.write('\n')
+                            f_DLPNO.close()
+                   
     def archive(self, sub_number):
         # this fuinciton copies all files to arch
         path_dictionary = setup_paths()
