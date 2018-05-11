@@ -570,28 +570,36 @@ class DFTRun:
 
     def write_DLPNO_inputs(self):
         ## set files  for DLNPO calcs 
-        path_dictionary = setup_paths()      
+        path_dictionary = setup_paths()
         reference_name = stripName(self.job)
         geo_ref = self.geopath
         geo_name =  reference_name + '.xyz'
-        ensure_dir(path_dictionary['DLPNO_path'] + reference_name+'/')
-        shutil.copy(geo_ref,path_dictionary['DLPNO_path'] + reference_name + '/' + geo_name)
-        self.DLPNO_job = path_dictionary['DLPNO_path'] + reference_name+'/' + reference_name + '.in'
-        ### write files
-        if not os.path.exists(self.DLPNO_job):
-            f_DLPNO = open(self.DLPNO_job, 'w')
-            f_DLPNO.write('#DLPNO- CCSD(T) single point energy\n')
-            f_DLPNO.write('\n')
-            f_DLPNO.write('! DLPNO-CCSD(T) def2-TZVP def2-TZVP/C sp PAL4\n')
-            f_DLPNO.write('\n')
-            f_DLPNO.write('%MaxCore 4096\n')
-            f_DLPNO.write('\n')
-            f_DLPNO.write('!\n')
-            f_DLPNO.write('\n')
-            f_DLPNO.write(" ".join(['* xyzfile',str(self.charge),str(self.tspin),geo_name]))
-            f_DLPNO.write('\n')
-            f_DLPNO.close()
-            
+        mainbasisList =  ["CC-PVDZ","CC-PVTZ","CC-PVQZ","def2-TZVP","def2-QZVP"]
+        auxs  = [" AutoAux RIJCOSX "," "]
+        baserf = reference_name
+        for i in range(0,len(mainbasisList)):
+                for j,aux in enumerate(auxs):
+                        mainbasis = mainbasisList[i]
+                        reference_name = baserf + '_'+str(i)+'_'+str(j)
+                        self.DLPNO_job = path_dictionary['DLPNO_path'] + reference_name+'/' + reference_name + '.in'
+                        ensure_dir(path_dictionary['DLPNO_path'] + reference_name+'/')
+                        shutil.copy(geo_ref,path_dictionary['DLPNO_path'] + reference_name + '/' + geo_name)
+
+                        ### write files
+                        if not os.path.exists(self.DLPNO_job):
+                            f_DLPNO = open(self.DLPNO_job, 'w')
+                            f_DLPNO.write('#DLPNO-CCSD(T) single point energy\n')
+                            f_DLPNO.write('\n')
+                            f_DLPNO.write('! DLPNO-CCSD(T) ' + mainbasis + aux +'printbasis\n')
+                            f_DLPNO.write('\n')
+                            f_DLPNO.write('%MaxCore 4096\n')
+                            f_DLPNO.write('\n')
+                            f_DLPNO.write('!\n')
+                            f_DLPNO.write('\n')
+                            f_DLPNO.write(" ".join(['* xyzfile',str(self.charge),str(self.tspin),geo_name]))
+                            f_DLPNO.write('\n')
+                            f_DLPNO.close()
+                   
     def archive(self, sub_number):
         # this fuinciton copies all files to arch
         path_dictionary = setup_paths()
