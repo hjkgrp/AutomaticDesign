@@ -19,6 +19,8 @@ def resume_run(args):
     while its < reps:
       GA_run = GA_run_defintion()
       GA_run.deserialize(os.getcwd()+'/.madconfig')
+      if args.post_all:
+        GA_run.config['post_all'] = True
       path_dictionary = setup_paths()
       print(GA_run.config)
       if GA_run.config['DFT']:
@@ -29,7 +31,7 @@ def resume_run(args):
         live_job_count = check_queue_for_live_jobs()
         logger(path_dictionary['state_path'],str(datetime.datetime.now()) + ' monitoring, number of live jobs ' + str(live_job_count)) 
       ## wake the run
-      logger(path_dictionary['state_path'],str(datetime.datetime.now()) + ' resuming MSAD')
+      logger(path_dictionary['state_path'],str(datetime.datetime.now()) + ' resuming MAD')
       wake_up_routine()
       if GA_run.config['DFT']:
         ## send off oustanding jobs

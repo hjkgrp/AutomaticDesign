@@ -34,7 +34,10 @@ class GA_run_defintion:
                       max_jobs = 20,
                       exchange = 20,
                       oxocatalysis = False,
-                      monitor_diversity=True,monitor_distance= True,**KWARGS):
+                      monitor_diversity=True,
+                      monitor_distance= True,
+                      all_post = False,
+                      **KWARGS):
             ## first time start-up function
 #                print('configuring status dictionaty')
 #                print('setting rundir to '+rundir)
@@ -65,7 +68,8 @@ class GA_run_defintion:
                               'split_parameter':split_parameter,
                               'monitor_diversity':monitor_diversity,
                               'monitor_distance':monitor_distance,
-                              'max_jobs':max_jobs}
+                              'max_jobs':max_jobs,
+                              "all_post":all_post}
         def serialize(self):
             ## serialize run info
             print('serialziing to '+str(self.config['rundir'] + '.madconfig'))

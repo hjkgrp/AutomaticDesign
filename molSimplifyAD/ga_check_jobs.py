@@ -13,6 +13,31 @@ from molSimplifyAD.ga_main import *
 from molSimplifyAD.process_scf import *
 from molSimplifyAD.post_classes import *
 from molSimplifyAD.ga_oct_check import *
+
+#######################
+def postprocessJob(job,live_job_dictionary,converged_jobs_dictionary)
+    ## function to choos if a job should
+    GA_run = get_current_GA()
+    
+    ## be post processed:
+    if (job not in live_job_dictionary.keys()) and (len(jobs.strip('\n'))!=0):
+        if not ("sp_infiles" in jobs) and not ("thermo" in jobs) and not ("solvent" in jobs):
+            if GA_run["allPost"]:
+                postProc = True
+            elif jobs in converged_jobs_dictionary.keys():
+                this_outcome = int(converged_jobs_dictionary[jobs])
+                if this_outcome in [0,1,3,6,8]: # dead jobs
+                    postProc = False
+                else:
+                    postProc = True
+            else:
+                postProc = True
+                
+        
+            
+    else:            
+        postProc = False
+    return(postProc)
 #######################
 def check_all_current_convergence():
     print('\nchecking convergence of jobs\n')
@@ -53,7 +78,7 @@ def check_all_current_convergence():
         ## 13-> job requests solvent
         
         for jobs in joblist:
-            if  (jobs not in live_job_dictionary.keys()) and (len(jobs.strip('\n'))!=0) and not ("sp_infiles" in jobs) and not ("thermo" in jobs) and not ("solvent" in jobs):
+            if  postprocessJob(job=jobs,live_job_dictionary=live_job_dictionary,converged_jobs_dictionary=converged_jobs):
                 ## upack job name
                 gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,base_name,base_gene = translate_job_name(jobs)
                 ## create run
