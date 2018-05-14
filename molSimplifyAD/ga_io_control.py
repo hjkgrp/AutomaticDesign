@@ -140,6 +140,7 @@ def parseall(parser):
     # parses commandline arguments and prints help information ###
     parser.add_argument("-new", help="point to new tree definition file, or use default",nargs='?',const = True,default=False)
     parser.add_argument("-resume", help="point to already initialized folder ", nargs='?',const = True,default=False)
+    parser.add_argument("-post-all", help="force check of all runs (re-check converged) ", nargs='?',const = True,default=False)
     parser.add_argument("-reps", help="repeat n resume operations ", nargs='?',const = 1,default=False)
     parser.add_argument("-sleep", help="time (in seconds) to sleep beweetwn reps ", nargs='?',const = 0,default=False)
     args=parser.parse_args()
