@@ -137,6 +137,13 @@ def isDFT():
         return False
     return rdir
 ########################
+def isall_post():
+    GA_run =  get_current_GA()
+    if 'all_post' in GA_run.config.keys():
+            return GA_run.config["all_post"]
+    else:
+        return False
+########################
 def isOptimize():
     GA_run =  get_current_GA()
     if GA_run.config["optimize"]:

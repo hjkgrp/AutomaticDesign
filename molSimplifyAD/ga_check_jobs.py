@@ -21,12 +21,12 @@ def postprocessJob(job,live_job_dictionary,converged_jobs_dictionary):
     GA_run = get_current_GA()
     
     ## be post processed:
-    if (job not in live_job_dictionary.keys()) and (len(jobs.strip('\n'))!=0):
-        if not ("sp_infiles" in jobs) and not ("thermo" in jobs) and not ("solvent" in jobs):
-            if GA_run["allPost"]:
+    if (job not in live_job_dictionary.keys()) and (len(job.strip('\n'))!=0):
+        if not ("sp_infiles" in job) and not ("thermo" in job) and not ("solvent" in job):
+            if isall_post():
                 postProc = True
-            elif jobs in converged_jobs_dictionary.keys():
-                this_outcome = int(converged_jobs_dictionary[jobs])
+            elif job in converged_jobs_dictionary.keys():
+                this_outcome = int(converged_jobs_dictionary[job])
                 if this_outcome in [0,1,3,6,8]: # dead jobs
                     postProc = False
                 else:
@@ -370,7 +370,7 @@ def check_all_current_convergence():
         if not (os.path.isfile(get_run_dir() + '/unified_results_post.csv')):
                 logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                                + " starting output log file at " + get_run_dir() + '/unified_results_post.csv')
-        if (not GA_run["allPost"]) and os.path.isfile(get_run_dir() + '/unified_results_post.csv'):
+        if (not isall_post()) and os.path.isfile(get_run_dir() + '/unified_results_post.csv'):
             with open('unified_results_post.csv','a') as f:
                 for reskeys in final_results.keys():
                     values = atrextract(final_results[reskeys],list_of_props)
@@ -381,11 +381,11 @@ def check_all_current_convergence():
                 for reskeys in final_results.keys():
                     values = atrextract(final_results[reskeys],list_of_props)
                     writeprops(values,f)
-        if (not GA_run["allPost"]) and os.path.isfile(get_run_dir() + '/consistent_descriptor_file.csv'):
+        if (not isall_post()) and os.path.isfile(get_run_dir() + '/consistent_descriptor_file.csv'):
             append_descriptor_csv(final_results.values())
         else:
             write_descriptor_csv(final_results.values())    
-        if GA_run["allPost"]:
+        if isall_post():
             output = open('final_runs_pickle.pkl','wb')
             pickle.dump(final_results,output,-1)
             output.close()
