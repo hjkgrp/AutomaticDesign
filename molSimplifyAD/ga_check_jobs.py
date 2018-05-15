@@ -7,12 +7,38 @@ import argparse
 import os
 import random
 import shutil
+import pickle 
 from molSimplifyAD.ga_tools import *
 from molSimplifyAD.ga_complex import *
 from molSimplifyAD.ga_main import *
 from molSimplifyAD.process_scf import *
 from molSimplifyAD.post_classes import *
 from molSimplifyAD.ga_oct_check import *
+
+#######################
+def postprocessJob(job,live_job_dictionary,converged_jobs_dictionary):
+    ## function to choos if a job should
+    GA_run = get_current_GA()
+    
+    ## be post processed:
+    if (job not in live_job_dictionary.keys()) and (len(job.strip('\n'))!=0):
+        if not ("sp_infiles" in job) and not ("thermo" in job) and not ("solvent" in job):
+            if isall_post():
+                postProc = True
+            elif job in converged_jobs_dictionary.keys():
+                this_outcome = int(converged_jobs_dictionary[job])
+                if this_outcome in [0,1,3,6,8]: # dead jobs
+                    postProc = False
+                else:
+                    postProc = True
+            else:
+                postProc = True
+                
+        
+            
+    else:            
+        postProc = False
+    return(postProc)
 #######################
 def check_all_current_convergence():
     print('\nchecking convergence of jobs\n')
@@ -53,10 +79,10 @@ def check_all_current_convergence():
         ## 13-> job requests solvent
         
         for jobs in joblist:
-            if  (jobs not in live_job_dictionary.keys()) and (len(jobs.strip('\n'))!=0) and not ("sp_infiles" in jobs) and not ("thermo" in jobs) and not ("solvent" in jobs):
-                ## upack job name
-                gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,base_name,base_gene = translate_job_name(jobs)
-                ## create run
+            if  postprocessJob(job=jobs,live_job_dictionary=live_job_dictionary,converged_jobs_dictionary=converged_jobs):
+		## upack job name
+		gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,base_name,base_gene = translate_job_name(jobs)
+		## create run
                 this_run=DFTRun(base_name)
                 
                 ## add info
@@ -201,8 +227,8 @@ def check_all_current_convergence():
                                             logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref ' + refHFX)
 
                                             add_to_outstanding_jobs(HFX_job)
-                                    if GA_run.config['oxocatalysis'] == True:
-                                            empty_job, empty_sp = this_run.write_empty_inputs()
+                                    if GA_run.config['oxocatalysis'] == True and int(ox)>3:
+                                            empty_job, empty_sp = this_run.write_empty_inputs(refHFX)
                                             if (empty_job not in joblist) and (empty_job not in outstanding_jobs) and (empty_job not in converged_jobs.keys()):
                                                     print('note: converting from oxo structure to empty structure')
                                                     logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure')
@@ -211,8 +237,8 @@ def check_all_current_convergence():
                                                     print('note: converting from oxo structure to empty structure (SP)')
                                                     logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure (SP)')
                                                     add_to_outstanding_jobs(empty_sp)
-                    elif GA_run.config['oxocatalysis']==True: #Must do this because the empty sites are one step behind the 6-coordinates at different HFX
-                            empty_job, empty_sp = this_run.write_empty_inputs()
+                    elif GA_run.config['oxocatalysis']==True and int(ox)>3: #Must do this because the empty sites are one step behind the 6-coordinates at different HFX
+                            empty_job, empty_sp = this_run.write_empty_inputs(refHFX)
                             if (empty_job not in joblist) and (empty_job not in outstanding_jobs) and (empty_job not in converged_jobs.keys()):
                                     print('note: converting from oxo structure to empty structure')
                                     logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure')
@@ -341,15 +367,28 @@ def check_all_current_convergence():
                         list_of_props.append("_".join(['ox',str(ox),spin_cat,props]))
             list_of_props.append('attempted')
             final_results = process_runs_geo(all_runs,list_of_prop_names,spin_dictionary())
-        if not (os.path.isfile(get_run_dir() + '/results_post.csv')):
+        if not (os.path.isfile(get_run_dir() + '/unified_results_post.csv')):
                 logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                                + " starting output log file at " + get_run_dir() + '/unified_results_post.csv')
-        with open('unified_results_post.csv','w') as f:
-            writeprops(list_of_props,f)
-            for reskeys in final_results.keys():
-                values = atrextract(final_results[reskeys],list_of_props)
-                writeprops(values,f)
-        write_descriptor_csv(final_results.values())
+        if (not isall_post()) and os.path.isfile(get_run_dir() + '/unified_results_post.csv'):
+            with open('unified_results_post.csv','a') as f:
+                for reskeys in final_results.keys():
+                    values = atrextract(final_results[reskeys],list_of_props)
+                    writeprops(values,f)            
+        else:
+            with open('unified_results_post.csv','w') as f:
+                writeprops(list_of_props,f)
+                for reskeys in final_results.keys():
+                    values = atrextract(final_results[reskeys],list_of_props)
+                    writeprops(values,f)
+        if (not isall_post()) and os.path.isfile(get_run_dir() + '/consistent_descriptor_file.csv'):
+            append_descriptor_csv(final_results.values())
+        else:
+            write_descriptor_csv(final_results.values())    
+        if isall_post():
+            output = open('final_runs_pickle.pkl','wb')
+            pickle.dump(final_results,output,-1)
+            output.close()
         print('\n**** end of file inspection **** \n')
     else:
         print('post processing SP/spin files')    

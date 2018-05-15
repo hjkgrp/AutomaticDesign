@@ -34,7 +34,10 @@ class GA_run_defintion:
                       max_jobs = 20,
                       exchange = 20,
                       oxocatalysis = False,
-                      monitor_diversity=True,monitor_distance= True,**KWARGS):
+                      monitor_diversity=True,
+                      monitor_distance= True,
+                      all_post = False,
+                      **KWARGS):
             ## first time start-up function
 #                print('configuring status dictionaty')
 #                print('setting rundir to '+rundir)
@@ -65,7 +68,8 @@ class GA_run_defintion:
                               'split_parameter':split_parameter,
                               'monitor_diversity':monitor_diversity,
                               'monitor_distance':monitor_distance,
-                              'max_jobs':max_jobs}
+                              'max_jobs':max_jobs,
+                              "all_post":all_post}
         def serialize(self):
             ## serialize run info
             print('serialziing to '+str(self.config['rundir'] + '.madconfig'))
@@ -136,6 +140,7 @@ def parseall(parser):
     # parses commandline arguments and prints help information ###
     parser.add_argument("-new", help="point to new tree definition file, or use default",nargs='?',const = True,default=False)
     parser.add_argument("-resume", help="point to already initialized folder ", nargs='?',const = True,default=False)
+    parser.add_argument("-post-all", help="force check of all runs (re-check converged) ", action='store_true',default=False)
     parser.add_argument("-reps", help="repeat n resume operations ", nargs='?',const = 1,default=False)
     parser.add_argument("-sleep", help="time (in seconds) to sleep beweetwn reps ", nargs='?',const = 0,default=False)
     args=parser.parse_args()

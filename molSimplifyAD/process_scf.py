@@ -311,14 +311,11 @@ def process_runs_oxocatalysis(all_runs,list_of_prop_names,local_spin_dictionary,
        
         metal_spins  = local_spin_dictionary[this_metal][this_ox]
         
-        print('Metal',this_metal,'Ox',this_ox)
-        print('This_run.spin!!!!',this_run.spin)
-        print('METAL SPINS',metal_spins)
-        if this_run.spin not in metal_spins:
+        if int(this_run.spin) not in metal_spins:
            print('ERROR! not in metal spins : ' +  str(this_run) + ' not in ' +  str(metal_spins))
         else:
             spin_ind = metal_spins.index(this_run.spin)
-            if spin_ind == 0:
+	    if spin_ind == 0:
                 spin_cat = 'LS'
             elif spin_ind == 1:
                 spin_cat = 'IS'
