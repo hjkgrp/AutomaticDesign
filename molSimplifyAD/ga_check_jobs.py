@@ -7,6 +7,7 @@ import argparse
 import os
 import random
 import shutil
+import pickle 
 from molSimplifyAD.ga_tools import *
 from molSimplifyAD.ga_complex import *
 from molSimplifyAD.ga_main import *
@@ -15,7 +16,7 @@ from molSimplifyAD.post_classes import *
 from molSimplifyAD.ga_oct_check import *
 
 #######################
-def postprocessJob(job,live_job_dictionary,converged_jobs_dictionary)
+def postprocessJob(job,live_job_dictionary,converged_jobs_dictionary):
     ## function to choos if a job should
     GA_run = get_current_GA()
     
@@ -366,15 +367,28 @@ def check_all_current_convergence():
                         list_of_props.append("_".join(['ox',str(ox),spin_cat,props]))
             list_of_props.append('attempted')
             final_results = process_runs_geo(all_runs,list_of_prop_names,spin_dictionary())
-        if not (os.path.isfile(get_run_dir() + '/results_post.csv')):
+        if not (os.path.isfile(get_run_dir() + '/unified_results_post.csv')):
                 logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                                + " starting output log file at " + get_run_dir() + '/unified_results_post.csv')
-        with open('unified_results_post.csv','w') as f:
-            writeprops(list_of_props,f)
-            for reskeys in final_results.keys():
-                values = atrextract(final_results[reskeys],list_of_props)
-                writeprops(values,f)
-        write_descriptor_csv(final_results.values())
+        if (not GA_run["allPost"]) and os.path.isfile(get_run_dir() + '/unified_results_post.csv'):
+            with open('unified_results_post.csv','a') as f:
+                for reskeys in final_results.keys():
+                    values = atrextract(final_results[reskeys],list_of_props)
+                    writeprops(values,f)            
+        else:
+            with open('unified_results_post.csv','w') as f:
+                writeprops(list_of_props,f)
+                for reskeys in final_results.keys():
+                    values = atrextract(final_results[reskeys],list_of_props)
+                    writeprops(values,f)
+        if (not GA_run["allPost"]) and os.path.isfile(get_run_dir() + '/consistent_descriptor_file.csv'):
+            append_descriptor_csv(final_results.values())
+        else:
+            write_descriptor_csv(final_results.values())    
+        if GA_run["allPost"]:
+            output = open('final_runs_pickle.pkl','wb')
+            pickle.dump(final_results,output,-1)
+            output.close()
         print('\n**** end of file inspection **** \n')
     else:
         print('post processing SP/spin files')    

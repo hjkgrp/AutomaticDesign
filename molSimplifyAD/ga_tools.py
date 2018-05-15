@@ -96,8 +96,12 @@ def get_metals():
         return metals_list
 ########################
 def get_ox_states(): # could be made metal dependent like spin
+    GA_run =  get_current_GA() 
+    if GA_run.config["oxocatalysis"]:
         ox_list = [2,3,4,5]
-        return ox_list
+    else:
+        ox_list = [2,3]
+    return ox_list
 ########################
 def spin_dictionary():
     GA_run =  get_current_GA() 
@@ -494,3 +498,18 @@ def write_descriptor_csv(list_of_runs):
     else:
         pass
 ########################
+def append_descriptor_csv(list_of_runs):
+    if list_of_runs:
+        nl = len(list_of_runs[0].descriptor_names)
+        with open('consistent_descriptor_file.csv','a') as f:
+            for runs in list_of_runs:
+                try:
+                    f.write(runs.name)
+                    counter  = 0 
+                    for properties in runs.descriptors:
+                        f.write(','+str(properties))
+                    f.write('\n')
+                except:
+                    pass
+    else:
+        pass
