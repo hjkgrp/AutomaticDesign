@@ -168,10 +168,12 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary,local_met
             axlig2_name = this_run.axlig2
             
                 
-        this_name = "_".join([this_metal,'eq',str(eqlig_name),'ax1',str(axlig1_name),'ax2',str(axlig2_name),'ahf',str(int(this_run.alpha))])
+        this_name = "_".join([this_metal,'eq',str(eqlig_name),'ax1',str(axlig1_name),'ax2',str(axlig2_name),'ahf',str(int(this_run.alpha)).zfill(2)])
+        print('** name is ' + str(this_name))
                 ### add alpha value to list owned by this_comp:
                 
         if this_name not in final_results.keys():
+            print('new name')
             ## need to create a new holder to store this gene
             this_comp = Comp(this_name)
             this_comp.set_properties(this_run)
@@ -212,7 +214,7 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary,local_met
             if duplication:
                 # set back conv counter
                 this_comp.convergence -= 1
-                if this_run.coord == 6:
+                if this_run.flag_oct == 1:
                     ## replace the descriptor if set
                     this_comp.set_desc = False
             
@@ -226,8 +228,8 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary,local_met
                 this_comp.gene = "_".join([this_metal,str(eqlig_name),str(axlig1_name),str(axlig2_name)])
             if this_run.converged and this_run.coord == 6:
                 this_comp.convergence += 1
-            if this_run.coord == 6 and not this_comp.set_desc:
-                try:
+            if this_run.flag_oct == 1 and not this_comp.set_desc:
+#                try:
                     if not os.path.isdir('used_geos/'):
                         os.mkdir('used_geos/')
                     this_run.mol.writexyz('used_geos/'+this_name+'.xyz')
@@ -236,12 +238,14 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary,local_met
                     this_comp.eqlig = this_run.eqlig
                     this_comp.set_rep_mol(this_run)
                     this_comp.get_descriptor_vector(loud=False,name=this_name)
-                except:
-                    if not os.path.isdir('bad_geos/'):
-                        os.mkdir('bad_geos/')
-                    this_run.mol.writexyz('bad_geos/'+this_name+'.xyz')
-                    this_comp.convergence -= 1
-                    this_run.coord = 'error'
+#                except:
+#                    if not os.path.isdir('bad_geos/'):
+#                        os.mkdir('bad_geos/')
+#                    this_run.mol.writexyz('bad_geos/'+this_name+'.xyz')
+#                    this_comp.convergence -= 1
+#                    this_run.coord = 'error'
+#                    sadasdasdasda
+            
 
             for props in list_of_prop_names:
                      this_attribute = "_".join(['ox',str(this_ox),spin_cat,props])

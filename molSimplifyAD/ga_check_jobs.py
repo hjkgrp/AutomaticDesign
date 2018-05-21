@@ -80,9 +80,9 @@ def check_all_current_convergence():
         
         for jobs in joblist:
             if  postprocessJob(job=jobs,live_job_dictionary=live_job_dictionary,converged_jobs_dictionary=converged_jobs):
-		## upack job name
-		gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,base_name,base_gene = translate_job_name(jobs)
-		## create run
+                ##upack job name
+                gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,base_name,base_gene = translate_job_name(jobs)
+	        	## create run
                 this_run=DFTRun(base_name)
                 
                 ## add info
@@ -106,7 +106,7 @@ def check_all_current_convergence():
                 
                   
                 ## make unique gene
-                name = "_".join([str(metal),'eq',str(eqlig),'ax1',str(axlig1),'ax2',str(axlig2),'ahf',str(int(alpha))])
+                name = "_".join([str(metal),'eq',str(eqlig),'ax1',str(axlig1),'ax2',str(axlig2),'ahf',str(int(alpha)).zfill(2)])
 
                 ## set file paths
                 path_dictionary =  setup_paths()
@@ -382,8 +382,11 @@ def check_all_current_convergence():
                     values = atrextract(final_results[reskeys],list_of_props)
                     writeprops(values,f)
         if (not isall_post()) and os.path.isfile(get_run_dir() + '/consistent_descriptor_file.csv'):
+            shouldntbehere
             append_descriptor_csv(final_results.values())
         else:
+            print('QQWWWQW *** * ** * ** ** ** * *****  ')
+            print('final results values len is ' + str(len(final_results.values())))
             write_descriptor_csv(final_results.values())    
         if isall_post():
             output = open('final_runs_pickle.pkl','wb')

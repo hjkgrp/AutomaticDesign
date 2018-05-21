@@ -139,8 +139,8 @@ def isDFT():
 ########################
 def isall_post():
     GA_run =  get_current_GA()
-    if 'all_post' in GA_run.config.keys():
-            return GA_run.config["all_post"]
+    if unicode('post_all','utf-8') in GA_run.config.keys():
+        return GA_run.config["post_all"]
     else:
         return False
 ########################
@@ -198,7 +198,7 @@ def translate_job_name(job):
         #print('spin assigned as ll[9]  = ' + str(spin) + ' on  ' +str(ll))
         #print('critical erorr, unknown spin: '+ str(spin))
         spin_cat = 'IS' #Intermediate Spin
-    gene = "_".join([str(metal),str(ox),str(eqlig_ind),str(axlig1_ind),str(axlig2_ind),str(ahf)])
+    gene = "_".join([str(metal),str(ox),str(eqlig_ind),str(axlig1_ind),str(axlig2_ind),str(ahf).zfill(2)])
     basegene = "_".join([str(metal),str(eqlig_ind),str(axlig1_ind),str(axlig2_ind)])
     return gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,basename,basegene
 ########################
@@ -483,9 +483,11 @@ def atrextract(a_run,list_of_props):
 def write_descriptor_csv(list_of_runs):
     if list_of_runs:
         nl = len(list_of_runs[0].descriptor_names)
+        print('writing a file')
         with open('consistent_descriptor_file.csv','w') as f:
             f.write('runs,')
             n_cols = len(list_of_runs[0].descriptor_names)
+            print('first element has ' + str(n_cols) + ' columns')
             if n_cols == 0:
                 f.write('\n')
             for i,names in enumerate(list_of_runs[0].descriptor_names):
@@ -497,7 +499,9 @@ def write_descriptor_csv(list_of_runs):
                 try:
                     f.write(runs.name)
                     counter  = 0 
+                    print('found ' + str(len(runs.descriptors)) +  ' descriptors ')
                     for properties in runs.descriptors:
+        
                         f.write(','+str(properties))
                     f.write('\n')
                 except:
