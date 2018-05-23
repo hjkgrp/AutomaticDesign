@@ -382,7 +382,6 @@ def check_all_current_convergence():
                     values = atrextract(final_results[reskeys],list_of_props)
                     writeprops(values,f)
         if (not isall_post()) and os.path.isfile(get_run_dir() + '/consistent_descriptor_file.csv'):
-            shouldntbehere
             append_descriptor_csv(final_results.values())
         else:
             print('QQWWWQW *** * ** * ** ** ** * *****  ')
