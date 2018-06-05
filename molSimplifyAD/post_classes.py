@@ -123,6 +123,9 @@ class DFTRun:
         self.dict_geo_check = dict()
         self.comment = ''
         self.octahedral = 'undef'
+        self.devi_linear_avrg = 'undef'
+        self.devi_linear_max = 'undef'
+
 
         ## mopac statistics
         self.mop_energy = 'undef'
