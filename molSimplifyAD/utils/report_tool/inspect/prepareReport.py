@@ -1,9 +1,5 @@
-
-# coding: utf-8
-
-# In[53]:
-
-
+import numpy as np
+from string import template
 import os, sys, shutil, glob, subprocess
 from molSimplify.Classes.mol3D import *
 from molSimplify.Classes.ligand import *
@@ -12,10 +8,6 @@ from pymol.cgo import *
 from pymol import cmd
 from pymol import preset
 from pymol import util
-
-
-# In[47]:
-
 
 def loadMols(initialPath, finalPath, reportPath):
     # load in geos
@@ -34,7 +26,7 @@ def loadMols(initialPath, finalPath, reportPath):
     return initialMol, finalMol
 
 
-# In[49]:
+
 
 
 def processInitialAndFinalToXyz(initialPath, initialMol, finalPath, finalMol):
