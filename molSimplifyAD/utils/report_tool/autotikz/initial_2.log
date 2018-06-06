@@ -1,0 +1,344 @@
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2018.3.23)  5 JUN 2018 17:48
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**initial_2.tex
+(./initial_2.tex
+LaTeX2e <2011/06/27>
+Babel <3.9h> and hyphenation patterns for 78 languages loaded.
+
+! LaTeX Error: Environment tikzpicture undefined.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.1 \begin{tikzpicture}
+                       [scale=1.0,tdplot_main_coords]
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+
+! LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.1 \begin{tikzpicture}[
+                        scale=1.0,tdplot_main_coords]
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+Missing character: There is no [ in font nullfont!
+Missing character: There is no s in font nullfont!
+Missing character: There is no c in font nullfont!
+Missing character: There is no a in font nullfont!
+Missing character: There is no l in font nullfont!
+Missing character: There is no e in font nullfont!
+Missing character: There is no = in font nullfont!
+Missing character: There is no 1 in font nullfont!
+Missing character: There is no . in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no , in font nullfont!
+Missing character: There is no t in font nullfont!
+Missing character: There is no d in font nullfont!
+Missing character: There is no p in font nullfont!
+Missing character: There is no l in font nullfont!
+Missing character: There is no o in font nullfont!
+Missing character: There is no t in font nullfont!
+! Missing $ inserted.
+<inserted text> 
+                $
+l.1 \begin{tikzpicture}[scale=1.0,tdplot_
+                                         main_coords]
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 1.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 1.
+! Undefined control sequence.
+l.4     \coordinate
+                    (ori) at (0,0,0);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.5     \coordinate
+                    (tz) at (0,0,\extent);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.6     \coordinate
+                    (bz) at (0,0,-\extent);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.7     \coordinate
+                    (tx) at (\extent,0,0);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.8     \coordinate
+                    (bx) at (-\extent,0,0);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.9     \coordinate
+                    (ty) at (0,\extent,0);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.10     \coordinate
+                     (by) at (0,-\extent,0);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.12     \draw
+              [thick,blue,<->]  (bz.center) -- (tz.center);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.13     \draw
+              [thick,blue,<->]  (bx.center) -- (tx.center);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.14     \draw
+              [thick,blue,<->]  (by.center) -- (ty.center);
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.15     \tdplottransformmainscreen
+                                   {0}{0}{0}
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.16       \shade
+                 [CoAtom](\tdplotresx,\tdplotresy) circle;
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.16       \shade[CoAtom](\tdplotresx
+                                     ,\tdplotresy) circle;
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.16       \shade[CoAtom](\tdplotresx,\tdplotresy
+                                                 ) circle;
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.17     \tdplottransformmainscreen
+                                   {-1}{5}{5}
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.18           \shade
+                     [FeAtom](\tdplotresx,\tdplotresy) circle ;
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.18           \shade[FeAtom](\tdplotresx
+                                         ,\tdplotresy) circle ;
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.18 ...    \shade[FeAtom](\tdplotresx,\tdplotresy
+                                                  ) circle ;
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Undefined control sequence.
+l.19     \drawFeAtom
+                    {5}{5}{-12}
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.20 
+     
+I've inserted a begin-math/end-math symbol since I think
+you left one out. Proceed, with fingers crossed.
+
+
+Overfull \hbox (625.28001pt too wide) in paragraph at lines 1--20
+[]$[]\OML/cmm/m/it/10 ain[]oords\OT1/cmr/m/n/10 ](\OML/cmm/m/it/10 ori\OT1/cmr/
+m/n/10 )\OML/cmm/m/it/10 at\OT1/cmr/m/n/10 (0\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10
+ 0\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 0); (\OML/cmm/m/it/10 tz\OT1/cmr/m/n/10 )\
+OML/cmm/m/it/10 at\OT1/cmr/m/n/10 (0\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 0\OML/cm
+m/m/it/10 ; \OT1/cmr/m/n/10 10); (\OML/cmm/m/it/10 bz\OT1/cmr/m/n/10 )\OML/cmm/
+m/it/10 at\OT1/cmr/m/n/10 (0\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 0\OML/cmm/m/it/1
+0 ; \OMS/cmsy/m/n/10 ^^@\OT1/cmr/m/n/10 10); (\OML/cmm/m/it/10 tx\OT1/cmr/m/n/1
+0 )\OML/cmm/m/it/10 at\OT1/cmr/m/n/10 (10\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 0\O
+ML/cmm/m/it/10 ; \OT1/cmr/m/n/10 0); (\OML/cmm/m/it/10 bx\OT1/cmr/m/n/10 )\OML/
+cmm/m/it/10 at\OT1/cmr/m/n/10 (\OMS/cmsy/m/n/10 ^^@\OT1/cmr/m/n/10 10\OML/cmm/m
+/it/10 ; \OT1/cmr/m/n/10 0\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 0); (\OML/cmm/m/it
+/10 ty\OT1/cmr/m/n/10 )\OML/cmm/m/it/10 at\OT1/cmr/m/n/10 (0\OML/cmm/m/it/10 ; 
+\OT1/cmr/m/n/10 10\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 0); (\OML/cmm/m/it/10 by\O
+T1/cmr/m/n/10 )\OML/cmm/m/it/10 at\OT1/cmr/m/n/10 (0\OML/cmm/m/it/10 ; \OMS/cms
+y/m/n/10 ^^@\OT1/cmr/m/n/10 10\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 0); [\OML/cmm/
+m/it/10 thick; blue; <
+ []
+
+
+Overfull \hbox (18.33331pt too wide) in paragraph at lines 1--20
+\OMS/cmsy/m/n/10 ^^@ \OML/cmm/m/it/10 >
+ []
+
+
+Overfull \hbox (58.53606pt too wide) in paragraph at lines 1--20
+\OT1/cmr/m/n/10 ](\OML/cmm/m/it/10 bz:center\OT1/cmr/m/n/10 ) \OMS/cmsy/m/n/10 
+^^@
+ []
+
+
+Overfull \hbox (119.48586pt too wide) in paragraph at lines 1--20
+\OMS/cmsy/m/n/10 ^^@\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 tz:center\OT1/cmr/m/n/10 
+); [\OML/cmm/m/it/10 thick; blue; <
+ []
+
+
+Overfull \hbox (18.33331pt too wide) in paragraph at lines 1--20
+\OMS/cmsy/m/n/10 ^^@ \OML/cmm/m/it/10 >
+ []
+
+
+Overfull \hbox (59.16103pt too wide) in paragraph at lines 1--20
+\OT1/cmr/m/n/10 ](\OML/cmm/m/it/10 bx:center\OT1/cmr/m/n/10 ) \OMS/cmsy/m/n/10 
+^^@
+ []
+
+
+Overfull \hbox (120.11082pt too wide) in paragraph at lines 1--20
+\OMS/cmsy/m/n/10 ^^@\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 tx:center\OT1/cmr/m/n/10 
+); [\OML/cmm/m/it/10 thick; blue; <
+ []
+
+
+Overfull \hbox (18.33331pt too wide) in paragraph at lines 1--20
+\OMS/cmsy/m/n/10 ^^@ \OML/cmm/m/it/10 >
+ []
+
+
+Overfull \hbox (58.70735pt too wide) in paragraph at lines 1--20
+\OT1/cmr/m/n/10 ](\OML/cmm/m/it/10 by:center\OT1/cmr/m/n/10 ) \OMS/cmsy/m/n/10 
+^^@
+ []
+
+
+Overfull \hbox (293.80893pt too wide) in paragraph at lines 1--20
+\OMS/cmsy/m/n/10 ^^@\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 ty:center\OT1/cmr/m/n/10 
+); 000[\OML/cmm/m/it/10 CoAtom\OT1/cmr/m/n/10 ](\OML/cmm/m/it/10 ; \OT1/cmr/m/n
+/10 )\OML/cmm/m/it/10 circle\OT1/cmr/m/n/10 ; []55[\OML/cmm/m/it/10 FeAtom\OT1/
+cmr/m/n/10 ](\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 )\OML/cmm/m/it/10 circle\OT1/cm
+r/m/n/10 ; 55[]$ 
+ []
+
+
+! LaTeX Error: \begin{document} ended by \end{tikzpicture}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.22 \end{tikzpicture}
+                      
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+)
+! Emergency stop.
+<*> initial_2.tex
+                 
+*** (job aborted, no legal \end found)
+
+ 
+Here is how much of TeX's memory you used:
+ 10 strings out of 493304
+ 200 string characters out of 6139871
+ 52880 words of memory out of 5000000
+ 3569 multiletter control sequences out of 15000+600000
+ 3640 words of font info for 14 fonts, out of 8000000 for 9000
+ 957 hyphenation exceptions out of 8191
+ 18i,2n,12p,81b,58s stack positions out of 5000i,500n,10000p,200000b,80000s
+!  ==> Fatal error occurred, no output PDF file produced!

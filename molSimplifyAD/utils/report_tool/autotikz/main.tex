@@ -1,0 +1,29 @@
+\documentclass[12pt,tikz]{report}
+\include{header}
+\include{tikz_styles}
+\begin{document}
+
+\begin{tabular}{|c|c|c|}
+\hline \tdplotsetmaincoords{60}{135} 
+\resizebox{.35\textwidth}{!}{
+\input{initialProc}
+}& 
+ \tdplotsetmaincoords{60}{135} 
+\resizebox{.35\textwidth}{!}{
+\input{finalProc}
+}
+\\ \hline 
+\tdplotsetmaincoords{120}{135} 
+\resizebox{.35\textwidth}{!}{
+\input{initialProc}
+}&  
+\tdplotsetmaincoords{120}{135}
+\resizebox{.35\textwidth}{!}{
+\input{finalProc}
+}\\
+\hline
+\end{tabular}
+
+
+
+\end{document}
