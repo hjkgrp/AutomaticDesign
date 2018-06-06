@@ -579,6 +579,7 @@ class DFTRun:
                             f_DLPNO.close()
                    
     def archive(self, sub_number):
+            
         # this fuinciton copies all files to arch
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
@@ -588,6 +589,7 @@ class DFTRun:
         org_name = archive_path
         archive_path = org_name.rstrip('/') + '_' + str(sub_number) + '/'
         if not os.path.isdir(archive_path):
+                
             ensure_dir(archive_path)
             print('archiving to ' + archive_path)
             # copy files:
@@ -607,6 +609,13 @@ class DFTRun:
                 shutil.copy(self.outpath, archive_path + self.name + '.out')
             else:
                 print('archiving did NOT find  ' + self.outpath)
+
+    def get_descriptor_vector(self, loud=False, name=False):
+        self.mol.update_graph_check()
+        descriptor_names, descriptors = get_descriptor_vector(this_complex=self.mol,custom_ligand_dict=False,ox_modifier=False)    
+        self.descriptor_names = descriptor_names
+        self.descriptors = descriptors
+        self.set_desc = True
 
     def append_descriptors(self, list_of_names, list_of_props, prefix, suffix):
         for names in list_of_names:
@@ -945,25 +954,7 @@ class Comp:
         self.descriptor_names = descriptor_names
         self.descriptors = descriptors
         self.set_desc = True
-                #results_dictionary = generate_all_ligand_misc(self.mol, loud)
-                #self.mol.update_graph_check()
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax'], 'misc', 'ax')
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq'], 'misc', 'eq')
-                #results_dictionary = generate_all_ligand_autocorrelations(self.mol, depth=3, loud=True, name=name)
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax_full'], 'f', 'ax')
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq_full'], 'f', 'eq')
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax_con'], 'lc', 'ax')
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq_con'], 'lc', 'eq')
-                #results_dictionary = generate_metal_autocorrelations(self.mol, depth=3, loud=loud)
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['results'], 'mc', 'all')
-                #results_dictionary = generate_full_complex_autocorrelations(self.mol, depth=3, loud=loud)
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['results'], 'f', 'all')
-                #### delta metrics 
-                #results_dictionary = generate_all_ligand_deltametrics(self.mol, depth=3, loud=True, name=name)
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax_con'], 'D_lc', 'ax')
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq_con'], 'D_lc', 'eq')
-                #results_dictionary = generate_metal_deltametrics(self.mol, depth=3, loud=loud)
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['results'], 'D_mc', 'all')
+
     def append_descriptors(self, list_of_names, list_of_props, prefix, suffix):
         for names in list_of_names:
             if hasattr(names, '__iter__'):
