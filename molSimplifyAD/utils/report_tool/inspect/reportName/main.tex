@@ -1,26 +1,18 @@
 \documentclass[12pt,tikz]{report}
 \include{header}
-\include{tikz_styles}
+
 \begin{document}
 
 \begin{tabular}{|c|c|c|}
-\hline \tdplotsetmaincoords{60}{135} 
-\resizebox{.35\textwidth}{!}{
-\input{initialProc}
-}& 
- \tdplotsetmaincoords{60}{135} 
-\resizebox{.35\textwidth}{!}{
-\input{finalProc}
-}
+\hline 
+\includegraphics{../initial/initial_render1.png}
+& 
+\includegraphics{../initial/initial_render2.png}
 \\ \hline 
-\tdplotsetmaincoords{120}{135} 
-\resizebox{.35\textwidth}{!}{
-\input{initialProc}
-}&  
-\tdplotsetmaincoords{120}{135}
-\resizebox{.35\textwidth}{!}{
-\input{finalProc}
-}\\
+\includegraphics{../final/final_render1.png}
+&  
+\includegraphics{../final/final_render2.png}
+\\
 \hline
 \end{tabular}
 
