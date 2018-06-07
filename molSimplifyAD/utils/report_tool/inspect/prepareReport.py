@@ -13,6 +13,7 @@ def loadMols(initialPath, finalPath, reportPath):
     # load in geos
     finalMol = mol3D()
     initialMol = mol3D()
+    texSource = '../autotikz/'
 
     initialMol.readfromxyz(initialPath + '/initial.xyz')
     finalMol.readfromxyz(finalPath + '/final.xyz')
@@ -65,7 +66,7 @@ def rot(mol, component):
     maxComponent = 0
     Vect = []
     cInd = 0
-
+    initialLiglist, initialLigdents, initialLigcons = ligand_breakdown(mol)
     for conAtoms in initialLigcons:
         thisComponent = abs(mol.getAtom(conAtoms[0]).coords()[component])
         if maxComponent < thisComponent:
@@ -143,13 +144,16 @@ def draw3d(load_path, save_path):
 # In[78]:
 
 
-def compileTex():
+def compileTex(reportPath):
     print('\n######## COMPILE ########')
-    os.chdir('reportName')
+    os.chdir(reportPath)
     print('Compile in folder:')
     print(os.getcwd())
     cmd_str  = 'pdflatex main.tex'
-    p_sub = subprocess.Popen(cmd_str, shell = True, stdout = subprocess.PIPE)
+    print(cmd_str)
+    # p_sub = subprocess.Popen(cmd_str, shell = True, stdout = subprocess.PIPE)
+    os.system(cmd_str)
+    print('done')
     os.chdir('..')
 
 
@@ -157,6 +161,16 @@ def compileTex():
 
 
 def generateReport(initialPath, finalPath, reportPath):
+    try:
+        from pymol.cgo import *
+        from pymol import cmd
+        from pymol import preset
+        from pymol import util
+    except ImportError:
+        raise ImportError('Import from pymol didn\'t work.')
+    except Exception:
+        raise Exception('Unknown non-import related error.')
+    
     # paths
     initialPath = initialPath
     finalPath = finalPath
@@ -168,10 +182,8 @@ def generateReport(initialPath, finalPath, reportPath):
     draw3d(initialPath + '/initialOrient.xyz', initialPath + '/initial_render')
     draw3d(finalPath + '/finalOrient.xyz', finalPath + '/final_render')
 
-    compileTex()
+    compileTex(reportPath)
 
-
-# In[80]:
 
 
 generateReport("initial", "final", "reportName")
