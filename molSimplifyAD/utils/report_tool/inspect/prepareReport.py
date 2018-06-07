@@ -151,8 +151,9 @@ def compileTex(reportPath):
     print(os.getcwd())
     cmd_str  = 'pdflatex main.tex'
     print(cmd_str)
-    # p_sub = subprocess.Popen(cmd_str, shell = True, stdout = subprocess.PIPE)
-    os.system(cmd_str)
+    p_sub = subprocess.call(cmd_str,shell=True)
+
+    # os.system(cmd_str)
     print('done')
     os.chdir('..')
 
