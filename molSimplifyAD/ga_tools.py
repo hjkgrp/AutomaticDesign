@@ -293,7 +293,10 @@ def setup_paths():
                    "infiles"          : working_dir + "infiles/",
                    "mopac_path"       : working_dir + "mopac/",
                    "ANN_output"       : working_dir + "ANN_ouput/",
-                   "ms_reps"          : working_dir + "ms_reps/"}
+                   "ms_reps"          : working_dir + "ms_reps/",
+                   "good_reports"     : working_dir + "reports/good_geo/",
+                   "bad_reports"      : working_dir + "reports/bad_geo/",
+                   "other_reports"    : working_dir + "reports/other/"}
 
 #    shutil.copyfile(get_source_dir()+'wake.sh',get_run_dir()+'wake.sh')
     ## set scr path to scr/sp for single points
@@ -312,7 +315,7 @@ def setup_paths():
 def advance_paths(path_dictionary,generation):
     new_dict = dict()
     for keys in path_dictionary.keys():
-        if not (keys in ["molsimp_path","DLPNO_path"]) :
+        if not (keys in ["molsimp_path","DLPNO_path","reports"]) :
             new_dict[keys] = path_dictionary[keys] + "gen_" +  str(generation) + "/"
             ensure_dir(new_dict[keys])
     return new_dict

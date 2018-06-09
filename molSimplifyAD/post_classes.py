@@ -18,9 +18,10 @@ from molSimplify.Informatics.coulomb_analyze import *
 from molSimplify.Informatics.graph_analyze import *
 from molSimplify.Informatics.geo_analyze import *
 from molSimplify.Informatics.RACassemble import *
-#from molSimplifyAD.ga_oct_check import *
+
 from molSimplifyAD.ga_io_control import *
 from molSimplifyAD.ga_tools import get_current_GA
+from molSimplifyAD.utils.report_tool.prepare_report import *
 from molSimplify.Classes.globalvars import dict_oct_check_loose, dict_oct_check_st, dict_oneempty_check_st, \
     dict_oneempty_check_loose, oct_angle_ref, oneempty_angle_ref
 
@@ -54,6 +55,7 @@ class DFTRun:
         self.spin = 'undef'
 
         # ligands and metal
+        self.metal = 'undef'
         self.eqlig_ind = 'undef'
         self.axlig1_ind = 'undef'
         self.axlig2_ind = 'undef'
@@ -630,7 +632,28 @@ class DFTRun:
                 self.descriptors.extend(values)
             else:
                 self.descriptors.append(values)
-
+    def DFTRunToReport(self):
+        customDict = {"NAME":self.name,
+                      "METAL":str(self.metal),
+                      "LIGS":"/".join([str(i) for i in [self.eqlig,self.axlig1,self.axlig2]]),
+                      "OX":str(self.ox),
+                      "SPIN":str(self.spin),
+                      "STATUS":str(self.status),
+                      "HFX":str(self.alpha).zfill(1),
+                      "s2":"/".join([ '{0:.2f}'.format(self.ss_act).zfill(1),str(self.ss_target).zfill(1)])}
+        if self.status == 8:
+                finalPath = self.progpath
+        else:
+                finalPath = self.geopath
+        initalPath = self.init_geopath
+        
+        
+        generateReport(initialPath=initalPath,
+                       finalPath=finalPath,
+                       reportPath=self.reportpath,
+                       customDict=customDict,
+                       octahedral = self.octahedral)
+                       
 
 class Comp:
     """ This is a class for each unique composition and configuration"""

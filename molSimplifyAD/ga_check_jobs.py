@@ -129,6 +129,8 @@ def check_all_current_convergence():
                 this_run.moppath = path_dictionary["mopac_path" ]+ base_name + ".out"
                 this_run.mop_geopath = path_dictionary["mopac_path" ] + base_name + ".xyz"
                 
+                
+                
                 ## check if outpath exists
                 if os.path.isfile(this_run.outpath):
                         this_run.estimate_if_job_live() # test if live
@@ -388,6 +390,17 @@ def check_all_current_convergence():
             print('final results values len is ' + str(len(final_results.values())))
             write_descriptor_csv(final_results.values())    
         if isall_post():
+            print('writing outpickle and reports! patience is a virtue')
+            for runClass in all_runs:
+                if runClass.status in [0,1,2,7,8,12,13,14]:
+                    if runClass in [0]:
+                        this_run.reportpath = path_dictionary["good_reports" ] + base_name + ".pdf"
+                    elif runClass in [1,8]:
+                        this_run.reportpath = path_dictionary["bad_reports" ] + base_name + ".pdf"
+                    else:
+                        this_run.reportpath = path_dictionary["other_reports" ] + base_name + ".pdf"
+                    if not os.path.exists(runClass.reportpath):
+                        runClass.DFTRunToReport()
             output = open('final_runs_pickle.pkl','wb')
             pickle.dump(final_results,output,-1)
             output.close()

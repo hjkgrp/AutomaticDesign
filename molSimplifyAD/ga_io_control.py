@@ -245,5 +245,10 @@ def process_new_run_input(path):
             print( ' the file contains one keyword (space) value per line.')
     return configuration
     
+########################
+def get_texsource_file(filename):
+    ## returns default ligand input file
+    req_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/utils/report_tool/tex_source/"+filename)
     
+    return req_file
         
