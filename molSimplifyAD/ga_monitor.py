@@ -51,7 +51,7 @@ def launch_job(job,sub_num):
         else:
             cmd_script = "launch_script_sp.sh"
             infile = get_infile_from_job(job)
-    if GA_run.config["queue_type"] == "SGE":
+    if GA_run.config["queue_type"].lower() == "sge":
         cmd_str ='qsub -j y -N  ' +name + ' '+ '-o ' + opath + ' ' +'-e '+epath +' ' +get_run_dir() + cmd_script + ' ' + infile
     else:
         cmd_str ='sbatch -J' + name + ' ' + ' -o ' + opath + ' ' + '-e '+epath + ' '+ get_run_dir() + cmd_script + ' ' + infile
@@ -59,7 +59,7 @@ def launch_job(job,sub_num):
     p_sub = subprocess.Popen(cmd_str,shell=True,stdout=subprocess.PIPE)
     ll = p_sub.communicate()[0]
     ll =  ll.split()
-    if GA_run.config["queue_type"] == "SGE":
+    if GA_run.config["queue_type"].lower() == "sge":
         job_id = ll[2]
     else:
         job_id = ll[3]
@@ -68,7 +68,7 @@ def launch_job(job,sub_num):
 def is_job_live(job_id):
     print(job_id)
     GA_run = get_current_GA()
-    if GA_run.config["queue_type"] == "SGE":
+    if GA_run.config["queue_type"].lower() == "sge":
         cmd_str = ('qstat -j '+ str(job_id))
     else:
         cmd_str = ('squeue -j '+ str(job_id))
@@ -83,7 +83,7 @@ def is_job_live(job_id):
             if (str(lines).find('Following jobs do not exist:') != -1) or (str(lines).find("slurm_load_jobs error: Invalid job id") != -1) or (len(ll)<=2):
                     print('job ' + str(job_id) + ' is not live')
                     verdict = False
-    if not GA_run.config["queue_type"] == "SGE":
+    if not GA_run.config["queue_type"].lower() == "sge":
         if len(ll)==1:
             verdict = False
 
