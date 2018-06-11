@@ -305,7 +305,20 @@ class GA_generation:
                                ## convert the gene into a job file and geometery
                                 jobpath,mol_name,ANN_split,ANN_distance = jobs.generate_geometery(prefix = job_prefix, spin = spins,path_dictionary = self.current_path_dictionary,
                                                                       rundirpath = get_run_dir(),gen=self.status_dictionary['gen'])
-                                if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
+                                ## Geo_check on Init geo
+                                gene = jobpath.split('/')[-1].split('.')[0]
+                                path_initgeo = get_run_dir()+ 'initial_geo/gen_%s/%s.xyz' %(str(self.status_dictionary["gen"]), gene)
+                                # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', path_initgeo)
+                                mol = mol3D()
+                                mol.readfromxyz(path_initgeo)
+                                flag_oct, flag_list, dict_oct_info = mol.IsOct()
+                                flag_H = not mol.closest_H_2_metal()[0]
+                                print(flag_H, flag_oct)
+                                flag_oct = flag_oct and flag_H
+                                if not flag_oct:
+                                    with open('bad_initgeo_log.txt', 'a') as fin:
+                                        fin.write(path_initgeo+'\n')
+                                if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()) and (flag_oct):
                                         ## save result
                                         print('saving result in ANN dict: ' + mol_name)
                                         ANN_results_dict.update({mol_name:",".join([str(ANN_split),str(ANN_distance)])})
