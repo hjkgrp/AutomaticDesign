@@ -1,0 +1,42 @@
+\documentclass[12pt,tikz]{report}
+\include{header}
+
+\begin{document}
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline Initial & Final \\ 
+%\hline \tdplotsetmaincoords{60}{135} 
+%\resizebox{.35\textwidth}{!}{
+%\input{initialProc}
+%}& 
+% \tdplotsetmaincoords{60}{135} 
+%\resizebox{.35\textwidth}{!}{
+%\input{finalProc}
+%}
+%\\ \hline 
+%\tdplotsetmaincoords{120}{135} 
+%\resizebox{.35\textwidth}{!}{
+%\input{initialProc}
+%}&  
+%\tdplotsetmaincoords{120}{135}
+%\resizebox{.35\textwidth}{!}{
+%\input{finalProc}
+%}\\
+\hline \includegraphics{initial/initial_render1.png}
+& 
+\includegraphics{final/final_render1.png}
+\\ 
+\hline 
+\includegraphics{initial/initial_render2.png} 
+&  
+\includegraphics{final/final_render2.png}
+\\
+\hline
+\end{tabular}
+\end{center}
+$ $
+\\
+\input{summary}
+
+
+\end{document}

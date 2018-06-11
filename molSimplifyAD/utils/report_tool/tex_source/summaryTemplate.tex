@@ -1,0 +1,20 @@
+\begin{table}[h]
+\begin{center}
+\begin{verbatim} ${NAME} \end{verbatim}\\
+\begin{tabular}{l|p{4cm}p{4cm}}
+\hline
+Metal/ox/spin/HFX & \multicolumn{2}{p{8cm}}{ \centering ${METAL}/${OX}/${SPIN}/${HFX}}\\
+Ligands eq/ax1/ax2:  & \multicolumn{2}{p{8cm}}{\centering ${LIGS}}\\
+Run status:  & \multicolumn{2}{p{8cm}}{\centering ${STATUS}}\\
+RMSD max intial$\rightarrow$ final [\AA]  & \multicolumn{2}{p{8cm}}{\centering ${RMSD}}\\
+$S^2$ act/target  & \multicolumn{2}{p{8cm}}{\centering ${s2} }\\
+\hline
+& initial & final\\
+\hline
+mean BL eq/ax [\AA] & ${initialBL} & ${finalBL} \\
+deniticity eq/ax & ${initialDent} & ${finalDent} \\
+max angle deviation [deg] & ${initialAD} & ${finalAD} \\
+problems & \begin{verbatim} ${initialFL} \end{verbatim}& \begin{verbatim} ${finalFL} \end{verbatim}\\
+\end{tabular}
+\end{center}
+\end{table}

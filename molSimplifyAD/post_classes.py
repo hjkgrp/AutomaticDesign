@@ -18,9 +18,12 @@ from molSimplify.Informatics.coulomb_analyze import *
 from molSimplify.Informatics.graph_analyze import *
 from molSimplify.Informatics.geo_analyze import *
 from molSimplify.Informatics.RACassemble import *
-from molSimplifyAD.ga_oct_check import *
+
 from molSimplifyAD.ga_io_control import *
 from molSimplifyAD.ga_tools import get_current_GA
+from molSimplifyAD.utils.report_tool.prepare_report import *
+from molSimplify.Classes.globalvars import dict_oct_check_loose, dict_oct_check_st, dict_oneempty_check_st, \
+    dict_oneempty_check_loose, oct_angle_ref, oneempty_angle_ref
 
 
 ########### UNIT CONVERSION
@@ -52,6 +55,7 @@ class DFTRun:
         self.spin = 'undef'
 
         # ligands and metal
+        self.metal = 'undef'
         self.eqlig_ind = 'undef'
         self.axlig1_ind = 'undef'
         self.axlig2_ind = 'undef'
@@ -73,7 +77,7 @@ class DFTRun:
         self.progpath = 'undef'
         # mol holders
         self.mol = False
-        self.initmol = False
+        self.init_mol = False
         self.progmol = False
 
         ## run info
@@ -109,6 +113,7 @@ class DFTRun:
         self.angletest = 'undef'
         self.ligrsmd = 'undef'
         self.flag_oct = 'undef'
+        self.flag_oct_loose = 'undef'
         self.flag_oct_list = 'undef'
         self.num_coord_metal = 'undef'
         self.rmsd_max = 'undef'
@@ -117,10 +122,12 @@ class DFTRun:
         self.max_del_sig_angle = 'undef'
         self.dist_del_eq = 'undef'
         self.dist_del_all = 'undef'
-        # self.dist_del_ax = 'undef'
-        # self.dist_del_eq_ax = 'undef'
+        self.dict_geo_check = dict()
         self.comment = ''
         self.octahedral = 'undef'
+        self.devi_linear_avrg = 'undef'
+        self.devi_linear_max = 'undef'
+
 
         ## mopac statistics
         self.mop_energy = 'undef'
@@ -170,97 +177,70 @@ class DFTRun:
             self.progmol = mol3D()
             self.progmol.readfromxyz(self.progpath)
 
+    def write_geo_dict(self):
+        for key in self.dict_geo_check:
+            setattr(self, key, self.dict_geo_check[key])
+
     def check_oct_needs_final_only(self, debug=False):
-        # self.geopath
-        # self.mol
         if self.octahedral:
-            flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, dict_check=dict_oct_check_st,
-                                                       debug=debug)
+            flag_oct, flag_list, dict_oct_info = self.mol.IsOct(dict_check=dict_oct_check_st,
+                                                                debug=debug)
         else:
-            flag_oct, flag_list, dict_oct_info = IsStructure(self.geopath,
-                                                          dict_check=dict_oneempty_check_st,
-                                                          debug=debug)
+            flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(dict_check=dict_oneempty_check_st,
+                                                                      debug=debug)
         self.flag_oct = flag_oct
-        self.flag_oct_list = ', '.join(flag_list)
-        self.num_coord_metal = dict_oct_info['num_coord_metal']
-        self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
-        self.dist_del_eq = dict_oct_info['dist_del_eq']
-        self.dist_del_all = dict_oct_info['dist_del_all']
-        self.max_del_sig_angle = dict_oct_info['max_del_sig_angle']
-        # self.dist_del_ax = dict_oct_info['dist_del_ax']
-        # self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
+        self.flag_oct_list = flag_list
+        self.dict_geo_check = dict_oct_info
+        self.write_geo_dict()
         return flag_oct, flag_list, dict_oct_info
 
     def check_oct_needs_init(self, debug=False):
-        # self.geopath
-        # self.init_geopath
-        # self.mol
-        # self.init
         if self.octahedral:
-            flag_oct, flag_list, dict_oct_info = IsOct(self.geopath, self.init_geopath, dict_check=dict_oct_check_st,
-                                                       debug=debug)
+            flag_oct, flag_list, dict_oct_info = self.mol.IsOct(self.init_mol,
+                                                                dict_check=dict_oct_check_st,
+                                                                debug=debug)
         else:
-            flag_oct, flag_list, dict_oct_info = IsStructure(self.geopath, self.init_geopath,
-                                                          dict_check=dict_oneempty_check_st,
-                                                          debug=debug)
+            flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(self.init_mol,
+                                                                      dict_check=dict_oneempty_check_st,
+                                                                      debug=debug)
         self.flag_oct = flag_oct
-        self.flag_oct_list = ', '.join(flag_list)
-        self.num_coord_metal = dict_oct_info['num_coord_metal']
-        self.rmsd_max = dict_oct_info['rmsd_max']
-        self.atom_dist_max = dict_oct_info['atom_dist_max']
-        self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
-        self.dist_del_eq = dict_oct_info['dist_del_eq']
-        self.dist_del_all = dict_oct_info['dist_del_all']
-        self.max_del_sig_angle = dict_oct_info['max_del_sig_angle']
-        # self.dist_del_ax = dict_oct_info['dist_del_ax']
-        # self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
+        self.flag_oct_list = flag_list
+        self.dict_geo_check = dict_oct_info
+        self.write_geo_dict()
+        #print('!!!!!!linear:', self.devi_linear_avrg)
         return flag_oct, flag_list, dict_oct_info
 
     def check_oct_on_prog(self, debug=False):
-        # self.progmol
-        # self.progpath
         if os.path.exists(self.init_geopath):
+            self.obtain_init_mol3d()
             if self.octahedral:
-                flag_oct, flag_list, dict_oct_info = IsOct(self.progpath, self.init_geopath,
-                                                           dict_check=dict_oct_check_loose,
-                                                           debug=debug)
+                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsOct(self.init_mol,
+                                                                        dict_check=dict_oct_check_loose,
+                                                                        debug=debug)
             else:
-                flag_oct, flag_list, dict_oct_info = IsStructure(self.progpath, self.init_geopath,
-                                                              dict_check=dict_oneempty_check_loose,
-                                                              debug=debug)
-            self.flag_oct = flag_oct
-            self.flag_oct_list = ', '.join(flag_list)
-            self.num_coord_metal = dict_oct_info['num_coord_metal']
-            self.rmsd_max = dict_oct_info['rmsd_max']
-            self.atom_dist_max = dict_oct_info['atom_dist_max']
-            self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
-            self.dist_del_eq = dict_oct_info['dist_del_eq']
-            self.dist_del_all = dict_oct_info['dist_del_all']
-            self.max_del_sig_angle = dict_oct_info['max_del_sig_angle']
-    # self.dist_del_ax = dict_oct_info['dist_del_ax']
-            # self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
+                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsStructure(self.init_mol,
+                                                                              dict_check=dict_oneempty_check_loose,
+                                                                              debug=debug)
+            self.flag_oct_loose = flag_oct_loose
+            self.flag_oct_list = flag_list
+            self.dict_geo_check = dict_oct_info
+            self.write_geo_dict()
         else:
             if self.octahedral:
-                flag_oct, flag_list, dict_oct_info = IsOct(self.progpath, dict_check=dict_oct_check_loose,
-                                                           debug=debug)
+                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsOct(dict_check=dict_oct_check_loose,
+                                                                              debug=debug)
             else:
-                flag_oct, flag_list, dict_oct_info = IsStructure(self.progpath,
-                                                              dict_check=dict_oneempty_check_loose,
-                                                              debug=debug)
-            self.flag_oct = flag_oct
-            self.flag_oct_list = ', '.join(flag_list)
-            self.num_coord_metal = dict_oct_info['num_coord_metal']
-            self.oct_angle_devi_max = dict_oct_info['oct_angle_devi_max']
-            self.dist_del_eq = dict_oct_info['dist_del_eq']
-            self.dist_del_all = dict_oct_info['dist_del_all']
-            self.max_del_sig_angle = dict_oct_info['max_del_sig_angle']
-            # self.dist_del_ax = dict_oct_info['dist_del_ax']
-            # self.dist_del_eq_ax = dict_oct_info['dist_del_eq_ax']
-        if self.flag_oct == 1:
+                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsStructure(dict_check=dict_oneempty_check_loose,
+                                                                                    debug=debug)
+            self.flag_oct_loose = flag_oct_loose
+            self.flag_oct_list = flag_list
+            self.dict_geo_check = dict_oct_info
+            self.write_geo_dict()
+        if self.flag_oct_loose == 1:
             self.progstatus = 0
         else:
             self.progstatus = 1
-        return flag_oct, flag_list, dict_oct_info
+        return flag_oct_loose, flag_list, dict_oct_info
 
     def extract_geo(self):
         self.geostatus = extract_file_check(self.scrpath, self.geopath)
@@ -601,6 +581,7 @@ class DFTRun:
                             f_DLPNO.close()
                    
     def archive(self, sub_number):
+            
         # this fuinciton copies all files to arch
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
@@ -610,6 +591,7 @@ class DFTRun:
         org_name = archive_path
         archive_path = org_name.rstrip('/') + '_' + str(sub_number) + '/'
         if not os.path.isdir(archive_path):
+                
             ensure_dir(archive_path)
             print('archiving to ' + archive_path)
             # copy files:
@@ -630,6 +612,13 @@ class DFTRun:
             else:
                 print('archiving did NOT find  ' + self.outpath)
 
+    def get_descriptor_vector(self, loud=False, name=False):
+        self.mol.update_graph_check()
+        descriptor_names, descriptors = get_descriptor_vector(this_complex=self.mol,custom_ligand_dict=False,ox_modifier=False)    
+        self.descriptor_names = descriptor_names
+        self.descriptors = descriptors
+        self.set_desc = True
+
     def append_descriptors(self, list_of_names, list_of_props, prefix, suffix):
         for names in list_of_names:
             if hasattr(names, '__iter__'):
@@ -643,7 +632,28 @@ class DFTRun:
                 self.descriptors.extend(values)
             else:
                 self.descriptors.append(values)
-
+    def DFTRunToReport(self):
+        customDict = {"NAME":self.name,
+                      "METAL":str(self.metal),
+                      "LIGS":"/".join([str(i) for i in [self.eqlig,self.axlig1,self.axlig2]]),
+                      "OX":str(self.ox),
+                      "SPIN":str(self.spin),
+                      "STATUS":str(self.status),
+                      "HFX":str(self.alpha).zfill(1),
+                      "s2":"/".join([ '{0:.2f}'.format(self.ss_act).zfill(1),str(self.ss_target).zfill(1)])}
+        if self.status == 8:
+                finalPath = self.progpath
+        else:
+                finalPath = self.geopath
+        initalPath = self.init_geopath
+        
+        
+        generateReport(initialPath=initalPath,
+                       finalPath=finalPath,
+                       reportPath=self.reportpath,
+                       customDict=customDict,
+                       octahedral = self.octahedral)
+                       
 
 class Comp:
     """ This is a class for each unique composition and configuration"""
@@ -784,6 +794,16 @@ class Comp:
         self.ox_2_HS_oct_angle_devi_max = 'undef'
         self.ox_3_LS_oct_angle_devi_max = 'undef'
         self.ox_3_HS_oct_angle_devi_max = 'undef'
+
+        self.ox_2_LS_devi_linear_avrg = 'undef'
+        self.ox_2_HS_devi_linear_avrg = 'undef'
+        self.ox_3_LS_devi_linear_avrg = 'undef'
+        self.ox_3_HS_devi_linear_avrg = 'undef'
+
+        self.ox_2_LS_devi_linear_max = 'undef'
+        self.ox_2_HS_devi_linear_max = 'undef'
+        self.ox_3_LS_devi_linear_max = 'undef'
+        self.ox_3_HS_devi_linear_max = 'undef'
 
         #        self.ox_2_LS_dist_del_ax  = 'undef'
         #        self.ox_2_HS_dist_del_ax = 'undef'
@@ -957,25 +977,7 @@ class Comp:
         self.descriptor_names = descriptor_names
         self.descriptors = descriptors
         self.set_desc = True
-                #results_dictionary = generate_all_ligand_misc(self.mol, loud)
-                #self.mol.update_graph_check()
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax'], 'misc', 'ax')
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq'], 'misc', 'eq')
-                #results_dictionary = generate_all_ligand_autocorrelations(self.mol, depth=3, loud=True, name=name)
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax_full'], 'f', 'ax')
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq_full'], 'f', 'eq')
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax_con'], 'lc', 'ax')
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq_con'], 'lc', 'eq')
-                #results_dictionary = generate_metal_autocorrelations(self.mol, depth=3, loud=loud)
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['results'], 'mc', 'all')
-                #results_dictionary = generate_full_complex_autocorrelations(self.mol, depth=3, loud=loud)
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['results'], 'f', 'all')
-                #### delta metrics 
-                #results_dictionary = generate_all_ligand_deltametrics(self.mol, depth=3, loud=True, name=name)
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_ax_con'], 'D_lc', 'ax')
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['result_eq_con'], 'D_lc', 'eq')
-                #results_dictionary = generate_metal_deltametrics(self.mol, depth=3, loud=loud)
-                #self.append_descriptors(results_dictionary['colnames'], results_dictionary['results'], 'D_mc', 'all')
+
     def append_descriptors(self, list_of_names, list_of_props, prefix, suffix):
         for names in list_of_names:
             if hasattr(names, '__iter__'):

@@ -21,6 +21,12 @@ def resume_run(args):
       GA_run.deserialize(os.getcwd()+'/.madconfig')
       if args.post_all:
         GA_run.config['post_all'] = True
+        print('NB: ALL post on')
+        GA_run.serialize()
+      else:
+        GA_run.config['post_all'] = False
+        print('NB: ALL post OFF')
+        GA_run.serialize()
       path_dictionary = setup_paths()
       print(GA_run.config)
       if GA_run.config['DFT']:

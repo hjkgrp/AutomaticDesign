@@ -1,0 +1,15 @@
+\begin{tikzpicture}[scale=1.0,tdplot_main_coords]
+    \def\extent{20}
+    %	\tkzMarkAngle[size=0.17cm,draw=blue](C,A,E);
+    \coordinate (ori) at (0,0,0);
+    \coordinate (tz) at (0,0,\extent);
+    \coordinate (bz) at (0,0,-\extent);
+    \coordinate (tx) at (\extent,0,0);
+    \coordinate (bx) at (-\extent,0,0);
+    \coordinate (ty) at (0,\extent,0);
+    \coordinate (by) at (0,-\extent,0);
+    \draw[thick,blue,<->]  (bz.center) -- (tz.center);
+    \draw[thick,blue,<->]  (bx.center) -- (tx.center);
+    \draw[thick,blue,<->]  (by.center) -- (ty.center);
+    %% new stuff goes here!
+\end{tikzpicture}

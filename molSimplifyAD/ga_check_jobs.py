@@ -81,9 +81,9 @@ def check_all_current_convergence():
         
         for jobs in joblist:
             if  postprocessJob(job=jobs,live_job_dictionary=live_job_dictionary,converged_jobs_dictionary=converged_jobs):
-		## upack job name
-		gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,base_name,base_gene = translate_job_name(jobs)
-		## create run
+                ##upack job name
+                gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,base_name,base_gene = translate_job_name(jobs)
+	        	## create run
                 this_run=DFTRun(base_name)
                 
                 ## add info
@@ -107,7 +107,7 @@ def check_all_current_convergence():
                 
                   
                 ## make unique gene
-                name = "_".join([str(metal),'eq',str(eqlig),'ax1',str(axlig1),'ax2',str(axlig2),'ahf',str(int(alpha))])
+                name = "_".join([str(metal),'eq',str(eqlig),'ax1',str(axlig1),'ax2',str(axlig2),'ahf',str(int(alpha)).zfill(2)])
 
                 ## set file paths
                 path_dictionary =  setup_paths()
@@ -129,6 +129,8 @@ def check_all_current_convergence():
 
                 this_run.moppath = path_dictionary["mopac_path" ]+ base_name + ".out"
                 this_run.mop_geopath = path_dictionary["mopac_path" ] + base_name + ".xyz"
+                
+                
                 
                 ## check if outpath exists
                 if os.path.isfile(this_run.outpath):
@@ -349,7 +351,7 @@ def check_all_current_convergence():
         list_of_props.append('axlig2')
         list_of_props.append('eqlig')  
         list_of_prop_names =['converged','energy','init_energy', 'flag_oct', 'num_coord_metal',"HOMO","LUMO",
-                             'rmsd_max', 'atom_dist_max', 'oct_angle_devi_max', 'dist_del_eq', 'dist_del_all', 'max_del_sig_angle',
+                             'rmsd_max', 'atom_dist_max', 'oct_angle_devi_max', 'dist_del_eq', 'dist_del_all', 'max_del_sig_angle', 'devi_linear_avrg', 'devi_linear_max',
                              'coord','rmsd','maxd','status','time','spin','ss_act','ss_target','ax1_MLB','ax2_MLB','eq_MLB',
                     'init_ax1_MLB','init_ax2_MLB','init_eq_MLB','thermo_cont','imag','solvent_cont','geopath','terachem_version','terachem_detailed_version',
                     'basis','charge','alpha_level_shift','beta_level_shift','functional','mop_energy','mop_coord','attempted']
@@ -385,8 +387,21 @@ def check_all_current_convergence():
         if (not isall_post()) and os.path.isfile(get_run_dir() + '/consistent_descriptor_file.csv'):
             append_descriptor_csv(final_results.values())
         else:
+            print('QQWWWQW *** * ** * ** ** ** * *****  ')
+            print('final results values len is ' + str(len(final_results.values())))
             write_descriptor_csv(final_results.values())    
         if isall_post():
+            print('writing outpickle and reports! patience is a virtue')
+            for runClass in all_runs:
+                if runClass.status in [0,1,2,7,8,12,13,14]:
+                    if runClass in [0]:
+                        this_run.reportpath = path_dictionary["good_reports" ] + base_name + ".pdf"
+                    elif runClass in [1,8]:
+                        this_run.reportpath = path_dictionary["bad_reports" ] + base_name + ".pdf"
+                    else:
+                        this_run.reportpath = path_dictionary["other_reports" ] + base_name + ".pdf"
+                    if not os.path.exists(runClass.reportpath):
+                        runClass.DFTRunToReport()
             output = open('final_runs_pickle.pkl','wb')
             pickle.dump(final_results,output,-1)
             output.close()
