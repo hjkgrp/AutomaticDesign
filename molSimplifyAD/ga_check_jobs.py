@@ -358,9 +358,16 @@ def check_all_current_convergence():
         if GA_run.config["oxocatalysis"]:
             for props in list_of_prop_names:
                 for spin_cat in ['LS','IS','HS']:
-                    for ox in ['4','5']:
-                        for catax in ['x','oxo']:
-                            list_of_props.append("_".join(['ox',str(ox),spin_cat,str(catax),props]))
+                     for catax in ['x','oxo','hydroxyl']:
+		          if catax == 'x':
+			       for ox in ['2','3']:
+			            list_of_props.append("_".join(['ox',str(ox),spin_cat,str(catax),props]))
+			  elif catax == 'oxo':
+			       for ox in ['4','5']:
+			            list_of_props.append("_".join(['ox',str(ox),spin_cat,str(catax),props]))
+			  else:
+			       for ox in ['3','4']:
+				    list_of_props.append("_".join(['ox',str(ox),spin_cat,str(catax),props]))
             list_of_props.append('attempted')
             final_results = process_runs_oxocatalysis(all_runs,list_of_prop_names,spin_dictionary()) 
         else:   
