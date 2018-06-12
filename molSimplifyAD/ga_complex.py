@@ -414,7 +414,7 @@ class octahedral_complex:
         optimize = this_GA.config['optimize']
         
         if optimize:
-            print(' setting up GEO optimization ')
+            #print(' setting up GEO optimization ')
             rty = 'minimize'
             scrpath =  "scr/geo/gen_"+str(gen) + '/'  + mol_name
         else:
@@ -519,7 +519,7 @@ class octahedral_complex:
         if not 'ANN_split' in dir():
             ANN_split = False
             ANN_distance = False
-        print('!!!ANN_split:', ANN_split)
+        #print('!!!ANN_split:', ANN_split)
         return jobpath,mol_name,ANN_split,ANN_distance
 
 

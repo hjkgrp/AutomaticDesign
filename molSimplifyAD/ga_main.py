@@ -218,9 +218,9 @@ class GA_generation:
             print('***********')
             print(self.genes)
             print(self.gene_compound_dictionary.keys())
-            print('now printing what the gene-compound dictionary knows:')
-            for keys in self.gene_compound_dictionary.keys():
-                    print('key: ' + str(keys) + ' val is  ' +  str(self.gene_compound_dictionary[keys]))
+            #print('now printing what the gene-compound dictionary knows:')
+            #for keys in self.gene_compound_dictionary.keys():
+            #        print('key: ' + str(keys) + ' val is  ' +  str(self.gene_compound_dictionary[keys]))
             print('***********')
             ## loop all over genes in the pool and the selected set
             fitkeys  = self.gene_fitness_dictionary.keys()
@@ -306,8 +306,8 @@ class GA_generation:
                         # print('!!!!!jobs::::', jobs)
                         spins_dict = spin_dictionary()
                         metal = jobs.metals_list[jobs.core]
-                        print('metal is '+str(metal))
-                        print('ox is ' +str(jobs.ox))
+                        #print('metal is '+str(metal))
+                        #print('ox is ' +str(jobs.ox))
                         spin_list = spins_dict[metal][jobs.ox]
                         for spins in spin_list:
                                 job_prefix = "gen_" + str(self.status_dictionary["gen"]) + "_slot_" + str(keys) + "_"
