@@ -403,8 +403,7 @@ def check_all_current_convergence():
                         runClass.reportpath = path_dictionary["bad_reports" ] + runClass.name + ".pdf"
                     else:
                         runClass.reportpath = path_dictionary["other_reports" ] + runClass.name + ".pdf"
-                    if not os.path.exists(runClass.reportpath):
-                        runClass.DFTRunToReport()
+                    runClass.DFTRunToReport()
             output = open('final_runs_pickle.pkl','wb')
             pickle.dump(final_results,output,-1)
             output.close()
