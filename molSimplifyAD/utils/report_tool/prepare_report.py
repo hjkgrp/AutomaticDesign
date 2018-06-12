@@ -23,7 +23,22 @@ except ImportError:
         raise ImportError('connection to pymol unsuccessful.')
 except Exception:
         raise Exception('Unknown non-import related error.')
-       
+
+def flProcess(flag_list):
+    formatted_list = ""
+    print(flag_list)
+    
+    if flag_list == "None":
+        flag_list = ["None"]
+    if isinstance(flag_list,basestring):
+        flag_list = [flag_list]
+    for fl in flag_list:
+        formatted_list  += verbatimize(str(fl))+' '
+    return formatted_list
+
+def verbatimize(st):
+    return "\\begin{verbatim}" + st + "\\end{verbatim}"
+            
 def loadMols(initialPath, finalPath):
     # load in geos
     finalMol = mol3D()
@@ -196,14 +211,16 @@ def generateReport(initialPath, finalPath, reportPath,customDict=dict(),octahedr
     # load the two geometries
     initialMol, finalMol = loadMols(initialPath, finalPath)
 
+    # get tex info
+    repDict = makeGeoReportDictionary(repDict, initialMol, finalMol, octahedral)
+
     # rotate and align the geos
     try:
         processInitialAndFinalToXyz(workdir, initialMol, finalMol)
     except:
         print('rotation failed')
 
-    # get tex info
-    repDict = makeGeoReportDictionary(repDict, initialMol, finalMol, octahedral)
+
     
     # make 3D renders
     if allowedPymol:
@@ -230,14 +247,14 @@ def generateReport(initialPath, finalPath, reportPath,customDict=dict(),octahedr
     compileTex(workdir,reportPath)
     
     # now remove workdir
-    print('removing '+ workdir)
+    #print('removing '+ workdir)
     shutil.rmtree(workdir)
 
 def makeCleanWorkdir(workdir):
     org_name = workdir
     counter = 0
     while os.path.isdir(workdir):
-        print 'Warning: ' +workdir +' already exists, generating unique key...'
+        #print 'Warning: ' +workdir +' already exists, generating unique key...'
         workdir =  org_name.rstrip('/') +'_'+ str(counter) + '/'
         counter+=1
     ensure_dir(workdir)
@@ -268,6 +285,22 @@ def basicRepdict():
     
 def makeGeoReportDictionary(repDict,initialMol,finalMol,octahedral):
 
+    # get ligand formula:
+    #if True:
+    try:
+        if octahedral:  # can only work for oct currently
+            initial_axnames, initial_eqnames = getLigFormulae(initialMol)
+            print(initial_axnames)
+            print(initial_eqnames)
+            initial_formulae = "/".join([initial_eqnames[0]]+initial_axnames[0:2])
+        else:
+            initial_formulae = ""
+    except:
+        initial_formulae = "er"
+        
+    repDict.update({"LIGFORMULAES":initial_formulae}) 
+
+    
     # measure bonds
     try:
 
@@ -299,22 +332,23 @@ def makeGeoReportDictionary(repDict,initialMol,finalMol,octahedral):
     # get denticity
     try: 
             resdict = generate_all_ligand_misc(initialMol,loud=False)
-            init_ax_dent = resdict["result_ax"]
-            init_eq_dent = resdict["result_eq"]
+            init_ax_dent = [resdict["result_ax"][0]]
+            init_eq_dent = [resdict["result_eq"][0]]
+            print(init_ax_dent)
 
     except:
-            init_ax_dent = 'er'
-            init_eq_dent = 'er'
+            init_ax_dent = ['er']
+            init_eq_dent = ['er']
 
                 
     repDict.update({"initialDent":"/".join([ str(i) for i in init_eq_dent+init_ax_dent])})
     try: 
             resdict = generate_all_ligand_misc(finalMol,loud=False)
-            final_ax_dent = resdict["result_ax"]
-            final_eq_dent = resdict["result_eq"]
+            final_ax_dent = [resdict["result_ax"][0]]
+            final_eq_dent = [resdict["result_eq"][0]]
     except:
-            final_ax_dent = 'er'
-            final_eq_dent = 'er'
+            final_ax_dent = ['er']
+            final_eq_dent = ['er']
 
 
     repDict.update({"finalDent":"/".join([ str(i) for i in final_ax_dent+final_eq_dent])})
@@ -332,6 +366,7 @@ def makeGeoReportDictionary(repDict,initialMol,finalMol,octahedral):
         init_AD = 'er'
     repDict.update({"initialAD":init_AD})
     try:
+    #if True:
         if octahedral:
                 final_flag_oct, final_flag_list, final_dict_oct_info = finalMol.IsOct(init_mol=initialMol)
         else:
@@ -345,14 +380,17 @@ def makeGeoReportDictionary(repDict,initialMol,finalMol,octahedral):
     
     # fail list 
     try:
+    #if True:
         repDict.update({"initialFL":flProcess(init_flag_list)})
     except:
         repDict.update({"initialFL":'er'})
     try:
+    #if True:
        repDict.update({"finalFL":flProcess(final_flag_list)})
     except:
        repDict.update({"finalFL":'er'})
-
+    
+    
 
     
     # rmsd 
@@ -365,12 +403,4 @@ def makeGeoReportDictionary(repDict,initialMol,finalMol,octahedral):
     repDict.update({"RMSD":rmsd})
     return repDict
 
-    def flProcess(flag_list):
-            formatted_list = ""
-            for fl in flag_lsit:
-                formatted_list  += verbatimize(str(fl))+' '
-            return formatted_list
-
-    def verbatimize(st):
-            return "\begin{verbatim}" + st + "\end{verbatim}"
 
