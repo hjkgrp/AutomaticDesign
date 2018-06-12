@@ -375,10 +375,6 @@ class octahedral_complex:
                 else:
                     smicat += ",  " + str(ax_lig[1]).replace("'","")  # cat list 
             
-
-            #print(' after ax-shell, liglist is ' + liglist)
-            #print(' after ax-shell, smicat is ' + str(smicat))            
-            
             # second eq ligand 
             eq_lig = self.eq_ligands[1]
             #print('processing ligand ' + str(eq_lig))
@@ -439,7 +435,7 @@ class octahedral_complex:
         
         ## check if already exists:
         geo_exists = os.path.isfile(path_dictionary["initial_geo_path"] + mol_name + '.xyz')
-
+        
         if not (geo_exists):
                 print('generating '+ str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and'  + str(self.ax_ligands))
                 try:
@@ -503,8 +499,17 @@ class octahedral_complex:
                     newf.writelines("scrdir " +scrpath + "\n")
                 os.remove(rundirpath + 'temp/' + mol_name + '.in')
                 
+                
+                ### check if ligands in old optimizer list
+                old_optimizer_list = get_old_optimizer_ligand_list()
+                use_old_optimizer = False
+                for ligs in (self.eq_ligands+self.ax_ligands):
+                    if ligs in old_optimizer_list:
+                        use_old_optimizer = True
+                
+                
                 ### make an infile!
-                create_generic_infile(jobpath,restart=False)
+                create_generic_infile(jobpath,restart=False,use_old_optimizer = use_old_optimizer)
                     
                 
         else:

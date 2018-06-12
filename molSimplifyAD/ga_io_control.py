@@ -249,6 +249,15 @@ def process_new_run_input(path):
 def get_texsource_file(filename):
     ## returns default ligand input file
     req_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/utils/report_tool/tex_source/"+filename)
-    
     return req_file
         
+########################
+def get_old_optimizer_ligand_list():
+    ## returns old opt ligand list
+    req_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/old_optimizer_ligands.txt")
+    old_optimizer_list =[]
+    with open(req_file,'r') as f:
+        for lines in f.readlines():
+            old_optimizer_list.append(lines.strip().strip('\n'))
+    return old_optimizer_list
+

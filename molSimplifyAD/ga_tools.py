@@ -42,7 +42,7 @@ def get_infile_from_job(job):
         create_generic_infile(job,restart = True)
     return target_inpath
 ########################
-def create_generic_infile(job,restart=False):
+def create_generic_infile(job,restart=False,use_old_optimizer = False):
     ## guess is ANOTHER JOB NAME, from which the geom and wavefunction guess
     ## will attempt to be extracted
     ## process job name
@@ -72,12 +72,16 @@ def create_generic_infile(job,restart=False):
             source_lines = sourcef.readlines()
             with open(target_inpath,'w') as newf:
                     for line in source_lines:
-                            if not ("coordinates" in line) and (not "end" in line):
+                            if not ("coordinates" in line) and (not "end" in line) and (not "new_minimizer"):
                                     newf.write(line)
 
     ## append geo
     with open(target_inpath,'a') as newf:
                     newf.write('coordinates '+ geometry_path+ '\n')
+                    if not use_old_optimizer:
+                        newf.write("min_coordinates cartesian")
+                    else:
+                        newf.write("new_minimizer yes")
                     newf.write(guess_string)
                     newf.write('end')  
 
@@ -527,3 +531,8 @@ def append_descriptor_csv(list_of_runs):
                     pass
     else:
         pass
+########################
+
+        
+        
+        
