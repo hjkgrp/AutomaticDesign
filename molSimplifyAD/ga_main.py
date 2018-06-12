@@ -26,7 +26,7 @@ class GA_generation:
                 self.ligands_list = ligands_list
                 self.status_dictionary = dict()
                 self.gene_compound_dictionary = dict()
-                self.total_counter = total_counter = 0
+                self.total_counter = 0
 
         def configure_gen(self,gen_num,npool,ncross,pmut,maxgen,scoring_function="split",split_parameter = 15.0,distance_parameter = 1,DFT =True, 
                                 RTA = False,mean_fitness =  0,monitor_diversity=False,monitor_distance=False,**kwargs):
@@ -259,6 +259,15 @@ class GA_generation:
             ## if we are using the ANN only, populate the gene-fitnes dictionary
             if self.status_dictionary["DFT"] == False:
                     self.ANN_fitness()
+            if os.path.exists('bad_initgeo_log.txt'):
+                with open('bad_initgeo_log.txt', 'r') as fin:
+                    print('!!!!!!!These are jobs with bad initial geometry generated from molSimplify!!!!!')
+                    print('!!!!!!!please check what happens!!!!!')
+                    for line in fin:
+                        print(line)
+            else:
+                print('All initial geometry is good. Okay to go!')
+
 
         def random_fitness(self):
                 ## test function for validating GA = white noise fitness
@@ -294,6 +303,7 @@ class GA_generation:
                 for keys in self.outstanding_jobs.keys():
 
                         jobs = self.outstanding_jobs[keys]
+                        # print('!!!!!jobs::::', jobs)
                         spins_dict = spin_dictionary()
                         metal = jobs.metals_list[jobs.core]
                         print('metal is '+str(metal))
@@ -308,16 +318,15 @@ class GA_generation:
                                 ## Geo_check on Init geo
                                 gene = jobpath.split('/')[-1].split('.')[0]
                                 path_initgeo = get_run_dir()+ 'initial_geo/gen_%s/%s.xyz' %(str(self.status_dictionary["gen"]), gene)
-                                # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', path_initgeo)
                                 mol = mol3D()
                                 mol.readfromxyz(path_initgeo)
                                 flag_oct, flag_list, dict_oct_info = mol.IsOct()
                                 flag_H = not mol.closest_H_2_metal()[0]
-                                print(flag_H, flag_oct)
+                                # print(flag_H, flag_oct)
                                 flag_oct = flag_oct and flag_H
                                 if not flag_oct:
                                     with open('bad_initgeo_log.txt', 'a') as fin:
-                                        fin.write(path_initgeo+'\n')
+                                        fin.write(jobpath+'\n')
                                 if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()) and (flag_oct):
                                         ## save result
                                         print('saving result in ANN dict: ' + mol_name)
