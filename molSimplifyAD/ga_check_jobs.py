@@ -33,7 +33,8 @@ def postprocessJob(job,live_job_dictionary,converged_jobs_dictionary):
                     postProc = True
             else:
                 postProc = True
-                
+        else:
+	    postProc = False        
         
             
     else:            
@@ -229,22 +230,22 @@ def check_all_current_convergence():
                                             logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref ' + refHFX)
 
                                             add_to_outstanding_jobs(HFX_job)
-                                    if GA_run.config['oxocatalysis'] == True and int(ox)>3:
+                                    if GA_run.config['oxocatalysis'] == True and int(ox)>3 and (axlig2 != 'hydroxyl'):
                                             empty_job, empty_sp = this_run.write_empty_inputs(refHFX)
-                                            if (empty_job not in joblist) and (empty_job not in outstanding_jobs) and (empty_job not in converged_jobs.keys()):
-                                                    print('note: converting from oxo structure to empty structure')
-                                                    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure')
-                                                    add_to_outstanding_jobs(empty_job)
+                                            #if (empty_job not in joblist) and (empty_job not in outstanding_jobs) and (empty_job not in converged_jobs.keys()):
+                                            #        print('note: converting from oxo structure to empty structure')
+                                            #        logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure')
+                                            #        add_to_outstanding_jobs(empty_job)
                                             if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (empty_sp not in converged_jobs.keys()):
                                                     print('note: converting from oxo structure to empty structure (SP)')
                                                     logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure (SP)')
                                                     add_to_outstanding_jobs(empty_sp)
-                    elif GA_run.config['oxocatalysis']==True and int(ox)>3: #Must do this because the empty sites are one step behind the 6-coordinates at different HFX
-                            empty_job, empty_sp = this_run.write_empty_inputs(refHFX)
-                            if (empty_job not in joblist) and (empty_job not in outstanding_jobs) and (empty_job not in converged_jobs.keys()):
-                                    print('note: converting from oxo structure to empty structure')
-                                    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure')
-                                    add_to_outstanding_jobs(empty_job)
+                    elif GA_run.config['oxocatalysis']==True and int(ox)>3 and (axlig2 != 'hydroxyl'): #Must do this because the empty sites are one step behind the 6-coordinates at different HFX
+                            empty_job, empty_sp = this_run.write_empty_inputs('00')
+                            #if (empty_job not in joblist) and (empty_job not in outstanding_jobs) and (empty_job not in converged_jobs.keys()):
+                            #        print('note: converting from oxo structure to empty structure')
+                            #        logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure')
+                            #        add_to_outstanding_jobs(empty_job)
                             if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (empty_sp not in converged_jobs.keys()):
                                     print('note: converting from oxo structure to empty structure (SP)')
                                     logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure (SP)')
