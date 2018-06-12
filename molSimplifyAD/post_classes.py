@@ -634,7 +634,7 @@ class DFTRun:
                 self.descriptors.append(values)
     def DFTRunToReport(self):
         customDict = {"NAME":self.name,
-                      "METAL":str(self.metal),
+                      "METAL":"".join([e.upper() if i == 0 else e for i,e in enumerate(get_metals()[self.metal])]),
                       "LIGS":"/".join([str(i) for i in [self.eqlig,self.axlig1,self.axlig2]]),
                       "OX":str(self.ox),
                       "SPIN":str(self.spin),
@@ -645,10 +645,10 @@ class DFTRun:
                 finalPath = self.progpath
         else:
                 finalPath = self.geopath
-        initalPath = self.init_geopath
+        initialPath = self.init_geopath
+        print(initialPath)
         
-        
-        generateReport(initialPath=initalPath,
+        generateReport(initialPath=initialPath,
                        finalPath=finalPath,
                        reportPath=self.reportpath,
                        customDict=customDict,

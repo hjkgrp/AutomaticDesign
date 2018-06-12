@@ -103,7 +103,7 @@ def draw3d(load_path, save_path):
 
     ## generate axes
     w = 0.06 # cylinder width 
-    l = 3 # cylinder length
+    l = 5 # cylinder length
     h = 0.25 # cone hight
     d = w * 1.618 # cone base diameter
 
@@ -121,10 +121,15 @@ def draw3d(load_path, save_path):
     # load structure and define properties 
     cmd.load(load_path)
     cmd.bg_color(color="white")
-    util.cbaw
     preset.ball_and_stick(selection='all', mode=1)
-    cmd.select('hats', name='h')
-    cmd.set ("sphere_scale", size=0, selection='hats', state=0, updates=1, log=0, quiet=1)
+
+    util.cbaw
+    cmd.color("gray","symbol c")
+    cmd.select('hats', "symbol h")
+    cmd.set("sphere_scale",0,'hats')
+    cmd.set("stick_h_scale",1)
+    cmd.set("stick_radius",0.70)
+
     cmd.zoom('all', 1000, 0, 0)
     cmd.set('depth_cue', 0)
 
@@ -190,7 +195,7 @@ def generateReport(initialPath, finalPath, reportPath,customDict=dict(),octahedr
 
     # load the two geometries
     initialMol, finalMol = loadMols(initialPath, finalPath)
-    
+
     # rotate and align the geos
     try:
         processInitialAndFinalToXyz(workdir, initialMol, finalMol)
@@ -206,7 +211,6 @@ def generateReport(initialPath, finalPath, reportPath,customDict=dict(),octahedr
             draw3d(workdir + 'initial/initialOrient.xyz', workdir + 'initial/initial_render')
             draw3d(workdir + 'final/finalOrient.xyz', workdir + 'final/final_render')
         except:
-            print('No pymol error')
             shutil.copy(get_texsource_file('failsafe.png'), workdir +'initial/initial_render1.png')
             shutil.copy(get_texsource_file('failsafe.png'), workdir +'initial/initial_render2.png')
             shutil.copy(get_texsource_file('failsafe.png'), workdir +'final/final_render1.png')
@@ -251,6 +255,7 @@ def basicRepdict():
     repDict.update({"NAME":"someComplex"})
     repDict.update({"METAL":"someMetal"})
     repDict.update({"LIGS":"reallyGreatLigands"})
+    repDict.update({"LIGFORMULAES":"reallyGreatLigandFormulae"})
     repDict.update({"OX":"someOxidationState"})
     repDict.update({"SPIN":"someSpin"})
     repDict.update({"STATUS":"someStatus"})
@@ -264,8 +269,9 @@ def basicRepdict():
 def makeGeoReportDictionary(repDict,initialMol,finalMol,octahedral):
 
     # measure bonds
-    init_ax_dist, init_eq_dist = getOctBondDistances(initialMol)
     try:
+
+        init_ax_dist, init_eq_dist = getOctBondDistances(initialMol)
         init_av_ax = '{0:.2f}'.format(np.mean(init_ax_dist))
     except:
         init_av_ax = "er"
@@ -277,8 +283,9 @@ def makeGeoReportDictionary(repDict,initialMol,finalMol,octahedral):
     repDict.update({"initialBL":"/".join([init_av_eq,init_av_ax])}) 
     
     
-    final_ax_dist, final_eq_dist = getOctBondDistances(finalMol)
     try:
+
+        final_ax_dist, final_eq_dist = getOctBondDistances(finalMol)
         final_av_ax = '{0:.2f}'.format(np.mean(final_ax_dist))
     except:
         final_av_ax = "er"
@@ -290,39 +297,63 @@ def makeGeoReportDictionary(repDict,initialMol,finalMol,octahedral):
     repDict.update({"finalBL":"/".join([final_av_eq,final_av_ax])}) 
     
     # get denticity
-    resdict = generate_all_ligand_misc(initialMol,loud=False)
-    init_ax_dent = resdict["result_ax"]
-    init_eq_dent = resdict["result_eq"]
+    try: 
+            resdict = generate_all_ligand_misc(initialMol,loud=False)
+            init_ax_dent = resdict["result_ax"]
+            init_eq_dent = resdict["result_eq"]
+
+    except:
+            init_ax_dent = 'er'
+            init_eq_dent = 'er'
+
+                
     repDict.update({"initialDent":"/".join([ str(i) for i in init_eq_dent+init_ax_dent])})
-    
-    resdict = generate_all_ligand_misc(finalMol,loud=False)
-    final_ax_dent = resdict["result_ax"]
-    final_eq_dent = resdict["result_eq"]
+    try: 
+            resdict = generate_all_ligand_misc(finalMol,loud=False)
+            final_ax_dent = resdict["result_ax"]
+            final_eq_dent = resdict["result_eq"]
+    except:
+            final_ax_dent = 'er'
+            final_eq_dent = 'er'
+
+
     repDict.update({"finalDent":"/".join([ str(i) for i in final_ax_dent+final_eq_dent])})
     
     # geo check calls
-    if octahedral:
-        init_flag_oct, init_flag_list, init_dict_oct_info = initialMol.IsOct()
-    else:
-        init_flag_oct, init_flag_list, init_dict_oct_info = initialMol.IsStructure()
     try:
+        if octahedral:
+                init_flag_oct, init_flag_list, init_dict_oct_info = initialMol.IsOct()
+        else:
+                init_flag_oct, init_flag_list, init_dict_oct_info = initialMol.IsStructure()
+
         init_AD = '{0:.2f}'.format(init_dict_oct_info["oct_angle_devi_max"])
+
     except:
         init_AD = 'er'
     repDict.update({"initialAD":init_AD})
-    if octahedral:
-        final_flag_oct, final_flag_list, final_dict_oct_info = finalMol.IsOct(init_mol=initialMol)
-    else:
-        final_flag_oct, final_flag_list, final_dict_oct_info = finalMol.IsStructure(init_mol=initialMol)
     try:
+        if octahedral:
+                final_flag_oct, final_flag_list, final_dict_oct_info = finalMol.IsOct(init_mol=initialMol)
+        else:
+                final_flag_oct, final_flag_list, final_dict_oct_info = finalMol.IsStructure(init_mol=initialMol)
+
         final_AD = '{0:.2f}'.format(final_dict_oct_info["oct_angle_devi_max"])
+
     except:
         final_AD = 'er'
     repDict.update({"finalAD":final_AD})
     
     # fail list 
-    repDict.update({"initialFL":final_flag_list})
-    repDict.update({"finalFL":final_flag_list})
+    try:
+        repDict.update({"initialFL":flProcess(init_flag_list)})
+    except:
+        repDict.update({"initialFL":'er'})
+    try:
+       repDict.update({"finalFL":flProcess(final_flag_list)})
+    except:
+       repDict.update({"finalFL":'er'})
+
+
     
     # rmsd 
     
@@ -334,6 +365,12 @@ def makeGeoReportDictionary(repDict,initialMol,finalMol,octahedral):
     repDict.update({"RMSD":rmsd})
     return repDict
 
-    
+    def flProcess(flag_list):
+            formatted_list = ""
+            for fl in flag_lsit:
+                formatted_list  += verbatimize(str(fl))+' '
+            return formatted_list
 
+    def verbatimize(st):
+            return "\begin{verbatim}" + st + "\end{verbatim}"
 

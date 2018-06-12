@@ -33,8 +33,8 @@ echo "gen path  $generalpath "
 echo " gen num path $gennumpath"
 echo "base name is  $namebase "
 sourcepath=$fullpath
-inpath=$generalpath/infiles/$gennumpath/$namebase.in
-outpath=$generalpath/outfiles/$gennumpath/$namebase.out
+inpath=$generalpath/sp_infiles/$gennumpath/$namebase.in
+outpath=$generalpath/sp_outfiles/$gennumpath/$namebase.out
 scrpath=$generalpath/scr/sp/$gennumpath/
 echo "scr will be copied to  $scrpath"
 echo "paths set"
@@ -42,7 +42,7 @@ echo "paths set"
 localoutpath=$namebase.out
 localinpath=$namebase.in
 mkdir -p scr
-mkdir -p scr/sp
+mkdir -p scr/sp/$gennumpath/
 spacer='_'
 echo "begining"
 echo "file is  $namebase"
@@ -60,4 +60,4 @@ terachem $localinpath >  $localoutpath
 echo "Complete"
 ## copy back complete cases 
 mv $localoutpath $outpath
-mv scr/sp/$namebase $scrpath
+mv scr/sp/$gennumpath/$namebase $scrpath

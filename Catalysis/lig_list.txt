@@ -1,0 +1,16 @@
+[O-][O-] 1
+[I-] 1
+N#C[O-] 1
+[OH-] 1
+N#[C-] 2
+[OH2] 1
+N#CC 1
+c1ccncc1 4
+N 1
+c3c(P(c1ccccc1)c2ccccc2)cccc3 3
+C=O 2
+[C-]#[O+] 1
+[S--] 1
+[F-] 1
+[PH3] 1
+[SH2] 1

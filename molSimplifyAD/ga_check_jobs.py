@@ -33,7 +33,8 @@ def postprocessJob(job,live_job_dictionary,converged_jobs_dictionary):
                     postProc = True
             else:
                 postProc = True
-                
+        else:
+	    postProc = False        
         
             
     else:            
@@ -229,22 +230,22 @@ def check_all_current_convergence():
                                             logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from HFX = '+ str(this_run.alpha) + ' to '+newHFX + ' with ref ' + refHFX)
 
                                             add_to_outstanding_jobs(HFX_job)
-                                    if GA_run.config['oxocatalysis'] == True and int(ox)>3:
+                                    if GA_run.config['oxocatalysis'] == True and int(ox)>3 and (axlig2 != 'hydroxyl'):
                                             empty_job, empty_sp = this_run.write_empty_inputs(refHFX)
-                                            if (empty_job not in joblist) and (empty_job not in outstanding_jobs) and (empty_job not in converged_jobs.keys()):
-                                                    print('note: converting from oxo structure to empty structure')
-                                                    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure')
-                                                    add_to_outstanding_jobs(empty_job)
+                                            #if (empty_job not in joblist) and (empty_job not in outstanding_jobs) and (empty_job not in converged_jobs.keys()):
+                                            #        print('note: converting from oxo structure to empty structure')
+                                            #        logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure')
+                                            #        add_to_outstanding_jobs(empty_job)
                                             if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (empty_sp not in converged_jobs.keys()):
                                                     print('note: converting from oxo structure to empty structure (SP)')
                                                     logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure (SP)')
                                                     add_to_outstanding_jobs(empty_sp)
-                    elif GA_run.config['oxocatalysis']==True and int(ox)>3: #Must do this because the empty sites are one step behind the 6-coordinates at different HFX
-                            empty_job, empty_sp = this_run.write_empty_inputs(refHFX)
-                            if (empty_job not in joblist) and (empty_job not in outstanding_jobs) and (empty_job not in converged_jobs.keys()):
-                                    print('note: converting from oxo structure to empty structure')
-                                    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure')
-                                    add_to_outstanding_jobs(empty_job)
+                    elif GA_run.config['oxocatalysis']==True and int(ox)>3 and (axlig2 != 'hydroxyl'): #Must do this because the empty sites are one step behind the 6-coordinates at different HFX
+                            empty_job, empty_sp = this_run.write_empty_inputs('00')
+                            #if (empty_job not in joblist) and (empty_job not in outstanding_jobs) and (empty_job not in converged_jobs.keys()):
+                            #        print('note: converting from oxo structure to empty structure')
+                            #        logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure')
+                            #        add_to_outstanding_jobs(empty_job)
                             if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (empty_sp not in converged_jobs.keys()):
                                     print('note: converting from oxo structure to empty structure (SP)')
                                     logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure (SP)')
@@ -386,19 +387,22 @@ def check_all_current_convergence():
         if (not isall_post()) and os.path.isfile(get_run_dir() + '/consistent_descriptor_file.csv'):
             append_descriptor_csv(final_results.values())
         else:
-            print('QQWWWQW *** * ** * ** ** ** * *****  ')
             print('final results values len is ' + str(len(final_results.values())))
             write_descriptor_csv(final_results.values())    
         if isall_post():
             print('writing outpickle and reports! patience is a virtue')
-            for runClass in all_runs:
-                if runClass.status in [0,1,2,7,8,12,13,14]:
-                    if runClass in [0]:
-                        this_run.reportpath = path_dictionary["good_reports" ] + base_name + ".pdf"
-                    elif runClass in [1,8]:
-                        this_run.reportpath = path_dictionary["bad_reports" ] + base_name + ".pdf"
+            for runClass in all_runs.values():
+                print('status is ' + str(runClass.status))
+                path_dictionary=setup_paths()
+                print(path_dictionary.keys())
+                print([runClass.alpha,runClass.status])
+                if runClass.status in [0,1,2,7,8,12,13,14] and runClass.alpha == 20.0:
+                    if runClass.status in [0]:
+                        runClass.reportpath = path_dictionary["good_reports" ] + runClass.name + ".pdf"
+                    elif runClass.status in [1,8]:
+                        runClass.reportpath = path_dictionary["bad_reports" ] + runClass.name + ".pdf"
                     else:
-                        this_run.reportpath = path_dictionary["other_reports" ] + base_name + ".pdf"
+                        runClass.reportpath = path_dictionary["other_reports" ] + runClass.name + ".pdf"
                     if not os.path.exists(runClass.reportpath):
                         runClass.DFTRunToReport()
             output = open('final_runs_pickle.pkl','wb')
