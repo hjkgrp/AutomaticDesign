@@ -279,8 +279,8 @@ def setup_paths():
                    "sp_in_path"       : working_dir + "sp_infiles/",
                    "scr_path"         : working_dir + "scr/geo/",
                    "queue_output"     : working_dir + "queue_output/",
-                   "thermo_out_path"  : working_dir + "thermo_outfiles/",                   
-                   "solvent_out_path" : working_dir + "solvent_outfiles/",                   
+                   "thermo_out_path"  : working_dir + "thermo_outfiles/",
+                   "solvent_out_path" : working_dir + "solvent_outfiles/",
                    "job_path"         : working_dir + "jobs/",
                    "done_path"        : working_dir + "completejobs/",
                    "initial_geo_path" : working_dir + "initial_geo/",
@@ -315,7 +315,7 @@ def setup_paths():
 def advance_paths(path_dictionary,generation):
     new_dict = dict()
     for keys in path_dictionary.keys():
-        if not (keys in ["molsimp_path","DLPNO_path","reports"]) :
+        if not (keys in ["molsimp_path","DLPNO_path","good_reports","other_reports","bad_reports"]) :
             new_dict[keys] = path_dictionary[keys] + "gen_" +  str(generation) + "/"
             ensure_dir(new_dict[keys])
     return new_dict

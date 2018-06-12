@@ -386,19 +386,22 @@ def check_all_current_convergence():
         if (not isall_post()) and os.path.isfile(get_run_dir() + '/consistent_descriptor_file.csv'):
             append_descriptor_csv(final_results.values())
         else:
-            print('QQWWWQW *** * ** * ** ** ** * *****  ')
             print('final results values len is ' + str(len(final_results.values())))
             write_descriptor_csv(final_results.values())    
         if isall_post():
             print('writing outpickle and reports! patience is a virtue')
-            for runClass in all_runs:
-                if runClass.status in [0,1,2,7,8,12,13,14]:
-                    if runClass in [0]:
-                        this_run.reportpath = path_dictionary["good_reports" ] + base_name + ".pdf"
-                    elif runClass in [1,8]:
-                        this_run.reportpath = path_dictionary["bad_reports" ] + base_name + ".pdf"
+            for runClass in all_runs.values():
+                print('status is ' + str(runClass.status))
+                path_dictionary=setup_paths()
+                print(path_dictionary.keys())
+                print([runClass.alpha,runClass.status])
+                if runClass.status in [0,1,2,7,8,12,13,14] and runClass.alpha == 20.0:
+                    if runClass.status in [0]:
+                        runClass.reportpath = path_dictionary["good_reports" ] + runClass.name + ".pdf"
+                    elif runClass.status in [1,8]:
+                        runClass.reportpath = path_dictionary["bad_reports" ] + runClass.name + ".pdf"
                     else:
-                        this_run.reportpath = path_dictionary["other_reports" ] + base_name + ".pdf"
+                        runClass.reportpath = path_dictionary["other_reports" ] + runClass.name + ".pdf"
                     if not os.path.exists(runClass.reportpath):
                         runClass.DFTRunToReport()
             output = open('final_runs_pickle.pkl','wb')
