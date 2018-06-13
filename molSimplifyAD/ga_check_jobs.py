@@ -87,6 +87,8 @@ def check_all_current_convergence():
                 this_run=DFTRun(base_name)
                 
                 ## add info
+		if GA_run.config["oxocatalysis"]:
+			base_gene = '_'.join(base_gene.split('_')[:-1])
                 this_run.gene = base_gene
                 this_run.number = slot
                 this_run.gen= gen
@@ -321,9 +323,21 @@ def check_all_current_convergence():
                 print('END OF JOB \n *******************\n')
             elif "sp_infiles" in jobs:
                 print('checking status of SP job ' + str(jobs))
+                gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,base_name,base_gene = translate_job_name(jobs)
                 if (jobs not in live_job_dictionary.keys()) and ((len(jobs.strip('\n'))!=0)):
                     print('checking status of SP job ' + str(jobs))
                     this_run = test_terachem_sp_convergence(jobs)
+                    this_run.number = slot
+                    this_run.gen= gen
+                    this_run.job = jobs 
+		    #print('THIS IS THE NAME GIVEN: ',this_run.name)
+		    #print('THIS IS THE GENE GIVEN: ',this_run.gene)
+                    all_runs.update({this_run.name:this_run})
+                    print('added ' + this_run.name + ' to all_runs')
+                    print('run status is  ' + str(this_run.status))
+                    base_path_dictionary = setup_paths()
+                    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
+                                        + ' added ' + this_run.name + ' to all_runs with status '+ str(this_run.status))
                     update_converged_job_dictionary(jobs,this_run.status) # record converged 
                     print("Did this SP run converge?  " + str(this_run.converged)+' with status  ' + str(this_run.status))
                     if this_run.status == 0: ##  convergence is successful!
