@@ -72,18 +72,18 @@ def create_generic_infile(job,restart=False,use_old_optimizer = False):
             source_lines = sourcef.readlines()
             with open(target_inpath,'w') as newf:
                     for line in source_lines:
-                            if not ("coordinates" in line) and (not "end" in line) and (not "new_minimizer"):
+                            if not ("coordinates" in line) and (not "end" in line) and (not "new_minimizer" in line):
                                     newf.write(line)
 
     ## append geo
     with open(target_inpath,'a') as newf:
                     newf.write('coordinates '+ geometry_path+ '\n')
-                    if not use_old_optimizer:
-                        newf.write("min_coordinates cartesian")
+                    if use_old_optimizer:
+                        newf.write('min_coordinates cartesian\n')
                     else:
-                        newf.write("new_minimizer yes")
+                        newf.write("new_minimizer yes\n")
                     newf.write(guess_string)
-                    newf.write('end')  
+                    newf.write('end\n')  
 
 ########################
 def find_live_jobs():
