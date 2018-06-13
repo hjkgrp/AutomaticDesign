@@ -49,12 +49,13 @@ def test_terachem_sp_convergence(job):
     if this_GA.config["oxocatalysis"]:
         this_run.outpath = (path_dictionary["sp_out_path"] + "/gen_" + str(gen) +"/"
                            + basename + ".out")
+	basegene = '_'.join(basegene.split('_')[:-1])
     else:
         this_run.outpath = (path_dictionary["out_path" ] + "/gen_" + str(gen) +"/"
                            + basename + ".out")
     ## load details into run
     this_run.configure(metal,ox,eqlig,axlig1,axlig2,spin,alpha,spin_cat)
-    this_run.gene =  gene
+    this_run.gene =  basegene
     if os.path.exists(this_run.outpath):
         ### file is found,d check if converged
         with open(this_run.outpath) as f: 
