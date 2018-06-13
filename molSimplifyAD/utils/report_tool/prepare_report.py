@@ -20,9 +20,10 @@ try:
         from pymol import util
         allowedPymol = True
 except ImportError:
-        raise ImportError('connection to pymol unsuccessful.')
-except Exception:
-        raise Exception('Unknown non-import related error.')
+        #raise ImportError('connection to pymol unsuccessful.')
+        print('connection to pymol unsuccessful.')
+#except Exception:
+#        raise Exception('Unknown non-import related error.')
        
 def loadMols(initialPath, finalPath):
     # load in geos
