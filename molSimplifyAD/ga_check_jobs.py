@@ -330,6 +330,19 @@ def check_all_current_convergence():
                     this_run.number = slot
                     this_run.gen= gen
                     this_run.job = jobs 
+                    this_run.geopath = "SP calc: see initial geo"
+                    this_run.progpath = (path_dictionary["prog_geo_path" ] + base_name + ".xyz")
+                    this_run.init_geopath = (path_dictionary["initial_geo_path" ]+ base_name + ".xyz")
+                    this_run.outpath = "SP calc: see sp_outpath"
+                    this_run.thermo_outpath = "N/A: SP calc"
+                    this_run.solvent_outpath = "N/A: SP calc"
+                    this_run.sp_outpath = (path_dictionary["sp_out_path" ]+ '/' + base_name + ".out")
+                    this_run.scrpath = path_dictionary["scr_path" ]  + base_name
+                    this_run.scrlogpath = path_dictionary["scr_path" ]  + base_name +"/oplog.xls"
+                    this_run.inpath = path_dictionary["job_path" ]+ base_name +".in"
+                    this_run.comppath = path_dictionary["done_path" ] + base_name +".in"
+                    this_run.moppath = path_dictionary["mopac_path" ]+ base_name + ".out"
+                    this_run.mop_geopath = path_dictionary["mopac_path" ] + base_name + ".xyz"
 		    #print('THIS IS THE NAME GIVEN: ',this_run.name)
 		    #print('THIS IS THE GENE GIVEN: ',this_run.gene)
                     all_runs.update({this_run.name:this_run})
