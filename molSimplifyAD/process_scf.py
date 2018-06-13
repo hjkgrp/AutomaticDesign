@@ -49,12 +49,13 @@ def test_terachem_sp_convergence(job):
     if this_GA.config["oxocatalysis"]:
         this_run.outpath = (path_dictionary["sp_out_path"] + "/gen_" + str(gen) +"/"
                            + basename + ".out")
+	basegene = '_'.join(basegene.split('_')[:-1])
     else:
         this_run.outpath = (path_dictionary["out_path" ] + "/gen_" + str(gen) +"/"
                            + basename + ".out")
     ## load details into run
     this_run.configure(metal,ox,eqlig,axlig1,axlig2,spin,alpha,spin_cat)
-    this_run.gene =  gene
+    this_run.gene =  basegene
     if os.path.exists(this_run.outpath):
         ### file is found,d check if converged
         with open(this_run.outpath) as f: 
@@ -308,10 +309,6 @@ def process_runs_oxocatalysis(all_runs,list_of_prop_names,local_spin_dictionary,
                 ### add alpha value to list owned by this_comp:
         
         this_ox = int(this_run.ox)
-        if this_ox == 4 or this_ox == 2:
-            this_ox = 2
-        elif this_ox == 5 or this_ox == 3:
-            this_ox = 3 #For now, treating both as this ox
        
         metal_spins  = local_spin_dictionary[this_metal][this_ox]
         
@@ -332,17 +329,41 @@ def process_runs_oxocatalysis(all_runs,list_of_prop_names,local_spin_dictionary,
             this_comp.set_properties(this_run)
             for props in list_of_prop_names:
                 for spin_val in ['LS','IS','HS']:
-                    for ox_val in ['4','5']:
-                        for catax_val in ['x','oxo']:
-                            this_attribute = "_".join(['ox',str(ox_val),spin_val,str(catax_val),props])
-                            #print(this_attribute)
-                            setattr(this_comp,this_attribute,'undef')
-                            if 'converged' or 'time' or 'set_desc' in this_attribute:
-                                setattr(this_comp,this_attribute,False)
-                            if 'convergence' or 'attempted' in this_attribute or this_attribute == 'split':
-                                setattr(this_comp,this_attribute,0)
-                            if 'descriptor' in this_attribute:
-                                setattr(this_comp,this_attribute,list())
+                     for catax_val in ['x','oxo','hydroxyl']:
+		          if catax_val == 'x':
+				for ox_val in ['2','3']:
+                            	     this_attribute = "_".join(['ox',str(ox_val),spin_val,str(catax_val),props])
+                                     #print(this_attribute)
+                                     setattr(this_comp,this_attribute,'undef')
+                                     if 'converged' or 'time' or 'set_desc' in this_attribute:
+                                          setattr(this_comp,this_attribute,False)
+                                     if 'convergence' or 'attempted' in this_attribute or this_attribute == 'split':
+                                          setattr(this_comp,this_attribute,0)
+                                     if 'descriptor' in this_attribute:
+                                          setattr(this_comp,this_attribute,list())
+			  elif catax_val == 'oxo':
+				for ox_val in ['4','5']:
+                            	     this_attribute = "_".join(['ox',str(ox_val),spin_val,str(catax_val),props])
+                                     #print(this_attribute)
+                                     setattr(this_comp,this_attribute,'undef')
+                                     if 'converged' or 'time' or 'set_desc' in this_attribute:
+                                          setattr(this_comp,this_attribute,False)
+                                     if 'convergence' or 'attempted' in this_attribute or this_attribute == 'split':
+                                          setattr(this_comp,this_attribute,0)
+                                     if 'descriptor' in this_attribute:
+                                          setattr(this_comp,this_attribute,list())
+			  else:
+				for ox_val in ['3','4']:
+                            	     this_attribute = "_".join(['ox',str(ox_val),spin_val,str(catax_val),props])
+                                     #print(this_attribute)
+                                     setattr(this_comp,this_attribute,'undef')
+                                     if 'converged' or 'time' or 'set_desc' in this_attribute:
+                                          setattr(this_comp,this_attribute,False)
+                                     if 'convergence' or 'attempted' in this_attribute or this_attribute == 'split':
+                                          setattr(this_comp,this_attribute,0)
+                                     if 'descriptor' in this_attribute:
+                                          setattr(this_comp,this_attribute,list())
+				     
         else:
             this_comp = final_results[this_name]
         print(runkeys)
@@ -372,6 +393,8 @@ def process_runs_oxocatalysis(all_runs,list_of_prop_names,local_spin_dictionary,
                     this_run.coord = 'error'
             for props in list_of_prop_names:
                     this_attribute = "_".join(['ox',str(this_ox),spin_cat,str(axlig2_name),props])
+	            #print('attribute: ',this_attribute)
+		    #print('assigned: ',getattr(this_run,props))
                     setattr(this_comp,this_attribute,getattr(this_run,props))
         this_comp.get_some_split()
         ###

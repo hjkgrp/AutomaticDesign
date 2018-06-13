@@ -87,6 +87,8 @@ def check_all_current_convergence():
                 this_run=DFTRun(base_name)
                 
                 ## add info
+		if GA_run.config["oxocatalysis"]:
+			base_gene = '_'.join(base_gene.split('_')[:-1])
                 this_run.gene = base_gene
                 this_run.number = slot
                 this_run.gen= gen
@@ -321,9 +323,34 @@ def check_all_current_convergence():
                 print('END OF JOB \n *******************\n')
             elif "sp_infiles" in jobs:
                 print('checking status of SP job ' + str(jobs))
+                gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,base_name,base_gene = translate_job_name(jobs)
                 if (jobs not in live_job_dictionary.keys()) and ((len(jobs.strip('\n'))!=0)):
                     print('checking status of SP job ' + str(jobs))
                     this_run = test_terachem_sp_convergence(jobs)
+                    this_run.number = slot
+                    this_run.gen= gen
+                    this_run.job = jobs 
+                    this_run.geopath = "SP calc: see initial geo"
+                    this_run.progpath = (path_dictionary["prog_geo_path" ] + base_name + ".xyz")
+                    this_run.init_geopath = (path_dictionary["initial_geo_path" ]+ base_name + ".xyz")
+                    this_run.outpath = "SP calc: see sp_outpath"
+                    this_run.thermo_outpath = "N/A: SP calc"
+                    this_run.solvent_outpath = "N/A: SP calc"
+                    this_run.sp_outpath = (path_dictionary["sp_out_path" ]+ '/' + base_name + ".out")
+                    this_run.scrpath = path_dictionary["scr_path" ]  + base_name
+                    this_run.scrlogpath = path_dictionary["scr_path" ]  + base_name +"/oplog.xls"
+                    this_run.inpath = path_dictionary["job_path" ]+ base_name +".in"
+                    this_run.comppath = path_dictionary["done_path" ] + base_name +".in"
+                    this_run.moppath = path_dictionary["mopac_path" ]+ base_name + ".out"
+                    this_run.mop_geopath = path_dictionary["mopac_path" ] + base_name + ".xyz"
+		    #print('THIS IS THE NAME GIVEN: ',this_run.name)
+		    #print('THIS IS THE GENE GIVEN: ',this_run.gene)
+                    all_runs.update({this_run.name:this_run})
+                    print('added ' + this_run.name + ' to all_runs')
+                    print('run status is  ' + str(this_run.status))
+                    base_path_dictionary = setup_paths()
+                    logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
+                                        + ' added ' + this_run.name + ' to all_runs with status '+ str(this_run.status))
                     update_converged_job_dictionary(jobs,this_run.status) # record converged 
                     print("Did this SP run converge?  " + str(this_run.converged)+' with status  ' + str(this_run.status))
                     if this_run.status == 0: ##  convergence is successful!
@@ -358,9 +385,16 @@ def check_all_current_convergence():
         if GA_run.config["oxocatalysis"]:
             for props in list_of_prop_names:
                 for spin_cat in ['LS','IS','HS']:
-                    for ox in ['4','5']:
-                        for catax in ['x','oxo']:
-                            list_of_props.append("_".join(['ox',str(ox),spin_cat,str(catax),props]))
+                     for catax in ['x','oxo','hydroxyl']:
+		          if catax == 'x':
+			       for ox in ['2','3']:
+			            list_of_props.append("_".join(['ox',str(ox),spin_cat,str(catax),props]))
+			  elif catax == 'oxo':
+			       for ox in ['4','5']:
+			            list_of_props.append("_".join(['ox',str(ox),spin_cat,str(catax),props]))
+			  else:
+			       for ox in ['3','4']:
+				    list_of_props.append("_".join(['ox',str(ox),spin_cat,str(catax),props]))
             list_of_props.append('attempted')
             final_results = process_runs_oxocatalysis(all_runs,list_of_prop_names,spin_dictionary()) 
         else:   
@@ -403,8 +437,7 @@ def check_all_current_convergence():
                         runClass.reportpath = path_dictionary["bad_reports" ] + runClass.name + ".pdf"
                     else:
                         runClass.reportpath = path_dictionary["other_reports" ] + runClass.name + ".pdf"
-                    if not os.path.exists(runClass.reportpath):
-                        runClass.DFTRunToReport()
+                    runClass.DFTRunToReport()
             output = open('final_runs_pickle.pkl','wb')
             pickle.dump(final_results,output,-1)
             output.close()
