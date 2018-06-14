@@ -42,6 +42,16 @@ def get_infile_from_job(job):
         create_generic_infile(job,restart = True)
     return target_inpath
 ########################
+def get_initial_geo_path_from_job(job):
+    ## given a job (file under jobs/gen_x/
+    ## this returns the path to the initial geo file
+    _,gen,_,_,_,_,_,_,_,_,_,_,_,_,base_name,_ = translate_job_name(job)
+    ## create paths
+    path_dictionary = setup_paths()
+    path_dictionary = advance_paths(path_dictionary,gen)
+    target_initial_geo_path = path_dictionary["initial_geo_path"] +base_name + '.xyz'
+    return target_initial_geo_path
+########################
 def create_generic_infile(job,restart=False,use_old_optimizer = False):
     ## guess is ANOTHER JOB NAME, from which the geom and wavefunction guess
     ## will attempt to be extracted
@@ -389,11 +399,20 @@ def read_dictionary(path):
         emsg = "Error, could not read state space: " + path
     return emsg,dictionary
 ########################
-
 def logger(path,message):
     ensure_dir(path)
     with open(path + '/log.txt', 'a') as f:
         f.write(message + "\n")
+########################
+def log_bad_initial(job):
+    path = get_run_dir() + 'bad_initgeo_log.txt' 
+    if os.path.isfile(path):
+        with open(path, 'a') as f:
+            f.write(job + "\n")
+    else:
+        with open(path, 'w') as f:
+            f.write(job + "\n")
+    
 ########################
 def add_to_outstanding_jobs(job):
     current_outstanding = get_outstanding_jobs()

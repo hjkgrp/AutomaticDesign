@@ -1,15 +1,8 @@
-import glob
-import glob
-import math
-import numpy
-import subprocess
-import argparse
-import os
-import random
-import shutil
+import glob, math, numpy, subprocess, os, random, shutil
 import sys
 
 from ga_tools import *
+from molSimplify.Classes.mol3D import *
 
 class octahedral_complex:
     def __init__(self,ligands_list):
@@ -506,12 +499,9 @@ class octahedral_complex:
                 for ligs in (self.eq_ligands+self.ax_ligands):
                     if ligs in old_optimizer_list:
                         use_old_optimizer = True
-                
-                
                 ### make an infile!
                 create_generic_infile(jobpath,restart=False,use_old_optimizer = use_old_optimizer)
-                    
-                
+            
         else:
             
             ANN_split = False
@@ -519,7 +509,21 @@ class octahedral_complex:
         if not 'ANN_split' in dir():
             ANN_split = False
             ANN_distance = False
-        #print('!!!ANN_split:', ANN_split)
+        
         return jobpath,mol_name,ANN_split,ANN_distance
-
+    
+    def inspect_initial_geo(self,jobpath):
+        ## this function contains the logic for inspecting a
+        ## initial geo file and reporting if there are problems with it
+        mol = mol3D() # load blank mol3D()
+        target_initial_geo_path = get_initial_geo_path_from_job(jobpath)
+        print(target_initial_geo_path)
+        if os.path.isfile(target_initial_geo_path):
+            mol.readfromxyz(target_initial_geo_path)
+        flag_oct, flag_list, dict_oct_info = mol.IsOct()
+        flag_H = not mol.closest_H_2_metal()[0]
+        flag_oct = flag_oct and flag_H
+        return flag_oct, flag_list, dict_oct_info 
+ 
+    
 

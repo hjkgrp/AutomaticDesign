@@ -316,21 +316,17 @@ class GA_generation:
                                 jobpath,mol_name,ANN_split,ANN_distance = jobs.generate_geometery(prefix = job_prefix, spin = spins,path_dictionary = self.current_path_dictionary,
                                                                       rundirpath = get_run_dir(),gen=self.status_dictionary['gen'])
                                 ## Geo_check on Init geo
-                                gene = jobpath.split('/')[-1].split('.')[0]
-                                path_initgeo = get_run_dir()+ 'initial_geo/gen_%s/%s.xyz' %(str(self.status_dictionary["gen"]), gene)
-                                mol = mol3D()
-                                mol.readfromxyz(path_initgeo)
-                                flag_oct, flag_list, dict_oct_info = mol.IsOct()
-                                flag_H = not mol.closest_H_2_metal()[0]
-                                # print(flag_H, flag_oct)
-                                flag_oct = flag_oct and flag_H
+                                flag_oct,_,_ = jobs.inspect_initial_geo(jobpath)
+                                
                                 if not flag_oct:
-                                    with open('bad_initgeo_log.txt', 'a') as fin:
-                                        fin.write(jobpath+'\n')
+                                    log_bad_initial(jobpath)
+                                    
                                 if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()) and (flag_oct):
                                         ## save result
-                                        print('saving result in ANN dict: ' + mol_name)
-                                        ANN_results_dict.update({mol_name:",".join([str(ANN_split),str(ANN_distance)])})
+                                        msg, ANN_dict = read_dictionary(self.current_path_dictionary["ANN_output"] +'ANN_results.csv')
+                                        if not mol_name in ANN_dict.keys():
+                                                print('saving result in ANN dict: ' + mol_name)
+                                                ANN_results_dict.update({mol_name:",".join([str(ANN_split),str(ANN_distance)])})
                                         jobpaths.append(jobpath)
                                         logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen "
                                         + str(self.status_dictionary['gen'])
