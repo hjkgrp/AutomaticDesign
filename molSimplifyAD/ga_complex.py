@@ -1,15 +1,8 @@
-import glob
-import glob
-import math
-import numpy
-import subprocess
-import argparse
-import os
-import random
-import shutil
-import sys
+import glob, math, numpy, subprocess, os, random, shutil
+import sys, shlex
 
 from ga_tools import *
+from molSimplify.Classes.mol3D import *
 
 class octahedral_complex:
     def __init__(self,ligands_list):
@@ -407,7 +400,8 @@ class octahedral_complex:
                 ff_opt = 'A'
             else:
                 ff_opt = 'A'
-
+        if smicat:
+                ff_opt = 'N'
         ## get custom exchange fraction
         this_GA = get_current_GA()
         exchange = this_GA.config['exchange']
@@ -442,6 +436,7 @@ class octahedral_complex:
                 #if True:
                     with open(ms_dump_path,'a') as ms_pipe:
                         with open(ms_error_path,'a') as ms_error_pipe:
+
                             call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +liglist,'-ligocc 1,1,1,1,1,1',
                                      '-rundir ' +"'"+ rundirpath.rstrip("/")+"'",'-keepHs yes,yes,yes,yes,yes,yes','-jobdir','temp',
                                      '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
@@ -449,10 +444,14 @@ class octahedral_complex:
                                      '-qccode TeraChem','-runtyp '+rty,'-method UDFT',"-ffoption "+ff_opt,' -ff UFF'])
                             if smicat:
                                 call += ' -smicat ' + smicat
+
                             if this_GA.config['oxocatalysis']:
                                 call += ' -qoption dftd,d3 -qoption min_maxiter,1100'
                             print(call)
-                            p2 = subprocess.call(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
+#                            p2 = subprocess.call(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
+                            p2 = subprocess.Popen(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
+                            p2.wait()
+
                     assert(os.path.isfile(rundirpath + 'temp'+'/' + mol_name + '.molinp'))
                     shutil.move(rundirpath + 'temp'+'/' + mol_name + '.molinp', path_dictionary["molsimplify_inps"]+'/' + mol_name + '.molinp')
                     shutil.move(rundirpath + 'temp'+'/' + mol_name + '.xyz', geometry_path)
@@ -506,12 +505,9 @@ class octahedral_complex:
                 for ligs in (self.eq_ligands+self.ax_ligands):
                     if ligs in old_optimizer_list:
                         use_old_optimizer = True
-                
-                
                 ### make an infile!
                 create_generic_infile(jobpath,restart=False,use_old_optimizer = use_old_optimizer)
-                    
-                
+            
         else:
             
             ANN_split = False
@@ -519,7 +515,21 @@ class octahedral_complex:
         if not 'ANN_split' in dir():
             ANN_split = False
             ANN_distance = False
-        #print('!!!ANN_split:', ANN_split)
+        
         return jobpath,mol_name,ANN_split,ANN_distance
-
+    
+    def inspect_initial_geo(self,jobpath):
+        ## this function contains the logic for inspecting a
+        ## initial geo file and reporting if there are problems with it
+        mol = mol3D() # load blank mol3D()
+        target_initial_geo_path = get_initial_geo_path_from_job(jobpath)
+        print(target_initial_geo_path)
+        if os.path.isfile(target_initial_geo_path):
+            mol.readfromxyz(target_initial_geo_path)
+        flag_oct, flag_list, dict_oct_info = mol.IsOct()
+        flag_H = not mol.closest_H_2_metal()[0]
+        flag_oct = flag_oct and flag_H
+        return flag_oct, flag_list, dict_oct_info 
+ 
+    
 
