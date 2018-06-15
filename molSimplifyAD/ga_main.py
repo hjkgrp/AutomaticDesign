@@ -300,6 +300,7 @@ class GA_generation:
                 emsg,ANN_results_dict = read_dictionary(self.current_path_dictionary["ANN_output"] +'/ANN_results.csv')
                 current_outstanding = get_outstanding_jobs()
                 converged_jobs = find_converged_job_dictionary()
+                dict_var = ['jobpath','mol_name','ANN_split','ANN_distance','flag_oct']
                 for keys in self.outstanding_jobs.keys():
 
                         jobs = self.outstanding_jobs[keys]
@@ -309,21 +310,31 @@ class GA_generation:
                         #print('metal is '+str(metal))
                         #print('ox is ' +str(jobs.ox))
                         spin_list = spins_dict[metal][jobs.ox]
-                        for spins in spin_list:
+                        job_dict = []
+                        flag_oct_spin = True
+                        for idx, spins in enumerate(spin_list):
+                                # print('!!!!spin_list!!!!:', spin_list)
                                 job_prefix = "gen_" + str(self.status_dictionary["gen"]) + "_slot_" + str(keys) + "_"
                                 ## generate HS/LS
                                 ## convert the gene into a job file and geometery
                                 jobpath,mol_name,ANN_split,ANN_distance = jobs.generate_geometery(prefix = job_prefix, spin = spins,path_dictionary = self.current_path_dictionary,
                                                                       rundirpath = get_run_dir(),gen=self.status_dictionary['gen'])
-                                   
-                                if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
-                                        ## Geo_check on Init geo
-                                        flag_oct,_,_ = jobs.inspect_initial_geo(jobpath)
-                                                
-                                        if not flag_oct:
-                                            log_bad_initial(jobpath)
-                                        else:
-                                            ## save result
+                                flag_oct,_,_ = jobs.inspect_initial_geo(jobpath)
+                                if not flag_oct:
+                                    flag_oct_spin = False
+                                job_dict.append(dict())
+                                for ele in dict_var:
+                                    job_dict[idx].update({ele:locals()[ele]})
+                        if flag_oct_spin:
+                                for idx, spins in enumerate(spin_list):
+                                    # for ele in dict_var:
+                                    #     globals()[ele] = job_dict[idx][ele]
+                                    jobpath = job_dict[idx]['jobpath']
+                                    mol_name = job_dict[idx]['mol_name']
+                                    ANN_split = job_dict[idx]['ANN_split']
+                                    ANN_distance = job_dict[idx]['ANN_distance']
+                                    # print('@@@@@', jobpath)
+                                    if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
                                             msg, ANN_dict = read_dictionary(self.current_path_dictionary["ANN_output"] +'ANN_results.csv')
                                             if not mol_name in ANN_dict.keys():
                                                print('saving result in ANN dict: ' + mol_name)
@@ -332,6 +343,15 @@ class GA_generation:
                                             logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen "
                                                 + str(self.status_dictionary['gen'])
                                                 + " missing information for gene number  " + str(keys) + ' with  name ' + str(jobs.name) )
+                        else:
+                                for idx, spins in enumerate(spin_list):
+                                    # for ele in dict_var:  ## Does not work! so wierd.
+                                    #     locals()[ele] = job_dict[idx][ele]
+                                    jobpath = job_dict[idx]['jobpath']
+                                    print('@@@@@', jobpath)
+                                    log_bad_initial(jobpath)
+                                    update_converged_job_dictionary(jobpath,3)
+
                         write_dictionary(ANN_results_dict,self.current_path_dictionary["ANN_output"] +'ANN_results.csv')
                 set_outstanding_jobs(current_outstanding+jobpaths)
 

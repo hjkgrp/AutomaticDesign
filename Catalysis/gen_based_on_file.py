@@ -47,8 +47,8 @@ shutil.copy(lig_list, rundir + lig_list)
 ll = process_ligands_file(rundir + lig_list)
 print('!!!ll:', ll)
 GA_run = GA_run_defintion()
-GA_run.configure(gen=0, runtype='redox', optimize=True, DFT=True, rundir=rundir, liglist=ll, queue_type='SGE',
-                 symclass='weak', use_singlets=True, all_spins=False, queue_reference=False, npool=10, ncross=5,
+GA_run.configure(gen=0, runtype='split', optimize=True, DFT=True, rundir=rundir, liglist=ll, queue_type='SGE',
+                 symclass='weak', use_singlets=True, all_spins=False, queue_reference=False, npool=1, ncross=5,
                  pmut=0.15, maxgen=20, scoring_function='split', split_parameter=15.0, distance_parameter=1.0,
                  monitor_diversity=True, monitor_distance=True, max_jobs=100, HFXsample=False)
 GA_run.serialize()
