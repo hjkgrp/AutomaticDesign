@@ -139,7 +139,6 @@ class DFTRun:
         self.descriptor_names = list()
 
     def set_geo_check_func(self):
-        
         try:
                 GA_run = get_current_GA()
                 self.octahedral = GA_run.config['octahedral']
@@ -343,6 +342,13 @@ class DFTRun:
         except:
             self.init_coord = 0
 
+    def get_track_elec_prop(self):
+        try:
+            GA_run = get_current_GA()
+            self.track_elec_prop = GA_run.config['track_elec_prop']
+        except:
+            self.track_elec_prop = False
+
     def write_new_inputs(self):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
@@ -527,6 +533,14 @@ class DFTRun:
                     guess_string_geo = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/'+ wfnrefempty+ '/ca0' + \
                            ' ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/'+ wfnrefempty + '/cb0\n'
                     f.write(guess_string_geo)
+                # self.get_track_elec_prop()
+                # print('!!!!!!!', self.track_elec_prop)
+                # print('!!!!!!!!!!!!!!!!!')
+                # if self.track_elec_prop:
+                #     f.write('### props ####\n')
+                #     f.write('ml_prop yes\n')
+                #     f.write('poptype mulliken\n')
+                #     f.write('bond_order_list yes\n')
                 f.write('end\n')
                 f.write('\n')
                 #### We want to freeze the M3L and M4L dihedrals as to how they were for the geo opt for the 6 coord structure
