@@ -719,7 +719,7 @@ def read_terachem_scrlog_output(this_run):
                         LUMO_ind = check_line.index("E_LUMO")
                     except:
                         print("cannot understand HOMO/LUMO results")                       
-                    if LUMO_ind & LUMO_ind:                   
+                    if LUMO_ind and HOMO_ind:                   
                         print('safe results')
                         safe = True
                     else:
@@ -732,4 +732,4 @@ def read_terachem_scrlog_output(this_run):
         print('setting HOMO to '+ str(current_HOMO))
         print('setting LUMO to '+ str(current_LUMO))
         this_run.HOMO = current_HOMO
-        this_run.LUMO = current_HOMO
+        this_run.LUMO = current_LUMO

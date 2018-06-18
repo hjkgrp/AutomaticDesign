@@ -22,8 +22,8 @@ from molSimplify.Informatics.RACassemble import *
 from molSimplifyAD.ga_io_control import *
 from molSimplifyAD.ga_tools import get_current_GA
 from molSimplifyAD.utils.report_tool.prepare_report import *
-from molSimplify.Classes.globalvars import dict_oct_check_loose, dict_oct_check_st, dict_oneempty_check_st, \
-    dict_oneempty_check_loose, oct_angle_ref, oneempty_angle_ref
+#from molSimplify.Classes.globalvars import dict_oct_check_loose, dict_oct_check_st, dict_oneempty_check_st, \
+#    dict_oneempty_check_loose, oct_angle_ref, oneempty_angle_ref
 
 
 ########### UNIT CONVERSION
@@ -182,11 +182,12 @@ class DFTRun:
             setattr(self, key, self.dict_geo_check[key])
 
     def check_oct_needs_final_only(self, debug=False):
+        globs=globalvars()
         if self.octahedral:
-            flag_oct, flag_list, dict_oct_info = self.mol.IsOct(dict_check=dict_oct_check_st,
+            flag_oct, flag_list, dict_oct_info = self.mol.IsOct(dict_check=globs.geo_check_dictionary()["dict_oct_check_st"],
                                                                 debug=debug)
         else:
-            flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(dict_check=dict_oneempty_check_st,
+            flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(dict_check=self.globs.geo_check_dictionary()["dict_oneempty_check_st"],
                                                                       debug=debug)
         self.flag_oct = flag_oct
         self.flag_oct_list = flag_list
@@ -195,13 +196,14 @@ class DFTRun:
         return flag_oct, flag_list, dict_oct_info
 
     def check_oct_needs_init(self, debug=False):
+        globs=globalvars()
         if self.octahedral:
             flag_oct, flag_list, dict_oct_info = self.mol.IsOct(self.init_mol,
-                                                                dict_check=dict_oct_check_st,
+                                                                dict_check=globs.geo_check_dictionary()["dict_oct_check_st"],
                                                                 debug=debug)
         else:
             flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(self.init_mol,
-                                                                      dict_check=dict_oneempty_check_st,
+                                                                      dict_check=self.globs.geo_check_dictionary()["dict_oneempty_check_st"],
                                                                       debug=debug)
         self.flag_oct = flag_oct
         self.flag_oct_list = flag_list
@@ -211,15 +213,17 @@ class DFTRun:
         return flag_oct, flag_list, dict_oct_info
 
     def check_oct_on_prog(self, debug=False):
+        globs=globalvars()
+
         if os.path.exists(self.init_geopath):
             self.obtain_init_mol3d()
             if self.octahedral:
                 flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsOct(self.init_mol,
-                                                                        dict_check=dict_oct_check_loose,
+                                                                        dict_check=globs.geo_check_dictionary()["dict_oct_check_loose"],
                                                                         debug=debug)
             else:
                 flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsStructure(self.init_mol,
-                                                                              dict_check=dict_oneempty_check_loose,
+                                                                              dict_check=globs.geo_check_dictionary()["dict_oneempty_check_loose"],
                                                                               debug=debug)
             self.flag_oct_loose = flag_oct_loose
             self.flag_oct_list = flag_list
@@ -227,10 +231,10 @@ class DFTRun:
             self.write_geo_dict()
         else:
             if self.octahedral:
-                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsOct(dict_check=dict_oct_check_loose,
+                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsOct(dict_check=globs.geo_check_dictionary()["dict_oct_check_loose"],
                                                                               debug=debug)
             else:
-                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsStructure(dict_check=dict_oneempty_check_loose,
+                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsStructure(dict_check=globs.geo_check_dictionary()["dict_oneempty_check_loose"],
                                                                                     debug=debug)
             self.flag_oct_loose = flag_oct_loose
             self.flag_oct_list = flag_list

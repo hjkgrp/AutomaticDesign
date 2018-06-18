@@ -3,9 +3,6 @@ from molSimplify.Scripts.io import getlicores
 import os, json, argparse
 from pkg_resources import resource_filename, Requirement
 
-
-
-
 class GA_run_defintion:
         ## this function controls run-specific parameters
         def __init__(self):
