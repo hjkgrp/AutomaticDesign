@@ -1,5 +1,5 @@
 import glob, math, numpy, subprocess, os, random, shutil
-import sys
+import sys, shlex
 
 from ga_tools import *
 from molSimplify.Classes.mol3D import *
@@ -400,7 +400,8 @@ class octahedral_complex:
                 ff_opt = 'A'
             else:
                 ff_opt = 'A'
-
+        if smicat:
+                ff_opt = 'N'
         ## get custom exchange fraction
         this_GA = get_current_GA()
         exchange = this_GA.config['exchange']
@@ -435,6 +436,7 @@ class octahedral_complex:
                 #if True:
                     with open(ms_dump_path,'a') as ms_pipe:
                         with open(ms_error_path,'a') as ms_error_pipe:
+
                             call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +liglist,'-ligocc 1,1,1,1,1,1',
                                      '-rundir ' +"'"+ rundirpath.rstrip("/")+"'",'-keepHs yes,yes,yes,yes,yes,yes','-jobdir','temp',
                                      '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
@@ -442,10 +444,14 @@ class octahedral_complex:
                                      '-qccode TeraChem','-runtyp '+rty,'-method UDFT',"-ffoption "+ff_opt,' -ff UFF'])
                             if smicat:
                                 call += ' -smicat ' + smicat
+
                             if this_GA.config['oxocatalysis']:
                                 call += ' -qoption dftd,d3 -qoption min_maxiter,1100'
                             print(call)
-                            p2 = subprocess.call(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
+#                            p2 = subprocess.call(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
+                            p2 = subprocess.Popen(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
+                            p2.wait()
+
                     assert(os.path.isfile(rundirpath + 'temp'+'/' + mol_name + '.molinp'))
                     shutil.move(rundirpath + 'temp'+'/' + mol_name + '.molinp', path_dictionary["molsimplify_inps"]+'/' + mol_name + '.molinp')
                     shutil.move(rundirpath + 'temp'+'/' + mol_name + '.xyz', geometry_path)

@@ -34,6 +34,7 @@ class GA_run_defintion:
                       monitor_diversity=True,
                       monitor_distance= True,
                       all_post = False,
+                      track_elec_prop = False,
                       **KWARGS):
             ## first time start-up function
 #                print('configuring status dictionaty')
@@ -66,7 +67,9 @@ class GA_run_defintion:
                               'monitor_diversity':monitor_diversity,
                               'monitor_distance':monitor_distance,
                               'max_jobs':max_jobs,
-                              "all_post":all_post}
+                              "all_post":all_post,
+                              'track_elec_prop':track_elec_prop,
+                               }
         def serialize(self):
             ## serialize run info
             print('serialziing to '+str(self.config['rundir'] + '.madconfig'))

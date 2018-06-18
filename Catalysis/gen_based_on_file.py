@@ -47,10 +47,10 @@ shutil.copy(lig_list, rundir + lig_list)
 ll = process_ligands_file(rundir + lig_list)
 print('!!!ll:', ll)
 GA_run = GA_run_defintion()
-GA_run.configure(gen=0, runtype='redox', optimize=True, DFT=True, rundir=rundir, liglist=ll, queue_type='SGE',
-                 symclass='weak', use_singlets=True, all_spins=False, queue_reference=False, npool=10, ncross=5,
+GA_run.configure(gen=0, runtype='split', optimize=True, DFT=True, rundir=rundir, liglist=ll, queue_type='SGE',
+                 symclass='weak', use_singlets=True, all_spins=False, queue_reference=False, npool=1, ncross=5,
                  pmut=0.15, maxgen=20, scoring_function='split', split_parameter=15.0, distance_parameter=1.0,
-                 monitor_diversity=True, monitor_distance=True, max_jobs=100, HFXsample=False)
+                 monitor_diversity=True, monitor_distance=True, max_jobs=100, HFXsample=False, track_elec_prop=True)
 GA_run.serialize()
 configuration = GA_run.config
 sp_file, geo_file, thermo_file, solvent_file = get_launch_script_file(configuration["queue_type"])
