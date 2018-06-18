@@ -307,7 +307,7 @@ class GA_generation:
                 for keys in self.outstanding_jobs.keys():
 
                         jobs = self.outstanding_jobs[keys]
-                        print('!!!!!jobs::::', jobs)
+                        # print('!!!!!jobs::::', jobs)
                         spins_dict = spin_dictionary()
                         metal = jobs.metals_list[jobs.core]
                         #print('metal is '+str(metal))
@@ -329,9 +329,7 @@ class GA_generation:
                                 if self.track_elec_prop:
                                     self.write_elec_prop_infile(filepath=jobpath)
                                     infile_path = self.current_path_dictionary['infiles']+'/'+jobpath.split('/')[-1]
-                                    with open(infile_path, 'r') as f:
-                                        ftxt = f.readlines()
-                                    self.write_elec_prop_infile(filepath=infile_path, ftxt=ftxt)
+                                    self.write_elec_prop_infile(filepath=infile_path)
                                 if not flag_oct:
                                     flag_oct_spin = False
                                 job_dict.append(dict())
@@ -632,7 +630,9 @@ class GA_generation:
                 self.genes.update(selected_genes)
                 self.gene_compound_dictionary.update(selected_compound_dictionary)
 
-        def write_elec_prop_infile(self, filepath, ftxt=None):
+        def write_elec_prop_infile(self, filepath):
+            with open(filepath, 'r') as f:
+                ftxt = f.readlines()
             with open(filepath, 'w') as f:
                 if not ftxt == None:
                     f.writelines(ftxt[:-1])
