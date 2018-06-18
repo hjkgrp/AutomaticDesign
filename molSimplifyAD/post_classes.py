@@ -45,6 +45,7 @@ class DFTRun:
         self.time = 'undef'
         self.energy = 'undef'
         self.HOMO = "undef"
+        self.SOMO = "undef"
         self.LUMO = "undef"
         self.initial_energy = 'undef'
         self.charge = 'undef'
@@ -748,6 +749,10 @@ class Comp:
         self.ox_2_LS_HOMO = 'undef'
         self.ox_3_LS_HOMO = 'undef'
         self.ox_3_HS_HOMO = 'undef'
+        self.ox_2_HS_SOMO = 'undef'
+        self.ox_2_LS_SOMO = 'undef'
+        self.ox_3_LS_SOMO = 'undef'
+        self.ox_3_HS_SOMO = 'undef'
         self.ox_2_HS_LUMO = 'undef'
         self.ox_2_LS_LUMO = 'undef'
         self.ox_3_LS_LUMO = 'undef'

@@ -702,8 +702,10 @@ def read_terachem_scrlog_output(this_run):
     found_lumo =False 
     safe = False
     current_HOMO = 0 
+    current_SOMO = 0 
     current_LUMO = 0 
     HOMO_ind = "undef"
+    SOMO_ind = "undef"
     LUMO_ind = "undef"
     print('\n checking '+this_run.scrlogpath)
     if os.path.exists(this_run.scrlogpath):
@@ -712,13 +714,14 @@ def read_terachem_scrlog_output(this_run):
         with open(this_run.scrlogpath) as f:            
             data=f.readlines()
             for i,lines in enumerate(data):
-                if str(lines).find('E_HOMO') != -1 & str(lines).find('E_LUMO') != -1:
+                if str(lines).find('E_HOMO') != -1 & str(lines).find('E_LUMO') != -1 & str(lines).find('E_SOMO') != -1:
                     try:
                         check_line = lines.strip().split()
                         HOMO_ind = check_line.index("E_HOMO")
+                        SOMO_ind = check_line.index("E_SOMO")
                         LUMO_ind = check_line.index("E_LUMO")
                     except:
-                        print("cannot understand HOMO/LUMO results")                       
+                        print("cannot understand HOMO/SOMO/LUMO results")                       
                     if LUMO_ind and HOMO_ind:                   
                         print('safe results')
                         safe = True
@@ -727,9 +730,15 @@ def read_terachem_scrlog_output(this_run):
                         print("scr log not understood")
                 elif safe:
                     current_HOMO = lines.strip().split()[HOMO_ind]
+                    current_SOMO = lines.strip().split()[SOMO_ind]
                     current_LUMO = lines.strip().split()[LUMO_ind]
     if safe:
         print('setting HOMO to '+ str(current_HOMO))
+        print('setting SOMO to '+ str(current_SOMO))
         print('setting LUMO to '+ str(current_LUMO))
         this_run.HOMO = current_HOMO
+        this_run.SOMO = current_SOMO
         this_run.LUMO = current_LUMO
+
+
+
