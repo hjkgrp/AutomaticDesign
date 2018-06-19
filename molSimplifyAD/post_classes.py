@@ -22,8 +22,8 @@ from molSimplify.Informatics.RACassemble import *
 from molSimplifyAD.ga_io_control import *
 from molSimplifyAD.ga_tools import get_current_GA
 from molSimplifyAD.utils.report_tool.prepare_report import *
-from molSimplify.Classes.globalvars import dict_oct_check_loose, dict_oct_check_st, dict_oneempty_check_st, \
-    dict_oneempty_check_loose, oct_angle_ref, oneempty_angle_ref
+#from molSimplify.Classes.globalvars import dict_oct_check_loose, dict_oct_check_st, dict_oneempty_check_st, \
+#    dict_oneempty_check_loose, oct_angle_ref, oneempty_angle_ref
 
 
 ########### UNIT CONVERSION
@@ -45,6 +45,7 @@ class DFTRun:
         self.time = 'undef'
         self.energy = 'undef'
         self.HOMO = "undef"
+        self.SOMO = "undef"
         self.LUMO = "undef"
         self.initial_energy = 'undef'
         self.charge = 'undef'
@@ -139,7 +140,6 @@ class DFTRun:
         self.descriptor_names = list()
 
     def set_geo_check_func(self):
-        
         try:
                 GA_run = get_current_GA()
                 self.octahedral = GA_run.config['octahedral']
@@ -182,11 +182,12 @@ class DFTRun:
             setattr(self, key, self.dict_geo_check[key])
 
     def check_oct_needs_final_only(self, debug=False):
+        globs=globalvars()
         if self.octahedral:
-            flag_oct, flag_list, dict_oct_info = self.mol.IsOct(dict_check=dict_oct_check_st,
+            flag_oct, flag_list, dict_oct_info = self.mol.IsOct(dict_check=globs.geo_check_dictionary()["dict_oct_check_st"],
                                                                 debug=debug)
         else:
-            flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(dict_check=dict_oneempty_check_st,
+            flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(dict_check=self.globs.geo_check_dictionary()["dict_oneempty_check_st"],
                                                                       debug=debug)
         self.flag_oct = flag_oct
         self.flag_oct_list = flag_list
@@ -195,13 +196,14 @@ class DFTRun:
         return flag_oct, flag_list, dict_oct_info
 
     def check_oct_needs_init(self, debug=False):
+        globs=globalvars()
         if self.octahedral:
             flag_oct, flag_list, dict_oct_info = self.mol.IsOct(self.init_mol,
-                                                                dict_check=dict_oct_check_st,
+                                                                dict_check=globs.geo_check_dictionary()["dict_oct_check_st"],
                                                                 debug=debug)
         else:
             flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(self.init_mol,
-                                                                      dict_check=dict_oneempty_check_st,
+                                                                      dict_check=self.globs.geo_check_dictionary()["dict_oneempty_check_st"],
                                                                       debug=debug)
         self.flag_oct = flag_oct
         self.flag_oct_list = flag_list
@@ -211,15 +213,17 @@ class DFTRun:
         return flag_oct, flag_list, dict_oct_info
 
     def check_oct_on_prog(self, debug=False):
+        globs=globalvars()
+
         if os.path.exists(self.init_geopath):
             self.obtain_init_mol3d()
             if self.octahedral:
                 flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsOct(self.init_mol,
-                                                                        dict_check=dict_oct_check_loose,
+                                                                        dict_check=globs.geo_check_dictionary()["dict_oct_check_loose"],
                                                                         debug=debug)
             else:
                 flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsStructure(self.init_mol,
-                                                                              dict_check=dict_oneempty_check_loose,
+                                                                              dict_check=globs.geo_check_dictionary()["dict_oneempty_check_loose"],
                                                                               debug=debug)
             self.flag_oct_loose = flag_oct_loose
             self.flag_oct_list = flag_list
@@ -227,10 +231,10 @@ class DFTRun:
             self.write_geo_dict()
         else:
             if self.octahedral:
-                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsOct(dict_check=dict_oct_check_loose,
+                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsOct(dict_check=globs.geo_check_dictionary()["dict_oct_check_loose"],
                                                                               debug=debug)
             else:
-                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsStructure(dict_check=dict_oneempty_check_loose,
+                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsStructure(dict_check=globs.geo_check_dictionary()["dict_oneempty_check_loose"],
                                                                                     debug=debug)
             self.flag_oct_loose = flag_oct_loose
             self.flag_oct_list = flag_list
@@ -342,6 +346,13 @@ class DFTRun:
             self.init_coord = len(these_neighbours)
         except:
             self.init_coord = 0
+
+    def get_track_elec_prop(self):
+        try:
+            GA_run = get_current_GA()
+            self.track_elec_prop = GA_run.config['track_elec_prop']
+        except:
+            self.track_elec_prop = False
 
     def write_new_inputs(self):
         path_dictionary = setup_paths()
@@ -527,6 +538,14 @@ class DFTRun:
                     guess_string_geo = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/'+ wfnrefempty+ '/ca0' + \
                            ' ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/'+ wfnrefempty + '/cb0\n'
                     f.write(guess_string_geo)
+                # self.get_track_elec_prop()
+                # print('!!!!!!!', self.track_elec_prop)
+                # print('!!!!!!!!!!!!!!!!!')
+                # if self.track_elec_prop:
+                #     f.write('### props ####\n')
+                #     f.write('ml_prop yes\n')
+                #     f.write('poptype mulliken\n')
+                #     f.write('bond_order_list yes\n')
                 f.write('end\n')
                 f.write('\n')
                 #### We want to freeze the M3L and M4L dihedrals as to how they were for the geo opt for the 6 coord structure
@@ -730,6 +749,10 @@ class Comp:
         self.ox_2_LS_HOMO = 'undef'
         self.ox_3_LS_HOMO = 'undef'
         self.ox_3_HS_HOMO = 'undef'
+        self.ox_2_HS_SOMO = 'undef'
+        self.ox_2_LS_SOMO = 'undef'
+        self.ox_3_LS_SOMO = 'undef'
+        self.ox_3_HS_SOMO = 'undef'
         self.ox_2_HS_LUMO = 'undef'
         self.ox_2_LS_LUMO = 'undef'
         self.ox_3_LS_LUMO = 'undef'

@@ -29,7 +29,8 @@ class GA_generation:
                 self.total_counter = 0
 
         def configure_gen(self,gen_num,npool,ncross,pmut,maxgen,scoring_function="split",split_parameter = 15.0,distance_parameter = 1,DFT =True, 
-                                RTA = False,mean_fitness =  0,monitor_diversity=False,monitor_distance=False,**kwargs):
+                          RTA = False,mean_fitness =  0,monitor_diversity=False,monitor_distance=False,
+                          **kwargs):
                 self.current_path_dictionary = advance_paths(self.base_path_dictionary,gen_num)
                 self.status_dictionary.update({'gen':gen_num})
                 self.status_dictionary.update({'scoring_function': scoring_function})
@@ -43,6 +44,7 @@ class GA_generation:
                 self.status_dictionary.update({'DFT': DFT})
                 self.status_dictionary.update({'monitor_diversity': monitor_diversity})
                 self.status_dictionary.update({'monitor_distance': monitor_distance})
+
 
         def populate_random(self):
                 ## clear the pool
@@ -170,8 +172,8 @@ class GA_generation:
                                    RTA = bool((read_dict["ready_to_advance"] == 'True')),
                                    mean_fitness = float(read_dict["mean_fitness"]),
                                    DFT =  bool((read_dict["DFT"] == 'True')),
-				   monitor_diversity = bool((read_dict["monitor_diversity"] == 'True')),
-				   monitor_distance = bool((read_dict["monitor_distance"] == 'True')))
+				                   monitor_diversity = bool((read_dict["monitor_diversity"] == 'True')),
+				                   monitor_distance = bool((read_dict["monitor_distance"] == 'True')))
 
                 ## next read  genes from path
                 state_path = self.current_path_dictionary["state_path"] +"current_genes.csv"
@@ -256,6 +258,7 @@ class GA_generation:
                 self.status_dictionary["ready_to_advance"] = True
             else:
                 self.job_dispatcher()
+                # pass
             ## if we are using the ANN only, populate the gene-fitnes dictionary
             if self.status_dictionary["DFT"] == False:
                     self.ANN_fitness()
@@ -300,6 +303,7 @@ class GA_generation:
                 emsg,ANN_results_dict = read_dictionary(self.current_path_dictionary["ANN_output"] +'/ANN_results.csv')
                 current_outstanding = get_outstanding_jobs()
                 converged_jobs = find_converged_job_dictionary()
+                dict_var = ['jobpath','mol_name','ANN_split','ANN_distance','flag_oct']
                 for keys in self.outstanding_jobs.keys():
 
                         jobs = self.outstanding_jobs[keys]
@@ -309,21 +313,38 @@ class GA_generation:
                         #print('metal is '+str(metal))
                         #print('ox is ' +str(jobs.ox))
                         spin_list = spins_dict[metal][jobs.ox]
-                        for spins in spin_list:
+                        job_dict = []
+                        flag_oct_spin = True
+                        for idx, spins in enumerate(spin_list):
+                                # print('!!!!spin_list!!!!:', spin_list)
                                 job_prefix = "gen_" + str(self.status_dictionary["gen"]) + "_slot_" + str(keys) + "_"
                                 ## generate HS/LS
                                 ## convert the gene into a job file and geometery
                                 jobpath,mol_name,ANN_split,ANN_distance = jobs.generate_geometery(prefix = job_prefix, spin = spins,path_dictionary = self.current_path_dictionary,
                                                                       rundirpath = get_run_dir(),gen=self.status_dictionary['gen'])
-                                   
-                                if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
-                                        ## Geo_check on Init geo
-                                        flag_oct,_,_ = jobs.inspect_initial_geo(jobpath)
-                                                
-                                        if not flag_oct:
-                                            log_bad_initial(jobpath)
-                                        else:
-                                            ## save result
+                                flag_oct,_,_ = jobs.inspect_initial_geo(jobpath)
+                                # print('!!!!!!', self.current_path_dictionary)
+                                ## add lines in terachem inputs
+                                self.track_elec_prop = get_current_GA().config['track_elec_prop']
+                                if self.track_elec_prop:
+                                    self.write_elec_prop_infile(filepath=jobpath)
+                                    infile_path = self.current_path_dictionary['infiles']+'/'+jobpath.split('/')[-1]
+                                    self.write_elec_prop_infile(filepath=infile_path)
+                                if not flag_oct:
+                                    flag_oct_spin = False
+                                job_dict.append(dict())
+                                for ele in dict_var:
+                                    job_dict[idx].update({ele:locals()[ele]})
+                        if flag_oct_spin:
+                                for idx, spins in enumerate(spin_list):
+                                    # for ele in dict_var:
+                                    #     locals()[ele] = job_dict[idx][ele]
+                                    jobpath = job_dict[idx]['jobpath']
+                                    mol_name = job_dict[idx]['mol_name']
+                                    ANN_split = job_dict[idx]['ANN_split']
+                                    ANN_distance = job_dict[idx]['ANN_distance']
+                                    # print('@@@@@', jobpath)
+                                    if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
                                             msg, ANN_dict = read_dictionary(self.current_path_dictionary["ANN_output"] +'ANN_results.csv')
                                             if not mol_name in ANN_dict.keys():
                                                print('saving result in ANN dict: ' + mol_name)
@@ -332,6 +353,15 @@ class GA_generation:
                                             logger(self.base_path_dictionary['state_path'],str(datetime.datetime.now()) + ":  Gen "
                                                 + str(self.status_dictionary['gen'])
                                                 + " missing information for gene number  " + str(keys) + ' with  name ' + str(jobs.name) )
+                        else:
+                                for idx, spins in enumerate(spin_list):
+                                    # for ele in dict_var:  ## Does not work! so wierd.
+                                    #     locals()[ele] = job_dict[idx][ele]
+                                    jobpath = job_dict[idx]['jobpath']
+                                    # print('@@@@@', jobpath)
+                                    log_bad_initial(jobpath)
+                                    update_converged_job_dictionary(jobpath,3)
+
                         write_dictionary(ANN_results_dict,self.current_path_dictionary["ANN_output"] +'ANN_results.csv')
                 set_outstanding_jobs(current_outstanding+jobpaths)
 
@@ -599,6 +629,19 @@ class GA_generation:
                 ## merge the lists
                 self.genes.update(selected_genes)
                 self.gene_compound_dictionary.update(selected_compound_dictionary)
+
+        def write_elec_prop_infile(self, filepath):
+            with open(filepath, 'r') as f:
+                ftxt = f.readlines()
+            with open(filepath, 'w') as f:
+                if not ftxt == None:
+                    f.writelines(ftxt[:-1])
+                f.write('### props ####\n')
+                f.write('ml_prop yes\n')
+                f.write('poptype mulliken\n')
+                f.write('bond_order_list yes\n')
+                f.write('end\n')
+
 
 ########################
 def update_current_gf_dictionary(gene,fitness):

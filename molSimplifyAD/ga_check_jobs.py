@@ -377,7 +377,7 @@ def check_all_current_convergence():
         list_of_props.append('axlig1')
         list_of_props.append('axlig2')
         list_of_props.append('eqlig')  
-        list_of_prop_names =['converged','energy','init_energy', 'flag_oct', 'num_coord_metal',"HOMO","LUMO",
+        list_of_prop_names =['converged','energy','init_energy', 'flag_oct', 'num_coord_metal',"HOMO","SOMO","LUMO",
                              'rmsd_max', 'atom_dist_max', 'oct_angle_devi_max', 'dist_del_eq', 'dist_del_all', 'max_del_sig_angle', 'devi_linear_avrg', 'devi_linear_max',
                              'coord','rmsd','maxd','status','time','spin','ss_act','ss_target','ax1_MLB','ax2_MLB','eq_MLB',
                     'init_ax1_MLB','init_ax2_MLB','init_eq_MLB','thermo_cont','imag','solvent_cont','geopath','terachem_version','terachem_detailed_version',
