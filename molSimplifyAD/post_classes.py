@@ -44,9 +44,8 @@ class DFTRun:
         self.status = 'undef'
         self.time = 'undef'
         self.energy = 'undef'
-        self.HOMO = "undef"
-        self.SOMO = "undef"
-        self.LUMO = "undef"
+        self.alphaHOMO = "undef"
+        self.alphaLUMO = "undef"
         self.initial_energy = 'undef'
         self.charge = 'undef'
         self.idn = 'undef'
@@ -704,190 +703,41 @@ class Comp:
         ## spliting logic
         ## should only use
         ## ox2_split
-        # 3 or ox3_split
-        self.split = 0
+        ## or ox3_split
+        self.split = 777
 
-        ## spins_and_charge
-        self.ox_2_HS_spin = 'undef'
-        self.ox_2_LS_spin = 'undef'
-        self.ox_3_LS_spin = 'undef'
-        self.ox_3_HS_spin = 'undef'
-        self.ox_2_HS_charge = 'undef'
-        self.ox_2_LS_charge = 'undef'
-        self.ox_3_LS_charge = 'undef'
-        self.ox_3_HS_charge = 'undef'
 
-        ## convergence
-        self.ox_2_HS_attempted = False
-        self.ox_2_LS_attempted = False
-        self.ox_3_LS_attempted = False
-        self.ox_3_HS_attempted = False
-        self.ox_2_HS_converged = False
-        self.ox_2_LS_converged = False
-        self.ox_3_LS_converged = False
-        self.ox_3_HS_converged = False
-        self.ox_2_HS_mop_converged = False
-        self.ox_2_LS_mop_converged = False
-        self.ox_3_LS_mop_converged = False
-        self.ox_3_HS_mop_converged = False
-        self.ox_2_HS_time = False
-        self.ox_2_LS_time = False
-        self.ox_3_LS_time = False
-        self.ox_3_HS_time = False
-        ## energies
-        self.ox_2_HS_energy = 'undef'
-        self.ox_2_LS_energy = 'undef'
-        self.ox_3_LS_energy = 'undef'
-        self.ox_3_HS_energy = 'undef'
-        self.ox_2_HS_mop_energy = 'undef'
-        self.ox_2_LS_mop_energy = 'undef'
-        self.ox_3_LS_mop_energy = 'undef'
-        self.ox_3_HS_mop_energy = 'undef'
-        
-        ## HOMO/LUMO
-        self.ox_2_HS_HOMO = 'undef'
-        self.ox_2_LS_HOMO = 'undef'
-        self.ox_3_LS_HOMO = 'undef'
-        self.ox_3_HS_HOMO = 'undef'
-        self.ox_2_HS_SOMO = 'undef'
-        self.ox_2_LS_SOMO = 'undef'
-        self.ox_3_LS_SOMO = 'undef'
-        self.ox_3_HS_SOMO = 'undef'
-        self.ox_2_HS_LUMO = 'undef'
-        self.ox_2_LS_LUMO = 'undef'
-        self.ox_3_LS_LUMO = 'undef'
-        self.ox_3_HS_LUMO = 'undef'
-        
-        
-        ### coords
-        self.ox_2_LS_coord = 'undef'
-        self.ox_2_HS_coord = 'undef'
-        self.ox_3_LS_coord = 'undef'
-        self.ox_3_HS_coord = 'undef'
-        self.ox_2_LS_num_coord_metal = 'undef'
-        self.ox_2_HS_num_coord_metal = 'undef'
-        self.ox_3_LS_num_coord_metal = 'undef'
-        self.ox_3_HS_num_coord_metal = 'undef'
-        self.ox_2_LS_mop_coord = 'undef'
-        self.ox_2_HS_mop_coord = 'undef'
-        self.ox_3_LS_mop_coord = 'undef'
-        self.ox_3_HS_mop_coord = 'undef'
+        ## run class dependent props:
+        init_props = ['spin','charge','attempted','converged',
+                      'mop_converged','time','energy',
+                      'mop_energy','alphaHOMO','betaHOMO', 
+                      'alphaLUMO','betaLUMO',
+                      'coord','num_coord_metal','mop_coord',
+                      'ligrsmd','rmsd','rmsd_max',
+                      'maxd','atom_dist_max','flag_oct ',
+                      'angletest','flag_oct_list','oct_angle_devi_max',
+                      'devi_linear_avrg','devi_linear_max',
+                      'dist_del_all','dist_del_eq','dist_del_eq'
+                      'oct_angle_devi_max','del_sig_angle'
+                      'thermo_cont','imag',
+                      'solvent_cont',
+                      'init_energy',
+                      'status','comment',
+                      'ax1_MLB','ax2_MLB','eq_MLB',
+                      'init_ax1_MLB', 'init_ax2_MLB','init_eq_MLB',
+                      'ss_act','ss_target','geopath',
+                      'terachem_version','terachem_detailed_version',
+                      'basis','functional',
+                      'alpha_level_shift','beta_level_shift']
+                      
+        for props in list_of_init_props:
+                for ox in ["2","3"]:
+                        for sc in ["LS","HS"]:
+                                this_attribute = "_".join(['ox',ox,sc,props])
+                                setattr(self,this_attribute,'undef')
+            
 
-        ### rmsds
-        self.ox_2_LS_rmsd = 'undef'
-        self.ox_2_HS_rmsd = 'undef'
-        self.ox_3_LS_rmsd = 'undef'
-        self.ox_3_HS_rmsd = 'undef'
-        self.ox_2_LS_rmsd_max = 'undef'
-        self.ox_2_HS_rmsd_max = 'undef'
-        self.ox_3_LS_rmsd_max = 'undef'
-        self.ox_3_HS_rmsd_max = 'undef'
-        self.ox_2_LS_ligrsmd = 'undef'
-        self.ox_2_HS_ligrsmd = 'undef'
-        self.ox_3_LS_ligrsmd = 'undef'
-        self.ox_3_HS_ligrsmd = 'undef'
-
-        ## geometric health indicators
-        self.ox_2_LS_maxd = 'undef'
-        self.ox_2_HS_maxd = 'undef'
-        self.ox_3_LS_maxd = 'undef'
-        self.ox_3_HS_maxd = 'undef'
-
-        self.ox_2_LS_atom_dist_max = 'undef'
-        self.ox_2_HS_atom_dist_max = 'undef'
-        self.ox_3_LS_atom_dist_max = 'undef'
-        self.ox_3_HS_atom_dist_max = 'undef'
-
-        self.ox_2_LS_angletest = 'undef'
-        self.ox_2_HS_angletest = 'undef'
-        self.ox_3_LS_angletest = 'undef'
-        self.ox_3_HS_angletest = 'undef'
-
-        self.ox_2_LS_flag_oct = 'undef'
-        self.ox_2_HS_flag_oct = 'undef'
-        self.ox_3_LS_flag_oct = 'undef'
-        self.ox_3_HS_flag_oct = 'undef'
-
-        self.ox_2_LS_flag_oct_list = 'undef'
-        self.ox_2_HS_flag_oct_list = 'undef'
-        self.ox_3_LS_flag_oct_list = 'undef'
-        self.ox_3_HS_flag_oct_list = 'undef'
-
-        self.ox_2_LS_oct_angle_devi_max = 'undef'
-        self.ox_2_HS_oct_angle_devi_max = 'undef'
-        self.ox_3_LS_oct_angle_devi_max = 'undef'
-        self.ox_3_HS_oct_angle_devi_max = 'undef'
-
-        self.ox_2_LS_devi_linear_avrg = 'undef'
-        self.ox_2_HS_devi_linear_avrg = 'undef'
-        self.ox_3_LS_devi_linear_avrg = 'undef'
-        self.ox_3_HS_devi_linear_avrg = 'undef'
-
-        self.ox_2_LS_devi_linear_max = 'undef'
-        self.ox_2_HS_devi_linear_max = 'undef'
-        self.ox_3_LS_devi_linear_max = 'undef'
-        self.ox_3_HS_devi_linear_max = 'undef'
-
-        #        self.ox_2_LS_dist_del_ax  = 'undef'
-        #        self.ox_2_HS_dist_del_ax = 'undef'
-        #        self.ox_3_LS_dist_del_ax  = 'undef'
-        #        self.ox_3_HS_dist_del_ax  = 'undef'
-
-        self.ox_2_LS_dist_del_all = 'undef'
-        self.ox_2_HS_dist_del_all = 'undef'
-        self.ox_3_LS_dist_del_all = 'undef'
-        self.ox_3_HS_dist_del_all = 'undef'
-
-        self.ox_2_LS_dist_del_eq = 'undef'
-        self.ox_2_HS_dist_del_eq = 'undef'
-        self.ox_3_LS_dist_del_eq = 'undef'
-        self.ox_3_HS_dist_del_eq = 'undef'
-
-        self.ox_2_LS_oct_angle_devi_max = 'undef'
-        self.ox_2_HS_oct_angle_devi_max = 'undef'
-        self.ox_3_LS_oct_angle_devi_max = 'undef'
-        self.ox_3_HS_oct_angle_devi_max = 'undef'
-
-        self.ox_2_LS_max_del_sig_angle = 'undef'
-        self.ox_2_HS_max_del_sig_angle = 'undef'
-        self.ox_3_LS_max_del_sig_angle = 'undef'
-        self.ox_3_HS_max_del_sig_angle = 'undef'
-
-        #        self.ox_2_LS_dist_del_eq_ax  = 'undef'
-        #        self.ox_2_HS_dist_del_eq_ax  = 'undef'
-        #        self.ox_3_LS_dist_del_eq_ax  = 'undef'
-        #        self.ox_3_HS_dist_del_eq_ax  = 'undef'
-
-        ### thermo
-        self.ox_2_LS_thermo_cont = 'undef'
-        self.ox_2_HS_thermo_cont = 'undef'
-        self.ox_3_LS_thermo_cont = 'undef'
-        self.ox_3_HS_thermo_cont = 'undef'
-        ### imag
-        self.ox_2_LS_imag = 'undef'
-        self.ox_2_HS_imag = 'undef'
-        self.ox_3_LS_imag = 'undef'
-        self.ox_3_HS_imag = 'undef'
-        ### solvent
-        self.ox_2_LS_solvent_cont = 'undef'
-        self.ox_2_HS_solvent_cont = 'undef'
-        self.ox_3_LS_solvent_cont = 'undef'
-        self.ox_3_HS_solvent_cont = 'undef'
-        ### initial
-        self.ox_2_LS_init_energy = 'undef'
-        self.ox_2_HS_init_energy = 'undef'
-        self.ox_3_LS_init_energy = 'undef'
-        self.ox_3_HS_init_energy = 'undef'
-        ### status
-        self.ox_2_LS_status = 'undef'
-        self.ox_2_HS_status = 'undef'
-        self.ox_3_LS_status = 'undef'
-        self.ox_3_HS_status = 'undef'
-        self.ox_2_LS_comment = 'undef'
-        self.ox_2_HS_comment = 'undef'
-        self.ox_3_LS_comment = 'undef'
-        self.ox_3_HS_comment = 'undef'
-
+   
         ### MOPAC
         self.mop_convergence = 0
         ### Coulomb
@@ -897,89 +747,6 @@ class Comp:
         self.ox2split = 'undef'
         self.ox3split = 'undef'
 
-        ### bond lengths 
-        self.ox_3_LS_ax1_MLB = 'undef'
-        self.ox_3_HS_ax1_MLB = 'undef'
-        self.ox_2_LS_ax1_MLB = 'undef'
-        self.ox_2_HS_ax1_MLB = 'undef'
-
-        self.ox_3_LS_ax2_MLB = 'undef'
-        self.ox_3_HS_ax2_MLB = 'undef'
-        self.ox_2_LS_ax2_MLB = 'undef'
-        self.ox_2_HS_ax2_MLB = 'undef'
-
-        self.ox_3_LS_eq_MLB = 'undef'
-        self.ox_3_HS_eq_MLB = 'undef'
-        self.ox_2_LS_eq_MLB = 'undef'
-        self.ox_2_HS_eq_MLB = 'undef'
-
-        ### initial bond lengths
-        self.ox_3_LS_init_ax1_MLB = 'undef'
-        self.ox_3_HS_init_ax1_MLB = 'undef'
-        self.ox_2_LS_init_ax1_MLB = 'undef'
-        self.ox_2_HS_init_ax1_MLB = 'undef'
-
-        self.ox_3_LS_init_ax2_MLB = 'undef'
-        self.ox_3_HS_init_ax2_MLB = 'undef'
-        self.ox_2_LS_init_ax2_MLB = 'undef'
-        self.ox_2_HS_init_ax2_MLB = 'undef'
-
-        self.ox_3_LS_init_eq_MLB = 'undef'
-        self.ox_3_HS_init_eq_MLB = 'undef'
-        self.ox_2_LS_init_eq_MLB = 'undef'
-        self.ox_2_HS_init_eq_MLB = 'undef'
-
-        ### spin contam diag
-        self.ox_3_LS_ss_act = 'undef'
-        self.ox_3_HS_ss_act = 'undef'
-        self.ox_2_LS_ss_act = 'undef'
-        self.ox_2_HS_ss_act = 'undef'
-
-        self.ox_3_LS_ss_target = 'undef'
-        self.ox_3_HS_ss_target = 'undef'
-        self.ox_2_LS_ss_target = 'undef'
-        self.ox_2_HS_ss_target = 'undef'
-
-        ### geopaths
-        self.ox_3_LS_geopath = 'undef'
-        self.ox_3_HS_geopath = 'undef'
-        self.ox_2_LS_geopath = 'undef'
-        self.ox_2_HS_geopath = 'undef'
-
-        ### raw spins
-        self.ox_3_LS_spin = 'undef'
-        self.ox_3_HS_spin = 'undef'
-        self.ox_2_LS_spin = 'undef'
-        self.ox_2_HS_spin = 'undef'
-
-        ### r
-
-        ### data provenance
-        self.ox_3_LS_terachem_version = 'undef'
-        self.ox_3_HS_terachem_version = 'undef'
-        self.ox_2_LS_terachem_version = 'undef'
-        self.ox_2_HS_terachem_version = 'undef'
-        self.ox_3_LS_terachem_detailed_version = 'undef'
-        self.ox_3_HS_terachem_detailed_version = 'undef'
-        self.ox_2_LS_terachem_detailed_version = 'undef'
-        self.ox_2_HS_terachem_detailed_version = 'undef'
-        self.ox_3_LS_basis = 'undef'
-        self.ox_3_HS_basis = 'undef'
-        self.ox_2_LS_basis = 'undef'
-        self.ox_2_HS_basis = 'undef'
-        self.ox_3_LS_functional = 'undef'
-        self.ox_3_HS_functional = 'undef'
-        self.ox_2_LS_functional = 'undef'
-        self.ox_2_HS_functional = 'undef'
-        self.ox_3_LS_alpha_level_shift = 'undef'
-        self.ox_3_HS_alpha_level_shift = 'undef'
-        self.ox_2_LS_alpha_level_shift = 'undef'
-        self.ox_2_HS_alpha_level_shift = 'undef'
-
-        self.ox_3_LS_beta_level_shift = 'undef'
-        self.ox_3_HS_beta_level_shift = 'undef'
-        self.ox_2_LS_beta_level_shift = 'undef'
-        self.ox_2_HS_beta_level_shift = 'undef'
 
     def set_properties(self, this_run):
         self.metal = this_run.metal
