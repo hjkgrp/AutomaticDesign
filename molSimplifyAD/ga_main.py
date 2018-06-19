@@ -325,7 +325,10 @@ class GA_generation:
                                 flag_oct,_,_ = jobs.inspect_initial_geo(jobpath)
                                 # print('!!!!!!', self.current_path_dictionary)
                                 ## add lines in terachem inputs
-                                self.track_elec_prop = get_current_GA().config['track_elec_prop']
+                                if 'track_elec_prop' in get_current_GA().config.keys():
+                                        self.track_elec_prop = get_current_GA().config['track_elec_prop']
+                                else:
+                                        self.track_elec_prop = False
                                 if self.track_elec_prop:
                                     self.write_elec_prop_infile(filepath=jobpath)
                                     infile_path = self.current_path_dictionary['infiles']+'/'+jobpath.split('/')[-1]
