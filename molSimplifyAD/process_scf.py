@@ -705,11 +705,11 @@ def read_molden_file(this_run):
 	LUMOalpha = False
 	LUMObeta = False
 	print('\n checking '+this_run.moldenpath)
-    if os.path.exists(this_run.moldenpath):
-        print('Moldenpath exists')
+	if os.path.exists(this_run.moldenpath):
+		print('Moldenpath exists')
         ### file is found, check if converged
         with open(this_run.moldenpath) as f:            
-            for lines in f.readlines():
+			for lines in f.readlines():
 				try:
 					if not lines.find('Ene')== -1:
 						this_energy = float(lines.split()[1].strip())
@@ -731,20 +731,18 @@ def read_molden_file(this_run):
 						occup = 777
 				except:
 					print('Could not parse molden correctly')
-				if LUMOalpha and LUMObeta and HOMOalpha and HOMObeta:                   
-                    print('safe results')
-                    safe = True
-                else:
-                    print(lines)
-                    print("Molden not understood (alpha/beta HOMO/LUMO values not taken)")
-    if safe:
-        print('setting alpha HOMO to '+ str(HOMOalpha))
-        print('setting alpha LUMO to '+ str(LUMOalpha))
-        print('setting beta HOMO to '+ str(HOMObeta))
-        print('setting beta LUMO to '+ str(LUMObeta))
-        this_run.alphaHOMO = HOMOalpha
-        this_run.alphaLUMO = LUMOalpha
-        this_run.betaHOMO = HOMObeta
-        this_run.betaLUMO = LUMObeta
-
-
+				if LUMOalpha and LUMObeta and HOMOalpha and HOMObeta:
+					print('safe results')
+					safe = True
+				else:
+					print(lines)
+					print("Molden not understood (alpha/beta HOMO/LUMO values not taken)")
+	if safe:
+		print('setting alpha HOMO to '+ str(HOMOalpha))
+		print('setting alpha LUMO to '+ str(LUMOalpha))
+		print('setting beta HOMO to '+ str(HOMObeta))
+		print('setting beta LUMO to '+ str(LUMObeta))
+		this_run.alphaHOMO = HOMOalpha
+		this_run.alphaLUMO = LUMOalpha
+		this_run.betaHOMO = HOMObeta
+		this_run.betaLUMO = LUMObeta
