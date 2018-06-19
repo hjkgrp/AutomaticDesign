@@ -46,6 +46,8 @@ class DFTRun:
         self.energy = 'undef'
         self.alphaHOMO = "undef"
         self.alphaLUMO = "undef"
+	self.betaHOMO = "undef"
+	self.betaLUMO = "undef"
         self.initial_energy = 'undef'
         self.charge = 'undef'
         self.idn = 'undef'
