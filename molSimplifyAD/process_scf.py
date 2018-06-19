@@ -692,53 +692,61 @@ def read_terachem_go_output(this_run):
     if (found_data == True) and (found_time == True) and (found_conv == True):
         this_run.converged = True
         print('run outfile converged')
-        
-def read_terachem_scrlog_output(this_run):
-    ## function to parse scr optlog fiile
-    ##  for terachem 
+
+def read_molden_file(this_run):
+    ## function to parse molden file
+    ## for terachem 
     #  @param this_run a run class
     #  @return this_run populated run class  
-    found_homo =False 
-    found_lumo =False 
-    safe = False
-    current_HOMO = 0 
-    current_SOMO = 0 
-    current_LUMO = 0 
-    HOMO_ind = "undef"
-    SOMO_ind = "undef"
-    LUMO_ind = "undef"
-    print('\n checking '+this_run.scrlogpath)
-    if os.path.exists(this_run.scrlogpath):
-        print('logpath exists')
+	HOMOalpha = 0
+	HOMObeta = 0
+	cat = 0
+	occup = 9
+	LUMOalpha = False
+	LUMObeta = False
+	scrpath = this_run.scrpath.strip('optim.xyz')
+	moldenFile = glob.glob(scrpath + "*.molden")[0]
+	print(moldenFile)
+	print('\n checking '+moldenFile)
+	if os.path.exists(moldenFile):
+		print('Moldenpath exists')
         ### file is found, check if converged
-        with open(this_run.scrlogpath) as f:            
-            data=f.readlines()
-            for i,lines in enumerate(data):
-                if str(lines).find('E_HOMO') != -1 & str(lines).find('E_LUMO') != -1 & str(lines).find('E_SOMO') != -1:
-                    try:
-                        check_line = lines.strip().split()
-                        HOMO_ind = check_line.index("E_HOMO")
-                        SOMO_ind = check_line.index("E_SOMO")
-                        LUMO_ind = check_line.index("E_LUMO")
-                    except:
-                        print("cannot understand HOMO/SOMO/LUMO results")                       
-                    if LUMO_ind and HOMO_ind:                   
-                        print('safe results')
-                        safe = True
-                    else:
-                        print(lines)
-                        print("scr log not understood")
-                elif safe:
-                    current_HOMO = lines.strip().split()[HOMO_ind]
-                    current_SOMO = lines.strip().split()[SOMO_ind]
-                    current_LUMO = lines.strip().split()[LUMO_ind]
-    if safe:
-        print('setting HOMO to '+ str(current_HOMO))
-        print('setting SOMO to '+ str(current_SOMO))
-        print('setting LUMO to '+ str(current_LUMO))
-        this_run.HOMO = current_HOMO
-        this_run.SOMO = current_SOMO
-        this_run.LUMO = current_LUMO
-
-
-
+        with open(moldenFile) as f:            
+			for lines in f.readlines():
+				try:
+					if not lines.find('Ene')== -1:
+						this_energy = float(lines.split()[1].strip())
+					if not lines.find('Spin')== -1:
+						cat = lines.split()[1].strip()
+						occup = 777
+					if not lines.find('Occup')==-1:
+						occup = float(lines.split()[1].strip())
+					if occup == 1 and cat == 'Alpha':
+						HOMOalpha = this_energy
+					elif not LUMOalpha and occup == 0 and cat == 'Alpha':
+						LUMOalpha = this_energy
+					if occup == 1 and cat =='Beta':
+						HOMObeta = this_energy
+					elif not LUMObeta and occup == 0 and cat =='Beta':
+						LUMObeta = this_energy
+						# sardines
+					if occup != 777:
+						occup = 777
+				except:
+					print('Could not parse molden correctly')
+				if LUMOalpha and LUMObeta and HOMOalpha and HOMObeta:
+					#print('safe results')
+					safe = True
+				else:
+					continue
+					#print(lines)
+					#print("Molden not understood (alpha/beta HOMO/LUMO values not taken)")
+	if safe:
+		print('setting alpha HOMO to '+ str(HOMOalpha))
+		print('setting alpha LUMO to '+ str(LUMOalpha))
+		print('setting beta HOMO to '+ str(HOMObeta))
+		print('setting beta LUMO to '+ str(LUMObeta))
+		this_run.alphaHOMO = HOMOalpha
+		this_run.alphaLUMO = LUMOalpha
+		this_run.betaHOMO = HOMObeta
+		this_run.betaLUMO = LUMObeta
