@@ -125,7 +125,7 @@ def check_all_current_convergence():
                 this_run.sp_outpath = (path_dictionary["sp_out_path" ]+ '/' + base_name + ".out")
             
                 this_run.scrpath = path_dictionary["scr_path" ]  + base_name +"/optim.xyz"
-                this_run.scrlogpath = path_dictionary["scr_path" ]  + base_name +"/oplog.xls"
+                this_run.moldenpath = path_dictionary["scr_path" ]  + base_name +"/"+base_name+".molden"
                 this_run.inpath = path_dictionary["job_path" ]+ base_name +".in"
                 this_run.comppath = path_dictionary["done_path" ] + base_name +".in"
 
@@ -175,7 +175,7 @@ def check_all_current_convergence():
 
                 if this_run.status == 0:
                     # get HOMO/LUMO for successful run
-                    read_terachem_scrlog_output(this_run)
+                    read_molden_file(this_run)
                     print('converged run, alpha is ' + str(this_run.alpha))
                     run_success = False
                     # perfrom health checks on complex here
