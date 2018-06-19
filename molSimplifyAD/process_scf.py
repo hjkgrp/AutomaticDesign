@@ -704,11 +704,14 @@ def read_molden_file(this_run):
 	occup = 9
 	LUMOalpha = False
 	LUMObeta = False
-	print('\n checking '+this_run.moldenpath)
-	if os.path.exists(this_run.moldenpath):
+	scrpath = this_run.scrpath.strip('optim.xyz')
+	moldenFile = glob.glob(scrpath + "*.molden")[0]
+	print(moldenFile)
+	print('\n checking '+moldenFile)
+	if os.path.exists(moldenFile):
 		print('Moldenpath exists')
         ### file is found, check if converged
-        with open(this_run.moldenpath) as f:            
+        with open(moldenFile) as f:            
 			for lines in f.readlines():
 				try:
 					if not lines.find('Ene')== -1:
@@ -732,11 +735,12 @@ def read_molden_file(this_run):
 				except:
 					print('Could not parse molden correctly')
 				if LUMOalpha and LUMObeta and HOMOalpha and HOMObeta:
-					print('safe results')
+					#print('safe results')
 					safe = True
 				else:
-					print(lines)
-					print("Molden not understood (alpha/beta HOMO/LUMO values not taken)")
+					continue
+					#print(lines)
+					#print("Molden not understood (alpha/beta HOMO/LUMO values not taken)")
 	if safe:
 		print('setting alpha HOMO to '+ str(HOMOalpha))
 		print('setting alpha LUMO to '+ str(LUMOalpha))
