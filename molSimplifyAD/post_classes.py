@@ -708,7 +708,7 @@ class Comp:
 
 
         ## run class dependent props:
-        init_props = ['spin','charge','attempted','converged',
+        list_of_init_props = ['spin','charge','attempted','converged',
                       'mop_converged','time','energy',
                       'mop_energy','alphaHOMO','betaHOMO', 
                       'alphaLUMO','betaLUMO',
