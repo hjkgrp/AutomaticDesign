@@ -704,7 +704,7 @@ def read_molden_file(this_run):
 	occup = 9
 	LUMOalpha = False
 	LUMObeta = False
-    print('\n checking '+this_run.moldenpath)
+	print('\n checking '+this_run.moldenpath)
     if os.path.exists(this_run.moldenpath):
         print('Moldenpath exists')
         ### file is found, check if converged
