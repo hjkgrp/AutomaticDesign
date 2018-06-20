@@ -720,7 +720,7 @@ class Comp:
                       'angletest','flag_oct_list','oct_angle_devi_max',
                       'devi_linear_avrg','devi_linear_max',
                       'dist_del_all','dist_del_eq','dist_del_eq'
-                      'oct_angle_devi_max','del_sig_angle'
+                      'oct_angle_devi_max','del_sig_angle','max_del_sig_angle',
                       'thermo_cont','imag',
                       'solvent_cont',
                       'init_energy',
