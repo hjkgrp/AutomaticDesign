@@ -716,7 +716,7 @@ class Comp:
                       'alphaLUMO','betaLUMO',
                       'coord','num_coord_metal','mop_coord',
                       'ligrsmd','rmsd','rmsd_max',
-                      'maxd','atom_dist_max','flag_oct ',
+                      'maxd','atom_dist_max','flag_oct',
                       'angletest','flag_oct_list','oct_angle_devi_max',
                       'devi_linear_avrg','devi_linear_max',
                       'dist_del_all','dist_del_eq','dist_del_eq'
