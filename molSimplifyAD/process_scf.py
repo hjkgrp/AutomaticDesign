@@ -698,55 +698,56 @@ def read_molden_file(this_run):
     ## for terachem 
     #  @param this_run a run class
     #  @return this_run populated run class  
-	HOMOalpha = 0
-	HOMObeta = 0
-	cat = 0
-	occup = 9
-	LUMOalpha = False
-	LUMObeta = False
-	scrpath = this_run.scrpath.strip('optim.xyz')
-	moldenFile = glob.glob(scrpath + "*.molden")[0]
-	print(moldenFile)
-	print('\n checking '+moldenFile)
-	if os.path.exists(moldenFile):
-		print('Moldenpath exists')
-        ### file is found, check if converged
-        with open(moldenFile) as f:            
-			for lines in f.readlines():
-				try:
-					if not lines.find('Ene')== -1:
-						this_energy = float(lines.split()[1].strip())
-					if not lines.find('Spin')== -1:
-						cat = lines.split()[1].strip()
-						occup = 777
-					if not lines.find('Occup')==-1:
-						occup = float(lines.split()[1].strip())
-					if occup == 1 and cat == 'Alpha':
-						HOMOalpha = this_energy
-					elif not LUMOalpha and occup == 0 and cat == 'Alpha':
-						LUMOalpha = this_energy
-					if occup == 1 and cat =='Beta':
-						HOMObeta = this_energy
-					elif not LUMObeta and occup == 0 and cat =='Beta':
-						LUMObeta = this_energy
-						# sardines
-					if occup != 777:
-						occup = 777
-				except:
-					print('Could not parse molden correctly')
-				if LUMOalpha and LUMObeta and HOMOalpha and HOMObeta:
-					#print('safe results')
-					safe = True
-				else:
-					continue
-					#print(lines)
-					#print("Molden not understood (alpha/beta HOMO/LUMO values not taken)")
-	if safe:
-		print('setting alpha HOMO to '+ str(HOMOalpha))
-		print('setting alpha LUMO to '+ str(LUMOalpha))
-		print('setting beta HOMO to '+ str(HOMObeta))
-		print('setting beta LUMO to '+ str(LUMObeta))
-		this_run.alphaHOMO = HOMOalpha
-		this_run.alphaLUMO = LUMOalpha
-		this_run.betaHOMO = HOMObeta
-		this_run.betaLUMO = LUMObeta
+    HOMOalpha = 0
+    HOMObeta = 0
+    cat = 0
+    occup = 9
+    LUMOalpha = False
+    LUMObeta = False
+    scrpath = this_run.scrpath.strip('optim.xyz')
+    moldenFile = glob.glob(scrpath + "*.molden")[0]
+    safe = False 
+    print(moldenFile)
+    print('\n checking '+moldenFile)
+    if os.path.exists(moldenFile):
+        print('Moldenpath exists')
+    ### file is found, check if converged
+    with open(moldenFile) as f:            
+        for lines in f.readlines():
+            try:
+                if not lines.find('Ene')== -1:
+                    this_energy = float(lines.split()[1].strip())
+                if not lines.find('Spin')== -1:
+                    cat = lines.split()[1].strip()
+                    occup = 777
+                if not lines.find('Occup')==-1:
+                    occup = float(lines.split()[1].strip())
+                if occup == 1 and cat == 'Alpha':
+                    HOMOalpha = this_energy
+                elif not LUMOalpha and occup == 0 and cat == 'Alpha':
+                    LUMOalpha = this_energy
+                if occup == 1 and cat =='Beta':
+                    HOMObeta = this_energy
+                elif not LUMObeta and occup == 0 and cat =='Beta':
+                    LUMObeta = this_energy
+                    # sardines
+                if occup != 777:
+                    occup = 777
+            except:
+                print('Could not parse molden correctly')
+            if LUMOalpha and LUMObeta and HOMOalpha and HOMObeta:
+                #print('safe results')
+                safe = True
+            else:
+                continue
+                #print(lines)
+                #print("Molden not understood (alpha/beta HOMO/LUMO values not taken)")
+    if safe:
+        print('setting alpha HOMO to '+ str(HOMOalpha))
+        print('setting alpha LUMO to '+ str(LUMOalpha))
+        print('setting beta HOMO to '+ str(HOMObeta))
+        print('setting beta LUMO to '+ str(LUMObeta))
+        this_run.alphaHOMO = HOMOalpha
+        this_run.alphaLUMO = LUMOalpha
+        this_run.betaHOMO = HOMObeta
+        this_run.betaLUMO = LUMObeta
