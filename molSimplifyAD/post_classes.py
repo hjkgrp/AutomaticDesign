@@ -730,7 +730,8 @@ class Comp:
                       'ss_act','ss_target','geopath',
                       'terachem_version','terachem_detailed_version',
                       'basis','functional',
-                      'alpha_level_shift','beta_level_shift']
+                      'alpha_level_shift','beta_level_shift',
+                      "DFT_RUN"]
                       
         for props in list_of_init_props:
                 for ox in ["2","3"]:
