@@ -732,13 +732,19 @@ class Comp:
                       'basis','functional',
                       'alpha_level_shift','beta_level_shift',
                       "DFT_RUN"]
-                      
+        list_of_init_falses = ['attempted','converged',
+                      'mop_converged',
+                      "DFT_RUN"]
         for props in list_of_init_props:
                 for ox in ["2","3"]:
                         for sc in ["LS","HS"]:
                                 this_attribute = "_".join(['ox',ox,sc,props])
                                 setattr(self,this_attribute,'undef')
-            
+        for props in list_of_init_falses:
+                for ox in ["2","3"]:
+                        for sc in ["LS","HS"]:
+                                this_attribute = "_".join(['ox',ox,sc,props])
+                                setattr(self,this_attribute,False)            
 
    
         ### MOPAC
