@@ -719,35 +719,36 @@ def read_molden_file(this_run):
                     this_energy = float(lines.split()[1].strip())
                 if not lines.find('Spin')== -1:
                     cat = lines.split()[1].strip()
-                    occup = 777
                 if not lines.find('Occup')==-1:
                     occup = float(lines.split()[1].strip())
-                if occup == 1 and cat == 'Alpha':
-                    HOMOalpha = this_energy
-                elif not LUMOalpha and occup == 0 and cat == 'Alpha':
-                    LUMOalpha = this_energy
-                if occup == 1 and cat =='Beta':
-                    HOMObeta = this_energy
-                elif not LUMObeta and occup == 0 and cat =='Beta':
-                    LUMObeta = this_energy
-                    # sardines
-                if occup != 777:
-                    occup = 777
+
+                    if occup >= 1 and cat == 'Alpha':
+                        HOMOalpha = this_energy
+                    elif not LUMOalpha and occup == 0 and cat == 'Alpha':
+                        LUMOalpha = this_energy
+                        
+                    if occup >= 1 and cat =='Beta':
+                        HOMObeta = this_energy
+                        
+                    elif not LUMObeta and occup == 0 and cat =='Beta':
+                        LUMObeta = this_energy
             except:
                 print('Could not parse molden correctly')
-            if LUMOalpha and LUMObeta and HOMOalpha and HOMObeta:
-                #print('safe results')
-                safe = True
-            else:
-                continue
-                #print(lines)
-                #print("Molden not understood (alpha/beta HOMO/LUMO values not taken)")
-    if safe:
-        print('setting alpha HOMO to '+ str(HOMOalpha))
-        print('setting alpha LUMO to '+ str(LUMOalpha))
-        print('setting beta HOMO to '+ str(HOMObeta))
-        print('setting beta LUMO to '+ str(LUMObeta))
-        this_run.alphaHOMO = HOMOalpha
-        this_run.alphaLUMO = LUMOalpha
-        this_run.betaHOMO = HOMObeta
-        this_run.betaLUMO = LUMObeta
+    if  not LUMOalpha:
+        LUMOalpha = float('NaN')
+    if  not LUMObeta:
+        LUMObeta = float('NaN')
+    if  not HOMOalpha:
+        HOMOalpha = float('NaN')
+    if  not HOMObeta:
+        HOMObeta = float('NaN')
+    #if safe:
+    print('setting alpha HOMO to '+ str(HOMOalpha))
+    print('setting alpha LUMO to '+ str(LUMOalpha))
+    print('setting beta HOMO to '+ str(HOMObeta))
+    print('setting beta LUMO to '+ str(LUMObeta))
+    this_run.alphaHOMO = HOMOalpha
+    this_run.alphaLUMO = LUMOalpha
+    this_run.betaHOMO = HOMObeta
+    this_run.betaLUMO = LUMObeta
+    
