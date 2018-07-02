@@ -41,12 +41,14 @@ class DFTRun:
     def __init__(self, name):
         self.numRuns += 1
         self.dict_geo_check = dict()
+        self.dict_geo_check_loose = dict()
         self.descriptors = list()
         self.descriptor_names = list()
+        self.name = name
+        self.comment = ''
 
         ################
         # ## basic info
-        # self.name = name
         # self.status = 'undef'
         # self.time = 'undef'
         # self.energy = 'undef'
@@ -146,8 +148,8 @@ class DFTRun:
 
         list_of_init_props = ['status', 'time', 'energy', 'alphaHOMO', 'alphaLUMO', 'betaHOMO', 'betaLUMO',
                               'initial_energy', 'charge', 'idn', 'spin', 'metal', 'eqlig_ind', 'axlig1_ind',
-                              'axlig2_ind', 'eqlig', 'axlig1', 'axlig2', 'eq_MBL', 'ax1_MBL', 'ax2_MBL',
-                              'init_eq_MBL', 'init_ax1_MBL', 'init_ax2_MBL', 'outpath', 'geopath', 'init_geopath',
+                              'axlig2_ind', 'eqlig', 'axlig1', 'axlig2', 'eq_MLB', 'ax1_MLB', 'ax2_MLB',
+                              'init_eq_MLB', 'init_ax1_MLB', 'init_ax2_MLB', 'outpath', 'geopath', 'init_geopath',
                               'terachem_version', 'terachem_detailed_version', 'basis', 'alpha_level_shift',
                               'beta_level_shift', 'functional', 'rmsd', 'maxd', 'thermo_time', 'solvent_time',
                               'angletest', 'ligrsmd', 'flag_oct', 'flag_list', 'num_coord_metal', 'rmsd_max',
@@ -212,8 +214,8 @@ class DFTRun:
             setattr(self, key, self.dict_geo_check[key])
 
     def write_prog_geo_dict(self):
-        for key in self.dict_geo_check:
-            setattr(self, 'prog_%s' % key, self.dict_geo_check[key])
+        for key in self.dict_geo_check_prog:
+            setattr(self, 'prog_%s' % key, self.dict_geo_check_prog[key])
 
     def check_oct_needs_final_only(self, debug=False):
         globs = globalvars()
@@ -266,8 +268,8 @@ class DFTRun:
                                                                                         "dict_oneempty_check_loose"],
                                                                                     debug=debug)
             self.flag_oct_loose = flag_oct_loose
-            self.flag_list = flag_list
-            self.dict_geo_check = dict_oct_info
+            self.flag_list_loose = flag_list
+            self.dict_geo_check_prog = dict_oct_info
             self.write_prog_geo_dict()
         else:
             if self.octahedral:
@@ -279,8 +281,8 @@ class DFTRun:
                     dict_check=globs.geo_check_dictionary()["dict_oneempty_check_loose"],
                     debug=debug)
             self.flag_oct_loose = flag_oct_loose
-            self.flag_list = flag_list
-            self.dict_geo_check = dict_oct_info
+            self.flag_list_loose = flag_list
+            self.dict_geo_check_prog = dict_oct_info
             self.write_prog_geo_dict()
         if self.flag_oct_loose == 1:
             self.progstatus = 0
@@ -831,6 +833,8 @@ class Comp:
 
     def set_rep_mol(self, this_run):
         self.mol = this_run.mol
+        self.init_mol = this_run.init_mol
+
 
     def get_descriptor_vector(self, loud=False, name=False):
         self.mol.update_graph_check()
