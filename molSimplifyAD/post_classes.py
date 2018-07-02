@@ -22,7 +22,8 @@ from molSimplify.Informatics.RACassemble import *
 from molSimplifyAD.ga_io_control import *
 from molSimplifyAD.ga_tools import get_current_GA
 from molSimplifyAD.utils.report_tool.prepare_report import *
-#from molSimplify.Classes.globalvars import dict_oct_check_loose, dict_oct_check_st, dict_oneempty_check_st, \
+
+# from molSimplify.Classes.globalvars import dict_oct_check_loose, dict_oct_check_st, dict_oneempty_check_st, \
 #    dict_oneempty_check_loose, oct_angle_ref, oneempty_angle_ref
 
 
@@ -39,113 +40,141 @@ class DFTRun:
 
     def __init__(self, name):
         self.numRuns += 1
-        ## basic info
-        self.name = name
-        self.status = 'undef'
-        self.time = 'undef'
-        self.energy = 'undef'
-        self.alphaHOMO = "undef"
-        self.alphaLUMO = "undef"
-	self.betaHOMO = "undef"
-	self.betaLUMO = "undef"
-        self.initial_energy = 'undef'
-        self.charge = 'undef'
-        self.idn = 'undef'
-        self.solvent_cont = False
-        self.thermo_cont = False
-        self.init_energy = False
-        self.spin = 'undef'
-
-        # ligands and metal
-        self.metal = 'undef'
-        self.eqlig_ind = 'undef'
-        self.axlig1_ind = 'undef'
-        self.axlig2_ind = 'undef'
-        self.eqlig = 'undef'
-        self.axlig1 = 'undef'
-        self.axlig2 = 'undef'
-
-        # bond lengths
-        self.ax1_MLB = 'undef'
-        self.ax2_MLB = 'undef'
-        self.eq_MLB = 'undef'
-        self.init_ax1_MLB = 'undef'
-        self.init_ax2_MLB = 'undef'
-        self.init_eq_MLB = 'undef'
-        ## paths
-        self.outpath = 'undef'
-        self.geopath = 'undef'
-        self.init_geopath = 'undef'
-        self.progpath = 'undef'
-        # mol holders
-        self.mol = False
-        self.init_mol = False
-        self.progmol = False
-
-        ## run info
-        self.attempted = False
-        self.progpath = 'undef'
-        self.logpath = False
-        self.terachem_version = 'undef'
-        self.terachem_detailed_version = 'undef'
-        self.basis = 'undef'
-        self.alpha_level_shift = 'undef'
-        self.beta_level_shift = 'undef'
-        self.functional = 'undef'
-
-        ## diagnositcs
-        self.time = 'undef'
-        self.geostatus = False
-        self.thermo_status = False
-        self.imag = False
-        self.rmsd = 'undef'
-        self.geo_exists = False
-        self.progstatus = False
-        self.prog_exists = False
-        self.output_exists = False
-        self.converged = False
-        self.mop_converged = False
-        self.islive = False
-        self.ss_target = 0
-        self.ss_act = 0
-        self.coord = 0
-        self.maxd = 'undef'  # max dist to detect detected atoms
-        self.thermo_time = 'undef'
-        self.solvent_time = 'undef'
-        self.angletest = 'undef'
-        self.ligrsmd = 'undef'
-        self.flag_oct = 'undef'
-        self.flag_oct_loose = 'undef'
-        self.flag_oct_list = 'undef'
-        self.num_coord_metal = 'undef'
-        self.rmsd_max = 'undef'
-        self.atom_dist_max = 'undef'
-        self.oct_angle_devi_max = 'undef'
-        self.max_del_sig_angle = 'undef'
-        self.dist_del_eq = 'undef'
-        self.dist_del_all = 'undef'
         self.dict_geo_check = dict()
-        self.comment = ''
-        self.octahedral = 'undef'
-        self.devi_linear_avrg = 'undef'
-        self.devi_linear_max = 'undef'
-
-
-        ## mopac statistics
-        self.mop_energy = 'undef'
-        self.mop_coord = 0
-
-        ## descriptors
-        self.set_desc = False
         self.descriptors = list()
         self.descriptor_names = list()
 
+        ################
+        # ## basic info
+        # self.name = name
+        # self.status = 'undef'
+        # self.time = 'undef'
+        # self.energy = 'undef'
+        # self.alphaHOMO = "undef"
+        # self.alphaLUMO = "undef"
+        # self.betaHOMO = "undef"
+        # self.betaLUMO = "undef"
+        # self.initial_energy = 'undef'
+        # self.charge = 'undef'
+        # self.idn = 'undef'
+        # self.solvent_cont = False
+        # self.thermo_cont = False
+        # self.init_energy = False
+        # self.spin = 'undef'
+        #
+        # # ligands and metal
+        # self.metal = 'undef'
+        # self.eqlig_ind = 'undef'
+        # self.axlig1_ind = 'undef'
+        # self.axlig2_ind = 'undef'
+        # self.eqlig = 'undef'
+        # self.axlig1 = 'undef'
+        # self.axlig2 = 'undef'
+        #
+        # # bond lengths
+        # self.ax1_MLB = 'undef'
+        # self.ax2_MLB = 'undef'
+        # self.eq_MLB = 'undef'
+        # self.init_ax1_MLB = 'undef'
+        # self.init_ax2_MLB = 'undef'
+        # self.init_eq_MLB = 'undef'
+        # ## paths
+        # self.outpath = 'undef'
+        # self.geopath = 'undef'
+        # self.init_geopath = 'undef'
+        # self.progpath = 'undef'
+        # # mol holders
+        # self.mol = False
+        # self.init_mol = False
+        # self.progmol = False
+        #
+        # ## run info
+        # self.attempted = False
+        # self.logpath = False
+        # self.terachem_version = 'undef'
+        # self.terachem_detailed_version = 'undef'
+        # self.basis = 'undef'
+        # self.alpha_level_shift = 'undef'
+        # self.beta_level_shift = 'undef'
+        # self.functional = 'undef'
+        #
+        # ## diagnositcs
+        # self.geostatus = False
+        # self.thermo_status = False
+        # self.imag = False
+        # self.rmsd = 'undef'
+        # self.geo_exists = False
+        # self.progstatus = False
+        # self.prog_exists = False
+        # self.output_exists = False
+        # self.converged = False
+        # self.mop_converged = False
+        # self.islive = False
+        # self.ss_target = 0
+        # self.ss_act = 0
+        # self.coord = 0
+        # self.maxd = 'undef'  # max dist to detect detected atoms
+        # self.thermo_time = 'undef'
+        # self.solvent_time = 'undef'
+        # self.angletest = 'undef'
+        # self.ligrsmd = 'undef'
+        # self.flag_oct = 'undef'
+        # self.flag_oct_loose = 'undef'
+        # self.flag_list = 'undef'
+        # self.flag_list_loose = 'undef'
+        # self.num_coord_metal = 'undef'
+        # self.rmsd_max = 'undef'
+        # self.atom_dist_max = 'undef'
+        # self.oct_angle_devi_max = 'undef'
+        # self.max_del_sig_angle = 'undef'
+        # self.dist_del_eq = 'undef'
+        # self.dist_del_all = 'undef'
+        # self.dict_geo_check = dict()
+        # self.comment = ''
+        # self.octahedral = 'undef'
+        # self.devi_linear_avrg = 'undef'
+        # self.devi_linear_max = 'undef'
+        #
+        # ## mopac statistics
+        # self.mop_energy = 'undef'
+        # self.mop_coord = 0
+        #
+        # ## descriptors
+        # self.set_desc = False
+        # self.descriptors = list()
+        # self.descriptor_names = list()
+
+        list_of_init_props = ['status', 'time', 'energy', 'alphaHOMO', 'alphaLUMO', 'betaHOMO', 'betaLUMO',
+                              'initial_energy', 'charge', 'idn', 'spin', 'metal', 'eqlig_ind', 'axlig1_ind',
+                              'axlig2_ind', 'eqlig', 'axlig1', 'axlig2', 'eq_MBL', 'ax1_MBL', 'ax2_MBL',
+                              'init_eq_MBL', 'init_ax1_MBL', 'init_ax2_MBL', 'outpath', 'geopath', 'init_geopath',
+                              'terachem_version', 'terachem_detailed_version', 'basis', 'alpha_level_shift',
+                              'beta_level_shift', 'functional', 'rmsd', 'maxd', 'thermo_time', 'solvent_time',
+                              'angletest', 'ligrsmd', 'flag_oct', 'flag_list', 'num_coord_metal', 'rmsd_max',
+                              'atom_dist_max', 'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
+                              'devi_linear_avrg', 'devi_linear_max', 'flag_oct_loose', 'flag_list_loose',
+                              'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max',
+                              'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
+                              'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
+                              'mop_energy']
+        list_of_init_false = ['solvent_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
+                              'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
+                              'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
+                              'islive', 'set_desc']
+        list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord']
+        for this_attribute in list_of_init_props:
+            setattr(self, this_attribute, 'undef')
+        for this_attribute in list_of_init_false:
+            setattr(self, this_attribute, False)
+        for this_attribute in list_of_init_zero:
+            setattr(self, this_attribute, 0)
+
     def set_geo_check_func(self):
         try:
-                GA_run = get_current_GA()
-                self.octahedral = GA_run.config['octahedral']
+            GA_run = get_current_GA()
+            self.octahedral = GA_run.config['octahedral']
         except:
-                self.octahedral = True
+            self.octahedral = True
 
     def obtain_mopac_mol(self):
         this_mol = mol3D()
@@ -182,65 +211,77 @@ class DFTRun:
         for key in self.dict_geo_check:
             setattr(self, key, self.dict_geo_check[key])
 
+    def write_prog_geo_dict(self):
+        for key in self.dict_geo_check:
+            setattr(self, 'prog_%s' % key, self.dict_geo_check[key])
+
     def check_oct_needs_final_only(self, debug=False):
-        globs=globalvars()
+        globs = globalvars()
         if self.octahedral:
-            flag_oct, flag_list, dict_oct_info = self.mol.IsOct(dict_check=globs.geo_check_dictionary()["dict_oct_check_st"],
-                                                                debug=debug)
+            flag_oct, flag_list, dict_oct_info = self.mol.IsOct(
+                dict_check=globs.geo_check_dictionary()["dict_oct_check_st"],
+                debug=debug)
         else:
-            flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(dict_check=self.globs.geo_check_dictionary()["dict_oneempty_check_st"],
-                                                                      debug=debug)
+            flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(
+                dict_check=self.globs.geo_check_dictionary()["dict_oneempty_check_st"],
+                debug=debug)
         self.flag_oct = flag_oct
-        self.flag_oct_list = flag_list
+        self.flag_list = flag_list
         self.dict_geo_check = dict_oct_info
         self.write_geo_dict()
         return flag_oct, flag_list, dict_oct_info
 
     def check_oct_needs_init(self, debug=False):
-        globs=globalvars()
+        globs = globalvars()
         if self.octahedral:
             flag_oct, flag_list, dict_oct_info = self.mol.IsOct(self.init_mol,
-                                                                dict_check=globs.geo_check_dictionary()["dict_oct_check_st"],
+                                                                dict_check=globs.geo_check_dictionary()[
+                                                                    "dict_oct_check_st"],
                                                                 debug=debug)
         else:
             flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(self.init_mol,
-                                                                      dict_check=self.globs.geo_check_dictionary()["dict_oneempty_check_st"],
+                                                                      dict_check=self.globs.geo_check_dictionary()[
+                                                                          "dict_oneempty_check_st"],
                                                                       debug=debug)
         self.flag_oct = flag_oct
-        self.flag_oct_list = flag_list
+        self.flag_list = flag_list
         self.dict_geo_check = dict_oct_info
         self.write_geo_dict()
-        #print('!!!!!!linear:', self.devi_linear_avrg)
+        # print('!!!!!!linear:', self.devi_linear_avrg)
         return flag_oct, flag_list, dict_oct_info
 
     def check_oct_on_prog(self, debug=False):
-        globs=globalvars()
-
+        globs = globalvars()
         if os.path.exists(self.init_geopath):
             self.obtain_init_mol3d()
             if self.octahedral:
                 flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsOct(self.init_mol,
-                                                                        dict_check=globs.geo_check_dictionary()["dict_oct_check_loose"],
-                                                                        debug=debug)
+                                                                              dict_check=globs.geo_check_dictionary()[
+                                                                                  "dict_oct_check_loose"],
+                                                                              debug=debug)
             else:
                 flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsStructure(self.init_mol,
-                                                                              dict_check=globs.geo_check_dictionary()["dict_oneempty_check_loose"],
-                                                                              debug=debug)
-            self.flag_oct_loose = flag_oct_loose
-            self.flag_oct_list = flag_list
-            self.dict_geo_check = dict_oct_info
-            self.write_geo_dict()
-        else:
-            if self.octahedral:
-                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsOct(dict_check=globs.geo_check_dictionary()["dict_oct_check_loose"],
-                                                                              debug=debug)
-            else:
-                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsStructure(dict_check=globs.geo_check_dictionary()["dict_oneempty_check_loose"],
+                                                                                    dict_check=
+                                                                                    globs.geo_check_dictionary()[
+                                                                                        "dict_oneempty_check_loose"],
                                                                                     debug=debug)
             self.flag_oct_loose = flag_oct_loose
-            self.flag_oct_list = flag_list
+            self.flag_list = flag_list
             self.dict_geo_check = dict_oct_info
-            self.write_geo_dict()
+            self.write_prog_geo_dict()
+        else:
+            if self.octahedral:
+                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsOct(
+                    dict_check=globs.geo_check_dictionary()["dict_oct_check_loose"],
+                    debug=debug)
+            else:
+                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsStructure(
+                    dict_check=globs.geo_check_dictionary()["dict_oneempty_check_loose"],
+                    debug=debug)
+            self.flag_oct_loose = flag_oct_loose
+            self.flag_list = flag_list
+            self.dict_geo_check = dict_oct_info
+            self.write_prog_geo_dict()
         if self.flag_oct_loose == 1:
             self.progstatus = 0
         else:
@@ -467,7 +508,7 @@ class DFTRun:
         ## set file paths for empty structure gen
         ## the fixed ordering is 
         ## HFX20 Oxo --> HFX20 Empty SP + HFX20 Empty Geo --> HFX25 Oxo --> HFX25 Empty SP + HFX25 Empty Geo... etc.
-        emptyrefdict = {"25": "20", "30": "25", "15": "20", "10": "15", "05": "10","00":"05" }
+        emptyrefdict = {"25": "20", "30": "25", "15": "20", "10": "15", "05": "10", "00": "05"}
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         new_name, reference_name = renameOxoEmpty(self.job)
@@ -476,13 +517,13 @@ class DFTRun:
         geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
         geo_ref_file = open(geo_ref)
         lines = geo_ref_file.readlines()
-        lines[0] = str(int(lines[0].split()[0])-1)+'\n'
+        lines[0] = str(int(lines[0].split()[0]) - 1) + '\n'
         new_ref = path_dictionary["initial_geo_path"] + new_name + '.xyz'
         new_ref_file = open(new_ref, 'w')
         new_ref_file.writelines([item for item in lines[:-1]])
         new_ref_file.close()
         geo_ref_file.close()
-        print('NEW REF is THIS:', new_ref, 'Referenced THIS:',geo_ref)
+        print('NEW REF is THIS:', new_ref, 'Referenced THIS:', geo_ref)
         self.empty_sp_inpath = path_dictionary['sp_in_path'] + new_name + '.in'
         self.empty_inpath = path_dictionary['infiles'] + new_name + '.in'
         self.empty_job = path_dictionary['job_path'] + new_name + '.in'
@@ -499,13 +540,15 @@ class DFTRun:
                             "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
                         ## these lines should be common
                         f_emptysp.write(line)
-            if int(refHFX) != 20: #This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
+            if int(
+                    refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
                 splist = new_name.split('_')
                 emptyrefval = emptyrefdict[splist[-2]]
                 splist[-2] = emptyrefval
                 wfnrefempty = "_".join(splist)
-                guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/'+ wfnrefempty+ '/ca0' + \
-                       ' ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/'+ wfnrefempty + '/cb0\n'
+                guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(
+                    self.gen) + '/' + wfnrefempty + '/ca0' + \
+                                  ' ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/cb0\n'
                 f_emptysp.write(guess_string_sp)
             f_emptysp.write('end')
             f_emptysp.close()
@@ -532,12 +575,14 @@ class DFTRun:
                             f.write(line)
                 f.write('coordinates ' + new_ref + ' \n')
                 if int(refHFX) != 20:
-                    geolist = new_name.split('_') #Copy without modifying the namelist
+                    geolist = new_name.split('_')  # Copy without modifying the namelist
                     emptyrefval = emptyrefdict[geolist[-2]]
                     geolist[-2] = emptyrefval
                     wfnrefempty = "_".join(geolist)
-                    guess_string_geo = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/'+ wfnrefempty+ '/ca0' + \
-                           ' ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/'+ wfnrefempty + '/cb0\n'
+                    guess_string_geo = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(
+                        self.gen) + '/' + wfnrefempty + '/ca0' + \
+                                       ' ' + get_run_dir() + 'scr/geo/gen_' + str(
+                        self.gen) + '/' + wfnrefempty + '/cb0\n'
                     f.write(guess_string_geo)
                 # self.get_track_elec_prop()
                 # print('!!!!!!!', self.track_elec_prop)
@@ -554,12 +599,13 @@ class DFTRun:
                 temp.readfromxyz(new_ref)
                 metal_ind = temp.findMetal()[0]
                 fixed_atoms = list()
-                fixed_atoms = temp.getBondedAtomsSmart(metal_ind) #Smart used so that the correct connecting atom constraints are used
+                fixed_atoms = temp.getBondedAtomsSmart(
+                    metal_ind)  # Smart used so that the correct connecting atom constraints are used
                 planar = fixed_atoms[:4]
-                metal_ind_mod = metal_ind+1 # 1-based indices
-                planar = [str(int(i)+1) for i in planar] # 1-based indices
-                first_string_to_write = 'dihedral ' + '_'.join(planar[:3])+ '_'+str(metal_ind_mod)+' \n'
-                second_string_to_write = 'dihedral ' + '_'.join(planar[:4])+' \n'
+                metal_ind_mod = metal_ind + 1  # 1-based indices
+                planar = [str(int(i) + 1) for i in planar]  # 1-based indices
+                first_string_to_write = 'dihedral ' + '_'.join(planar[:3]) + '_' + str(metal_ind_mod) + ' \n'
+                second_string_to_write = 'dihedral ' + '_'.join(planar[:4]) + ' \n'
                 f.write('$constraint_freeze \n')
                 f.write(first_string_to_write)
                 f.write(second_string_to_write)
@@ -573,35 +619,35 @@ class DFTRun:
         path_dictionary = setup_paths()
         reference_name = stripName(self.job)
         geo_ref = self.geopath
-        geo_name =  reference_name + '.xyz'
-        mainbasisList =  ["CC-PVDZ","CC-PVTZ","CC-PVQZ","def2-TZVP","def2-QZVP"]
-        auxs  = [" AutoAux RIJCOSX "," "]
+        geo_name = reference_name + '.xyz'
+        mainbasisList = ["CC-PVDZ", "CC-PVTZ", "CC-PVQZ", "def2-TZVP", "def2-QZVP"]
+        auxs = [" AutoAux RIJCOSX ", " "]
         baserf = reference_name
-        for i in range(0,len(mainbasisList)):
-                for j,aux in enumerate(auxs):
-                        mainbasis = mainbasisList[i]
-                        reference_name = baserf + '_'+str(i)+'_'+str(j)
-                        self.DLPNO_job = path_dictionary['DLPNO_path'] + reference_name+'/' + reference_name + '.in'
-                        ensure_dir(path_dictionary['DLPNO_path'] + reference_name+'/')
-                        shutil.copy(geo_ref,path_dictionary['DLPNO_path'] + reference_name + '/' + geo_name)
+        for i in range(0, len(mainbasisList)):
+            for j, aux in enumerate(auxs):
+                mainbasis = mainbasisList[i]
+                reference_name = baserf + '_' + str(i) + '_' + str(j)
+                self.DLPNO_job = path_dictionary['DLPNO_path'] + reference_name + '/' + reference_name + '.in'
+                ensure_dir(path_dictionary['DLPNO_path'] + reference_name + '/')
+                shutil.copy(geo_ref, path_dictionary['DLPNO_path'] + reference_name + '/' + geo_name)
 
-                        ### write files
-                        if not os.path.exists(self.DLPNO_job):
-                            f_DLPNO = open(self.DLPNO_job, 'w')
-                            f_DLPNO.write('#DLPNO-CCSD(T) single point energy\n')
-                            f_DLPNO.write('\n')
-                            f_DLPNO.write('! DLPNO-CCSD(T) ' + mainbasis + aux +'printbasis\n')
-                            f_DLPNO.write('\n')
-                            f_DLPNO.write('%MaxCore 4096\n')
-                            f_DLPNO.write('\n')
-                            f_DLPNO.write('!\n')
-                            f_DLPNO.write('\n')
-                            f_DLPNO.write(" ".join(['* xyzfile',str(self.charge),str(self.tspin),geo_name]))
-                            f_DLPNO.write('\n')
-                            f_DLPNO.close()
-                   
+                ### write files
+                if not os.path.exists(self.DLPNO_job):
+                    f_DLPNO = open(self.DLPNO_job, 'w')
+                    f_DLPNO.write('#DLPNO-CCSD(T) single point energy\n')
+                    f_DLPNO.write('\n')
+                    f_DLPNO.write('! DLPNO-CCSD(T) ' + mainbasis + aux + 'printbasis\n')
+                    f_DLPNO.write('\n')
+                    f_DLPNO.write('%MaxCore 4096\n')
+                    f_DLPNO.write('\n')
+                    f_DLPNO.write('!\n')
+                    f_DLPNO.write('\n')
+                    f_DLPNO.write(" ".join(['* xyzfile', str(self.charge), str(self.tspin), geo_name]))
+                    f_DLPNO.write('\n')
+                    f_DLPNO.close()
+
     def archive(self, sub_number):
-            
+
         # this fuinciton copies all files to arch
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
@@ -611,7 +657,7 @@ class DFTRun:
         org_name = archive_path
         archive_path = org_name.rstrip('/') + '_' + str(sub_number) + '/'
         if not os.path.isdir(archive_path):
-                
+
             ensure_dir(archive_path)
             print('archiving to ' + archive_path)
             # copy files:
@@ -634,7 +680,15 @@ class DFTRun:
 
     def get_descriptor_vector(self, loud=False, name=False):
         self.mol.update_graph_check()
-        descriptor_names, descriptors = get_descriptor_vector(this_complex=self.mol,custom_ligand_dict=False,ox_modifier=False)    
+        self.init_mol.update_graph_check()
+        if self.converged and self.flag_oct:
+            descriptor_names, descriptors = get_descriptor_vector(this_complex=self.mol,
+                                                                  custom_ligand_dict=False,
+                                                                  ox_modifier=False)
+        else:
+            descriptor_names, descriptors = get_descriptor_vector(this_complex=self.init_mol,
+                                                                  custom_ligand_dict=False,
+                                                                  ox_modifier=False)
         self.descriptor_names = descriptor_names
         self.descriptors = descriptors
         self.set_desc = True
@@ -652,28 +706,29 @@ class DFTRun:
                 self.descriptors.extend(values)
             else:
                 self.descriptors.append(values)
+
     def DFTRunToReport(self):
-        customDict = {"NAME":self.name,
-                      "METAL":"".join([e.upper() if i == 0 else e for i,e in enumerate(get_metals()[self.metal])]),
-                      "LIGS":"/".join([str(i) for i in [self.eqlig,self.axlig1,self.axlig2]]),
-                      "OX":str(self.ox),
-                      "SPIN":str(self.spin),
-                      "STATUS":str(self.status),
-                      "HFX":str(self.alpha).zfill(1),
-                      "s2":"/".join([ '{0:.2f}'.format(self.ss_act).zfill(1),str(self.ss_target).zfill(1)])}
+        customDict = {"NAME": self.name,
+                      "METAL": "".join([e.upper() if i == 0 else e for i, e in enumerate(get_metals()[self.metal])]),
+                      "LIGS": "/".join([str(i) for i in [self.eqlig, self.axlig1, self.axlig2]]),
+                      "OX": str(self.ox),
+                      "SPIN": str(self.spin),
+                      "STATUS": str(self.status),
+                      "HFX": str(self.alpha).zfill(1),
+                      "s2": "/".join(['{0:.2f}'.format(self.ss_act).zfill(1), str(self.ss_target).zfill(1)])}
         if self.status == 8:
-                finalPath = self.progpath
+            finalPath = self.progpath
         else:
-                finalPath = self.geopath
+            finalPath = self.geopath
         initialPath = self.init_geopath
         print(initialPath)
-        
+
         generateReport(initialPath=initialPath,
                        finalPath=finalPath,
                        reportPath=self.reportpath,
                        customDict=customDict,
-                       octahedral = self.octahedral)
-                       
+                       octahedral=self.octahedral)
+
 
 class Comp:
     """ This is a class for each unique composition and configuration"""
@@ -708,46 +763,48 @@ class Comp:
         ## or ox3_split
         self.split = 777
 
-
         ## run class dependent props:
-        list_of_init_props = ['spin','charge','attempted','converged',
-                      'mop_converged','time','energy',
-                      'mop_energy','alphaHOMO','betaHOMO', 
-                      'alphaLUMO','betaLUMO',
-                      'coord','num_coord_metal','mop_coord',
-                      'ligrsmd','rmsd','rmsd_max',
-                      'maxd','atom_dist_max','flag_oct',
-                      'angletest','flag_oct_list','oct_angle_devi_max',
-                      'devi_linear_avrg','devi_linear_max',
-                      'dist_del_all','dist_del_eq','dist_del_eq'
-                      'oct_angle_devi_max','del_sig_angle','max_del_sig_angle',
-                      'thermo_cont','imag',
-                      'solvent_cont',
-                      'init_energy',
-                      'status','comment',
-                      'ax1_MLB','ax2_MLB','eq_MLB',
-                      'init_ax1_MLB', 'init_ax2_MLB','init_eq_MLB',
-                      'ss_act','ss_target','geopath',
-                      'terachem_version','terachem_detailed_version',
-                      'basis','functional',
-                      'alpha_level_shift','beta_level_shift',
-                      "DFT_RUN"]
-        list_of_init_falses = ['attempted','converged',
-                      'mop_converged',
-                      "DFT_RUN"]
+        list_of_init_props = ['spin', 'charge', 'attempted', 'converged',
+                              'mop_converged', 'time', 'energy',
+                              'flag_oct', 'flag_list',
+                              'num_coord_metal', 'rmsd_max', 'atom_dist_max',
+                              'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
+                              'devi_linear_avrg', 'devi_linear_max',
+                              'flag_oct_loose', 'flag_list_loose',
+                              'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max',
+                              'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
+                              'prog_dist_del_all',
+                              'prog_devi_linear_avrg', 'prog_devi_linear_max',
+                              'mop_energy', 'alphaHOMO', 'betaHOMO',
+                              'alphaLUMO', 'betaLUMO',
+                              'coord', 'mop_coord',
+                              'ligrsmd', 'rmsd', 'maxd',
+                              'angletest', 'thermo_cont', 'imag',
+                              'solvent_cont',
+                              'init_energy',
+                              'status', 'comment',
+                              'ax1_MLB', 'ax2_MLB', 'eq_MLB',
+                              'init_ax1_MLB', 'init_ax2_MLB', 'init_eq_MLB',
+                              'ss_act', 'ss_target', 'geopath',
+                              'terachem_version', 'terachem_detailed_version',
+                              'basis', 'functional',
+                              'alpha_level_shift', 'beta_level_shift',
+                              "DFT_RUN"]
+        list_of_init_falses = ['attempted', 'converged',
+                               'mop_converged',
+                               "DFT_RUN"]
         for props in list_of_init_props:
-                for ox in ["2","3"]:
-                        for sc in ["LS","HS"]:
-                                this_attribute = "_".join(['ox',ox,sc,props])
-                                setattr(self,this_attribute,'undef')
+            for ox in ["2", "3"]:
+                for sc in ["LS", "HS"]:
+                    this_attribute = "_".join(['ox', ox, sc, props])
+                    setattr(self, this_attribute, 'undef')
         for props in list_of_init_falses:
-                for ox in ["2","3"]:
-                        for sc in ["LS","HS"]:
-                                this_attribute = "_".join(['ox',ox,sc,props])
-                                setattr(self,this_attribute,False)            
+            for ox in ["2", "3"]:
+                for sc in ["LS", "HS"]:
+                    this_attribute = "_".join(['ox', ox, sc, props])
+                    setattr(self, this_attribute, False)
 
-   
-        ### MOPAC
+                    ### MOPAC
         self.mop_convergence = 0
         ### Coulomb
         self.cmmat = list()
@@ -755,7 +812,6 @@ class Comp:
         ### spin splitting
         self.ox2split = 'undef'
         self.ox3split = 'undef'
-
 
     def set_properties(self, this_run):
         self.metal = this_run.metal
@@ -772,7 +828,15 @@ class Comp:
 
     def get_descriptor_vector(self, loud=False, name=False):
         self.mol.update_graph_check()
-        descriptor_names, descriptors = get_descriptor_vector(this_complex=self.mol,custom_ligand_dict=False,ox_modifier=False)    
+        self.init_mol.update_graph_check()
+        if self.converged and self.flag_oct:
+            descriptor_names, descriptors = get_descriptor_vector(this_complex=self.mol,
+                                                                  custom_ligand_dict=False,
+                                                                  ox_modifier=False)
+        else:
+            descriptor_names, descriptors = get_descriptor_vector(this_complex=self.init_mol,
+                                                                  custom_ligand_dict=False,
+                                                                  ox_modifier=False)
         self.descriptor_names = descriptor_names
         self.descriptors = descriptors
         self.set_desc = True
