@@ -404,7 +404,7 @@ def check_all_current_convergence():
         # for comparisons
         logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                + " starting output logs ")
-        write_output('comps',final_results.values(),list_of_prop_names)
+        write_output('comps',final_results.values(),output_properties(comp=True))
         # for runs
         write_output('runs',all_runs.values(),output_properties(comp=False))
     
