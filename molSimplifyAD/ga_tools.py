@@ -94,7 +94,70 @@ def create_generic_infile(job,restart=False,use_old_optimizer = False):
                         newf.write("new_minimizer yes\n")
                     newf.write(guess_string)
                     newf.write('end\n')  
-
+########################
+def output_properties(comp=False,oxocatalysis=False):
+    list_of_props = list()
+    list_of_props.append('name')
+    list_of_props.append('gene')
+    list_of_props.append('metal')
+    list_of_props.append('alpha')
+    list_of_props.append('axlig1')
+    list_of_props.append('axlig2')
+    list_of_props.append('eqlig')
+    list_of_prop_names = ['converged', 'status', 'time','charge', 'spin',
+                          'energy', 'init_energy', 
+                          'flag_oct', 'flag_list',
+                          'num_coord_metal', 
+                          'ss_act', 'ss_target',
+                          'ax1_MLB','ax2_MLB', 'eq_MLB',
+                          "alphaHOMO", "alphaLUMO", "betaHOMO", "betaLUMO",
+                          'rmsd_max', 'atom_dist_max',
+                          'geopath',
+                          'attempted',
+                          'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
+                          'devi_linear_avrg', 'devi_linear_max',
+                          'flag_oct_loose', 'flag_list_loose',
+                          'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max',
+                          'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
+                          'prog_dist_del_all',
+                          'prog_devi_linear_avrg', 'prog_devi_linear_max',
+                          'rmsd', 'maxd', 
+                          'init_ax1_MLB', 'init_ax2_MLB', 'init_eq_MLB', 'thermo_cont', 'imag', 'solvent_cont',
+                          'terachem_version', 'terachem_detailed_version',
+                          'basis',  'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
+                          'mop_coord']
+    if oxocatalysis:
+        if comp:
+            list_of_props.append('convergence')
+            for props in list_of_prop_names:
+                for spin_cat in ['LS', 'IS', 'HS']:
+                    for catax in ['x', 'oxo', 'hydroxyl']:
+                        if catax == 'x':
+                            for ox in ['2', '3']:
+                                list_of_props.append("_".join(['ox', str(ox), spin_cat, str(catax), props]))
+                        elif catax == 'oxo':
+                            for ox in ['4', '5']:
+                                list_of_props.append("_".join(['ox', str(ox), spin_cat, str(catax), props]))
+                        else:
+                            for ox in ['3', '4']:
+                                list_of_props.append("_".join(['ox', str(ox), spin_cat, str(catax), props]))
+            list_of_props.append('attempted')
+        else:
+            list_of_props += list_of_prop_names
+    else:
+        if comp:          
+            list_of_props.insert(1,'ox2RN')
+            list_of_props.insert(2,'ox3RN')  
+            for props in list_of_prop_names:
+                for spin_cat in ['LS', 'HS']:
+                    for ox in ['2', '3']:
+                        list_of_props.append("_".join(['ox', str(ox), spin_cat, props]))
+            list_of_props.append('attempted')
+        else:
+            list_of_props.insert(1,'number')
+            list_of_props.insert(2,'ox')
+            list_of_props += list_of_prop_names
+    return list_of_props
 ########################
 def find_live_jobs():
     path_dictionary = setup_paths()
@@ -166,7 +229,6 @@ def isOptimize():
         return False
     return rdir
 ########################
-
 def translate_job_name(job):
     base = os.path.basename(job)
     base = base.strip("\n")
@@ -506,52 +568,88 @@ def atrextract(a_run,list_of_props):
         extrct_props.append(getattr(a_run,props))
     return extrct_props
 ########################
-def write_descriptor_csv(list_of_runs):
+def write_descriptor_csv(list_of_runs,file_handle,append=False):
+    print('writing a file a new descriptor file')
     if list_of_runs:
         nl = len(list_of_runs[0].descriptor_names)
-        print('writing a file')
-        with open('consistent_descriptor_file.csv','w') as f:
-            f.write('runs,')
-            n_cols = len(list_of_runs[0].descriptor_names)
+        file_handle.write('runs,')
+        n_cols = len(list_of_runs[0].descriptor_names)
+        if not append:
             print('first element has ' + str(n_cols) + ' columns')
             if n_cols == 0:
-                f.write('\n')
+                file_handle.write('\n')
             for i,names in enumerate(list_of_runs[0].descriptor_names):
                 if i<(n_cols-1):
-                    f.write(names+',')
+                    file_handle.write(names+',')
                 else:
-                    f.write(names+'\n')
-            for runs in list_of_runs:
-                try:
-                    f.write(runs.name)
-                    counter  = 0 
-                    print('found ' + str(len(runs.descriptors)) +  ' descriptors ')
-                    for properties in runs.descriptors:
-        
-                        f.write(','+str(properties))
-                    f.write('\n')
-                except:
-                    pass
+                    file_handle.write(names+'\n')
+        for runs in list_of_runs:
+            try:
+                file_handle.write(runs.name)
+                counter  = 0 
+                print('found ' + str(len(runs.descriptors)) +  ' descriptors ')
+                for properties in runs.descriptors:
+    
+                    file_handle.write(','+str(properties))
+                file_handle.write('\n')
+            except:
+                pass
     else:
         pass
 ########################
-def append_descriptor_csv(list_of_runs):
-    if list_of_runs:
-        nl = len(list_of_runs[0].descriptor_names)
-        with open('consistent_descriptor_file.csv','a') as f:
-            for runs in list_of_runs:
-                try:
-                    f.write(runs.name)
-                    counter  = 0 
-                    for properties in runs.descriptors:
-                        f.write(','+str(properties))
-                    f.write('\n')
-                except:
-                    pass
-    else:
-        pass
-########################
+def write_output(name,list_of_things_with_props,list_of_props,base_path_dictionary=False,rdir=False,postall = False):
+    ## this function flexibly writes output files
+    # for both the run and comparison classes
+    # this fuinction supports overloading the default run directories through
+    # optional arguments in order to be useable in environments where
+    # no .madconfig is available and should only be used for this purpose
+    if not base_path_dictionary:
+        base_path_dictionary = setup_paths()
+    if not rdir:
+        rdir = get_run_dir()
+    if not postall:
+        postall = isall_post()
+    
+    output_path = rdir + '/' + name + '_results_post.csv'
+    descriptor_path = rdir + '/' + name +'_descriptor_file.csv'
 
-        
+               
+    if (not postall) and os.path.isfile(output_path):
+        with open(output_path, 'a') as f:
+            for thing in list_of_things_with_props:
+                values = atrextract(thing, list_of_props)
+                writeprops(values, f)
+    else:
+        with open(output_path, 'w') as f:
+            writeprops(list_of_props, f)
+            for thing in list_of_things_with_props:
+                values = atrextract(thing, list_of_props)
+                writeprops(values, f)
+                
+    if (not postall) and os.path.isfile(descriptor_path):
+        with open(descriptor_path, 'a') as f:
+            write_descriptor_csv(list_of_things_with_props,f,append=True)
+    else:
+        with open(descriptor_path, 'w') as f:
+            write_descriptor_csv(list_of_things_with_props,f,append=False)
+########################
+def write_run_reports(all_runs):
+    print('writing outpickle and reports! patience is a virtue')
+    path_dictionary = setup_paths()
+    for runClass in all_runs.values():
+        if runClass.status in [0, 1, 2, 7, 8, 12, 13, 14] and runClass.alpha == 20.0:
+            if runClass.status in [0]:
+                runClass.reportpath = path_dictionary["good_reports"] + runClass.name + ".pdf"
+            elif runClass.status in [1, 8]:
+                runClass.reportpath = path_dictionary["bad_reports"] + runClass.name + ".pdf"
+            else:
+                runClass.reportpath = path_dictionary["other_reports"] + runClass.name + ".pdf"
+            runClass.DFTRunToReport()
+########################
+def write_run_pickle(all_runs):
+    output = open('final_runs_pickle.pkl', 'wb')
+    pickle.dump(final_results, output, -1)
+    output.close()
+########################
         
         

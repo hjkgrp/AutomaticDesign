@@ -681,19 +681,21 @@ class DFTRun:
                 print('archiving did NOT find  ' + self.outpath)
 
     def get_descriptor_vector(self, loud=False, name=False):
-        self.mol.update_graph_check()
-        self.init_mol.update_graph_check()
-        ox_modifier =  {self.metal}
+        
+        
+        ox_modifier =  {self.metal : self.ox}
+        print(ox_modifier)
         if self.converged and self.flag_oct:
-          
+            self.mol.update_graph_check()  
             descriptor_names, descriptors = get_descriptor_vector(this_complex=self.mol,
                                                                   custom_ligand_dict=False,
-                                                                  ox_modifier=)
+                                                                  ox_modifier=ox_modifier)
         else:
             try:
+                self.init_mol.update_graph_check()
                 descriptor_names, descriptors = get_descriptor_vector(this_complex=self.init_mol,
                                                                       custom_ligand_dict=False,
-                                                                      ox_modifier=False)
+                                                                      ox_modifier=ox_modifier)
             except:
               descriptor_names, descriptors = [],[]
               
@@ -839,12 +841,7 @@ class Comp:
     def get_descriptor_vector(self, loud=False, name=False):
         self.mol.update_graph_check()
         self.init_mol.update_graph_check()
-        if self.converged and self.flag_oct:
-            descriptor_names, descriptors = get_descriptor_vector(this_complex=self.mol,
-                                                                  custom_ligand_dict=False,
-                                                                  ox_modifier=False)
-        else:
-            descriptor_names, descriptors = get_descriptor_vector(this_complex=self.init_mol,
+        descriptor_names, descriptors = get_descriptor_vector(this_complex=self.mol,
                                                                   custom_ligand_dict=False,
                                                                   ox_modifier=False)
         self.descriptor_names = descriptor_names

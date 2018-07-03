@@ -151,6 +151,10 @@ def check_all_current_convergence():
                 ##logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
                 #                      + 'test_go oct flag' + str(this_run.flag_oct))
 
+                ## get the initial mol 
+                if os.path.isfile(this_run.init_geopath):
+                    this_run.obtain_init_mol3d()
+                
                 # store the status
                 metal_spin_dictionary = spin_dictionary()
                 metal_list = get_metals()
@@ -159,20 +163,7 @@ def check_all_current_convergence():
 
                 print('metal is ' + str(metal))
                 these_states = metal_spin_dictionary[metal][ox]
-                if (spin == these_states[0]) or (spin == these_states[-1]):
-                    all_runs.update({this_run.name: this_run})
-                    print('added ' + this_run.name + ' to all_runs')
-                    print('run status is  ' + str(this_run.status))
-                    base_path_dictionary = setup_paths()
-                    logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
-                           + ' added ' + this_run.name + ' to all_runs with status ' + str(this_run.status))
-                else:
-                    all_runs.update({this_run.name: this_run})
-                    print('Intermediate spin')
-                    print('run status is  ' + str(this_run.status))
-                    base_path_dictionary = setup_paths()
-                    logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
-                           + ' added ' + this_run.name + ' to all_runs')
+                
 
                 if this_run.status == 0:
                     # get HOMO/LUMO for successful run
@@ -311,7 +302,19 @@ def check_all_current_convergence():
 
                     except:
                         print("ERROR: scr not found for" + str(this_run.scrpath))
-                update_converged_job_dictionary(jobs, this_run.status)  # record converged
+
+                ## record convergence status
+                update_converged_job_dictionary(jobs, this_run.status)  
+                ## store this run
+                # get features of this run before we save it
+                this_run.get_descriptor_vector()
+                all_runs.update({this_run.name: this_run})
+                print('added ' + this_run.name + ' to all_runs')
+                print('run status is  ' + str(this_run.status))
+                base_path_dictionary = setup_paths()
+                logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
+                       + ' added ' + this_run.name + ' to all_runs with status ' + str(this_run.status))
+
                 if this_run.status in [0, 1, 12, 13, 14]:  ##  convergence is successful!
                     print('removing job from OSL due to status  ' + str(this_run.status))
                     jobs_complete += 1
@@ -391,93 +394,24 @@ def check_all_current_convergence():
                     print(str(jobs) + ' is live\n')
                 print('END OF SP JOB \n *******************\n')
         print('matching DFT runs ... \n')
-        list_of_props = list()
-        list_of_props.append('name')
-        list_of_props.append('convergence')
-        list_of_props.append('gene')
-        list_of_props.append('metal')
-        list_of_props.append('alpha')
-        if not GA_run.config["oxocatalysis"]:
-            list_of_props.append('ox2RN')
-            list_of_props.append('ox3RN')
-        list_of_props.append('axlig1')
-        list_of_props.append('axlig2')
-        list_of_props.append('eqlig')
-        list_of_prop_names = ['converged', 'energy', 'init_energy', "alphaHOMO", "alphaLUMO", "betaHOMO", "betaLUMO",
-                              'flag_oct', 'flag_list',
-                              'num_coord_metal', 'rmsd_max', 'atom_dist_max',
-                              'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
-                              'devi_linear_avrg', 'devi_linear_max',
-                              'flag_oct_loose', 'flag_list_loose',
-                              'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max',
-                              'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
-                              'prog_dist_del_all',
-                              'prog_devi_linear_avrg', 'prog_devi_linear_max',
-                              'coord', 'rmsd', 'maxd', 'status', 'time', 'spin', 'ss_act', 'ss_target', 'ax1_MLB',
-                              'ax2_MLB', 'eq_MLB',
-                              'init_ax1_MLB', 'init_ax2_MLB', 'init_eq_MLB', 'thermo_cont', 'imag', 'solvent_cont',
-                              'geopath', 'terachem_version', 'terachem_detailed_version',
-                              'basis', 'charge', 'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
-                              'mop_coord', 'attempted']
+
         if GA_run.config["oxocatalysis"]:
-            for props in list_of_prop_names:
-                for spin_cat in ['LS', 'IS', 'HS']:
-                    for catax in ['x', 'oxo', 'hydroxyl']:
-                        if catax == 'x':
-                            for ox in ['2', '3']:
-                                list_of_props.append("_".join(['ox', str(ox), spin_cat, str(catax), props]))
-                        elif catax == 'oxo':
-                            for ox in ['4', '5']:
-                                list_of_props.append("_".join(['ox', str(ox), spin_cat, str(catax), props]))
-                        else:
-                            for ox in ['3', '4']:
-                                list_of_props.append("_".join(['ox', str(ox), spin_cat, str(catax), props]))
-            list_of_props.append('attempted')
-            final_results = process_runs_oxocatalysis(all_runs, list_of_prop_names, spin_dictionary())
+            final_results = process_runs_oxocatalysis(all_runs, spin_dictionary())
         else:
-            for props in list_of_prop_names:
-                for spin_cat in ['LS', 'HS']:
-                    for ox in ['2', '3']:
-                        list_of_props.append("_".join(['ox', str(ox), spin_cat, props]))
-            list_of_props.append('attempted')
-            final_results = process_runs_geo(all_runs, list_of_prop_names, spin_dictionary())
-        if not (os.path.isfile(get_run_dir() + '/unified_results_post.csv')):
-            logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
-                   + " starting output log file at " + get_run_dir() + '/unified_results_post.csv')
-        if (not isall_post()) and os.path.isfile(get_run_dir() + '/unified_results_post.csv'):
-            with open('unified_results_post.csv', 'a') as f:
-                for reskeys in final_results.keys():
-                    values = atrextract(final_results[reskeys], list_of_props)
-                    writeprops(values, f)
-        else:
-            with open('unified_results_post.csv', 'w') as f:
-                writeprops(list_of_props, f)
-                for reskeys in final_results.keys():
-                    values = atrextract(final_results[reskeys], list_of_props)
-                    writeprops(values, f)
-        if (not isall_post()) and os.path.isfile(get_run_dir() + '/consistent_descriptor_file.csv'):
-            append_descriptor_csv(final_results.values())
-        else:
-            print('final results values len is ' + str(len(final_results.values())))
-            write_descriptor_csv(final_results.values())
+            final_results = process_runs_geo(all_runs, spin_dictionary())
+            
+        ## file ouptut
+        # for comparisons
+        logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
+               + " starting output logs ")
+        write_output('comps',final_results.values(),list_of_prop_names)
+        # for runs
+        write_output('runs',all_runs.values(),output_properties(comp=False))
+    
+        
         if isall_post():
-            print('writing outpickle and reports! patience is a virtue')
-            for runClass in all_runs.values():
-                print('status is ' + str(runClass.status))
-                path_dictionary = setup_paths()
-                print(path_dictionary.keys())
-                print([runClass.alpha, runClass.status])
-                if runClass.status in [0, 1, 2, 7, 8, 12, 13, 14] and runClass.alpha == 20.0:
-                    if runClass.status in [0]:
-                        runClass.reportpath = path_dictionary["good_reports"] + runClass.name + ".pdf"
-                    elif runClass.status in [1, 8]:
-                        runClass.reportpath = path_dictionary["bad_reports"] + runClass.name + ".pdf"
-                    else:
-                        runClass.reportpath = path_dictionary["other_reports"] + runClass.name + ".pdf"
-                    runClass.DFTRunToReport()
-            output = open('final_runs_pickle.pkl', 'wb')
-            pickle.dump(final_results, output, -1)
-            output.close()
+            write_run_reports(all_runs)
+            write_run_pickle(all_runs)
         print('\n**** end of file inspection **** \n')
     else:
         print('post processing SP/spin files')

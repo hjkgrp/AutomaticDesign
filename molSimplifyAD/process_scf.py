@@ -124,7 +124,7 @@ def process_runs_sp(LS_runs,HS_runs):
             print('unmatched ID: '+ str(this_gene) + ' files ' + str(LS_run.name)+ ' has no partner' )
     return final_results
 
-def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary,local_metal_list=False):
+def process_runs_geo(all_runs,local_spin_dictionary,local_metal_list=False):
     ## function to find mathcing runs by gene
     ## and extract their properties
     ##  for terachem GO runs
@@ -140,7 +140,6 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary,local_met
         local_metal_list = get_metals()
     matched = False
     number_of_matches  = 0
-    print(local_spin_dictionary)
     print('processing all converged runs')
     for runkeys in all_runs.keys():
         skip = False
@@ -248,9 +247,12 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary,local_met
 #                    sadasdasdasda
             
 
-            for props in list_of_prop_names:
-                     this_attribute = "_".join(['ox',str(this_ox),spin_cat,props])
-                     setattr(this_comp,this_attribute,getattr(this_run,props))
+            for props in  output_properties(comp=False,oxocatalysis=False):
+                this_attribute = "_".join(['ox',str(this_ox),spin_cat,props])
+                print('looking for ' + str(props) + ' as '+ this_attribute + ' from run class')
+                if hasattr(this_run,props):
+                    print('found, ' + str(getattr(this_run,props)))
+                    setattr(this_comp,this_attribute,getattr(this_run,props))
             this_attribute = "_".join(['ox',str(this_ox),spin_cat,"DFT_RUN"])
             setattr(this_comp,this_attribute,this_run)
         ## the hack to get around expecting 
@@ -260,7 +262,7 @@ def process_runs_geo(all_runs,list_of_prop_names,local_spin_dictionary,local_met
         final_results.update({this_name:this_comp})
     return final_results
 
-def process_runs_oxocatalysis(all_runs,list_of_prop_names,local_spin_dictionary,local_metal_list=False):
+def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=False):
     ## function to find matching runs by gene
     ## and extract their properties
     ##  for terachem GO runs
@@ -327,7 +329,7 @@ def process_runs_oxocatalysis(all_runs,list_of_prop_names,local_spin_dictionary,
             ## need to create a new holder to store this gene
             this_comp = Comp(this_name)
             this_comp.set_properties(this_run)
-            for props in list_of_prop_names:
+            for props in output_properties(comp=False,oxocatalysis=True):
                 for spin_val in ['LS','IS','HS']:
                      for catax_val in ['x','oxo','hydroxyl']:
 		          if catax_val == 'x':
@@ -630,7 +632,7 @@ def test_terachem_go_convergence(this_run):
         else:
             this_run.status = 1
             this_run.comment += 'coord not good ' +str(this_run.coord) +'\n '
-            this_run.comment += 'flag_oct_list: %s\n'%(this_run.flag_oct_list)
+            this_run.comment += 'flag_oct_list: %s\n'%(this_run.flag_list)
             
 
 def read_terachem_go_output(this_run):
