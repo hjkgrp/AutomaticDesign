@@ -407,11 +407,12 @@ def check_all_current_convergence():
         write_output('comps',final_results.values(),output_properties(comp=True))
         # for runs
         write_output('runs',all_runs.values(),output_properties(comp=False))
-    
         
+        #print('-------')
+        #print(final_results)
         if isall_post():
             write_run_reports(all_runs)
-            write_run_pickle(all_runs)
+            write_run_pickle(final_results)
         print('\n**** end of file inspection **** \n')
     else:
         print('post processing SP/spin files')

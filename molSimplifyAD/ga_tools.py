@@ -1,6 +1,7 @@
 import os
 import shutil
 import numpy
+import pickle
 from molSimplifyAD.ga_io_control import *
 def ensure_dir(dir_path):
     if not os.path.exists(dir_path):
@@ -646,9 +647,9 @@ def write_run_reports(all_runs):
                 runClass.reportpath = path_dictionary["other_reports"] + runClass.name + ".pdf"
             runClass.DFTRunToReport()
 ########################
-def write_run_pickle(all_runs):
+def write_run_pickle(final_results):
     output = open('final_runs_pickle.pkl', 'wb')
-    pickle.dump(final_results, output, -1)
+    pickle.dump(final_results, output)
     output.close()
 ########################
         
