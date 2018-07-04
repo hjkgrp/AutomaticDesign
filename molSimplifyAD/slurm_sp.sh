@@ -6,11 +6,18 @@
 #SBATCH -A p-che140073
 #SBATCH -p normal
 
+module load  GCC/4.9.2-binutils-2.25
+module load binutils/2.25
+module load intel
+module load MPICH2
+module load CUDA/8.0.44
+module unload intel
+module load intel/2016
+export TeraChem="/cstor/xsede/projects/p-che140073/opt/terchem/06292018"
+export LD_LIBRARY_PATH=$TeraChem/lib:$LD_LIBRARY_PATH
 
 
 export OMP_NUM_THREADS=1
-module load terachem
-export TeraChem="/cstor/xsede/users/xs-jpjanet"
 
 fullpath="$1"
 
@@ -58,7 +65,7 @@ echo "daemon is in"
 pwd
 
 echo "Launching sp calc: $namebase"
-terachem $inpath >  $outpath
+$TeraChem/bin/terachem $inpath >  $outpath
 mv $localoutpath $outpath
 mv scr/sp/$gennumpath/$namebase $scrpath
 echo "Complete sp"

@@ -6,7 +6,7 @@
 #$ -pe smp 1 		#number parrallel jobs
 
 module load cuda
-module load terachem
+module load terachem/tip
 
 
 fullpath="$1"

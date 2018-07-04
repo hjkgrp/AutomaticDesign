@@ -34,7 +34,7 @@ class GA_run_defintion:
                       monitor_diversity=True,
                       monitor_distance= True,
                       all_post = False,
-                      track_elec_prop = False,
+                      track_elec_prop = True,
                       **KWARGS):
             ## first time start-up function
 #                print('configuring status dictionaty')

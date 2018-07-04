@@ -46,106 +46,6 @@ class DFTRun:
         self.descriptor_names = list()
         self.name = name
         self.comment = ''
-
-        ################
-        # ## basic info
-        # self.status = 'undef'
-        # self.time = 'undef'
-        # self.energy = 'undef'
-        # self.alphaHOMO = "undef"
-        # self.alphaLUMO = "undef"
-        # self.betaHOMO = "undef"
-        # self.betaLUMO = "undef"
-        # self.initial_energy = 'undef'
-        # self.charge = 'undef'
-        # self.idn = 'undef'
-        # self.solvent_cont = False
-        # self.thermo_cont = False
-        # self.init_energy = False
-        # self.spin = 'undef'
-        #
-        # # ligands and metal
-        # self.metal = 'undef'
-        # self.eqlig_ind = 'undef'
-        # self.axlig1_ind = 'undef'
-        # self.axlig2_ind = 'undef'
-        # self.eqlig = 'undef'
-        # self.axlig1 = 'undef'
-        # self.axlig2 = 'undef'
-        #
-        # # bond lengths
-        # self.ax1_MLB = 'undef'
-        # self.ax2_MLB = 'undef'
-        # self.eq_MLB = 'undef'
-        # self.init_ax1_MLB = 'undef'
-        # self.init_ax2_MLB = 'undef'
-        # self.init_eq_MLB = 'undef'
-        # ## paths
-        # self.outpath = 'undef'
-        # self.geopath = 'undef'
-        # self.init_geopath = 'undef'
-        # self.progpath = 'undef'
-        # # mol holders
-        # self.mol = False
-        # self.init_mol = False
-        # self.progmol = False
-        #
-        # ## run info
-        # self.attempted = False
-        # self.logpath = False
-        # self.terachem_version = 'undef'
-        # self.terachem_detailed_version = 'undef'
-        # self.basis = 'undef'
-        # self.alpha_level_shift = 'undef'
-        # self.beta_level_shift = 'undef'
-        # self.functional = 'undef'
-        #
-        # ## diagnositcs
-        # self.geostatus = False
-        # self.thermo_status = False
-        # self.imag = False
-        # self.rmsd = 'undef'
-        # self.geo_exists = False
-        # self.progstatus = False
-        # self.prog_exists = False
-        # self.output_exists = False
-        # self.converged = False
-        # self.mop_converged = False
-        # self.islive = False
-        # self.ss_target = 0
-        # self.ss_act = 0
-        # self.coord = 0
-        # self.maxd = 'undef'  # max dist to detect detected atoms
-        # self.thermo_time = 'undef'
-        # self.solvent_time = 'undef'
-        # self.angletest = 'undef'
-        # self.ligrsmd = 'undef'
-        # self.flag_oct = 'undef'
-        # self.flag_oct_loose = 'undef'
-        # self.flag_list = 'undef'
-        # self.flag_list_loose = 'undef'
-        # self.num_coord_metal = 'undef'
-        # self.rmsd_max = 'undef'
-        # self.atom_dist_max = 'undef'
-        # self.oct_angle_devi_max = 'undef'
-        # self.max_del_sig_angle = 'undef'
-        # self.dist_del_eq = 'undef'
-        # self.dist_del_all = 'undef'
-        # self.dict_geo_check = dict()
-        # self.comment = ''
-        # self.octahedral = 'undef'
-        # self.devi_linear_avrg = 'undef'
-        # self.devi_linear_max = 'undef'
-        #
-        # ## mopac statistics
-        # self.mop_energy = 'undef'
-        # self.mop_coord = 0
-        #
-        # ## descriptors
-        # self.set_desc = False
-        # self.descriptors = list()
-        # self.descriptor_names = list()
-
         list_of_init_props = ['status', 'time', 'energy', 'alphaHOMO', 'alphaLUMO', 'betaHOMO', 'betaLUMO',
                               'initial_energy', 'charge', 'idn', 'spin', 'metal', 'eqlig_ind', 'axlig1_ind',
                               'axlig2_ind', 'eqlig', 'axlig1', 'axlig2', 'eq_MLB', 'ax1_MLB', 'ax2_MLB',
@@ -158,7 +58,7 @@ class DFTRun:
                               'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max',
                               'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
-                              'mop_energy','descriptors','descriptor_names']
+                              'mop_energy', 'descriptors', 'descriptor_names']
         list_of_init_false = ['solvent_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
@@ -619,42 +519,44 @@ class DFTRun:
     def write_DLPNO_inputs(self):
         ## set files  for DLNPO calcs 
         path_dictionary = setup_paths()
-	print(path_dictionary)
-	print(path_dictionary['DLPNO_path'])
+        print(path_dictionary)
+        print(path_dictionary['DLPNO_path'])
         reference_name = stripName(self.job)
         geo_ref = self.geopath
-        geo_name =  reference_name + '.xyz'
-        mainbasisList =  ["CC-PVDZ"]
-        auxs  = ["AutoAux RIJCOSX"]
-	tols  = ["NormalPNO"]
+        geo_name = reference_name + '.xyz'
+        mainbasisList = ["CC-PVDZ"]
+        auxs = ["AutoAux RIJCOSX"]
+        tols = ["NormalPNO"]
         baserf = reference_name
-        for i in range(0,len(mainbasisList)):
-                for j, aux in enumerate(auxs):
-			for k, tol in enumerate(tols):
-				mainbasis = mainbasisList[i]
-				reference_name = baserf + '_' + str(i) + '_' + str(j) + '_'+str(k)
-				self.DLPNO_job = path_dictionary['DLPNO_path'] + reference_name + '/' + reference_name + '.in'
-				ensure_dir(path_dictionary['DLPNO_path'] + reference_name + '/')
-				shutil.copy(geo_ref,path_dictionary['DLPNO_path'] + reference_name + '/' + reference_name + '.xyz')
-				if not aux:
-					aux = mainbasis+'/C ' + mainbasis + '/J RIJCOSX'
-				### write files
-				if not os.path.exists(self.DLPNO_job):
-				    f_DLPNO = open(self.DLPNO_job, 'w')
-				    f_DLPNO.write('#DLPNO-CCSD(T) single point energy\n')
-				    f_DLPNO.write('\n')
-				    f_DLPNO.write('! UHF SlowConv DLPNO-CCSD(T) ' + mainbasis + ' ' + aux + ' ' + tol + ' printbasis\n')
-				    f_DLPNO.write('\n')
-				    f_DLPNO.write('%MaxCore 4096\n')
-				    f_DLPNO.write('%scf\nMaxIter 500\nend\n')
-				    f_DLPNO.write('%mdci\nmaxiter 200\nend')
-				    f_DLPNO.write('\n')
-				    f_DLPNO.write('!\n')
-				    f_DLPNO.write('\n')
-				    f_DLPNO.write(" ".join(['* xyzfile',str(self.charge),str(self.tspin),reference_name + '.xyz']))
-				    f_DLPNO.write('\n')
-				    f_DLPNO.close()
-	
+        for i in range(0, len(mainbasisList)):
+            for j, aux in enumerate(auxs):
+                for k, tol in enumerate(tols):
+                    mainbasis = mainbasisList[i]
+                    reference_name = baserf + '_' + str(i) + '_' + str(j) + '_' + str(k)
+                    self.DLPNO_job = path_dictionary['DLPNO_path'] + reference_name + '/' + reference_name + '.in'
+                    ensure_dir(path_dictionary['DLPNO_path'] + reference_name + '/')
+                    shutil.copy(geo_ref, path_dictionary['DLPNO_path'] + reference_name + '/' + reference_name + '.xyz')
+                    if not aux:
+                        aux = mainbasis + '/C ' + mainbasis + '/J RIJCOSX'
+                    ### write files
+                    if not os.path.exists(self.DLPNO_job):
+                        f_DLPNO = open(self.DLPNO_job, 'w')
+                        f_DLPNO.write('#DLPNO-CCSD(T) single point energy\n')
+                        f_DLPNO.write('\n')
+                        f_DLPNO.write(
+                            '! UHF SlowConv DLPNO-CCSD(T) ' + mainbasis + ' ' + aux + ' ' + tol + ' printbasis\n')
+                        f_DLPNO.write('\n')
+                        f_DLPNO.write('%MaxCore 4096\n')
+                        f_DLPNO.write('%scf\nMaxIter 500\nend\n')
+                        f_DLPNO.write('%mdci\nmaxiter 200\nend')
+                        f_DLPNO.write('\n')
+                        f_DLPNO.write('!\n')
+                        f_DLPNO.write('\n')
+                        f_DLPNO.write(
+                            " ".join(['* xyzfile', str(self.charge), str(self.tspin), reference_name + '.xyz']))
+                        f_DLPNO.write('\n')
+                        f_DLPNO.close()
+
     def archive(self, sub_number):
 
         # this fuinciton copies all files to arch
@@ -688,12 +590,11 @@ class DFTRun:
                 print('archiving did NOT find  ' + self.outpath)
 
     def get_descriptor_vector(self, loud=False, name=False):
-        
-        
-        ox_modifier =  {self.metal : self.ox}
+
+        ox_modifier = {self.metal: self.ox}
         print(ox_modifier)
         if self.converged and self.flag_oct:
-            self.mol.update_graph_check()  
+            self.mol.update_graph_check()
             descriptor_names, descriptors = get_descriptor_vector(this_complex=self.mol,
                                                                   custom_ligand_dict=False,
                                                                   ox_modifier=ox_modifier)
@@ -704,8 +605,8 @@ class DFTRun:
                                                                       custom_ligand_dict=False,
                                                                       ox_modifier=ox_modifier)
             except:
-              descriptor_names, descriptors = [],[]
-              
+                descriptor_names, descriptors = [], []
+
         self.descriptor_names = descriptor_names
         self.descriptors = descriptors
         self.set_desc = True
@@ -844,13 +745,12 @@ class Comp:
         self.mol = this_run.mol
         self.init_mol = this_run.init_mol
 
-
     def get_descriptor_vector(self, loud=False, name=False):
         self.mol.update_graph_check()
         self.init_mol.update_graph_check()
         descriptor_names, descriptors = get_descriptor_vector(this_complex=self.mol,
-                                                                  custom_ligand_dict=False,
-                                                                  ox_modifier=False)
+                                                              custom_ligand_dict=False,
+                                                              ox_modifier=False)
         self.descriptor_names = descriptor_names
         self.descriptors = descriptors
         self.set_desc = True
