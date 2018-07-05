@@ -154,7 +154,7 @@ def check_all_current_convergence():
                 ## get the initial mol 
                 if os.path.isfile(this_run.init_geopath):
                     this_run.obtain_init_mol3d()
-                
+
                 # store the status
                 metal_spin_dictionary = spin_dictionary()
                 metal_list = get_metals()
@@ -163,7 +163,6 @@ def check_all_current_convergence():
 
                 print('metal is ' + str(metal))
                 these_states = metal_spin_dictionary[metal][ox]
-                
 
                 if this_run.status == 0:
                     # get HOMO/LUMO for successful run
@@ -304,7 +303,7 @@ def check_all_current_convergence():
                         print("ERROR: scr not found for" + str(this_run.scrpath))
 
                 ## record convergence status
-                update_converged_job_dictionary(jobs, this_run.status)  
+                update_converged_job_dictionary(jobs, this_run.status)
                 ## store this run
                 # get features of this run before we save it
                 this_run.get_descriptor_vector()
@@ -399,20 +398,22 @@ def check_all_current_convergence():
             final_results = process_runs_oxocatalysis(all_runs, spin_dictionary())
         else:
             final_results = process_runs_geo(all_runs, spin_dictionary())
-            
+
         ## file ouptut
         # for comparisons
         logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                + " starting output logs ")
-        write_output('comps',final_results.values(),output_properties(comp=True))
+        comp_output_path, comp_descriptor_path = write_output('comps', final_results.values(),
+                                                              output_properties(comp=True))
         # for runs
-        write_output('runs',all_runs.values(),output_properties(comp=False))
-        
-        #print('-------')
-        #print(final_results)
+        run_output_path, run_descriptor_path = write_output('runs', all_runs.values(), output_properties(comp=False))
+
+        # print('-------')
+        # print(final_results)
         if isall_post():
             write_run_reports(all_runs)
             write_run_pickle(final_results)
+            process_run_post(run_output_path, run_descriptor_path)
         print('\n**** end of file inspection **** \n')
     else:
         print('post processing SP/spin files')
