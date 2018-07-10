@@ -34,13 +34,13 @@ def launch_job(job,sub_num):
          cmd_script = "launch_script_thermo.sh"
          infile = job # for thermo/solvent
                       # these are stored as 
-                      # infiles onlt
+                      # infiles only
     elif "solvent" in job:
         cmd_script = "launch_script_solvent.sh"
         infile = job
                       # for thermo/solvent
                       # these are stored as 
-                      # infiles onlt
+                      # infiles only
     elif axlig2 == 'x' and "sp_infiles" in job:
         cmd_script = "launch_script_sp.sh"
         infile = job

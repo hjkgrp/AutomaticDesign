@@ -90,6 +90,7 @@ def check_all_current_convergence():
                     jobs)
                 ## create run
                 this_run = DFTRun(base_name)
+                
                 ## regenerate opt geo
                 this_run.scrpath = path_dictionary["scr_path" ]  + base_name +"/optim.xyz"
                 if isall_post():

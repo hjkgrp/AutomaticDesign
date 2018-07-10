@@ -66,11 +66,11 @@ def get_initial_geo_path_from_job(job):
 
 
 ########################
-def create_generic_infile(job, restart=False, use_old_optimizer=False):
-    ## guess is ANOTHER JOB NAME, from which the geom and wavefunction guess
+def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_geo_guess =  False):
+    ## custom_geo_guess is ANOTHER JOB NAME, from which the geom and wavefunction guess
     ## will attempt to be extracted
     ## process job name
-    _, gen, _, _, _, _, _, _, _, _, _, _, _, _, base_name, _ = translate_job_name(job)
+    _, gen, _, _, _, _, _, _, _, _, _, this_spin, _, _, base_name, _ = translate_job_name(job)
     ## create paths
     path_dictionary = setup_paths()
     path_dictionary = advance_paths(path_dictionary, gen)
@@ -87,6 +87,18 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False):
         else:
             geometry_path = initial_geo_path
             guess_string = "guess generate \n"
+    elif custom_geo_guess:
+        _, guess_gen, _, _, _, _, _, _, _, _, _, _, _, _, guess_base_name, _ = translate_job_name(custom_geo_guess)
+        guess_path_dictionary = setup_paths()
+        guess_path_dictionary = advance_paths(guess_path_dictionary, guess_gen)
+        guess_geo_path = path_dictionary["optimial_geo_path"] + guess_base_name + '.xyz'
+        guess_path = path_dictionary["scr_path"] + guess_base_name + '/'
+        if os.path.isfile(guess_geo_path):
+            geometry_path = guess_geo_path
+            guess_string = "guess generate \n"
+        else:
+            geometry_path = initial_geo_path
+            guess_string = "guess generate \n"
     else:
         guess_string = "guess generate \n"
         geometry_path = initial_geo_path
@@ -97,7 +109,10 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False):
         with open(target_inpath, 'w') as newf:
             for line in source_lines:
                 if not ("coordinates" in line) and (not "end" in line) and (not "new_minimizer" in line):
-                    newf.write(line)
+                    if ("method ub3lyp" in line) and this_spin == 1:
+                        newf.write('method b3lyp\n')
+                    else:
+                        newf.write(line)
 
     ## append geo
     with open(target_inpath, 'a') as newf:
