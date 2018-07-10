@@ -90,7 +90,14 @@ def check_all_current_convergence():
                     jobs)
                 ## create run
                 this_run = DFTRun(base_name)
-
+                ## regenerate opt geo
+                this_run.scrpath = path_dictionary["scr_path" ]  + base_name +"/optim.xyz"
+                if isall_post():
+                    if os.path.exists(this_run.scrpath):
+                        this_run.extract_geo()
+                        print('  geo extracted to  ' +this_run.geopath)
+                    else:
+                        print(' cannot find scr:   ' +this_run.scrpath)
                 ## add info
                 if isOxocatalysis():
                     base_gene = '_'.join(base_gene.split('_')[:-1])
