@@ -55,7 +55,7 @@ class DFTRun:
                               'angletest', 'ligrsmd', 'flag_oct', 'flag_list', 'num_coord_metal', 'rmsd_max',
                               'atom_dist_max', 'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
                               'devi_linear_avrg', 'devi_linear_max', 'flag_oct_loose', 'flag_list_loose',
-                              'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max',
+                              'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max','area',
                               'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
                               'mop_energy', 'descriptors', 'descriptor_names']
@@ -694,7 +694,7 @@ class Comp:
                               'prog_dist_del_all',
                               'prog_devi_linear_avrg', 'prog_devi_linear_max',
                               'mop_energy', 'alphaHOMO', 'betaHOMO',
-                              'alphaLUMO', 'betaLUMO',
+                              'alphaLUMO', 'betaLUMO','area',
                               'coord', 'mop_coord',
                               'ligrsmd', 'rmsd', 'maxd',
                               'angletest', 'thermo_cont', 'imag',

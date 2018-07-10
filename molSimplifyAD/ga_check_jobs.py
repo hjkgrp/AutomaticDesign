@@ -92,7 +92,7 @@ def check_all_current_convergence():
                 this_run = DFTRun(base_name)
 
                 ## add info
-                if GA_run.config["oxocatalysis"]:
+                if isOxocatalysis():
                     base_gene = '_'.join(base_gene.split('_')[:-1])
                 this_run.gene = base_gene
                 this_run.number = slot
@@ -230,7 +230,7 @@ def check_all_current_convergence():
                                            this_run.alpha) + ' to ' + newHFX + ' with ref ' + refHFX)
 
                                 add_to_outstanding_jobs(HFX_job)
-                            if GA_run.config['oxocatalysis'] == True and int(ox) > 3 and (axlig2 != 'hydroxyl'):
+                            if isOxocatalysis() and int(ox) > 3 and (axlig2 != 'hydroxyl'):
                                 empty_job, empty_sp = this_run.write_empty_inputs(refHFX)
                                 # if (empty_job not in joblist) and (empty_job not in outstanding_jobs) and (empty_job not in converged_jobs.keys()):
                                 #        print('note: converting from oxo structure to empty structure')
@@ -242,7 +242,7 @@ def check_all_current_convergence():
                                     logger(base_path_dictionary['state_path'], str(
                                         datetime.datetime.now()) + ' converting from oxo structure to empty structure (SP)')
                                     add_to_outstanding_jobs(empty_sp)
-                    elif GA_run.config['oxocatalysis'] == True and int(ox) > 3 and (
+                    elif isOxocatalysis() and int(ox) > 3 and (
                             axlig2 != 'hydroxyl'):  # Must do this because the empty sites are one step behind the 6-coordinates at different HFX
                         empty_job, empty_sp = this_run.write_empty_inputs('00')
                         # if (empty_job not in joblist) and (empty_job not in outstanding_jobs) and (empty_job not in converged_jobs.keys()):
@@ -394,7 +394,7 @@ def check_all_current_convergence():
                 print('END OF SP JOB \n *******************\n')
         print('matching DFT runs ... \n')
 
-        if GA_run.config["oxocatalysis"]:
+        if isOxocatalysis():
             final_results = process_runs_oxocatalysis(all_runs, spin_dictionary())
         else:
             final_results = process_runs_geo(all_runs, spin_dictionary())
@@ -404,9 +404,9 @@ def check_all_current_convergence():
         logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                + " starting output logs ")
         comp_output_path, comp_descriptor_path = write_output('comps', final_results.values(),
-                                                              output_properties(comp=True))
+                                                              output_properties(comp=True,oxocatalysis = isOxocatalysis(), SASA = isSASA() ))
         # for runs
-        run_output_path, run_descriptor_path = write_output('runs', all_runs.values(), output_properties(comp=False))
+        run_output_path, run_descriptor_path = write_output('runs', all_runs.values(), output_properties(comp=False,oxocatalysis = isOxocatalysis(), SASA = isSASA() ))
 
         # print('-------')
         # print(final_results)

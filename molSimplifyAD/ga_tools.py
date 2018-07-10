@@ -108,10 +108,8 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False):
             newf.write("new_minimizer yes\n")
         newf.write(guess_string)
         newf.write('end\n')
-    ########################
-
-
-def output_properties(comp=False, oxocatalysis=False):
+########################
+def output_properties(comp=False, oxocatalysis=False, SASA= False):
     list_of_props = list()
     list_of_props.append('name')
     list_of_props.append('gene')
@@ -140,6 +138,8 @@ def output_properties(comp=False, oxocatalysis=False):
                           'terachem_version', 'terachem_detailed_version',
                           'basis', 'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
                           'mop_coord']
+    if SASA:
+        list_of_prop_names.append("area")
     if oxocatalysis:
         if comp:
             list_of_props.append('convergence')
@@ -172,7 +172,6 @@ def output_properties(comp=False, oxocatalysis=False):
             list_of_props.insert(2, 'ox')
             list_of_props += list_of_prop_names
     return list_of_props
-
 
 ########################
 def find_live_jobs():
@@ -237,6 +236,26 @@ def isDFT():
     else:
         return False
     return rdir
+########################
+def isSASA():
+    GA_run = get_current_GA()
+    try:
+        if GA_run.config["SASA"]:
+            return True
+        else:
+            return False
+    except:
+        return False
+########################
+def isOxocatalysis():
+    GA_run = get_current_GA()
+    try:
+        if GA_run.config["oxocatalysis"]:
+            return True
+        else:
+            return False
+    except:
+        return False
 
 
 ########################
@@ -410,7 +429,8 @@ def setup_paths():
         "ms_reps": working_dir + "ms_reps/",
         "good_reports": working_dir + "reports/good_geo/",
         "bad_reports": working_dir + "reports/bad_geo/",
-        "other_reports": working_dir + "reports/other/"}
+        "other_reports": working_dir + "reports/other/",
+        "pdb_path": working_dir + "pdb/"}
 
     #    shutil.copyfile(get_source_dir()+'wake.sh',get_run_dir()+'wake.sh')
     ## set scr path to scr/sp for single points
@@ -431,7 +451,7 @@ def setup_paths():
 def advance_paths(path_dictionary, generation):
     new_dict = dict()
     for keys in path_dictionary.keys():
-        if not (keys in ["molsimp_path", "DLPNO_path", "good_reports", "other_reports", "bad_reports"]):
+        if not (keys in ["molsimp_path", "DLPNO_path", "good_reports", "other_reports", "bad_reports","pdb_path"]):
             new_dict[keys] = path_dictionary[keys] + "gen_" + str(generation) + "/"
             ensure_dir(new_dict[keys])
     return new_dict
@@ -593,7 +613,22 @@ def remove_outstanding_jobs(job):
         for jobs in current_outstanding:
             f.write(jobs + "\n")
 
-
+########################
+def purge_converged_jobs(job):
+    print('removing job: ' + job)
+    path_dictionary = setup_paths()
+    path = path_dictionary["job_path"]
+    
+    converged_job_dictionary = find_converged_job_dictionary()
+    this_status = 'unknown'
+    if job in converged_job_dictionary.keys():
+        this_status = int(converged_job_dictionary[job])
+        print(' removing job with status  ' + str(this_status) + '\n')
+        converged_job_dictionary.pop(job)
+        write_dictionary(converged_job_dictionary, path_dictionary["job_path"] + "/converged_job_dictionary.csv")
+    else:
+        print(str(job) + ' not removed since it is not in conv keys')
+ 
 ########################
 def find_converged_job_dictionary():
     path_dictionary = setup_paths()
@@ -624,6 +659,24 @@ def find_submitted_jobs():
         submitted_job_dictionary = dict()
 
     return submitted_job_dictionary
+
+
+########################
+def purge_submitted_jobs(job):
+    print('removing job: ' + job)
+    path_dictionary = setup_paths()
+    path = path_dictionary["job_path"]
+    
+    submitted_job_dictionary = find_submitted_jobs()
+
+    if job in submitted_job_dictionary.keys():
+        this_status = int(submitted_job_dictionary[job])
+        print(' removing job with sub number  ' + str(this_status) + '\n')
+        submitted_job_dictionary.pop(job)
+        write_dictionary(submitted_job_dictionary, path_dictionary["job_path"] + "/submitted_jobs.csv")
+    else:
+        print(str(job) + ' not removed since it is not in subm keys')
+
 
 
 ########################
