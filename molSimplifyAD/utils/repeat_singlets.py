@@ -80,18 +80,31 @@ for jobs in joblist:
                 this_run.init_geopath = (path_dictionary["initial_geo_path"] + base_name + ".xyz")
 
                 this_run.outpath = (path_dictionary["geo_out_path"] + base_name + ".out")
-
+                this_run.spoutpath = path_dictionary["sp_out_path"]+base_name+".out"
+                this_run.spinpath = path_dictionary["sp_in_path"]+base_name+".in"
                 this_run.scrpath = path_dictionary["scr_path"] + base_name + "/optim.xyz"
                 this_run.scrfolder = path_dictionary["scr_path"] + base_name 
                 this_run.inpath = path_dictionary["job_path"] + base_name + ".in"
+                this_run.infiles = path_dictionary["infiles"] + base_name + ".in"
                 this_run.comppath = path_dictionary["done_path"] + base_name + ".in"
-
-                if ahf == 20:
-                    print('found HFX 20 singlet, will restart')
-                    restart_list.append(this_run)
+                if isOxocatalysis():
+                    if ahf == 20 and ox > 3 and not ('sp_infiles' in jobs):
+                        print('found HFX 20 singlet, will restart')
+                        restart_list.append(this_run)
+                    elif ahf != 20 and not ('sp_infiles' in jobs):
+                        print('found HFX != 20 singlet, will purge')
+                        delete_list.append(this_run)
+                    elif 'sp_infiles' in jobs:
+                        print('found an empty site SP calc, will purge')
+                        delete_list.append(this_run)
+                    else:
+                        print('found an empty site GEO calc, will purge')
+                        delete_list.append(this_run)
                 else:
-                    print('found HFX != 20 singlet, will purge')
-                    delete_list.append(this_run)
+                    if ahf == 20:
+                        print('found HFX20 singlet, will restart')
+                    else:
+                        print('found HFX != 20 singlet, will purge')
                 
 print('found ' + str(len(restart_list)) + ' singles to reset')                 
 print('found ' + str(len(delete_list)) + ' jobs to purge')
@@ -153,7 +166,9 @@ for runs in restart_list:
                 purge_converged_jobs(runs.job)
                 purge_submitted_jobs(runs.job)
 
-
+print('############################################################################')
+print('#                       NOW GOING THROUGH DELETE LIST                      #')
+print('############################################################################')
 for runs in delete_list:
         print('**************************')
         if runs.job in outstanding_jobs:
@@ -174,6 +189,26 @@ for runs in delete_list:
                         os.remove(runs.comppath)
                 else:
                         print('would delete '+  runs.comppath)
+        if os.path.isfile(runs.infiles):
+                if not dry_run:
+                        os.remove(runs.infiles)
+                else:
+                        print('would delete '+ runs.infiles)
+        if os.path.isfile(runs.spinpath) and isOxocatalysis():
+                if not dry_run:
+                        os.remove(runs.spinpath)
+                else:
+                        print('would delete '+  runs.spinpath)
+        if os.path.isfile(runs.spoutpath) and isOxocatalysis():
+                if not dry_run:
+                        os.remove(runs.spoutpath)
+                else:
+                        print('would delete '+ runs.spoutpath)
+        if runs.ox < 4 and os.path.isfile(runs.init_geopath) and isOxocatalysis():
+                if not dry_run:
+                        os.remove(runs.init_geopath)
+                else:
+                        print('would delete empty site geometry '+runs.init_geopath)
         if not keep_scr:
                 if os.path.isdir(runs.scrfolder):
                         if not dry_run:
