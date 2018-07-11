@@ -507,25 +507,23 @@ class octahedral_complex:
                         use_old_optimizer = True
                 ### make an infile!
                 create_generic_infile(jobpath,restart=False,use_old_optimizer = use_old_optimizer)
-            
+                flag_oct, _, __ = self.inspect_initial_geo(geometry_path)
         else:
-            
             ANN_split = False
             ANN_distance = False
+            flag_oct = 1
         if not 'ANN_split' in dir():
             ANN_split = False
             ANN_distance = False
         
-        return jobpath,mol_name,ANN_split,ANN_distance
+        return jobpath,mol_name,ANN_split,ANN_distance, flag_oct
     
-    def inspect_initial_geo(self,jobpath):
+    def inspect_initial_geo(self,geometry_path):
         ## this function contains the logic for inspecting a
         ## initial geo file and reporting if there are problems with it
         mol = mol3D() # load blank mol3D()
-        target_initial_geo_path = get_initial_geo_path_from_job(jobpath)
-        print(target_initial_geo_path)
-        if os.path.isfile(target_initial_geo_path):
-            mol.readfromxyz(target_initial_geo_path)
+        if os.path.isfile(geometry_path):
+            mol.readfromxyz(geometry_path)
         flag_oct, flag_list, dict_oct_info = mol.IsOct()
         flag_H = not mol.closest_H_2_metal()[0]
         flag_oct = flag_oct and flag_H
