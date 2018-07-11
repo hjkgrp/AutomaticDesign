@@ -393,11 +393,11 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
                     this_run.mol.writexyz('bad_geos/'+this_name+'.xyz')
                     this_comp.convergence -= 1
                     this_run.coord = 'error'
-            for props in list_of_prop_names:
+            for props in output_properties(comp=True,oxocatalysis=True):
                     this_attribute = "_".join(['ox',str(this_ox),spin_cat,str(axlig2_name),props])
 	            #print('attribute: ',this_attribute)
 		    #print('assigned: ',getattr(this_run,props))
-                    setattr(this_comp,this_attribute,getattr(this_run,props))
+                    setattr(this_comp,this_attribute,getattr(this_comp,props))
         this_comp.get_some_split()
         ###
         final_results.update({this_name:this_comp})
