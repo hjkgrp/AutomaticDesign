@@ -1,14 +1,21 @@
 from molSimplifyAD.ga_tools import *
 from molSimplifyAD.post_classes import *
-import os, shutil
+import os, shutil, sys
 import time
 
 
 
 
 ## dry RUN 
-dry_run = True
-       
+if len(sys.argv) > 1:
+    dry_run = False
+    print('warning, dry run is OFF. 5 second sleep engaged (not too late to cancel...) ')
+    time.sleep(5)
+else:
+    dry_run = True
+    print('dry run is ON. Files are safe.  2 second sleep engaged...' )
+    time.sleep(2)  
+   
 # warning, this will irreverisbly destory
 # all convergence info for singlet runs
 # in order to restart with RHF
@@ -103,8 +110,11 @@ for jobs in joblist:
                 else:
                     if ahf == 20:
                         print('found HFX20 singlet, will restart')
+                        restart_list.append(this_run)
                     else:
                         print('found HFX != 20 singlet, will purge')
+                        delete_list.append(this_run)
+
                 
 print('found ' + str(len(restart_list)) + ' singles to reset')                 
 print('found ' + str(len(delete_list)) + ' jobs to purge')
