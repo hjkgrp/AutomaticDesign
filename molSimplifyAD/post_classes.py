@@ -58,7 +58,7 @@ class DFTRun:
                               'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max','area',
                               'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
-                              'mop_energy', 'descriptors', 'descriptor_names']
+                              'mop_energy', 'descriptors', 'descriptor_names', 'chem_name']
         list_of_init_false = ['solvent_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
@@ -627,7 +627,7 @@ class DFTRun:
 
     def DFTRunToReport(self):
         customDict = {"NAME": self.name,
-                      "METAL": "".join([e.upper() if i == 0 else e for i, e in enumerate(get_metals()[self.metal])]),
+                      "METAL": "".join([e.upper() if i == 0 else e for i, e in enumerate(self.metal)]),
                       "LIGS": "/".join([str(i) for i in [self.eqlig, self.axlig1, self.axlig2]]),
                       "OX": str(self.ox),
                       "SPIN": str(self.spin),
@@ -682,7 +682,7 @@ class Comp:
         self.split = 777
 
         ## run class dependent props:
-        list_of_init_props = ['spin', 'charge', 'attempted', 'converged',
+        list_of_init_props = ['chem_name', 'spin', 'charge', 'attempted', 'converged',
                               'mop_converged', 'time', 'energy',
                               'flag_oct', 'flag_list',
                               'num_coord_metal', 'rmsd_max', 'atom_dist_max',

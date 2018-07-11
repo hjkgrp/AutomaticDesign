@@ -116,14 +116,15 @@ def check_all_current_convergence():
 
                 alpha = float(ahf)
                 this_run.logpath = path_dictionary['state_path']
-
+                metal_list = get_metals()
+                metal = metal_list[metal]
                 ## populate run with properies
                 this_run.configure(metal, ox, eqlig, axlig1, axlig2, spin, alpha, spin_cat)
 
                 ## make unique gene
-                name = "_".join([str(metal), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), 'ahf',
-                                 str(int(alpha)).zfill(2)])
-
+                name = "_".join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), 'ahf',
+                                 str(int(alpha)).zfill(2), str(spin)])
+                this_run.chem_name = name
                 ## set file paths
                 path_dictionary = setup_paths()
                 path_dictionary = advance_paths(path_dictionary, gen)  ## this adds the /gen_x/ to the paths
@@ -165,11 +166,12 @@ def check_all_current_convergence():
 
                 # store the status
                 metal_spin_dictionary = spin_dictionary()
-                metal_list = get_metals()
-                # convert metal from index to str
-                metal = metal_list[metal]
-
+                #metal_list = get_metals()
+                ## convert metal from index to str
+                #metal = metal_list[metal]
                 print('metal is ' + str(metal))
+                print('base_name', this_run.name)
+                print('chem_name', this_run.chem_name)
                 these_states = metal_spin_dictionary[metal][ox]
 
                 if this_run.status == 0:

@@ -155,7 +155,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
     list_of_props.append('axlig1')
     list_of_props.append('axlig2')
     list_of_props.append('eqlig')
-    list_of_prop_names = ['converged', 'status', 'time', 'charge', 'spin',
+    list_of_prop_names = ['chem_name', 'converged', 'status', 'time', 'charge', 'spin',
                           'energy', 'init_energy',
                           'ss_act', 'ss_target',
                           'ax1_MLB', 'ax2_MLB', 'eq_MLB',
@@ -337,20 +337,21 @@ def translate_job_name(job):
     axlig2_ind = int(ll[8])
     ligands_dict = get_ligands()
     if hasattr(ligands_dict[int(eqlig_ind)][0], '__iter__'):  # SMILEs string
-        eqlig = 'smi' + str(eqlig_ind)
+        #eqlig = 'smi' + str(eqlig_ind)
+        eqlig = ligands_dict[int(eqlig_ind)][0][0]
     else:
         eqlig = ligands_dict[int(eqlig_ind)][0]
     if hasattr(ligands_dict[int(axlig1_ind)][0], '__iter__'):  # SMILEs string
-        axlig1 = 'smi' + str(axlig1_ind)
+        #axlig1 = 'smi' + str(axlig1_ind)
+        axlig1 = ligands_dict[int(axlig1_ind)][0][0]
     else:
         axlig1 = ligands_dict[int(axlig1_ind)][0]
 
     if hasattr(ligands_dict[int(axlig2_ind)][0], '__iter__'):  # SMILEs string
-
-        axlig2 = 'smi' + str(axlig2_ind)
+        #axlig2 = 'smi' + str(axlig2_ind)
+        axlig2 = ligands_dict[int(axlig2_ind)][0][0]
     else:
         axlig2 = ligands_dict[int(axlig2_ind)][0]
-
     ahf = int(ll[9])
     spin = int(ll[10])
     metal_list = get_metals()
