@@ -50,7 +50,27 @@ def get_infile_from_job(job):
     else:
         print('no infile found for job ' + job + ' , creating a new one ')
         create_generic_infile(job, restart=True)
+    if 'track_elec_prop' in get_current_GA().config.keys():
+        track_elec_prop = get_current_GA().config['track_elec_prop']
+    else:
+        track_elec_prop = False
+    if track_elec_prop:
+        add_ml_prop_infiles(target_inpath)
     return target_inpath
+
+
+#########################
+def add_ml_prop_infiles(filepath):
+    with open(filepath, 'r') as f:
+        ftxt = f.readlines()
+    with open(filepath, 'w') as f:
+        if not ftxt == None:
+            f.writelines(ftxt[:-1])
+        f.write('### props ####\n')
+        f.write('ml_prop yes\n')
+        f.write('poptype mulliken\n')
+        f.write('bond_order_list yes\n')
+        f.write('end\n')
 
 
 ########################
@@ -66,7 +86,7 @@ def get_initial_geo_path_from_job(job):
 
 
 ########################
-def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_geo_guess =  False):
+def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_geo_guess=False):
     ## custom_geo_guess is ANOTHER JOB NAME, from which the geom and wavefunction guess
     ## will attempt to be extracted
     ## process job name
@@ -123,8 +143,10 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
             newf.write("new_minimizer yes\n")
         newf.write(guess_string)
         newf.write('end\n')
+
+
 ########################
-def output_properties(comp=False, oxocatalysis=False, SASA= False):
+def output_properties(comp=False, oxocatalysis=False, SASA=False):
     list_of_props = list()
     list_of_props.append('name')
     list_of_props.append('gene')
@@ -187,6 +209,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA= False):
             list_of_props.insert(2, 'ox')
             list_of_props += list_of_prop_names
     return list_of_props
+
 
 ########################
 def find_live_jobs():
@@ -251,6 +274,8 @@ def isDFT():
     else:
         return False
     return rdir
+
+
 ########################
 def isSASA():
     GA_run = get_current_GA()
@@ -261,6 +286,8 @@ def isSASA():
             return False
     except:
         return False
+
+
 ########################
 def isOxocatalysis():
     GA_run = get_current_GA()
@@ -466,7 +493,7 @@ def setup_paths():
 def advance_paths(path_dictionary, generation):
     new_dict = dict()
     for keys in path_dictionary.keys():
-        if not (keys in ["molsimp_path", "DLPNO_path", "good_reports", "other_reports", "bad_reports","pdb_path"]):
+        if not (keys in ["molsimp_path", "DLPNO_path", "good_reports", "other_reports", "bad_reports", "pdb_path"]):
             new_dict[keys] = path_dictionary[keys] + "gen_" + str(generation) + "/"
             ensure_dir(new_dict[keys])
     return new_dict
@@ -628,12 +655,13 @@ def remove_outstanding_jobs(job):
         for jobs in current_outstanding:
             f.write(jobs + "\n")
 
+
 ########################
 def purge_converged_jobs(job):
     print('removing job: ' + job)
     path_dictionary = setup_paths()
     path = path_dictionary["job_path"]
-    
+
     converged_job_dictionary = find_converged_job_dictionary()
     this_status = 'unknown'
     if job in converged_job_dictionary.keys():
@@ -643,7 +671,8 @@ def purge_converged_jobs(job):
         write_dictionary(converged_job_dictionary, path_dictionary["job_path"] + "/converged_job_dictionary.csv")
     else:
         print(str(job) + ' not removed since it is not in conv keys')
- 
+
+
 ########################
 def find_converged_job_dictionary():
     path_dictionary = setup_paths()
@@ -681,7 +710,7 @@ def purge_submitted_jobs(job):
     print('removing job: ' + job)
     path_dictionary = setup_paths()
     path = path_dictionary["job_path"]
-    
+
     submitted_job_dictionary = find_submitted_jobs()
 
     if job in submitted_job_dictionary.keys():
@@ -691,7 +720,6 @@ def purge_submitted_jobs(job):
         write_dictionary(submitted_job_dictionary, path_dictionary["job_path"] + "/submitted_jobs.csv")
     else:
         print(str(job) + ' not removed since it is not in subm keys')
-
 
 
 ########################
@@ -776,6 +804,7 @@ def write_output(name, list_of_things_with_props, list_of_props, base_path_dicti
         with open(descriptor_path, 'w') as f:
             write_descriptor_csv(list_of_things_with_props, f, append=False)
     return output_path, descriptor_path
+
 
 ########################
 def write_run_reports(all_runs):

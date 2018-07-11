@@ -326,35 +326,22 @@ class GA_generation:
                 job_prefix = "gen_" + str(self.status_dictionary["gen"]) + "_slot_" + str(keys) + "_"
                 ## generate HS/LS
                 ## convert the gene into a job file and geometery
-                jobpath, mol_name, ANN_split, ANN_distance = jobs.generate_geometery(prefix=job_prefix, spin=spins,
-                                                                                     path_dictionary=self.current_path_dictionary,
-                                                                                     rundirpath=get_run_dir(),
-                                                                                     gen=self.status_dictionary['gen'])
-                flag_oct, _, _ = jobs.inspect_initial_geo(jobpath)
+                jobpath, mol_name, ANN_split, ANN_distance, flag_oct = jobs.generate_geometery(prefix=job_prefix,
+                                                                                               spin=spins,
+                                                                                               path_dictionary=self.current_path_dictionary,
+                                                                                               rundirpath=get_run_dir(),
+                                                                                               gen=self.status_dictionary['gen'])
                 # print('!!!!!!', self.current_path_dictionary)
                 ## add lines in terachem inputs
-                if 'track_elec_prop' in get_current_GA().config.keys():
-                    self.track_elec_prop = get_current_GA().config['track_elec_prop']
-                else:
-                    self.track_elec_prop = False
-                if self.track_elec_prop:
-                    self.write_elec_prop_infile(filepath=jobpath)
-                    infile_path = self.current_path_dictionary['infiles'] + '/' + jobpath.split('/')[-1]
-                    self.write_elec_prop_infile(filepath=infile_path)
-                if not flag_oct:
-                    flag_oct_spin = False
-                job_dict.append(dict())
-                for ele in dict_var:
-                    job_dict[idx].update({ele: locals()[ele]})
-            if flag_oct_spin:
-                for idx, spins in enumerate(spin_list):
-                    # for ele in dict_var:
-                    #     locals()[ele] = job_dict[idx][ele]
-                    jobpath = job_dict[idx]['jobpath']
-                    mol_name = job_dict[idx]['mol_name']
-                    ANN_split = job_dict[idx]['ANN_split']
-                    ANN_distance = job_dict[idx]['ANN_distance']
-                    # print('@@@@@', jobpath)
+                # if 'track_elec_prop' in get_current_GA().config.keys():
+                #     self.track_elec_prop = get_current_GA().config['track_elec_prop']
+                # else:
+                #     self.track_elec_prop = False
+                # if self.track_elec_prop:
+                #     self.write_elec_prop_infile(filepath=jobpath)
+                #     infile_path = self.current_path_dictionary['infiles'] + '/' + jobpath.split('/')[-1]
+                #     self.write_elec_prop_infile(filepath=infile_path)
+                if flag_oct:
                     if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
                         msg, ANN_dict = read_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
                         if not mol_name in ANN_dict.keys():
@@ -364,12 +351,7 @@ class GA_generation:
                         logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen "
                                + str(self.status_dictionary['gen'])
                                + " missing information for gene number  " + str(keys) + ' with  name ' + str(jobs.name))
-            else:
-                for idx, spins in enumerate(spin_list):
-                    # for ele in dict_var:  ## Does not work! so wierd.
-                    #     locals()[ele] = job_dict[idx][ele]
-                    jobpath = job_dict[idx]['jobpath']
-                    # print('@@@@@', jobpath)
+                else:
                     log_bad_initial(jobpath)
                     update_converged_job_dictionary(jobpath, 3)
 
