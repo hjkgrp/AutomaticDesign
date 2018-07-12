@@ -93,13 +93,6 @@ def check_all_current_convergence():
                 
                 ## regenerate opt geo
                 this_run.scrpath = path_dictionary["scr_path" ]  + base_name +"/optim.xyz"
-                if isall_post():
-                    if os.path.exists(this_run.scrpath):
-                        this_run.extract_geo()
-                        print('  geo extracted to  ' +this_run.geopath)
-                    else:
-                        print(' cannot find scr:   ' +this_run.scrpath)
-                ## add info
                 if isOxocatalysis():
                     base_gene = '_'.join(base_gene.split('_')[:-1])
                 this_run.gene = base_gene
@@ -144,6 +137,16 @@ def check_all_current_convergence():
 
                 this_run.moppath = path_dictionary["mopac_path"] + base_name + ".out"
                 this_run.mop_geopath = path_dictionary["mopac_path"] + base_name + ".xyz"
+                
+                # extract geo and append results if post-all
+                if isall_post():
+                    if os.path.exists(this_run.scrpath):
+                        this_run.extract_geo()
+                        print('  geo extracted to  ' +this_run.geopath)
+                    else:
+                        print(' cannot find scr:   ' +this_run.scrpath)
+                    this_run.combine_resub_results()
+                    this_run.merge_files_from_scr()
 
                 ## check if outpath exists
                 if os.path.isfile(this_run.outpath):

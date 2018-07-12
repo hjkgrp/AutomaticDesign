@@ -46,6 +46,7 @@ class DFTRun:
         self.descriptor_names = list()
         self.name = name
         self.comment = ''
+        self.file_merge_list = ['bond_order.list', 'charge_mull.xls', 'grad.xyz', 'mullpop', 'optim.xyz', 'spin.xls']  
         list_of_init_props = ['status', 'time', 'energy', 'alphaHOMO', 'alphaLUMO', 'betaHOMO', 'betaLUMO',
                               'initial_energy', 'charge', 'idn', 'spin', 'metal', 'eqlig_ind', 'axlig1_ind',
                               'axlig2_ind', 'eqlig', 'axlig1', 'axlig2', 'eq_MLB', 'ax1_MLB', 'ax2_MLB',
@@ -486,14 +487,6 @@ class DFTRun:
                                        ' ' + get_run_dir() + 'scr/geo/gen_' + str(
                         self.gen) + '/' + wfnrefempty + '/cb0\n'
                     f.write(guess_string_geo)
-                # self.get_track_elec_prop()
-                # print('!!!!!!!', self.track_elec_prop)
-                # print('!!!!!!!!!!!!!!!!!')
-                # if self.track_elec_prop:
-                #     f.write('### props ####\n')
-                #     f.write('ml_prop yes\n')
-                #     f.write('poptype mulliken\n')
-                #     f.write('bond_order_list yes\n')
                 f.write('end\n')
                 f.write('\n')
                 #### We want to freeze the M3L and M4L dihedrals as to how they were for the geo opt for the 6 coord structure
@@ -588,6 +581,36 @@ class DFTRun:
                 shutil.copy(self.outpath, archive_path + self.name + '.out')
             else:
                 print('archiving did NOT find  ' + self.outpath)
+
+    def combine_resub_results(self):
+        archive_list = []
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
+        archive_path = path_dictionary["archive_path"]
+        scr_path = path_dictionary["scr_path"] + self.name + '/'
+        for dirpath, dir, files in os.walk(archive_path):
+            if self.name in dirpath.split('/')[-1]:
+                _scr_path = dirpath + '/scr/'
+                archive_list.append(_scr_path)
+        archive_list.sort()
+        archive_list.append(scr_path)
+        print('!!!!archive_list', archive_list)
+        self.archive_list = archive_list
+
+    def merge_files_from_scr(self):
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)
+        results_comb_path = path_dictionary["results_comb_path"] + self.name + '/'
+        ensure_dir(results_comb_path)
+        for _file in self.file_merge_list:
+            current_path = results_comb_path + _file
+            fo = open(current_path, 'w')
+            for inpath in self.archive_list:
+                infile = inpath + _file
+                with open(infile, 'r') as fin:
+                    txt = fin.readlines()
+                fo.writelines(txt)
+            fo.close()
 
     def get_descriptor_vector(self, loud=False, name=False):
 

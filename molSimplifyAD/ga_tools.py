@@ -464,6 +464,7 @@ def setup_paths():
         "prog_geo_path": working_dir + "prog_geo/",
         "stalled_jobs": working_dir + "stalled_jobs/",
         "archive_path": working_dir + "archive_resub/",
+        "results_comb_path": working_dir + "results_comb/",        
         "state_path": working_dir + "statespace/",
         "molsimplify_inps": working_dir + "ms_inps/",
         "infiles": working_dir + "infiles/",
