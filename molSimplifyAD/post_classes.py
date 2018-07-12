@@ -573,6 +573,8 @@ class DFTRun:
             if os.path.isdir(scrfolder):
                 print('archiving  ' + scrfolder)
                 shutil.copytree(scrfolder, archive_path + 'scr/')
+                ## remove the scr after archiving.
+                #shutil.rmtree(scrfolder)
             else:
                 print('archiving did NOT find  ' + scrfolder)
             if os.path.isfile(self.outpath):
@@ -580,8 +582,6 @@ class DFTRun:
                 shutil.copy(self.outpath, archive_path + self.name + '.out')
             else:
                 print('archiving did NOT find  ' + self.outpath)
-        ## remove the scr after archiving.
-        shutil.rmtree(scrfolder)
 
     def combine_resub_results(self):
         archive_list = []
