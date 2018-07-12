@@ -551,7 +551,6 @@ class DFTRun:
                         f_DLPNO.close()
 
     def archive(self, sub_number):
-
         # this fuinciton copies all files to arch
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
@@ -581,6 +580,8 @@ class DFTRun:
                 shutil.copy(self.outpath, archive_path + self.name + '.out')
             else:
                 print('archiving did NOT find  ' + self.outpath)
+        ## remove the scr after archiving.
+        shutil.rmtree(scrfolder)
 
     def combine_resub_results(self):
         archive_list = []
@@ -613,7 +614,6 @@ class DFTRun:
             fo.close()
 
     def get_descriptor_vector(self, loud=False, name=False):
-
         ox_modifier = {self.metal: self.ox}
         print(ox_modifier)
         if self.converged and self.flag_oct:
