@@ -91,7 +91,7 @@ def find_problems(initial_path,final_path):
             try:
 
                 init_names, init_desc  = get_descriptor_vector(init)
-                fin_names, fin_desc  = get_descriptor_vector(init)
+                fin_names, fin_desc  = get_descriptor_vector(fin)
                 ## check dent
                 max_fin_dent  =  max(fin_desc[fin_names.index("misc-dent-eq")],fin_desc[fin_names.index("misc-dent-ax")])
                 max_init_dent  =  max(init_desc[init_names.index("misc-dent-eq")],init_desc[init_names.index("misc-dent-ax")])
@@ -120,6 +120,8 @@ outcomes_dictionary = dict()
 
 print('found ' + str(len(converged_jobs.keys())) + ' converged jobs to check')
 
+
+
 for jobs in converged_jobs.keys():
     job_status = converged_jobs[jobs]
     if job_status in ["1","8"]:
@@ -134,18 +136,20 @@ for jobs in converged_jobs.keys():
             this_run.progpath = (path_dictionary["prog_geo_path"] + base_name + ".xyz")
             this_run.init_geopath = (path_dictionary["initial_geo_path"] + base_name + ".xyz")
             if job_status == '8':
+                check_geo_path = this_run.progpath
                 reason = find_problems(this_run.init_geopath,this_run.progpath)
                 print(reason,this_run.progpath)
             else:
+                check_geo_path = this_run.geopath
                 reason = find_problems(this_run.init_geopath,this_run.geopath)
                 print(reason,this_run.geopath)
             print('*******')
             if reason in outcomes_dictionary.keys():
                 this_list  = outcomes_dictionary[reason]
-                this_list.append(jobs)
+                this_list.append(check_geo_path)
                 outcomes_dictionary.update({reason:this_list})
             else:
-                outcomes_dictionary.update({reason:[jobs]})
+                outcomes_dictionary.update({reason:[check_geo_path]})
                 
 for keys in outcomes_dictionary.keys():
     print('There are '+ str(len(outcomes_dictionary[keys])) +  ' with status  ' + keys )
