@@ -154,8 +154,8 @@ class MoldenInfo:
             
 
 #EXAMPLE
-moldenpath = '/Users/adityanandy/Desktop/catalysis.molden'
-my_df_final = MoldenInfo(moldenpath)
-my_df_final.get_MO_energies()
-my_df_final.get_all_orbital_d_character()
-my_df_final.plot_dchar_vs_energies()
+# moldenpath = '/Users/adityanandy/Desktop/catalysis.molden'
+# my_df_final = MoldenInfo(moldenpath)
+# my_df_final.get_MO_energies()
+# my_df_final.get_all_orbital_d_character()
+# my_df_final.plot_dchar_vs_energies()
