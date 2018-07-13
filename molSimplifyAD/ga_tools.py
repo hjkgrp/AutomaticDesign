@@ -307,6 +307,14 @@ def isall_post():
         return GA_run.config["post_all"]
     else:
         return False
+########################
+def get_maxresub():
+    GA_run = get_current_GA()
+    if unicode('max_resubmit', 'utf-8') in GA_run.config.keys():
+        return int(GA_run.config["max_resubmit"])
+    else:
+        print('max_resubmit not set, using default of 3')
+        return 3
 
 
 ########################

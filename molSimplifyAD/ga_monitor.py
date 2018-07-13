@@ -128,7 +128,7 @@ def submit_outstanding_jobs():
                 else: # job is a resubmission 
                     number_of_attempts = submitted_job_dictionary[jobs]
                     print('number of attempts = '+ str(number_of_attempts))
-                    if (int(number_of_attempts) <= 2):
+                    if (int(number_of_attempts) <= get_maxresub()):
                         ## relaunch  
                         submitted_job_dictionary.update({jobs: (int(number_of_attempts)+1)})
                         job_id = launch_job(jobs,int(number_of_attempts) + 1)
