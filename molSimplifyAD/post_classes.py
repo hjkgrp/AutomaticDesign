@@ -605,13 +605,14 @@ class DFTRun:
         ensure_dir(results_comb_path)
         for _file in self.file_merge_list:
             current_path = results_comb_path + _file
-            fo = open(current_path, 'w')
-            for inpath in self.archive_list:
-                infile = inpath + _file
-                with open(infile, 'r') as fin:
-                    txt = fin.readlines()
-                fo.writelines(txt)
-            fo.close()
+            if os.path.isfile(_file):
+                    fo = open(current_path, 'w')
+                    for inpath in self.archive_list:
+                        infile = inpath + _file
+                        with open(infile, 'r') as fin:
+                            txt = fin.readlines()
+                        fo.writelines(txt)
+                    fo.close()
 
     def get_descriptor_vector(self, loud=False, name=False):
         ox_modifier = {self.metal: self.ox}
