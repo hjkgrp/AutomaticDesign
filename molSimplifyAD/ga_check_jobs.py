@@ -93,13 +93,6 @@ def check_all_current_convergence():
                 
                 ## regenerate opt geo
                 this_run.scrpath = path_dictionary["scr_path" ]  + base_name +"/optim.xyz"
-                if isall_post():
-                    if os.path.exists(this_run.scrpath):
-                        this_run.extract_geo()
-                        print('  geo extracted to  ' +this_run.geopath)
-                    else:
-                        print(' cannot find scr:   ' +this_run.scrpath)
-                ## add info
                 if isOxocatalysis():
                     base_gene = '_'.join(base_gene.split('_')[:-1])
                 this_run.gene = base_gene
@@ -116,14 +109,15 @@ def check_all_current_convergence():
 
                 alpha = float(ahf)
                 this_run.logpath = path_dictionary['state_path']
-
+                metal_list = get_metals()
+                metal = metal_list[metal]
                 ## populate run with properies
                 this_run.configure(metal, ox, eqlig, axlig1, axlig2, spin, alpha, spin_cat)
 
                 ## make unique gene
-                name = "_".join([str(metal), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), 'ahf',
-                                 str(int(alpha)).zfill(2)])
-
+                name = "_".join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), 'ahf',
+                                 str(int(alpha)).zfill(2), str(spin)])
+                this_run.chem_name = name
                 ## set file paths
                 path_dictionary = setup_paths()
                 path_dictionary = advance_paths(path_dictionary, gen)  ## this adds the /gen_x/ to the paths
@@ -143,6 +137,16 @@ def check_all_current_convergence():
 
                 this_run.moppath = path_dictionary["mopac_path"] + base_name + ".out"
                 this_run.mop_geopath = path_dictionary["mopac_path"] + base_name + ".xyz"
+                
+                # extract geo and append results if post-all
+                if isall_post():
+                    if os.path.exists(this_run.scrpath):
+                        this_run.extract_geo()
+                        print('  geo extracted to  ' +this_run.geopath)
+                    else:
+                        print(' cannot find scr:   ' +this_run.scrpath)
+                    this_run.combine_resub_results()
+                    this_run.merge_files_from_scr()
 
                 ## check if outpath exists
                 if os.path.isfile(this_run.outpath):
@@ -165,11 +169,12 @@ def check_all_current_convergence():
 
                 # store the status
                 metal_spin_dictionary = spin_dictionary()
-                metal_list = get_metals()
-                # convert metal from index to str
-                metal = metal_list[metal]
-
+                #metal_list = get_metals()
+                ## convert metal from index to str
+                #metal = metal_list[metal]
                 print('metal is ' + str(metal))
+                print('base_name', this_run.name)
+                print('chem_name', this_run.chem_name)
                 these_states = metal_spin_dictionary[metal][ox]
 
                 if this_run.status == 0:
@@ -341,7 +346,8 @@ def check_all_current_convergence():
                         logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                                + " failure at job : " + str(jobs) + ' with status ' + str(this_run.status)
                                + ' after ' + str(number_of_subs) + ' subs, trying again... ')
-                        if int(number_of_subs) > 2:
+
+                        if int(number_of_subs) > get_maxresub():
                             print(' giving up on job ' + str(jobs) + ' after ' + str(number_of_subs))
                             logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                                    + " giving up on job : " + str(jobs) + ' with status ' + str(this_run.status)

@@ -36,6 +36,7 @@ class GA_run_defintion:
                       monitor_distance= True,
                       all_post = False,
                       track_elec_prop = True,
+                      max_resubmit = 4,
                       **KWARGS):
             ## first time start-up function
 #                print('configuring status dictionaty')
@@ -70,6 +71,7 @@ class GA_run_defintion:
                               'max_jobs':max_jobs,
                               "all_post":all_post,
                               'track_elec_prop':track_elec_prop,
+                              'max_resubmit':max_resubmit
                                }
         def serialize(self):
             ## serialize run info

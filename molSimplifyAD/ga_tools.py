@@ -155,7 +155,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
     list_of_props.append('axlig1')
     list_of_props.append('axlig2')
     list_of_props.append('eqlig')
-    list_of_prop_names = ['converged', 'status', 'time', 'charge', 'spin',
+    list_of_prop_names = ['chem_name', 'converged', 'status', 'time', 'charge', 'spin',
                           'energy', 'init_energy',
                           'ss_act', 'ss_target',
                           'ax1_MLB', 'ax2_MLB', 'eq_MLB',
@@ -307,6 +307,14 @@ def isall_post():
         return GA_run.config["post_all"]
     else:
         return False
+########################
+def get_maxresub():
+    GA_run = get_current_GA()
+    if unicode('max_resubmit', 'utf-8') in GA_run.config.keys():
+        return int(GA_run.config["max_resubmit"])
+    else:
+        print('max_resubmit not set, using default of 3')
+        return 3
 
 
 ########################
@@ -337,20 +345,21 @@ def translate_job_name(job):
     axlig2_ind = int(ll[8])
     ligands_dict = get_ligands()
     if hasattr(ligands_dict[int(eqlig_ind)][0], '__iter__'):  # SMILEs string
-        eqlig = 'smi' + str(eqlig_ind)
+        #eqlig = 'smi' + str(eqlig_ind)
+        eqlig = ligands_dict[int(eqlig_ind)][0][0]
     else:
         eqlig = ligands_dict[int(eqlig_ind)][0]
     if hasattr(ligands_dict[int(axlig1_ind)][0], '__iter__'):  # SMILEs string
-        axlig1 = 'smi' + str(axlig1_ind)
+        #axlig1 = 'smi' + str(axlig1_ind)
+        axlig1 = ligands_dict[int(axlig1_ind)][0][0]
     else:
         axlig1 = ligands_dict[int(axlig1_ind)][0]
 
     if hasattr(ligands_dict[int(axlig2_ind)][0], '__iter__'):  # SMILEs string
-
-        axlig2 = 'smi' + str(axlig2_ind)
+        #axlig2 = 'smi' + str(axlig2_ind)
+        axlig2 = ligands_dict[int(axlig2_ind)][0][0]
     else:
         axlig2 = ligands_dict[int(axlig2_ind)][0]
-
     ahf = int(ll[9])
     spin = int(ll[10])
     metal_list = get_metals()
@@ -463,6 +472,7 @@ def setup_paths():
         "prog_geo_path": working_dir + "prog_geo/",
         "stalled_jobs": working_dir + "stalled_jobs/",
         "archive_path": working_dir + "archive_resub/",
+        "results_comb_path": working_dir + "results_comb/",        
         "state_path": working_dir + "statespace/",
         "molsimplify_inps": working_dir + "ms_inps/",
         "infiles": working_dir + "infiles/",

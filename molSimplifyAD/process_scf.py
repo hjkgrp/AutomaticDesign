@@ -154,6 +154,9 @@ def process_runs_geo(all_runs,local_spin_dictionary,local_metal_list=False):
         ## special catch of SMILEs ligands:
         if hasattr(this_run.eqlig,'__iter__'): # SMILEs string
             eliq_name = 'smi' + str(this_run.eqlig_ind)
+            #eqlig_name = this_run.eqlig
+            #print('!!!!!!eqlig_name', eqlig_name)
+            #sardines
         else:
             eqlig_name = this_run.eqlig
 

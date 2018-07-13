@@ -46,6 +46,7 @@ class DFTRun:
         self.descriptor_names = list()
         self.name = name
         self.comment = ''
+        self.file_merge_list = ['bond_order.list', 'charge_mull.xls', 'grad.xyz', 'mullpop', 'optim.xyz', 'spin.xls']  
         list_of_init_props = ['status', 'time', 'energy', 'alphaHOMO', 'alphaLUMO', 'betaHOMO', 'betaLUMO',
                               'initial_energy', 'charge', 'idn', 'spin', 'metal', 'eqlig_ind', 'axlig1_ind',
                               'axlig2_ind', 'eqlig', 'axlig1', 'axlig2', 'eq_MLB', 'ax1_MLB', 'ax2_MLB',
@@ -58,7 +59,7 @@ class DFTRun:
                               'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max','area',
                               'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
-                              'mop_energy', 'descriptors', 'descriptor_names']
+                              'mop_energy', 'descriptors', 'descriptor_names', 'chem_name']
         list_of_init_false = ['solvent_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
@@ -486,14 +487,6 @@ class DFTRun:
                                        ' ' + get_run_dir() + 'scr/geo/gen_' + str(
                         self.gen) + '/' + wfnrefempty + '/cb0\n'
                     f.write(guess_string_geo)
-                # self.get_track_elec_prop()
-                # print('!!!!!!!', self.track_elec_prop)
-                # print('!!!!!!!!!!!!!!!!!')
-                # if self.track_elec_prop:
-                #     f.write('### props ####\n')
-                #     f.write('ml_prop yes\n')
-                #     f.write('poptype mulliken\n')
-                #     f.write('bond_order_list yes\n')
                 f.write('end\n')
                 f.write('\n')
                 #### We want to freeze the M3L and M4L dihedrals as to how they were for the geo opt for the 6 coord structure
@@ -558,7 +551,6 @@ class DFTRun:
                         f_DLPNO.close()
 
     def archive(self, sub_number):
-
         # this fuinciton copies all files to arch
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
@@ -581,6 +573,8 @@ class DFTRun:
             if os.path.isdir(scrfolder):
                 print('archiving  ' + scrfolder)
                 shutil.copytree(scrfolder, archive_path + 'scr/')
+                ## remove the scr after archiving.
+                #shutil.rmtree(scrfolder)
             else:
                 print('archiving did NOT find  ' + scrfolder)
             if os.path.isfile(self.outpath):
@@ -589,8 +583,38 @@ class DFTRun:
             else:
                 print('archiving did NOT find  ' + self.outpath)
 
-    def get_descriptor_vector(self, loud=False, name=False):
+    def combine_resub_results(self):
+        archive_list = []
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
+        archive_path = path_dictionary["archive_path"]
+        scr_path = path_dictionary["scr_path"] + self.name + '/'
+        for dirpath, dir, files in os.walk(archive_path):
+            if self.name in dirpath.split('/')[-1]:
+                _scr_path = dirpath + '/scr/'
+                archive_list.append(_scr_path)
+        archive_list.sort()
+        archive_list.append(scr_path)
+        print('!!!!archive_list', archive_list)
+        self.archive_list = archive_list
 
+    def merge_files_from_scr(self):
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)
+        results_comb_path = path_dictionary["results_comb_path"] + self.name + '/'
+        ensure_dir(results_comb_path)
+        for _file in self.file_merge_list:
+            current_path = results_comb_path + _file
+            if os.path.isfile(_file):
+                    fo = open(current_path, 'w')
+                    for inpath in self.archive_list:
+                        infile = inpath + _file
+                        with open(infile, 'r') as fin:
+                            txt = fin.readlines()
+                        fo.writelines(txt)
+                    fo.close()
+
+    def get_descriptor_vector(self, loud=False, name=False):
         ox_modifier = {self.metal: self.ox}
         print(ox_modifier)
         if self.converged and self.flag_oct:
@@ -627,7 +651,7 @@ class DFTRun:
 
     def DFTRunToReport(self):
         customDict = {"NAME": self.name,
-                      "METAL": "".join([e.upper() if i == 0 else e for i, e in enumerate(get_metals()[self.metal])]),
+                      "METAL": "".join([e.upper() if i == 0 else e for i, e in enumerate(self.metal)]),
                       "LIGS": "/".join([str(i) for i in [self.eqlig, self.axlig1, self.axlig2]]),
                       "OX": str(self.ox),
                       "SPIN": str(self.spin),
@@ -682,7 +706,7 @@ class Comp:
         self.split = 777
 
         ## run class dependent props:
-        list_of_init_props = ['spin', 'charge', 'attempted', 'converged',
+        list_of_init_props = ['chem_name', 'spin', 'charge', 'attempted', 'converged',
                               'mop_converged', 'time', 'energy',
                               'flag_oct', 'flag_list',
                               'num_coord_metal', 'rmsd_max', 'atom_dist_max',

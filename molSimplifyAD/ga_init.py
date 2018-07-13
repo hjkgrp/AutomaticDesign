@@ -13,10 +13,8 @@ from molSimplifyAD.ga_check_jobs import *
 from molSimplifyAD.ga_io_control import *
 def initialize_GA_calc(path = ''):
         
-        ## load in run info
+        o## load in run info
         GA_run = get_current_GA()
-        
-
         
         path_dictionary = setup_paths()
         
@@ -46,7 +44,7 @@ def wake_up_routine():
         new_tree.check_results()
         new_tree.assess_fitness()
         print(new_tree.status_dictionary["ready_to_advance"])
-        if current_gen <= maxgen and GA_run.config["runtype"]=="split" :
+        if current_gen <= maxgen and GA_run.config["runtype"]=="split" or GA_run.config["runtype"]=="HOMO":
                ## check if there is still
                 ## work to be done
                 if (new_tree.status_dictionary["ready_to_advance"]):

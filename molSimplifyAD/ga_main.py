@@ -340,16 +340,6 @@ class GA_generation:
                                                                                                path_dictionary=self.current_path_dictionary,
                                                                                                rundirpath=get_run_dir(),
                                                                                                gen=self.status_dictionary['gen'])
-                # print('!!!!!!', self.current_path_dictionary)
-                ## add lines in terachem inputs
-                # if 'track_elec_prop' in get_current_GA().config.keys():
-                #     self.track_elec_prop = get_current_GA().config['track_elec_prop']
-                # else:
-                #     self.track_elec_prop = False
-                # if self.track_elec_prop:
-                #     self.write_elec_prop_infile(filepath=jobpath)
-                #     infile_path = self.current_path_dictionary['infiles'] + '/' + jobpath.split('/')[-1]
-                #     self.write_elec_prop_infile(filepath=infile_path)
                 if flag_oct:
                     if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
                         msg, ANN_dict = read_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
