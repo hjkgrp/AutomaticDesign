@@ -142,6 +142,7 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
         else:
             newf.write("new_minimizer yes\n")
         newf.write(guess_string)
+        newf.write('scrdir '+guess_path+'\n')
         newf.write('end\n')
 
 
