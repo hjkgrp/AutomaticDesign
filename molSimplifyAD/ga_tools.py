@@ -38,6 +38,7 @@ def get_infile_from_job(job):
     ## create paths
     path_dictionary = setup_paths()
     path_dictionary = advance_paths(path_dictionary, gen)
+    scr_path = path_dictionary["scr_path"] + base_name +'/'
     target_inpath = path_dictionary["infiles"] + base_name + '.in'
     path_dictionary = setup_paths()
     ll = os.path.split(job)
@@ -54,10 +55,18 @@ def get_infile_from_job(job):
         track_elec_prop = get_current_GA().config['track_elec_prop']
     else:
         track_elec_prop = False
-    if track_elec_prop:
+    if track_elec_prop and (not check_txt_infile(target_inpath, 'ml_prop yes')) :
         add_ml_prop_infiles(target_inpath)
+    if (not check_txt_infile(target_inpath, 'scrdir')):
+        print('---scrdir is not in the input file! Adding---')
+        add_scrdir_infiles(target_inpath, scr_path)
+        print(open(target_inpath).read())
     return target_inpath
 
+
+#############
+def check_txt_infile(target_inpath, target_txt):
+    return target_txt in open(target_inpath).read()
 
 #########################
 def add_ml_prop_infiles(filepath):
@@ -70,6 +79,16 @@ def add_ml_prop_infiles(filepath):
         f.write('ml_prop yes\n')
         f.write('poptype mulliken\n')
         f.write('bond_order_list yes\n')
+        f.write('end\n')
+
+######################
+def add_scrdir_infiles(filepath, scr_path):
+    with open(filepath, 'r') as f:
+        ftxt = f.readlines()
+    with open(filepath, 'w') as f:
+        if not ftxt == None:
+            f.writelines(ftxt[:-1])
+        f.write('scrdir '+ scr_path +'\n')
         f.write('end\n')
 
 
