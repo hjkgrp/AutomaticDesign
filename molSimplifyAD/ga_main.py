@@ -76,21 +76,30 @@ class GA_generation:
         ### of ligand list (not smiles)
         ligands_list_inds = [i[0] for i in self.ligands_list]
         metal_list_inds = get_metals()
+        
         ## check if ligs are known
         print('!!!!set:', [ligs[0][0], ligs[1][0], ligs[1][1]])
         print('!!!!!ind:', ligands_list_inds[0:7])
         print(ligs[0][0])
-        if len(ligs[0][0]) == 1:
+        print('asking about :')
+        print(ligs[0][0])
+        print('has type ' + str(type(ligs[0][0])))
+        print(isinstance(ligs[0][0],basestring))          
+        if isinstance(ligs[0][0],basestring):
+            print('dictionary  lig: ' + str(ligs[0][0]))
             this_eq = ligs[0][0]
         else:
             print('smiles lig: ' + str(ligs[0][0]))
             this_eq = ligs[0][0][0]
-        if len(ligs[1][0]) == 1:
+        if isinstance(ligs[1][0],basestring):
+            print('dictionary  lig: ' + str(ligs[1][0]))
             this_ax1 = ligs[1][0]
         else:
             print('smiles lig: ' + str(ligs[1][0]))
             this_ax1 = ligs[1][0][0]
-        if len(ligs[1][1]) == 1:
+        if isinstance(ligs[1][1],basestring):
+            print('dictionary  lig: ' + str(ligs[1][1]))
+
             this_ax2 = ligs[1][1]
         else:
             print('smiles lig: ' + str(ligs[1][1]))

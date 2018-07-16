@@ -81,7 +81,8 @@ def check_all_current_convergence():
         ## 8 -> prog geo was found, but was a bad geo
         ## 12-> job requests thermo
         ## 13-> job requests solvent
-
+        joblist.sort()
+        print('----post-all?---', isall_post())
         for jobs in joblist:
             if postprocessJob(job=jobs, live_job_dictionary=live_job_dictionary,
                               converged_jobs_dictionary=converged_jobs):
@@ -275,7 +276,7 @@ def check_all_current_convergence():
                            str(datetime.datetime.now()) + ' job  ' + str(this_run.outpath) + ' not converged')
                     this_run.extract_prog()
                     if this_run.progstatus == 0:
-                        flag_oct, flag_list, dict_oct_info = this_run.check_oct_on_prog()
+                        flag_oct, flag_list, dict_oct_info = this_run.check_oct_on_prog()  # set bad geo to prog_status 1
                         logger(base_path_dictionary['state_path'],
                                str(datetime.datetime.now()) + ' Check on prog_geo: flag_oct: ' + str(flag_oct))
                         logger(base_path_dictionary['state_path'],
