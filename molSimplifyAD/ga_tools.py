@@ -828,7 +828,8 @@ def write_run_reports(all_runs):
                 runClass.reportpath = path_dictionary["bad_reports"] + runClass.name + ".pdf"
             else:
                 runClass.reportpath = path_dictionary["other_reports"] + runClass.name + ".pdf"
-            runClass.DFTRunToReport()
+            if not os.path.isfile(runClass.reportpath):
+                runClass.DFTRunToReport()
 
 
 ########################
