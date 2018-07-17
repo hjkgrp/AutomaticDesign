@@ -196,7 +196,13 @@ class DFTRun:
 
     def obtain_rsmd(self):
         self.rmsd = self.mol.rmsd(self.init_mol)
-
+    def obtain_area(self):
+        #try:
+        if True:
+            from molSimplifyAD.utils.getSASA import get_area
+            self.area = get_area(self,self.name)
+            
+            
     def obtain_ML_dists(self):
         try:
             self.mind = minimum_ML_dist(self.mol)

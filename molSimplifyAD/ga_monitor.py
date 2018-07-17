@@ -1,12 +1,4 @@
-import glob
-import datetime
-import math
-import numpy
-import subprocess
-import argparse
-import os
-import random
-import shutil
+import glob, datetime, numpy, subprocess, os, random, shutil
 from molSimplifyAD.ga_tools import *
 from molSimplifyAD.ga_complex import *
 from molSimplifyAD.ga_main import *

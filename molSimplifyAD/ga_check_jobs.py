@@ -187,8 +187,13 @@ def check_all_current_convergence():
                     if (this_run.coord == 6 and this_run.octahedral == True) or (
                             this_run.coord == 5 and this_run.octahedral == False):
                         run_success = True
+
                     # check run is complete?
-                    if this_run.alpha == 20:  # only thermo and solvent for
+                    if this_run.alpha == 20:  
+                        if isSASA(): ## if we want SASA
+                            print('getting area for ' +this_run.name )
+                            this_run.obtain_area()
+                        # only thermo and solvent for
                         # B3LYP, also check HFX sample
                         if GA_run.config["thermo"]:
                             this_run = check_thermo_file(this_run)
