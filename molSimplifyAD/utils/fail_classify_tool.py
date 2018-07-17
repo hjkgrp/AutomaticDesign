@@ -121,36 +121,55 @@ outcomes_dictionary = dict()
 print('found ' + str(len(converged_jobs.keys())) + ' converged jobs to check')
 
 
-
+counter = 0
 for jobs in converged_jobs.keys():
     job_status = converged_jobs[jobs]
-    if job_status in ["1","8"]:
-        
-        gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(jobs)
-        if ahf == 20:
-            print('bad job ' + str(jobs) + ' with status ' + str(job_status))
-            path_dictionary = setup_paths()
-            path_dictionary = advance_paths(path_dictionary, gen)  ## this adds the /gen_x/ to the paths
-            this_run = DFTRun(base_name)
-            this_run.geopath = (path_dictionary["optimial_geo_path"] + base_name + ".xyz")
-            this_run.progpath = (path_dictionary["prog_geo_path"] + base_name + ".xyz")
-            this_run.init_geopath = (path_dictionary["initial_geo_path"] + base_name + ".xyz")
-            if job_status == '8':
-                check_geo_path = this_run.progpath
-                reason = find_problems(this_run.init_geopath,this_run.progpath)
-                print(reason,this_run.progpath)
-            else:
-                check_geo_path = this_run.geopath
-                reason = find_problems(this_run.init_geopath,this_run.geopath)
-                print(reason,this_run.geopath)
-            print('*******')
-            if reason in outcomes_dictionary.keys():
-                this_list  = outcomes_dictionary[reason]
-                this_list.append(check_geo_path)
-                outcomes_dictionary.update({reason:this_list})
-            else:
-                outcomes_dictionary.update({reason:[check_geo_path]})
-                
+    gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(jobs)
+    if ahf == 20:
+        counter +=1
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, gen)  ## this adds the /gen_x/ to the paths
+        if job_status in ["1","8"]:
+                print('bad job ' + str(jobs) + ' with status ' + str(job_status))
+                this_run = DFTRun(base_name)
+                this_run.geopath = (path_dictionary["optimial_geo_path"] + base_name + ".xyz")
+                this_run.progpath = (path_dictionary["prog_geo_path"] + base_name + ".xyz")
+                this_run.init_geopath = (path_dictionary["initial_geo_path"] + base_name + ".xyz")
+                if job_status == '8':
+                    check_geo_path = this_run.progpath
+                    reason = find_problems(this_run.init_geopath,this_run.progpath)
+                    print(reason,this_run.progpath)
+                else:
+                    check_geo_path = this_run.geopath
+                    reason = find_problems(this_run.init_geopath,this_run.geopath)
+                    print(reason,this_run.geopath)
+                print('*******')
+
+        elif job_status in ["3"]:
+            check_geo_path = path_dictionary["initial_geo_path"] + base_name + ".xyz"
+            reason = "ERROR-STAT"
+        elif job_status in ["2"]:
+            check_geo_path = path_dictionary["prog_geo_path"] + base_name + ".xyz"
+            reason = "TO-BE-RESTART"
+        elif job_status in ["7"]:
+            check_geo_path = path_dictionary["prog_geo_path"] + base_name + ".xyz"
+            reason = "MAX-RESUB"
+        elif job_status in ["0"]:
+            check_geo_path = path_dictionary["optimial_geo_path"] + base_name + ".xyz"
+            reason = "SUCCESS"
+        else:
+            print('unkown status ' + str(job_status))
+            check_geo_path = path_dictionary["initial_geo_path"] + base_name + ".xyz"
+            reason = "UNKNOWN-STATUS-"+ str(job_status)
+        if reason in outcomes_dictionary.keys():
+            this_list  = outcomes_dictionary[reason]
+            this_list.append(check_geo_path)
+            outcomes_dictionary.update({reason:this_list})
+        else:
+            outcomes_dictionary.update({reason:[check_geo_path]})        
+print('*******')
+print('Found a total of ' + str(counter) + ' HFX-20 jobs to analyze') 
+print('*******')
 for keys in outcomes_dictionary.keys():
     print('There are '+ str(len(outcomes_dictionary[keys])) +  ' with status  ' + keys )
     with open('runs-'+keys+'.txt','w') as f:
