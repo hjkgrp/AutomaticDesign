@@ -865,21 +865,29 @@ def process_run_post(filepost, filedescriptors):
                    'oct_angle_devi_max', 'max_del_sig_angle',
                    'dist_del_eq', 'dist_del_all',
                    'devi_linear_avrg', 'devi_linear_max']
+    keywords_needed = ['status', 'converged']
     prog_geo_flags = ['%s_loose' % x for x in geo_flags]
     prog_geo_metrics = ['prog_%s' % x for x in geo_metrics]
     file_prefix = filepost.split('.')[0]
     df1 = pd.read_csv(filepost)
-    df2 = pd.read_csv(filedescriptors)
-    df2 = df2.rename(index=str, columns={'runs': 'name'})
-    df = pd.merge(df1, df2, how='right', on=['name'])
-    df_conv = df[df['converged'] == True]
-    df_unconv = df[df['converged'] == False]
-    df_conv = df_conv.drop(columns=prog_geo_metrics, axis=1)
-    df_conv = df_conv.drop(columns=prog_geo_flags, axis=1)
-    df_unconv = df_unconv.drop(columns=geo_metrics, axis=1)
-    df_unconv = df_unconv.drop(columns=geo_flags, axis=1)
-    df_conv.to_csv('%s_converged.csv' % file_prefix)
-    df_unconv = df_unconv[df_unconv['status'] != 3]
-    df_unconv.to_csv('%s_unconverged.csv' % file_prefix)
-    df_noprog = df_unconv[df_unconv['status'] == 3]
-    df_noprog.to_csv('%s_noprogress.csv' % file_prefix)
+    header = list(df1.columns.values)
+    flag = True
+    for kw in keywords_needed:
+        if not kw in header:
+            flag = False
+            print('---column %s does not exist. dataframe spliting is aborted---'%kw)
+    if flag:
+        df2 = pd.read_csv(filedescriptors)
+        df2 = df2.rename(index=str, columns={'runs': 'name'})
+        df = pd.merge(df1, df2, how='right', on=['name'])
+        df_conv = df[df['converged'] == True]
+        df_unconv = df[df['converged'] == False]
+        df_conv = df_conv.drop(columns=prog_geo_metrics, axis=1)
+        df_conv = df_conv.drop(columns=prog_geo_flags, axis=1)
+        df_unconv = df_unconv.drop(columns=geo_metrics, axis=1)
+        df_unconv = df_unconv.drop(columns=geo_flags, axis=1)
+        df_conv.to_csv('%s_converged.csv' % file_prefix)
+        df_unconv = df_unconv[df_unconv['status'] != 3]
+        df_unconv.to_csv('%s_unconverged.csv' % file_prefix)
+        df_noprog = df_unconv[df_unconv['status'] == 3]
+        df_noprog.to_csv('%s_noprogress.csv' % file_prefix)
