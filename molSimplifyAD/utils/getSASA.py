@@ -44,7 +44,7 @@ def get_area(this_run,basename):
     
     path_dictionary=setup_paths()
     outpath = path_dictionary["pdb_path"] + basename + '.pdb'
-    
+    print('getting area')
     # convert to pdb
     obConversion = openbabel.OBConversion()
     obConversion.SetInFormat("xyz")
