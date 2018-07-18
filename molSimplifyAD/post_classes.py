@@ -46,7 +46,7 @@ class DFTRun:
         self.descriptor_names = list()
         self.name = name
         self.comment = ''
-        self.file_merge_list = ['bond_order.list', 'charge_mull.xls', 'grad.xyz', 'mullpop', 'optim.xyz', 'spin.xls']  
+        self.file_merge_list = ['optim.xyz', 'bond_order.list', 'charge_mull.xls', 'grad.xyz', 'mullpop', 'spin.xls']
         list_of_init_props = ['status', 'time', 'energy', 'alphaHOMO', 'alphaLUMO', 'betaHOMO', 'betaLUMO',
                               'initial_energy', 'charge', 'idn', 'spin', 'metal', 'eqlig_ind', 'axlig1_ind',
                               'axlig2_ind', 'eqlig', 'axlig1', 'axlig2', 'eq_MLB', 'ax1_MLB', 'ax2_MLB',
@@ -611,14 +611,14 @@ class DFTRun:
         ensure_dir(results_comb_path)
         for _file in self.file_merge_list:
             current_path = results_comb_path + _file
-            if os.path.isfile(_file):
-                    fo = open(current_path, 'w')
-                    for inpath in self.archive_list:
-                        infile = inpath + _file
-                        with open(infile, 'r') as fin:
-                            txt = fin.readlines()
-                        fo.writelines(txt)
-                    fo.close()
+            fo = open(current_path, 'w')
+            for inpath in self.archive_list:
+                infile = inpath + _file
+                if os.path.isfile(infile):
+                    with open(infile, 'r') as fin:
+                        txt = fin.readlines()
+                    fo.writelines(txt)
+            fo.close()
 
     def get_descriptor_vector(self, loud=False, name=False):
         ox_modifier = {self.metal: self.ox}
