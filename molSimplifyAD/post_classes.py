@@ -200,7 +200,7 @@ class DFTRun:
         #try:
         if True:
             from molSimplifyAD.utils.getSASA import get_area
-            self.area = get_area(self,self.name)
+            get_area(self,self.name)
             
             
     def obtain_ML_dists(self):
