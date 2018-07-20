@@ -405,8 +405,11 @@ class DFTRun:
                 with open(self.HFX_job, 'r') as ref:
                     for line in ref:
                         if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
-                            ## these lines should be common
-                            f.write(line)
+			    if (int(new_name[-1]) == 1) and "method ub3lyp" in line: #restrict singlets
+                            	## these lines should be common
+                            	f.write("method b3lyp\n")
+			    else:
+				f.write(line)
                 f.write('coordinates ' + geo_ref + ' \n')
                 f.write(guess_string)
                 f.write('end\n')
@@ -417,7 +420,8 @@ class DFTRun:
         ## set file paths for empty structure gen
         ## the fixed ordering is 
         ## HFX20 Oxo --> HFX20 Empty SP + HFX20 Empty Geo --> HFX25 Oxo --> HFX25 Empty SP + HFX25 Empty Geo... etc.
-        emptyrefdict = {"25": "20", "30": "25", "15": "20", "10": "15", "05": "10", "00": "05"}
+        _, _, _, _, _, _, _, _, _, _, _, this_spin, _, _, _, _ = translate_job_name(self.job)
+	emptyrefdict = {"25": "20", "30": "25", "15": "20", "10": "15", "05": "10", "00": "05"}
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         new_name, reference_name = renameOxoEmpty(self.job)
@@ -435,8 +439,7 @@ class DFTRun:
         print('NEW REF is THIS:', new_ref, 'Referenced THIS:', geo_ref)
         self.empty_sp_inpath = path_dictionary['sp_in_path'] + new_name + '.in'
         self.empty_inpath = path_dictionary['infiles'] + new_name + '.in'
-        self.empty_job = path_dictionary['job_path'] + new_name + '.in'
-        ### write files
+	### write files
         if not os.path.exists(self.empty_sp_inpath):
             f_emptysp = open(self.empty_sp_inpath, 'w')
             ## write SP
@@ -446,11 +449,10 @@ class DFTRun:
             with open(self.inpath, 'r') as ref:
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
-                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not ("method" in line):
                         ## these lines should be common
                         f_emptysp.write(line)
-            if int(
-                    refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
+            if int(refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
                 splist = new_name.split('_')
                 emptyrefval = emptyrefdict[splist[-2]]
                 splist[-2] = emptyrefval
@@ -459,61 +461,14 @@ class DFTRun:
                     self.gen) + '/' + wfnrefempty + '/ca0' + \
                                   ' ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/cb0\n'
                 f_emptysp.write(guess_string_sp)
+	    if int(this_spin) == 1:
+		f_emptysp.write('method b3lyp\n')
+	    else:
+		f_emptysp.write('method ub3lyp')
             f_emptysp.write('end')
             f_emptysp.close()
-        if not os.path.exists(self.empty_job):
-            f_empty = open(self.empty_job, 'w')
-            f_empty.write('run minimize \n')
-            f_empty.write('scrdir scr/geo/gen_' + str(self.gen) + '/' + new_name + '\n')
-            with open(self.inpath, 'r') as ref:
-                for line in ref:
-                    if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
-                            "run" in line):
-                        ## these lines should be common
-                        f_empty.write(line)
-            f_empty.write('end')
-            f_empty.close()
 
-        ## create infile:
-        if not os.path.exists(self.empty_inpath):
-            with open(self.empty_inpath, 'w') as f:
-                with open(self.empty_job, 'r') as ref:
-                    for line in ref:
-                        if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
-                            ## these lines should be common
-                            f.write(line)
-                f.write('coordinates ' + new_ref + ' \n')
-                if int(refHFX) != 20:
-                    geolist = new_name.split('_')  # Copy without modifying the namelist
-                    emptyrefval = emptyrefdict[geolist[-2]]
-                    geolist[-2] = emptyrefval
-                    wfnrefempty = "_".join(geolist)
-                    guess_string_geo = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(
-                        self.gen) + '/' + wfnrefempty + '/ca0' + \
-                                       ' ' + get_run_dir() + 'scr/geo/gen_' + str(
-                        self.gen) + '/' + wfnrefempty + '/cb0\n'
-                    f.write(guess_string_geo)
-                f.write('end\n')
-                f.write('\n')
-                #### We want to freeze the M3L and M4L dihedrals as to how they were for the geo opt for the 6 coord structure
-                temp = mol3D()
-                temp.readfromxyz(new_ref)
-                metal_ind = temp.findMetal()[0]
-                fixed_atoms = list()
-                fixed_atoms = temp.getBondedAtomsSmart(
-                    metal_ind)  # Smart used so that the correct connecting atom constraints are used
-                planar = fixed_atoms[:4]
-                metal_ind_mod = metal_ind + 1  # 1-based indices
-                planar = [str(int(i) + 1) for i in planar]  # 1-based indices
-                first_string_to_write = 'dihedral ' + '_'.join(planar[:3]) + '_' + str(metal_ind_mod) + ' \n'
-                second_string_to_write = 'dihedral ' + '_'.join(planar[:4]) + ' \n'
-                f.write('$constraint_freeze \n')
-                f.write(first_string_to_write)
-                f.write(second_string_to_write)
-                f.write('$end')
-                f.close()
-
-        return (self.empty_job, self.empty_sp_inpath)
+        return (self.empty_sp_inpath)
 
     def write_DLPNO_inputs(self):
         ## set files  for DLNPO calcs 
