@@ -34,7 +34,16 @@ def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary):
                     postProc = True
             else:
                 postProc = True
-        else:
+        elif not ("thermo" in job) and not ("solvent" in job) and isOxocatalysis():
+	    if isall_post():
+		postProc = True
+	    elif job in converged_jobs_dictionary.keys():
+		this_outcome = int(converged_jobs_dictionary[job])
+		if this_outcome in [0, 1, 3, 6, 8]:
+		    postProc = False
+		else:
+		    postProc = True
+	else:
             postProc = False
 
 
@@ -249,12 +258,8 @@ def check_all_current_convergence():
                                            this_run.alpha) + ' to ' + newHFX + ' with ref ' + refHFX)
 
                                 add_to_outstanding_jobs(HFX_job)
-                            if isOxocatalysis() and int(ox) > 3 and (axlig2 != 'hydroxyl'):
-                                empty_job, empty_sp = this_run.write_empty_inputs(refHFX)
-                                # if (empty_job not in joblist) and (empty_job not in outstanding_jobs) and (empty_job not in converged_jobs.keys()):
-                                #        print('note: converting from oxo structure to empty structure')
-                                #        logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure')
-                                #        add_to_outstanding_jobs(empty_job)
+                            if isOxocatalysis() and int(ox) > 3 and (axlig2 == 'oxo'):
+                                empty_sp = this_run.write_empty_inputs(refHFX)
                                 if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (
                                         empty_sp not in converged_jobs.keys()):
                                     print('note: converting from oxo structure to empty structure (SP)')
@@ -262,12 +267,8 @@ def check_all_current_convergence():
                                         datetime.datetime.now()) + ' converting from oxo structure to empty structure (SP)')
                                     add_to_outstanding_jobs(empty_sp)
                     elif isOxocatalysis() and int(ox) > 3 and (
-                            axlig2 != 'hydroxyl'):  # Must do this because the empty sites are one step behind the 6-coordinates at different HFX
-                        empty_job, empty_sp = this_run.write_empty_inputs('00')
-                        # if (empty_job not in joblist) and (empty_job not in outstanding_jobs) and (empty_job not in converged_jobs.keys()):
-                        #        print('note: converting from oxo structure to empty structure')
-                        #        logger(base_path_dictionary['state_path'],str(datetime.datetime.now())+ ' converting from oxo structure to empty structure')
-                        #        add_to_outstanding_jobs(empty_job)
+                            axlig2 == 'oxo'):  # Must do this because the empty sites are one step behind the 6-coordinates at different HFX
+                        empty_sp = this_run.write_empty_inputs('00')
                         if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (
                                 empty_sp not in converged_jobs.keys()):
                             print('note: converting from oxo structure to empty structure (SP)')
@@ -366,6 +367,10 @@ def check_all_current_convergence():
                         remove_outstanding_jobs(jobs)  # take out of pool
                 print('END OF JOB \n *******************\n')
             elif "sp_infiles" in jobs:
+		if not postprocessJob(job=jobs, live_job_dictionary=live_job_dictionary,
+                              converged_jobs_dictionary=converged_jobs):
+		    print('Already checked ' + str(jobs))
+		    continue
                 print('checking status of SP job ' + str(jobs))
                 gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(
                     jobs)
