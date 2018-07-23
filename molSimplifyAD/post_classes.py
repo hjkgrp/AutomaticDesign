@@ -691,7 +691,7 @@ class Comp:
                               'ss_act', 'ss_target', 'geopath',
                               'terachem_version', 'terachem_detailed_version',
                               'basis', 'functional',
-                              'alpha_level_shift', 'beta_level_shift',
+                              'alpha_level_shift', 'beta_level_shift', 'job_gene',
                               "DFT_RUN"]
         list_of_init_falses = ['attempted', 'converged',
                                'mop_converged',

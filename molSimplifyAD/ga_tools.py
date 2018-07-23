@@ -199,6 +199,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
         list_of_prop_names.append("area")
     if oxocatalysis:
         if comp:
+            list_of_props.insert(1,'job_gene')
             list_of_props.append('convergence')
             for props in list_of_prop_names:
                 for spin_cat in ['LS', 'IS', 'HS']:
@@ -219,6 +220,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
         if comp:
             list_of_props.insert(1, 'ox2RN')
             list_of_props.insert(2, 'ox3RN')
+            list_of_props.insert(3,'job_gene')
             for props in list_of_prop_names:
                 for spin_cat in ['LS', 'HS']:
                     for ox in ['2', '3']:

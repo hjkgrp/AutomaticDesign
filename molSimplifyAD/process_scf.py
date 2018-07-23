@@ -226,9 +226,9 @@ def process_runs_geo(all_runs,local_spin_dictionary,local_metal_list=False):
                  this_comp.ox2RN = max(this_run.number,this_comp.ox2RN)
             else:
                  this_comp.ox3RN = max(this_run.number,this_comp.ox3RN)
-            if this_comp.gene =="undef":
-                #this_comp.gene = this_run.gene
-                this_comp.gene = "_".join([this_metal,str(eqlig_name),str(axlig1_name),str(axlig2_name)])
+            this_comp.gene = "_".join([this_metal,str(eqlig_name),str(axlig1_name),str(axlig2_name)])
+            this_comp.job_gene = this_run.gene
+            print('----gene:---', this_comp.gene, this_comp.job_gene)
             if this_run.converged and this_run.coord == 6:
                 this_comp.convergence += 1
             if this_run.flag_oct == 1 and not this_comp.set_desc:
@@ -332,6 +332,7 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
             ## need to create a new holder to store this gene
             this_comp = Comp(this_name)
             this_comp.set_properties(this_run)
+            this_comp.job_gene = this_run.gene
             for props in output_properties(comp=False,oxocatalysis=True):
                 for spin_val in ['LS','IS','HS']:
                      for catax_val in ['x','oxo','hydroxyl']:
