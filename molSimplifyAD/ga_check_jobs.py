@@ -35,18 +35,16 @@ def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary):
             else:
                 postProc = True
         elif not ("thermo" in job) and not ("solvent" in job) and isOxocatalysis():
-	    if isall_post():
-		postProc = True
-	    elif job in converged_jobs_dictionary.keys():
-		this_outcome = int(converged_jobs_dictionary[job])
-		if this_outcome in [0, 1, 3, 6, 8]:
-		    postProc = False
-		else:
-		    postProc = True
-	else:
-            postProc = False
-
-
+            if isall_post():
+                postProc = True
+            elif job in converged_jobs_dictionary.keys():
+                this_outcome = int(converged_jobs_dictionary[job])
+                if this_outcome in [0, 1, 3, 6, 8]:
+                    postProc = False
+                else:
+                    postProc = True
+            else:
+                postProc = False
     else:
         postProc = False
     return (postProc)
