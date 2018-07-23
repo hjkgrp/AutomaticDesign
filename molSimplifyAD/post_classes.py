@@ -23,8 +23,8 @@ from molSimplifyAD.ga_io_control import *
 from molSimplifyAD.ga_tools import get_current_GA
 from molSimplifyAD.utils.report_tool.prepare_report import *
 
-# from molSimplify.Classes.globalvars import dict_oct_check_loose, dict_oct_check_st, dict_oneempty_check_st, \
-#    dict_oneempty_check_loose, oct_angle_ref, oneempty_angle_ref
+from molSimplify.Classes.globalvars import dict_oct_check_loose, dict_oct_check_st, dict_oneempty_check_st, \
+    dict_oneempty_check_loose, oct_angle_ref, oneempty_angle_ref
 
 
 ########### UNIT CONVERSION
@@ -126,7 +126,7 @@ class DFTRun:
                 debug=debug)
         else:
             flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(
-                dict_check=self.globs.geo_check_dictionary()["dict_oneempty_check_st"],
+                dict_check=globs.geo_check_dictionary()["dict_oneempty_check_st"],
                 debug=debug)
         self.flag_oct = flag_oct
         self.flag_list = flag_list
@@ -143,7 +143,7 @@ class DFTRun:
                                                                 debug=debug)
         else:
             flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(self.init_mol,
-                                                                      dict_check=self.globs.geo_check_dictionary()[
+                                                                      dict_check=globs.geo_check_dictionary()[
                                                                           "dict_oneempty_check_st"],
                                                                       debug=debug)
         self.flag_oct = flag_oct
@@ -405,7 +405,7 @@ class DFTRun:
                 with open(self.HFX_job, 'r') as ref:
                     for line in ref:
                         if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
-			    if (int(new_name[-1]) == 1) and "method ub3lyp" in line: #restrict singlets
+			    if (int(new_name[-1]) == 1) and "method" in line: #restrict singlets
                             	## these lines should be common
                             	f.write("method b3lyp\n")
 			    else:
