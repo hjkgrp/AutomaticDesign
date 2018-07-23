@@ -379,7 +379,10 @@ class DFTRun:
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         new_name = renameHFX(self.job, newHFX).strip('.in')
         reference_name = renameHFX(self.job, refHFX).strip('.in')
-        guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/ca0' + \
+	if int(new_name[-1]) == 1:
+		guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/c0\n'
+	else:
+        	guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/ca0' + \
                        ' ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/cb0\n'
         geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
         self.HFX_inpath = path_dictionary['infiles'] + new_name + '.in'
@@ -457,8 +460,10 @@ class DFTRun:
                 emptyrefval = emptyrefdict[splist[-2]]
                 splist[-2] = emptyrefval
                 wfnrefempty = "_".join(splist)
-                guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(
-                    self.gen) + '/' + wfnrefempty + '/ca0' + \
+		if int(this_spin)==1:
+			guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/c0\n'
+		else:
+                	guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/ca0' + \
                                   ' ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/cb0\n'
                 f_emptysp.write(guess_string_sp)
 	    if int(this_spin) == 1:
