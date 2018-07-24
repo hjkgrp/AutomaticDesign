@@ -23,8 +23,8 @@ from molSimplifyAD.ga_io_control import *
 from molSimplifyAD.ga_tools import get_current_GA
 from molSimplifyAD.utils.report_tool.prepare_report import *
 
-# from molSimplify.Classes.globalvars import dict_oct_check_loose, dict_oct_check_st, dict_oneempty_check_st, \
-#    dict_oneempty_check_loose, oct_angle_ref, oneempty_angle_ref
+from molSimplify.Classes.globalvars import dict_oct_check_loose, dict_oct_check_st, dict_oneempty_check_st, \
+    dict_oneempty_check_loose, oct_angle_ref, oneempty_angle_ref
 
 
 ########### UNIT CONVERSION
@@ -129,7 +129,7 @@ class DFTRun:
                 debug=debug)
         else:
             flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(
-                dict_check=self.globs.geo_check_dictionary()["dict_oneempty_check_st"],
+                dict_check=globs.geo_check_dictionary()["dict_oneempty_check_st"],
                 debug=debug)
         self.flag_oct = flag_oct
         self.flag_list = flag_list
@@ -146,7 +146,7 @@ class DFTRun:
                                                                 debug=debug)
         else:
             flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(self.init_mol,
-                                                                      dict_check=self.globs.geo_check_dictionary()[
+                                                                      dict_check=globs.geo_check_dictionary()[
                                                                           "dict_oneempty_check_st"],
                                                                       debug=debug)
         self.flag_oct = flag_oct
@@ -382,7 +382,10 @@ class DFTRun:
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         new_name = renameHFX(self.job, newHFX).strip('.in')
         reference_name = renameHFX(self.job, refHFX).strip('.in')
-        guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/ca0' + \
+	if int(new_name[-1]) == 1:
+		guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/c0\n'
+	else:
+        	guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/ca0' + \
                        ' ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/cb0\n'
         geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
         self.HFX_inpath = path_dictionary['infiles'] + new_name + '.in'
@@ -408,7 +411,7 @@ class DFTRun:
                 with open(self.HFX_job, 'r') as ref:
                     for line in ref:
                         if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
-			    if (int(new_name[-1]) == 1) and "method ub3lyp" in line: #restrict singlets
+			    if (int(new_name[-1]) == 1) and "method" in line: #restrict singlets
                             	## these lines should be common
                             	f.write("method b3lyp\n")
 			    else:
@@ -460,8 +463,10 @@ class DFTRun:
                 emptyrefval = emptyrefdict[splist[-2]]
                 splist[-2] = emptyrefval
                 wfnrefempty = "_".join(splist)
-                guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(
-                    self.gen) + '/' + wfnrefempty + '/ca0' + \
+		if int(this_spin)==1:
+			guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/c0\n'
+		else:
+                	guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/ca0' + \
                                   ' ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/cb0\n'
                 f_emptysp.write(guess_string_sp)
 	    if int(this_spin) == 1:
@@ -547,7 +552,7 @@ class DFTRun:
             else:
                 print('archiving did NOT find  ' + self.outpath)
 
-    def combine_resub_results(self):
+    def combine_scr_results(self):
         archive_list = []
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
@@ -562,7 +567,8 @@ class DFTRun:
         print('!!!!archive_list', archive_list)
         self.archive_list = archive_list
 
-    def merge_files_from_scr(self):
+    def merge_scr_files(self):
+        self.combine_scr_results()
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)
         results_comb_path = path_dictionary["results_comb_path"] + self.name + '/'
@@ -577,6 +583,42 @@ class DFTRun:
                         txt = fin.readlines()
                     fo.writelines(txt)
             fo.close()
+
+    def combine_outfiles(self):
+        archive_list = []
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
+        archive_path = path_dictionary["archive_path"]
+        out_path = path_dictionary["geo_out_path"] + self.name
+        for dirpath, dir, files in os.walk(archive_path):
+            if self.name in dirpath.split('/')[-1]:
+                _scr_path = dirpath + '/' + self.name
+                archive_list.append(_scr_path)
+        archive_list.sort()
+        archive_list.append(out_path)
+        print('!!!!archive_list', archive_list)
+        self.archive_list = archive_list
+
+
+    def merge_geo_outfiles(self):
+        self.combine_outfiles()
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)
+        results_comb_path = path_dictionary["results_comb_path"] + self.name + '/'
+        ensure_dir(results_comb_path)
+        ## for outfiles
+        current_path = results_comb_path + self.name +'.out'
+        fo = open(current_path, 'w')
+        for inpath in self.archive_list:
+            infile = inpath +'.out'
+            if os.path.isfile(infile):
+                with open(infile, 'r') as fin:
+                    txt = fin.readlines()
+                    fo.writelines(txt)
+            else:
+                print('---%s does not exist---' %infile)
+        fo.close()
+
 
     def get_descriptor_vector(self, loud=False, name=False):
         ox_modifier = {self.metal: self.ox}

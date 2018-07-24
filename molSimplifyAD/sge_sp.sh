@@ -40,7 +40,6 @@ echo "scr will be copied to  $scrpath"
 echo "paths set"
 ## set local, workdir related paths and copy files
 localoutpath=$namebase.out
-localinpath=$namebase.in
 mkdir -p scr
 mkdir -p scr/sp/$gennumpath/
 spacer='_'
@@ -51,13 +50,15 @@ echo "this current SGE_JOB_SPOOL_DIR: $SGE_JOB_SPOOL_DIR"
 echo "this SGE WORKDIR: $SGE_O_WORKDIR"
 echo "this SGE_O_PATH: $SGE_O_PATH"
 echo "this SGE shell current DIR: $PWD"
-wf_guess_flag=0
 
+cd $SGE_O_WORKDIR
+echo "moved to"
+pwd
 ##begin sp calculation
-cp $inpath $localinpath
+#cp $inpath $localinpath
 echo "Launching SP calc: $namebase"
-terachem $localinpath >  $localoutpath
+terachem $inpath >  $outpath
 echo "Complete"
 ## copy back complete cases 
-mv $localoutpath $outpath
-mv scr/sp/$gennumpath/$namebase $scrpath
+#mv $localoutpath $outpath
+#mv scr/sp/$gennumpath/$namebase $scrpath
