@@ -780,9 +780,16 @@ def write_descriptor_csv(list_of_runs, file_handle, append=False):
         if not append:
             print('first element has ' + str(n_cols) + ' columns')
             if n_cols == 0:
-                file_handle.write('\n')
-            for i, names in enumerate(list_of_runs[0].descriptor_names):
-                if i < (n_cols - 1):
+                print('reshuffling vector so that first element does have no names')
+                for i,runs in enumerate(list_of_runs):
+                    n_cols = len(runs.descriptor_names)
+                    if n_cols >0: 
+                        break
+            else: # first element is ok!
+                i =0
+                #file_handle.write('\n')
+            for j, names in enumerate(list_of_runs[i].descriptor_names):
+                if j < (n_cols - 1):
                     file_handle.write(names + ',')
                 else:
                     file_handle.write(names + '\n')

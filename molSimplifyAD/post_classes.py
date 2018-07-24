@@ -59,7 +59,8 @@ class DFTRun:
                               'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max','area',
                               'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
-                              'mop_energy', 'descriptors', 'descriptor_names', 'chem_name']
+                              'mop_energy', 'chem_name']
+        list_of_init_empty = ['descriptor_names','descriptors']            
         list_of_init_false = ['solvent_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
@@ -67,6 +68,8 @@ class DFTRun:
         list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord']
         for this_attribute in list_of_init_props:
             setattr(self, this_attribute, 'undef')
+        for this_attribute in list_of_init_empty:
+            setattr(self, this_attribute, [])
         for this_attribute in list_of_init_false:
             setattr(self, this_attribute, False)
         for this_attribute in list_of_init_zero:
