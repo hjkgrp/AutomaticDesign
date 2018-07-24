@@ -147,7 +147,9 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
         source_lines = sourcef.readlines()
         with open(target_inpath, 'w') as newf:
             for line in source_lines:
-                if not ("coordinates" in line) and (not "end" in line) and (not "new_minimizer" in line):
+                if "$end" in line:
+                        newf.write(line)
+                elif not ("coordinates" in line) and (not "end" in line) and (not "new_minimizer" in line):
                     if ("method ub3lyp" in line) and this_spin == 1:
                         newf.write('method b3lyp\n')
                     else:
