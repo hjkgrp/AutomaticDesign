@@ -401,7 +401,7 @@ class octahedral_complex:
             else:
                 ff_opt = 'A'
         if smicat:
-                ff_opt = 'N'
+                ff_opt = 'no'
         ## get custom exchange fraction
         this_GA = get_current_GA()
         exchange = this_GA.config['exchange']
