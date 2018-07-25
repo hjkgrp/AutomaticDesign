@@ -173,7 +173,8 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
     list_of_props.append('metal')
     list_of_props.append('alpha')
     list_of_props.append('axlig1')
-    list_of_props.append('axlig2')
+    if (not oxocatalysis) and (not comp):
+    	list_of_props.append('axlig2')
     list_of_props.append('eqlig')
     list_of_prop_names = ['chem_name', 'converged', 'status', 'time', 'charge', 'spin',
                           'energy', 'init_energy',
@@ -790,7 +791,7 @@ def write_descriptor_csv(list_of_runs, file_handle, append=False):
             try:
                 file_handle.write(runs.name)
                 counter = 0
-                print('found ' + str(len(runs.descriptors)) + ' descriptors ')
+                #print('found ' + str(len(runs.descriptors)) + ' descriptors ')
                 for properties in runs.descriptors:
                     file_handle.write(',' + str(properties))
                 file_handle.write('\n')
