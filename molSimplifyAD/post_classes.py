@@ -648,10 +648,11 @@ class Comp:
         self.time = "undef"
         self.metal = 'undef'
         self.axlig1 = 'undef'
-        self.axlig2 = 'undef'
+        if not isOxocatalysis():
+		self.axlig2 = 'undef'
+		self.axlig2_ind = 'undef'
         self.eqlig = 'undef'
         self.axlig1_ind = 'undef'
-        self.axlig2_ind = 'undef'
         self.eqlig_ind = 'undef'
         self.convergence = 0
         self.attempted = 0
@@ -711,8 +712,38 @@ class Comp:
                 for sc in ["LS", "HS"]:
                     this_attribute = "_".join(['ox', ox, sc, props])
                     setattr(self, this_attribute, False)
-
-                    ### MOPAC
+	if isOxocatalysis():
+	    for props in list_of_init_props:
+                for spin_cat in ['LS', 'IS', 'HS']:
+                    for catax in ['x', 'oxo', 'hydroxyl']:
+                        if catax == 'x':
+                            for ox in ['2', '3']:
+                                this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
+				setattr(self, this_attribute, 'undef')
+                        elif catax == 'oxo':
+                            for ox in ['4', '5']:
+                        	this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
+                                setattr(self, this_attribute, 'undef')
+			else:
+                            for ox in ['3', '4']:
+				this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
+                                setattr(self, this_attribute, 'undef')        
+            for props in list_of_init_falses:
+                for spin_cat in ['LS', 'IS', 'HS']:
+                    for catax in ['x', 'oxo', 'hydroxyl']:
+                        if catax == 'x':
+                            for ox in ['2', '3']:
+                                this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
+                                setattr(self, this_attribute, False)
+                        elif catax == 'oxo':
+                            for ox in ['4', '5']:
+                                this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
+                                setattr(self, this_attribute, False)
+                        else:
+                            for ox in ['3', '4']:
+                                this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
+                                setattr(self, this_attribute, False)
+	### MOPAC
         self.mop_convergence = 0
         ### Coulomb
         self.cmmat = list()
