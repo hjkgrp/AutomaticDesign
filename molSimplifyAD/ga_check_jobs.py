@@ -144,8 +144,9 @@ def check_all_current_convergence():
                         print('  geo extracted to  ' +this_run.geopath)
                     else:
                         print(' cannot find scr:   ' +this_run.scrpath)
-                    this_run.combine_resub_results()
-                    this_run.merge_files_from_scr()
+                    ### Merge scr files and output files
+                    this_run.merge_scr_files()
+                    this_run.merge_geo_outfiles()
 
                 ## check if outpath exists
                 if os.path.isfile(this_run.outpath):

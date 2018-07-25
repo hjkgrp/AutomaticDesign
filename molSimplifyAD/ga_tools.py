@@ -147,7 +147,9 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
         source_lines = sourcef.readlines()
         with open(target_inpath, 'w') as newf:
             for line in source_lines:
-                if not ("coordinates" in line) and (not "end" in line) and (not "new_minimizer" in line):
+                if "$end" in line:
+                        newf.write(line)
+                elif not ("coordinates" in line) and (not "end" in line) and (not "new_minimizer" in line):
                     if ("method ub3lyp" in line) and this_spin == 1:
                         newf.write('method b3lyp\n')
                     else:
@@ -182,12 +184,11 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
                           'ax1_MLB', 'ax2_MLB', 'eq_MLB',
                           "alphaHOMO", "alphaLUMO", "betaHOMO", "betaLUMO",
                           'geopath', 'attempted',
-                          'flag_oct', 'flag_list', 'num_coord_metal',
-                          'rmsd_max', 'atom_dist_max',
+                          'flag_oct', 'flag_list', 'num_coord_metal', 'rmsd_max',
                           'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
                           'devi_linear_avrg', 'devi_linear_max',
                           'flag_oct_loose', 'flag_list_loose',
-                          'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max',
+                          'prog_num_coord_metal', 'prog_rmsd_max',
                           'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                           'prog_dist_del_all',
                           'prog_devi_linear_avrg', 'prog_devi_linear_max',
@@ -781,9 +782,16 @@ def write_descriptor_csv(list_of_runs, file_handle, append=False):
         if not append:
             print('first element has ' + str(n_cols) + ' columns')
             if n_cols == 0:
-                file_handle.write('\n')
-            for i, names in enumerate(list_of_runs[0].descriptor_names):
-                if i < (n_cols - 1):
+                print('reshuffling vector so that first element does have no names')
+                for i,runs in enumerate(list_of_runs):
+                    n_cols = len(runs.descriptor_names)
+                    if n_cols >0: 
+                        break
+            else: # first element is ok!
+                i =0
+                #file_handle.write('\n')
+            for j, names in enumerate(list_of_runs[i].descriptor_names):
+                if j < (n_cols - 1):
                     file_handle.write(names + ',')
                 else:
                     file_handle.write(names + '\n')
@@ -865,7 +873,7 @@ def write_run_pickle(final_results):
 ########################
 def process_run_post(filepost, filedescriptors):
     geo_flags = ['flag_oct', 'flag_list']
-    geo_metrics = ['num_coord_metal', 'rmsd_max', 'atom_dist_max',
+    geo_metrics = ['num_coord_metal', 'rmsd_max',
                    'oct_angle_devi_max', 'max_del_sig_angle',
                    'dist_del_eq', 'dist_del_all',
                    'devi_linear_avrg', 'devi_linear_max']

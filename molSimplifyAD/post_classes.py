@@ -59,7 +59,8 @@ class DFTRun:
                               'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max','area',
                               'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
-                              'mop_energy', 'descriptors', 'descriptor_names', 'chem_name']
+                              'mop_energy', 'chem_name']
+        list_of_init_empty = ['descriptor_names','descriptors']            
         list_of_init_false = ['solvent_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
@@ -67,6 +68,8 @@ class DFTRun:
         list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord']
         for this_attribute in list_of_init_props:
             setattr(self, this_attribute, 'undef')
+        for this_attribute in list_of_init_empty:
+            setattr(self, this_attribute, [])
         for this_attribute in list_of_init_false:
             setattr(self, this_attribute, False)
         for this_attribute in list_of_init_zero:
@@ -549,7 +552,7 @@ class DFTRun:
             else:
                 print('archiving did NOT find  ' + self.outpath)
 
-    def combine_resub_results(self):
+    def combine_scr_results(self):
         archive_list = []
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
@@ -564,7 +567,8 @@ class DFTRun:
         print('!!!!archive_list', archive_list)
         self.archive_list = archive_list
 
-    def merge_files_from_scr(self):
+    def merge_scr_files(self):
+        self.combine_scr_results()
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)
         results_comb_path = path_dictionary["results_comb_path"] + self.name + '/'
@@ -579,6 +583,42 @@ class DFTRun:
                         txt = fin.readlines()
                     fo.writelines(txt)
             fo.close()
+
+    def combine_outfiles(self):
+        archive_list = []
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
+        archive_path = path_dictionary["archive_path"]
+        out_path = path_dictionary["geo_out_path"] + self.name
+        for dirpath, dir, files in os.walk(archive_path):
+            if self.name in dirpath.split('/')[-1]:
+                _scr_path = dirpath + '/' + self.name
+                archive_list.append(_scr_path)
+        archive_list.sort()
+        archive_list.append(out_path)
+        print('!!!!archive_list', archive_list)
+        self.archive_list = archive_list
+
+
+    def merge_geo_outfiles(self):
+        self.combine_outfiles()
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)
+        results_comb_path = path_dictionary["results_comb_path"] + self.name + '/'
+        ensure_dir(results_comb_path)
+        ## for outfiles
+        current_path = results_comb_path + self.name +'.out'
+        fo = open(current_path, 'w')
+        for inpath in self.archive_list:
+            infile = inpath +'.out'
+            if os.path.isfile(infile):
+                with open(infile, 'r') as fin:
+                    txt = fin.readlines()
+                    fo.writelines(txt)
+            else:
+                print('---%s does not exist---' %infile)
+        fo.close()
+
 
     def get_descriptor_vector(self, loud=False, name=False):
         ox_modifier = {self.metal: self.ox}
