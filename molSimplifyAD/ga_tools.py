@@ -183,12 +183,11 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
                           'ax1_MLB', 'ax2_MLB', 'eq_MLB',
                           "alphaHOMO", "alphaLUMO", "betaHOMO", "betaLUMO",
                           'geopath', 'attempted',
-                          'flag_oct', 'flag_list', 'num_coord_metal',
-                          'rmsd_max', 'atom_dist_max',
+                          'flag_oct', 'flag_list', 'num_coord_metal', 'rmsd_max',
                           'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
                           'devi_linear_avrg', 'devi_linear_max',
                           'flag_oct_loose', 'flag_list_loose',
-                          'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max',
+                          'prog_num_coord_metal', 'prog_rmsd_max',
                           'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                           'prog_dist_del_all',
                           'prog_devi_linear_avrg', 'prog_devi_linear_max',
@@ -873,7 +872,7 @@ def write_run_pickle(final_results):
 ########################
 def process_run_post(filepost, filedescriptors):
     geo_flags = ['flag_oct', 'flag_list']
-    geo_metrics = ['num_coord_metal', 'rmsd_max', 'atom_dist_max',
+    geo_metrics = ['num_coord_metal', 'rmsd_max',
                    'oct_angle_devi_max', 'max_del_sig_angle',
                    'dist_del_eq', 'dist_del_all',
                    'devi_linear_avrg', 'devi_linear_max']
