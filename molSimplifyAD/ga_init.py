@@ -13,7 +13,7 @@ from molSimplifyAD.ga_check_jobs import *
 from molSimplifyAD.ga_io_control import *
 def initialize_GA_calc(path = ''):
         
-        o## load in run info
+        ## load in run info
         GA_run = get_current_GA()
         
         path_dictionary = setup_paths()
