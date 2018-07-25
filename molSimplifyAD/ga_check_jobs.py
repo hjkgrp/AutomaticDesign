@@ -34,17 +34,8 @@ def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary):
                     postProc = True
             else:
                 postProc = True
-        elif not ("thermo" in job) and not ("solvent" in job) and isOxocatalysis():
-            if isall_post():
-                postProc = True
-            elif job in converged_jobs_dictionary.keys():
-                this_outcome = int(converged_jobs_dictionary[job])
-                if this_outcome in [0, 1, 3, 6, 8]:
-                    postProc = False
-                else:
-                    postProc = True
-            else:
-                postProc = False
+	else:
+	    postProc = False
     else:
         postProc = False
     return (postProc)
@@ -309,7 +300,10 @@ def check_all_current_convergence():
                         logger(base_path_dictionary['state_path'], str(
                             datetime.datetime.now()) + ' job not allowed to restart since no prog geo could be found')
                         if this_run.alpha == 20:
-                            shutil.copy(this_run.init_geopath, path_dictionary['stalled_jobs'] + this_run.name + '.xyz')
+                            try:
+				shutil.copy(this_run.init_geopath, path_dictionary['stalled_jobs'] + this_run.name + '.xyz')
+			    except:
+				print("GEOMETRY NOT FOUND FOR THIS JOB!")
                     try:
                         this_run.obtain_mol3d()
                         try:
@@ -365,13 +359,16 @@ def check_all_current_convergence():
                         remove_outstanding_jobs(jobs)  # take out of pool
                 print('END OF JOB \n *******************\n')
             elif "sp_infiles" in jobs:
-		if not postprocessJob(job=jobs, live_job_dictionary=live_job_dictionary,
-                              converged_jobs_dictionary=converged_jobs):
-		    print('Already checked ' + str(jobs))
-		    continue
-                print('checking status of SP job ' + str(jobs))
+		#if not postprocessJob(job=jobs, live_job_dictionary=live_job_dictionary,
+                #              converged_jobs_dictionary=converged_jobs):
+		#    print('Already checked ' + str(jobs))
+		#    continue
+                #print('checking status of SP job ' + str(jobs))
                 gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(
                     jobs)
+                name = "_".join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), 'ahf',
+                                 str(int(alpha)).zfill(2), str(spin)])
+                this_run.chem_name = name
                 if (jobs not in live_job_dictionary.keys()) and ((len(jobs.strip('\n')) != 0)):
                     print('checking status of SP job ' + str(jobs))
                     this_run = test_terachem_sp_convergence(jobs)
@@ -385,8 +382,10 @@ def check_all_current_convergence():
                     this_run.thermo_outpath = "N/A: SP calc"
                     this_run.solvent_outpath = "N/A: SP calc"
                     this_run.sp_outpath = (path_dictionary["sp_out_path"] + '/' + base_name + ".out")
-                    this_run.scrpath = path_dictionary["scr_path"] + base_name
-                    this_run.scrlogpath = path_dictionary["scr_path"] + base_name + "/oplog.xls"
+                    #this_run.scrpath = path_dictionary["scr_path"] + base_name
+                    #this_run.scrlogpath = path_dictionary["scr_path"] + base_name + "/oplog.xls"
+                    this_run.scrpath = path_dictionary["scr_path"][:-3]+'sp/' + base_name
+                    this_run.scrlogpath = path_dictionary["scr_path"][:-3]+'sp/' + base_name + "/oplog.xls"
                     this_run.inpath = path_dictionary["job_path"] + base_name + ".in"
                     this_run.comppath = path_dictionary["done_path"] + base_name + ".in"
                     this_run.moppath = path_dictionary["mopac_path"] + base_name + ".out"
@@ -426,8 +425,7 @@ def check_all_current_convergence():
         # for comparisons
         logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                + " starting output logs ")
-        comp_output_path, comp_descriptor_path = write_output('comps', final_results.values(),
-                                                              output_properties(comp=True,oxocatalysis = isOxocatalysis(), SASA = isSASA() ))
+        comp_output_path, comp_descriptor_path = write_output('comps', final_results.values(),output_properties(comp=True,oxocatalysis = isOxocatalysis(), SASA = isSASA() ))
         # for runs
         run_output_path, run_descriptor_path = write_output('runs', all_runs.values(), output_properties(comp=False,oxocatalysis = isOxocatalysis(), SASA = isSASA() ))
 
