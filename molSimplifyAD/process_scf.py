@@ -312,7 +312,8 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
                 
         this_name = "_".join([this_metal,'eq',str(eqlig_name),'ax1',str(axlig1_name),'ahf',str(this_run.alpha).zfill(2)])
                 ### add alpha value to list owned by this_comp:
-        
+        print('** name is ' + str(this_name))
+
         this_ox = int(this_run.ox)
        
         metal_spins  = local_spin_dictionary[this_metal][this_ox]
@@ -331,45 +332,7 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
         if this_name not in final_results.keys():
             ## need to create a new holder to store this gene
             this_comp = Comp(this_name)
-            this_comp.set_properties(this_run)
-            this_comp.job_gene = this_run.gene
-            for props in output_properties(comp=False,oxocatalysis=True):
-                for spin_val in ['LS','IS','HS']:
-                     for catax_val in ['x','oxo','hydroxyl']:
-		          if catax_val == 'x':
-				for ox_val in ['2','3']:
-                            	     this_attribute = "_".join(['ox',str(ox_val),spin_val,str(catax_val),props])
-                                     #print(this_attribute)
-                                     setattr(this_comp,this_attribute,'undef')
-                                     if 'converged' or 'time' or 'set_desc' in this_attribute:
-                                          setattr(this_comp,this_attribute,False)
-                                     if 'convergence' or 'attempted' in this_attribute or this_attribute == 'split':
-                                          setattr(this_comp,this_attribute,0)
-                                     if 'descriptor' in this_attribute:
-                                          setattr(this_comp,this_attribute,list())
-			  elif catax_val == 'oxo':
-				for ox_val in ['4','5']:
-                            	     this_attribute = "_".join(['ox',str(ox_val),spin_val,str(catax_val),props])
-                                     #print(this_attribute)
-                                     setattr(this_comp,this_attribute,'undef')
-                                     if 'converged' or 'time' or 'set_desc' in this_attribute:
-                                          setattr(this_comp,this_attribute,False)
-                                     if 'convergence' or 'attempted' in this_attribute or this_attribute == 'split':
-                                          setattr(this_comp,this_attribute,0)
-                                     if 'descriptor' in this_attribute:
-                                          setattr(this_comp,this_attribute,list())
-			  else:
-				for ox_val in ['3','4']:
-                            	     this_attribute = "_".join(['ox',str(ox_val),spin_val,str(catax_val),props])
-                                     #print(this_attribute)
-                                     setattr(this_comp,this_attribute,'undef')
-                                     if 'converged' or 'time' or 'set_desc' in this_attribute:
-                                          setattr(this_comp,this_attribute,False)
-                                     if 'convergence' or 'attempted' in this_attribute or this_attribute == 'split':
-                                          setattr(this_comp,this_attribute,0)
-                                     if 'descriptor' in this_attribute:
-                                          setattr(this_comp,this_attribute,list())
-				     
+	    this_comp.set_properties(this_run)            
         else:
             this_comp = final_results[this_name]
         print(runkeys)
@@ -377,32 +340,39 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
         ## get basic details
         ## assuming no duplicates:
         if True:
-            if this_comp.gene =='undef':
-                this_comp.gene = this_run.gene
+            this_comp.gene = "_".join([this_metal,str(eqlig_name),str(axlig1_name)])
+	    this_comp.job_gene = this_run.gene
+	    print('----gene:----', this_comp.gene, this_comp.job_gene)
             if this_run.converged and this_run.flag_oct==1:
                 this_comp.convergence += 1
             if this_run.flag_oct==1 and this_run.num_coord_metal == 6  and not this_comp.set_desc:
-                try:
+                #try:
                     if not os.path.isdir('used_geos/'):
                         os.mkdir('used_geos/')
                     this_run.mol.writexyz('used_geos/'+this_name+'.xyz')
                     this_comp.axlig1 = this_run.axlig1
-                    this_comp.axlig2 = this_run.axlig2
+                    #this_comp.axlig2 = this_run.axlig2
                     this_comp.eqlig = this_run.eqlig
                     this_comp.set_rep_mol(this_run)
                     this_comp.get_descriptor_vector(loud=False,name=this_name)
-                except:
-                    if not os.path.isdir('bad_geos/'):
-                        os.mkdir('bad_geos/')
-                    this_run.mol.writexyz('bad_geos/'+this_name+'.xyz')
-                    this_comp.convergence -= 1
-                    this_run.coord = 'error'
-            for props in output_properties(comp=True,oxocatalysis=True):
+                #except:
+                #    if not os.path.isdir('bad_geos/'):
+                #        os.mkdir('bad_geos/')
+                #    this_run.mol.writexyz('bad_geos/'+this_name+'.xyz')
+                #    this_comp.convergence -= 1
+                #    this_run.coord = 'error'
+            for props in output_properties(comp=False,oxocatalysis=True):
                     this_attribute = "_".join(['ox',str(this_ox),spin_cat,str(axlig2_name),props])
+	            print('looking for '+str(props)+' as '+this_attribute + ' from run class')
+		    if hasattr(this_run, props):
+			print('found, '+str(getattr(this_run,props)))
+			setattr(this_comp, this_attribute, getattr(this_run,props))
+	    this_attribute = "_".join(['ox',str(this_ox),spin_cat,str(axlig2_name),"DFT_RUN"])
 	            #print('attribute: ',this_attribute)
 		    #print('assigned: ',getattr(this_run,props))
-                    setattr(this_comp,this_attribute,getattr(this_comp,props))
-        this_comp.get_some_split()
+                    #setattr(this_comp,this_attribute,getattr(this_comp,props))
+       	    setattr(this_comp,this_attribute,this_run)
+	this_comp.get_some_split()
         ###
         final_results.update({this_name:this_comp})
     return final_results
