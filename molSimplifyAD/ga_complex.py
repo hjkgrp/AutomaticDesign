@@ -477,7 +477,7 @@ class octahedral_complex:
                 elif this_GA.config['symclass']=="weak": ## ANN not currently supported!
                     ANN_split = False
                     ANN_distance = False
-                if this_GA.config['oxocatalysis']: #Subbing in 1.65 as Oxo BL
+                if isOxocatalysis() and 'oxo' in liglist: #Subbing in 1.65 as Oxo BL
                     print('Modifying initial oxo geom file '+ mol_name + '.xyz to have oxo BL 1.65')
                     geo_ref_file = open(path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz','r')
                     lines = geo_ref_file.readlines()
