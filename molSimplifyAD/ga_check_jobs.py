@@ -367,6 +367,8 @@ def check_all_current_convergence():
                 #print('checking status of SP job ' + str(jobs))
                 gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(
                     jobs)
+                metal_list = get_metals()
+                metal = metal_list[metal]
                 name = "_".join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), 'ahf',
                                  str(int(alpha)).zfill(2), str(spin)])
                 this_run.chem_name = name
