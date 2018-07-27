@@ -561,18 +561,18 @@ def write_dictionary(dictionary, path, force_append=False):
 
 ########################
 
-def find_split_fitness(split_energy, split_parameter):
-    en = -1 * numpy.power((float(split_energy) / split_parameter), 2.0)
+def find_prop_fitness(prop_energy, prop_parameter):
+    en = -1 * numpy.power((float(prop_energy) / prop_parameter), 2.0)
     fitness = numpy.exp(en)
     return fitness
 
 
 ########################
 
-def find_split_dist_fitness(split_energy, split_parameter, distance, distance_parameter):
+def find_prop_dist_fitness(prop_energy, prop_parameter, distance, distance_parameter):
     ##FITNESS DEBUGGING: print "scoring function: split+dist YAY"
 
-    en = -1 * (numpy.power((float(split_energy) / split_parameter), 2.0) + numpy.power(
+    en = -1 * (numpy.power((float(prop_energy) / prop_parameter), 2.0) + numpy.power(
         (float(distance) / distance_parameter), 2.0))
     fitness = numpy.exp(en)
     return fitness
@@ -607,7 +607,34 @@ def read_dictionary(path):
     except:
         emsg = "Error, could not read state space: " + path
     return emsg, dictionary
-
+########################
+def read_ANN_results_dictionary(path):
+    emsg = False
+    dictionary = dict()
+    try:
+        with open(path, 'r') as f:
+            for i, val in enumerate(f.readlines()):
+				if i == 0:
+					keynames = val.strip().split(',')
+				else:
+					ll = val.strip().split(',')
+					key = ll[0]
+					dictionary2 = {}
+					for j, val2 in enumerate(ll[1:]):
+						dictionary2[keynames[j+1]] = float(val2)
+					dictionary[key] = dictionary2
+    except:
+        emsg = "Error, could not read ANN dictionary: " + path
+    return emsg, dictionary
+    
+########################
+def write_ANN_results_dictionary(path, dictionary):
+	with open(path, 'w') as f:
+		for i, val in enumerate(dictionary.keys()):
+			if i == 0:
+				f.write(",".join(["name"]+dictionary[val].keys())+'\n')
+			f.write(",".join([val]+[str(k) for k in dictionary[val].values()])+'\n')
+					
 
 ########################
 def logger(path, message):
