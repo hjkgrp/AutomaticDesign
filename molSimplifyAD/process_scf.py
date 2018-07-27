@@ -40,6 +40,8 @@ def test_terachem_sp_convergence(job):
     this_GA = get_current_GA()
     exchange = ahf
     alpha=float(exchange)
+    metal_list = get_metals()
+    metal = metal_list[metal]
     ### flag
     converged =  False
     ## set up up
