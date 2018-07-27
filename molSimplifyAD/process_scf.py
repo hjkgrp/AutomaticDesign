@@ -320,7 +320,8 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
         
         if int(this_run.spin) not in metal_spins:
            print('ERROR! not in metal spins : ' +  str(this_run) + ' not in ' +  str(metal_spins))
-        else:
+           continue
+	else:
             spin_ind = metal_spins.index(this_run.spin)
 	    if spin_ind == 0:
                 spin_cat = 'LS'
@@ -345,7 +346,7 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
 	    print('----gene:----', this_comp.gene, this_comp.job_gene)
             if this_run.converged and this_run.flag_oct==1:
                 this_comp.convergence += 1
-            if this_run.flag_oct==1 and this_run.num_coord_metal == 6  and not this_comp.set_desc:
+            if this_run.flag_oct==1  and not this_comp.set_desc:
                 #try:
                     if not os.path.isdir('used_geos/'):
                         os.mkdir('used_geos/')
