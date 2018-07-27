@@ -242,11 +242,13 @@ class octahedral_complex:
         n = len(self.ligands_list)
         self.examine()
         print('I think this is 3x bidentate: ',self.three_bidentate,self.ax_dent)
+        print('in mutate')
+        print('lig to mutate is ' + str(lig_to_mutate))
         if (lig_to_mutate == 0):
             print("mutating equitorial ligand")
             rand_ind = numpy.random.randint(low = 0,high = n)
             child.replace_equitorial([rand_ind])
-        elif (lig_to_mutate == 1):
+        elif (lig_to_mutate == 1) or (lig_to_mutate == 2):
             print('mutating axial ligand')
             ready_flag = False
             while not ready_flag:
@@ -430,6 +432,8 @@ class octahedral_complex:
         ## check if already exists:
         geo_exists = os.path.isfile(path_dictionary["initial_geo_path"] + mol_name + '.xyz')
         
+        #Initialize ANN results dictionary
+        ANN_results = {}
         if not (geo_exists):
                 print('generating '+ str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and'  + str(self.ax_ligands))
                 try:
@@ -460,24 +464,41 @@ class octahedral_complex:
                         print(call)
                         sys.exit()
                     
-                if this_GA.config['symclass']=="strong":                        
-                    with open(rundirpath + 'temp' +'/' + mol_name + '.report') as report_f:
-                        for line in report_f:
-                                if ("pred_split" in line):
-                                    #print('****')
-                                    #print(line)
-                                    ANN_split = float(line.split(",")[1])
-                                    print('ANN_split is ' +"{0:.2f}".format(ANN_split))
-                                if("ANN_dist_to_train" in line):
-                                    #print('****')
-                                    #print(line)
-                                    ll = line.split(',')[1]
-                                    ANN_distance = float(ll)
-                                    print('ANN_distance is ' +"{0:.2f}".format(ANN_distance))
-                elif this_GA.config['symclass']=="weak": ## ANN not currently supported!
-                    ANN_split = False
-                    ANN_distance = False
-                if isOxocatalysis() and 'oxo' in liglist: #Subbing in 1.65 as Oxo BL
+                #if this_GA.config['symclass']=="strong":                        
+                with open(rundirpath + 'temp' +'/' + mol_name + '.report') as report_f:
+					for line in report_f:
+							if ("pred_split_HS_LS" in line):
+								print('****')
+								print(line)
+								ANN_split = float(line.split(",")[1])
+								ANN_results.update({'pred_split_HS_LS':float(line.split(",")[1])})
+								print('ANN_split is ' +"{0:.2f}".format(ANN_split))
+							if("ANN_dist_to_train" in line):
+								print('****')
+								print(line)
+								ANN_distance = float(line.split(",")[1])
+								ANN_results.update({'ANN_dist_to_train':float(line.split(",")[1])})
+								print('ANN_distance is ' +"{0:.2f}".format(ANN_distance))
+							if ("pred_HOMO" in line):
+								print('****')
+								print(line)
+								ANN_homo = float(line.split(",")[1])
+								ANN_results.update({'pred_HOMO':float(line.split(",")[1])})
+								print('ANN_homo is ' +"{0:.2f}".format(ANN_homo))
+							if ("pred_GAP" in line):
+								print('****')
+								print(line)
+								ANN_gap = float(line.split(",")[1])
+								ANN_results.update({'pred_GAP':float(line.split(",")[1])})
+								print('ANN_gap is ' +"{0:.2f}".format(ANN_gap))
+							if ("ANN_dist_to_train_HOMO_and_GAP" in line):
+								print('****')
+								print(line)
+								ANN_dist_to_train_HOMO_and_GAP = float(line.split(",")[1])
+								ANN_results.update({'ANN_dist_to_train_HOMO_and_GAP':float(line.split(",")[1])})
+								print('ANN_dist_to_train_HOMO_and_GAP is ' +"{0:.2f}".format(ANN_dist_to_train_HOMO_and_GAP))
+								
+                if isOxocatalysis() and 'oxo' in liglist and isDFT(): #Subbing in 1.65 as Oxo BL
                     print('Modifying initial oxo geom file '+ mol_name + '.xyz to have oxo BL 1.65')
                     geo_ref_file = open(path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz','r')
                     lines = geo_ref_file.readlines()
@@ -509,14 +530,9 @@ class octahedral_complex:
                 create_generic_infile(jobpath,restart=False,use_old_optimizer = use_old_optimizer)
                 flag_oct, _, __ = self.inspect_initial_geo(geometry_path)
         else:
-            ANN_split = False
-            ANN_distance = False
-            flag_oct = 1
-        if not 'ANN_split' in dir():
-            ANN_split = False
-            ANN_distance = False
+			flag_oct = 1
         
-        return jobpath,mol_name,ANN_split,ANN_distance, flag_oct
+        return jobpath,mol_name, ANN_results, flag_oct
     
     def inspect_initial_geo(self,geometry_path):
         ## this function contains the logic for inspecting a
