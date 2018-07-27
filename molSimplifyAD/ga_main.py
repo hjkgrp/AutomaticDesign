@@ -28,14 +28,14 @@ class GA_generation:
         self.gene_compound_dictionary = dict()
         self.total_counter = 0
 
-    def configure_gen(self, gen_num, npool, ncross, pmut, maxgen, scoring_function="split", split_parameter=15.0,
+    def configure_gen(self, gen_num, npool, ncross, pmut, maxgen, scoring_function="split", property_parameter=15.0,
                       distance_parameter=1, DFT=True,
                       RTA=False, mean_fitness=0, monitor_diversity=False, monitor_distance=False,
                       **kwargs):
         self.current_path_dictionary = advance_paths(self.base_path_dictionary, gen_num)
         self.status_dictionary.update({'gen': gen_num})
         self.status_dictionary.update({'scoring_function': scoring_function})
-        self.status_dictionary.update({'split_parameter': split_parameter})
+        self.status_dictionary.update({'property_parameter': property_parameter})
         self.status_dictionary.update({'distance_parameter': distance_parameter})
         self.status_dictionary.update({'npool': npool, 'maxgen': maxgen})
         self.status_dictionary.update({'ncross': ncross})
@@ -177,7 +177,7 @@ class GA_generation:
                            pmut=float(read_dict["pmut"]),
                            maxgen=int(read_dict["maxgen"]),
                            scoring_function=read_dict["scoring_function"],
-                           split_parameter=float(read_dict["split_parameter"]),
+                           property_parameter=float(read_dict["property_parameter"]),
                            distance_parameter=float(read_dict["distance_parameter"]),
                            RTA=bool((read_dict["ready_to_advance"] == 'True')),
                            mean_fitness=float(read_dict["mean_fitness"]),
@@ -216,12 +216,12 @@ class GA_generation:
                     print('gene ' + str(genes) + ' already in dict, no action')
                 else:
                     this_split_energy = float(final_results[genes].split)
-                    if self.status_dictionary['scoring_function'] == "split+dist":
-                        print('error, cannot using aplit+dist fitness with ANN only. Switching to split only.')
+                    if self.status_dictionary['scoring_function'] == "prop+dist":
+                        print('error, cannot using prop+dist fitness with ANN only. Switching to prop only.')
                         logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen " +
                                str(self.status_dictionary['gen']) +
-                               ' error, cannot using aplit+dist fitness with ANN only. Switching to split only')
-                    fitness = find_split_fitness(this_split_energy, self.status_dictionary['split_parameter'])
+                               ' error, cannot using prop+dist fitness with ANN only. Switching to prop only')
+                    fitness = find_split_fitness(this_split_energy, self.status_dictionary['property_parameter'])
                     logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen " +
                            str(self.status_dictionary['gen']) +
                            ' setting fitness to ' + "{0:.2f}".format(fitness) + ' for new genes ' + str(genes))
@@ -274,6 +274,7 @@ class GA_generation:
         ## if we are using the ANN only, populate the gene-fitnes dictionary
         if self.status_dictionary["DFT"] == False:
             self.ANN_fitness()
+        #sardines
         if os.path.exists('bad_initgeo_log.txt'):
             with open('bad_initgeo_log.txt', 'r') as fin:
                 print('!!!!!!!These are jobs with bad initial geometry generated from molSimplify!!!!!')
@@ -294,31 +295,48 @@ class GA_generation:
             self.gene_fitness_dictionary.update({gene: random_fitness})
 
     def ANN_fitness(self):
-        msg, ANN_dict = read_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
-
+        msg, ANN_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
+        GA_run = get_current_GA()
+        runtype = GA_run.config["runtype"]
         for keys in ANN_dict.keys():
-            gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eq_ind, ax1_ind, ax2_ind, spin, spin_cat, ahf, basename, basegene = translate_job_name(
+            gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, basename, basegene = translate_job_name(
                 keys)
-            this_split_energy = float(ANN_dict[keys].split(',')[0])
-            this_ann_dist = float(ANN_dict[keys].split(',')[1].strip('\n'))
+            set_fitness = False
 
-            if self.status_dictionary['scoring_function'] == "split+dist":
-                fitness = find_split_dist_fitness(this_split_energy, self.status_dictionary['split_parameter'],
-                                                  this_ann_dist, self.status_dictionary['distance_parameter'])
-            else:
-                fitness = find_split_fitness(this_split_energy, self.status_dictionary['split_parameter'])
+            if runtype == 'split':
+                this_prop = float(ANN_dict[keys]['pred_split_HS_LS'])
+                this_dist = float(ANN_dict[keys]['ANN_dist_to_train'])
+                set_fitness = True
+            elif runtype == 'homo':
+                this_spin = float(ANN_dict[keys]['pred_split_HS_LS'])
+                if (this_spin > 0 and spin_cat == 'LS') or (this_spin <= 0 and spin_cat == 'HS'):
+                    this_prop = float(1/ANN_dict[keys]['pred_HOMO'])
+                    this_dist = float(ANN_dict[keys]['ANN_dist_to_train_HOMO_and_GAP'])
+                    set_fitness = True
+            elif runtype == 'gap':
+                this_spin = float(ANN_dict[keys]['pred_split_HS_LS'])
+                if (this_spin > 0 and spin_cat == 'LS') or (this_spin <= 0 and spin_cat == 'HS'):
+                    this_prop = float(ANN_dict[keys]['pred_GAP'])
+                    this_dist = float(ANN_dict[keys]['ANN_dist_to_train_HOMO_and_GAP'])
+                    set_fitness = True
+            if set_fitness:
+                if self.status_dictionary['scoring_function'] == "prop+dist":
+                    fitness = find_prop_dist_fitness(this_prop, self.status_dictionary['property_parameter'],
+                                                  this_dist, self.status_dictionary['distance_parameter'])
+                else:
+                    fitness = find_prop_fitness(this_prop, self.status_dictionary['property_parameter'])
 
-            logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now())
-                   + ":  Gen " + str(self.status_dictionary['gen'])
-                   + " fitness from ANN  " + "{0:.2f}".format(fitness) + ' assigned to  gene ' + str(gene))
-            self.gene_fitness_dictionary.update({gene: fitness})
+                logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now())
+                       + ":  Gen " + str(self.status_dictionary['gen'])
+                       + " fitness from ANN  " + "{0:.2f}".format(fitness) + ' assigned to  gene ' + str(gene))
+                self.gene_fitness_dictionary.update({gene: fitness})
 
     def job_dispatcher(self):
         jobpaths = list()
-        emsg, ANN_results_dict = read_dictionary(self.current_path_dictionary["ANN_output"] + '/ANN_results.csv')
+        emsg, ANN_results_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + '/ANN_results.csv')
         current_outstanding = get_outstanding_jobs()
         converged_jobs = find_converged_job_dictionary()
-        dict_var = ['jobpath', 'mol_name', 'ANN_split', 'ANN_distance', 'flag_oct']
+       
         for keys in self.outstanding_jobs.keys():
 
             jobs = self.outstanding_jobs[keys]
@@ -335,17 +353,17 @@ class GA_generation:
                 job_prefix = "gen_" + str(self.status_dictionary["gen"]) + "_slot_" + str(keys) + "_"
                 ## generate HS/LS
                 ## convert the gene into a job file and geometery
-                jobpath, mol_name, ANN_split, ANN_distance, flag_oct = jobs.generate_geometery(prefix=job_prefix,
+                jobpath, mol_name, ANN_results, flag_oct = jobs.generate_geometery(prefix=job_prefix,
                                                                                                spin=spins,
                                                                                                path_dictionary=self.current_path_dictionary,
                                                                                                rundirpath=get_run_dir(),
                                                                                                gen=self.status_dictionary['gen'])
                 if flag_oct:
                     if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
-                        msg, ANN_dict = read_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
+                        msg, ANN_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
                         if not mol_name in ANN_dict.keys():
                             print('saving result in ANN dict: ' + mol_name)
-                            ANN_results_dict.update({mol_name: ",".join([str(ANN_split), str(ANN_distance)])})
+                            ANN_results_dict.update({mol_name: ANN_results})
                         jobpaths.append(jobpath)
                         logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen "
                                + str(self.status_dictionary['gen'])
@@ -353,8 +371,8 @@ class GA_generation:
                 else:
                     log_bad_initial(jobpath)
                     update_converged_job_dictionary(jobpath, 3)
-
-            write_dictionary(ANN_results_dict, self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
+            print(ANN_results_dict)
+            write_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv', ANN_results_dict)
         set_outstanding_jobs(current_outstanding + jobpaths)
 
     # Tree doctor will do checkup on tree's diversity and distance. Functionality can be switched on or off. Automatically off if DFT enabled.
@@ -364,11 +382,17 @@ class GA_generation:
         runtype = GA_run.config["runtype"]
         for gen in xrange(curr_gen + 1):
             ANN_dir = get_run_dir() + "ANN_ouput/gen_" + str(gen) + "/ANN_results.csv"
-            emsg, ANN_dict = read_dictionary(ANN_dir)
+            emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
             for keys in ANN_dict.keys():
                 if runtype == "split":
                     this_gene = "_".join(keys.split("_")[4:10])
                     print(' using split : '"_".join(keys.split("_")))
+                elif runtype == "homo":
+                    this_gene = "_".join(keys.split("_")[4:10])
+                    print(' using homo : '"_".join(keys.split("_")))
+                elif runtype == "gap":
+                    this_gene = "_".join(keys.split("_")[4:10])
+                    print(' using gap : '"_".join(keys.split("_")))
                 elif runtype == "redox":
                     this_gene = "_".join(keys.split("_")[4:10])
                 this_energy = float(ANN_dict[keys].split(",")[0])
@@ -391,11 +415,11 @@ class GA_generation:
         for gene in self.gene_fitness_dictionary.keys():
             this_split_energy = float(full_gene_info[gene][0])
             this_ann_dist = float(full_gene_info[gene][1])
-            if self.status_dictionary['scoring_function'] == "split+dist":
-                fitness = find_split_dist_fitness(this_split_energy, self.status_dictionary['split_parameter'],
+            if self.status_dictionary['scoring_function'] == "prop+dist":
+                fitness = find_split_dist_fitness(this_split_energy, self.status_dictionary['property_parameter'],
                                                   this_ann_dist, self.status_dictionary['distance_parameter'])
             else:
-                fitness = find_split_fitness(this_split_energy, self.status_dictionary['split_parameter'])
+                fitness = find_split_fitness(this_split_energy, self.status_dictionary['property_parameter'])
             self.gene_fitness_dictionary.update({gene: fitness})
 
     def get_diversity(self):
@@ -585,13 +609,13 @@ class GA_generation:
             keep_equitorial = selected_compound_dictionary[these_partners[1]]
             old_genes = [selected_genes[key] for key in these_partners]
             new_complex_1 = keep_axial.exchange_ligands(keep_equitorial, True)
-            new_complex_1 = new_complex_1.exchange_metal(keep_equitorial)
-            new_complex_1 = new_complex_1.exchange_ox(keep_equitorial)
+            #new_complex_1 = new_complex_1.exchange_metal(keep_equitorial)
+            #new_complex_1 = new_complex_1.exchange_ox(keep_equitorial)
             print('FINAL : 1st new gene from this cross ' + str(new_complex_1.name) + '\n')
 
-            new_complex_2 = keep_equitorial.exchange_ligands(keep_axial, True)
-            new_complex_2 = new_complex_2.exchange_metal(keep_axial)
-            new_complex_2 = new_complex_2.exchange_ox(keep_axial)
+            new_complex_2 = keep_equitorial.exchange_ligands(keep_axial, False)
+            #new_complex_2 = new_complex_2.exchange_metal(keep_axial)
+            #new_complex_2 = new_complex_2.exchange_ox(keep_axial)
             new_gene_1 = new_complex_1.name
             new_gene_2 = new_complex_2.name
             print('FINAL : 2nd new gene from this cross ' + str(new_complex_2.name) + '\n')
