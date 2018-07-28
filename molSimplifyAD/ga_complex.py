@@ -466,38 +466,38 @@ class octahedral_complex:
                     
                 #if this_GA.config['symclass']=="strong":                        
                 with open(rundirpath + 'temp' +'/' + mol_name + '.report') as report_f:
-					for line in report_f:
-							if ("pred_split_HS_LS" in line):
-								print('****')
-								print(line)
-								ANN_split = float(line.split(",")[1])
-								ANN_results.update({'pred_split_HS_LS':float(line.split(",")[1])})
-								print('ANN_split is ' +"{0:.2f}".format(ANN_split))
-							if("ANN_dist_to_train" in line):
-								print('****')
-								print(line)
-								ANN_distance = float(line.split(",")[1])
-								ANN_results.update({'ANN_dist_to_train':float(line.split(",")[1])})
-								print('ANN_distance is ' +"{0:.2f}".format(ANN_distance))
-							if ("pred_HOMO" in line):
-								print('****')
-								print(line)
-								ANN_homo = float(line.split(",")[1])
-								ANN_results.update({'pred_HOMO':float(line.split(",")[1])})
-								print('ANN_homo is ' +"{0:.2f}".format(ANN_homo))
-							if ("pred_GAP" in line):
-								print('****')
-								print(line)
-								ANN_gap = float(line.split(",")[1])
-								ANN_results.update({'pred_GAP':float(line.split(",")[1])})
-								print('ANN_gap is ' +"{0:.2f}".format(ANN_gap))
-							if ("ANN_dist_to_train_HOMO_and_GAP" in line):
-								print('****')
-								print(line)
-								ANN_dist_to_train_HOMO_and_GAP = float(line.split(",")[1])
-								ANN_results.update({'ANN_dist_to_train_HOMO_and_GAP':float(line.split(",")[1])})
-								print('ANN_dist_to_train_HOMO_and_GAP is ' +"{0:.2f}".format(ANN_dist_to_train_HOMO_and_GAP))
-								
+                    for line in report_f:
+                        if ("pred_split_HS_LS" in line):
+                            print('****')
+                            print(line)
+                            ANN_split = float(line.split(",")[1])
+                            ANN_results.update({'pred_split_HS_LS':float(line.split(",")[1])})
+                            print('ANN_split is ' +"{0:.2f}".format(ANN_split))
+                        if("ANN_dist_to_train" in line) and not "HOMO" in line:
+                            print('****')
+                            print(line)
+                            ANN_distance = float(line.split(",")[1])
+                            ANN_results.update({'ANN_dist_to_train':float(line.split(",")[1])})
+                            print('ANN_distance is ' +"{0:.2f}".format(ANN_distance))
+                        if ("pred_HOMO" in line):
+                            print('****')
+                            print(line)
+                            ANN_homo = float(line.split(",")[1])
+                            ANN_results.update({'pred_HOMO':float(line.split(",")[1])})
+                            print('ANN_homo is ' +"{0:.2f}".format(ANN_homo))
+                        if ("pred_GAP" in line):
+                            print('****')
+                            print(line)
+                            ANN_gap = float(line.split(",")[1])
+                            ANN_results.update({'pred_GAP':float(line.split(",")[1])})
+                            print('ANN_gap is ' +"{0:.2f}".format(ANN_gap))
+                        if ("ANN_dist_to_train_HOMO_and_GAP" in line):
+                            print('****')
+                            print(line)
+                            ANN_dist_to_train_HOMO_and_GAP = float(line.split(",")[1])
+                            ANN_results.update({'ANN_dist_to_train_HOMO_and_GAP':float(line.split(",")[1])})
+                            print('ANN_dist_to_train_HOMO_and_GAP is ' +"{0:.2f}".format(ANN_dist_to_train_HOMO_and_GAP))
+                                
                 if isOxocatalysis() and 'oxo' in liglist and isDFT(): #Subbing in 1.65 as Oxo BL
                     print('Modifying initial oxo geom file '+ mol_name + '.xyz to have oxo BL 1.65')
                     geo_ref_file = open(path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz','r')
@@ -530,7 +530,7 @@ class octahedral_complex:
                 create_generic_infile(jobpath,restart=False,use_old_optimizer = use_old_optimizer)
                 flag_oct, _, __ = self.inspect_initial_geo(geometry_path)
         else:
-			flag_oct = 1
+            flag_oct = 1
         
         return jobpath,mol_name, ANN_results, flag_oct
     
