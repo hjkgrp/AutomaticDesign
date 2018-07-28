@@ -434,6 +434,7 @@ class octahedral_complex:
         
         #Initialize ANN results dictionary
         ANN_results = {}
+        property_list = ['split', 'split_dist','homo', 'homo_dist','gap', 'gap_dist']
         if not (geo_exists):
                 print('generating '+ str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and'  + str(self.ax_ligands))
                 try:
@@ -464,39 +465,51 @@ class octahedral_complex:
                         print(call)
                         sys.exit()
                     
-                #if this_GA.config['symclass']=="strong":                        
+                #if this_GA.config['symclass']=="strong":
+                                        
                 with open(rundirpath + 'temp' +'/' + mol_name + '.report') as report_f:
                     for line in report_f:
-                        if ("pred_split_HS_LS" in line):
+                        if ("split" in line) and not ("dist" in line) and not ("trust" in line):
                             print('****')
                             print(line)
-                            ANN_split = float(line.split(",")[1])
-                            ANN_results.update({'pred_split_HS_LS':float(line.split(",")[1])})
-                            print('ANN_split is ' +"{0:.2f}".format(ANN_split))
-                        if("ANN_dist_to_train" in line) and not "HOMO" in line:
+                            split = float(line.split(",")[1])
+                            ANN_results.update({'split':float(line.split(",")[1])})
+                            print('ANN_split is ' +"{0:.2f}".format(split))
+                        if ("split" in line) and ("dist" in line):
                             print('****')
                             print(line)
-                            ANN_distance = float(line.split(",")[1])
-                            ANN_results.update({'ANN_dist_to_train':float(line.split(",")[1])})
-                            print('ANN_distance is ' +"{0:.2f}".format(ANN_distance))
-                        if ("pred_HOMO" in line):
+                            split_dist = float(line.split(",")[1])
+                            ANN_results.update({'split_dist':float(line.split(",")[1])})
+                            print('ANN_split_distance is ' +"{0:.2f}".format(split_dist))
+                        if ("homo" in line) and not ("dist" in line) and not ("trust" in line):
                             print('****')
                             print(line)
-                            ANN_homo = float(line.split(",")[1])
-                            ANN_results.update({'pred_HOMO':float(line.split(",")[1])})
-                            print('ANN_homo is ' +"{0:.2f}".format(ANN_homo))
-                        if ("pred_GAP" in line):
+                            homo = float(line.split(",")[1])
+                            ANN_results.update({'homo':float(line.split(",")[1])})
+                            print('ANN_homo is ' +"{0:.2f}".format(homo))
+                        if ("homo" in line) and ("dist" in line):
                             print('****')
                             print(line)
-                            ANN_gap = float(line.split(",")[1])
-                            ANN_results.update({'pred_GAP':float(line.split(",")[1])})
-                            print('ANN_gap is ' +"{0:.2f}".format(ANN_gap))
-                        if ("ANN_dist_to_train_HOMO_and_GAP" in line):
+                            homo_dist = float(line.split(",")[1])
+                            ANN_results.update({'homo_dist':float(line.split(",")[1])})
+                            print('ANN_homo_distance is ' +"{0:.2f}".format(homo_dist))
+                        if ("gap" in line) and not ("dist" in line) and not ("trust" in line):
                             print('****')
                             print(line)
-                            ANN_dist_to_train_HOMO_and_GAP = float(line.split(",")[1])
-                            ANN_results.update({'ANN_dist_to_train_HOMO_and_GAP':float(line.split(",")[1])})
-                            print('ANN_dist_to_train_HOMO_and_GAP is ' +"{0:.2f}".format(ANN_dist_to_train_HOMO_and_GAP))
+                            gap = float(line.split(",")[1])
+                            ANN_results.update({'gap':float(line.split(",")[1])})
+                            print('ANN_gap is ' +"{0:.2f}".format(gap))
+                        if ("gap" in line) and ("dist" in line):
+                            print('****')
+                            print(line)
+                            gap_dist = float(line.split(",")[1])
+                            ANN_results.update({'gap_dist':float(line.split(",")[1])})
+                            print('ANN_gap_distance is ' +"{0:.2f}".format(gap_dist))
+                    if len(list(set(property_list).difference(ANN_results.keys())))>0:
+                        for i in property_list:
+                            ANN_results.update({i:float(10000)}) #Chosen to be arbitrarily large to reduce the fitness value to 0.
+                            print(str(i)+ ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.')
+
                                 
                 if isOxocatalysis() and 'oxo' in liglist and isDFT(): #Subbing in 1.65 as Oxo BL
                     print('Modifying initial oxo geom file '+ mol_name + '.xyz to have oxo BL 1.65')
@@ -528,7 +541,14 @@ class octahedral_complex:
                         use_old_optimizer = True
                 ### make an infile!
                 create_generic_infile(jobpath,restart=False,use_old_optimizer = use_old_optimizer)
-                flag_oct, _, __ = self.inspect_initial_geo(geometry_path)
+                flag_oct, _, _ = self.inspect_initial_geo(geometry_path)
+                if flag_oct == 0:
+                    print('Bad initial geometry. Setting all of the fitness values to 0 so it is not used.')
+                    print('All ANN dictkeys set to 10000, chosen so that the fitness goes to 0.')
+                    ANN_results = {k:float(10000) for k in ANN_results}
+                    for i in property_list:
+                        ANN_results.update({i:float(10000)}) #Chosen to be arbitrarily large to reduce the fitness value to 0.
+                        print(str(i)+ ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.')
         else:
             flag_oct = 1
         
