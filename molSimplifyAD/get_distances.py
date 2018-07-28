@@ -20,19 +20,28 @@ def _find_distances():
                 lol = fi.readlines()
                 GA_run = get_current_GA()
                 runtype = GA_run.config["runtype"]
-                for line in lol:
-                    gene, energy, distance = line.split(",")
+                for i, line in enumerate(lol):
+                    print(line)
+                    if i == 0:
+                        line_list = line.split(",")
+                        prop_idx = line_list.index(runtype)
+                        dist_idx = line_list.index(runtype+'_dist')
+                        continue
+                    line_list = line.split(",")
+                    gene = line_list[0]
+                    prop = line_list[prop_idx]
+                    dist = line_list[dist_idx]
                     ll = gene.split("_")
 #                    if runtype == "split":
                     geneName = "_".join(ll[4:10])
 #                    elif runtype == "redox":
 #                        geneName = "_".join(ll[4:9])
                     
-                    distance = float(distance.strip('\n'))
+                    dist = float(dist.strip('\n'))
                     if geneName in gene_dist_dict.keys():
                         pass
                     else:
-                        gene_dist_dict.update({geneName:distance})
+                        gene_dist_dict.update({geneName:dist})
                         #print geneName + " : " + str(distance)
 
             fi.close()
