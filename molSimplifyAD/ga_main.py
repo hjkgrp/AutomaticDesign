@@ -416,10 +416,10 @@ class GA_generation:
             this_split_energy = float(full_gene_info[gene][0])
             this_ann_dist = float(full_gene_info[gene][1])
             if self.status_dictionary['scoring_function'] == "prop+dist":
-                fitness = find_split_dist_fitness(this_split_energy, self.status_dictionary['property_parameter'],
+                fitness = find_prop_dist_fitness(this_split_energy, self.status_dictionary['property_parameter'],
                                                   this_ann_dist, self.status_dictionary['distance_parameter'])
             else:
-                fitness = find_split_fitness(this_split_energy, self.status_dictionary['property_parameter'])
+                fitness = find_prop_fitness(this_split_energy, self.status_dictionary['property_parameter'])
             self.gene_fitness_dictionary.update({gene: fitness})
 
     def get_diversity(self):
