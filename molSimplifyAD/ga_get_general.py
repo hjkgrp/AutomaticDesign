@@ -77,21 +77,20 @@ def _get_freq_fitness(lastgen, npool):
     ## if not DFT, get all current ANN splitting energies
     if not isDFT():
             full_gene_info = dict()
-            ANN_split_dict = dict()
+            ANN_prop_dict = dict()
             GA_run = get_current_GA()
             runtype = GA_run.config["runtype"]
             for generation in xrange(lastgen+1):
                 ANN_dir = get_run_dir() + "ANN_ouput/gen_"+str(generation)+"/ANN_results.csv"
-                emsg, ANN_dict = read_dictionary(ANN_dir)
+                emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
                 for keys in ANN_dict.keys():
-                    if runtype == "split":
-                        this_gene = "_".join(keys.split("_")[4:10])
-                    elif runtype == "redox":
+                    this_gene = "_".join(keys.split("_")[4:10])
+                    if runtype == "redox":
                         this_gene = "_".join(keys.split("_")[4:9])                    
-                    this_energy = float(ANN_dict[keys].split(",")[0])
-                    this_dist = float(ANN_dict[keys].split(",")[1].strip('\n'))
-                    if not(this_gene in ANN_split_dict.keys()):
-                        ANN_split_dict.update({this_gene:this_energy})
+                    this_prop = float(ANN_dict[keys][runtype])
+                    this_dist = float(ANN_dict[keys][runtype+'_dist'])
+                    if not(this_gene in ANN_prop_dict.keys()):
+                        ANN_prop_dict.update({this_gene:this_prop})
     
     
     for generation in xrange(lastgen+1):
@@ -146,11 +145,11 @@ def _get_freq_fitness(lastgen, npool):
             mean_split = 0.0 
             count = 0
             print('ANN keys are ')
-            print(ANN_split_dict.keys())
+            print(ANN_prop_dict.keys())
             for geneName in current_gene_list:
                 
-                if geneName in ANN_split_dict.keys():
-                    mean_split += abs(ANN_split_dict[geneName])
+                if geneName in ANN_prop_dict.keys():
+                    mean_split += abs(ANN_prop_dict[geneName])
                     count += 1
                 else:
                     print('Error: expected ' + geneName + ' to be in ANN results...')
