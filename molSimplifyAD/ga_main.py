@@ -372,7 +372,6 @@ class GA_generation:
                             ANN_results_dict.update({mol_name: ANN_results})
                     log_bad_initial(jobpath)
                     update_converged_job_dictionary(jobpath, 3)
-            print(ANN_results_dict)
             write_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv', ANN_results_dict)
         set_outstanding_jobs(current_outstanding + jobpaths)
 
