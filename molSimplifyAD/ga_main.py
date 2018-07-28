@@ -215,13 +215,13 @@ class GA_generation:
                 if genes in fitkeys:
                     print('gene ' + str(genes) + ' already in dict, no action')
                 else:
-                    this_split_energy = float(final_results[genes].split)
+                    this_prop = float(final_results[genes].split)
                     if self.status_dictionary['scoring_function'] == "prop+dist":
                         print('error, cannot using prop+dist fitness with ANN only. Switching to prop only.')
                         logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen " +
                                str(self.status_dictionary['gen']) +
                                ' error, cannot using prop+dist fitness with ANN only. Switching to prop only')
-                    fitness = find_split_fitness(this_split_energy, self.status_dictionary['property_parameter'])
+                    fitness = find_prop_fitness(this_prop, self.status_dictionary['property_parameter'])
                     logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen " +
                            str(self.status_dictionary['gen']) +
                            ' setting fitness to ' + "{0:.2f}".format(fitness) + ' for new genes ' + str(genes))
@@ -302,22 +302,18 @@ class GA_generation:
             gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, basename, basegene = translate_job_name(
                 keys)
             set_fitness = False
-
+            this_prop = float(ANN_dict[keys][runtype])
+            this_dist = float(ANN_dict[keys][runtype+'_dist'])
             if runtype == 'split':
-                this_prop = float(ANN_dict[keys]['pred_split_HS_LS'])
-                this_dist = float(ANN_dict[keys]['ANN_dist_to_train'])
                 set_fitness = True
             elif runtype == 'homo':
-                this_spin = float(ANN_dict[keys]['pred_split_HS_LS'])
+                this_spin = float(ANN_dict[keys]['split'])
                 if (this_spin > 0 and spin_cat == 'LS') or (this_spin <= 0 and spin_cat == 'HS'):
-                    this_prop = float(1/ANN_dict[keys]['pred_HOMO'])
-                    this_dist = float(ANN_dict[keys]['ANN_dist_to_train_HOMO_and_GAP'])
+                    this_prop = float(1/ANN_dict[keys][runtype])
                     set_fitness = True
             elif runtype == 'gap':
-                this_spin = float(ANN_dict[keys]['pred_split_HS_LS'])
+                this_spin = float(ANN_dict[keys]['split'])
                 if (this_spin > 0 and spin_cat == 'LS') or (this_spin <= 0 and spin_cat == 'HS'):
-                    this_prop = float(ANN_dict[keys]['pred_GAP'])
-                    this_dist = float(ANN_dict[keys]['ANN_dist_to_train_HOMO_and_GAP'])
                     set_fitness = True
             if set_fitness:
                 if self.status_dictionary['scoring_function'] == "prop+dist":
@@ -369,6 +365,11 @@ class GA_generation:
                                + str(self.status_dictionary['gen'])
                                + " missing information for gene number  " + str(keys) + ' with  name ' + str(jobs.name))
                 else:
+                    if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
+                        msg, ANN_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
+                        if not mol_name in ANN_dict.keys():
+                            print('saving result in ANN dict: ' + mol_name)
+                            ANN_results_dict.update({mol_name: ANN_results})
                     log_bad_initial(jobpath)
                     update_converged_job_dictionary(jobpath, 3)
             print(ANN_results_dict)
@@ -384,21 +385,12 @@ class GA_generation:
             ANN_dir = get_run_dir() + "ANN_ouput/gen_" + str(gen) + "/ANN_results.csv"
             emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
             for keys in ANN_dict.keys():
-                if runtype == "split":
-                    this_gene = "_".join(keys.split("_")[4:10])
-                    print(' using split : '"_".join(keys.split("_")))
-                elif runtype == "homo":
-                    this_gene = "_".join(keys.split("_")[4:10])
-                    print(' using homo : '"_".join(keys.split("_")))
-                elif runtype == "gap":
-                    this_gene = "_".join(keys.split("_")[4:10])
-                    print(' using gap : '"_".join(keys.split("_")))
-                elif runtype == "redox":
-                    this_gene = "_".join(keys.split("_")[4:10])
-                this_energy = float(ANN_dict[keys].split(",")[0])
-                this_dist = float(ANN_dict[keys].split(",")[1].strip('\n'))
+                this_gene = "_".join(keys.split("_")[4:10])
+                print('using '+str(runtype)+ ': '+"_".join(keys.split("_")))
+                this_prop = float(ANN_dict[keys][runtype])
+                this_dist = float(ANN_dict[keys][runtype+'_dist'])
                 if not (this_gene in full_gene_info.keys()):
-                    full_gene_info.update({this_gene: [this_energy, this_dist]})
+                    full_gene_info.update({this_gene: [this_prop, this_dist]})
         return full_gene_info
 
     def calc_mean_dist(self, genes_list, full_gene_info):
@@ -413,13 +405,13 @@ class GA_generation:
         # use self.gene_fitness_dictionary
         ## update gene-fitness
         for gene in self.gene_fitness_dictionary.keys():
-            this_split_energy = float(full_gene_info[gene][0])
+            this_prop = float(full_gene_info[gene][0])
             this_ann_dist = float(full_gene_info[gene][1])
             if self.status_dictionary['scoring_function'] == "prop+dist":
-                fitness = find_prop_dist_fitness(this_split_energy, self.status_dictionary['property_parameter'],
+                fitness = find_prop_dist_fitness(this_prop, self.status_dictionary['property_parameter'],
                                                   this_ann_dist, self.status_dictionary['distance_parameter'])
             else:
-                fitness = find_prop_fitness(this_split_energy, self.status_dictionary['property_parameter'])
+                fitness = find_prop_fitness(this_prop, self.status_dictionary['property_parameter'])
             self.gene_fitness_dictionary.update({gene: fitness})
 
     def get_diversity(self):
