@@ -34,8 +34,8 @@ def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary):
                     postProc = True
             else:
                 postProc = True
-    else:
-        postProc = False
+        else:
+            postProc = False
     else:
         postProc = False
     return (postProc)
@@ -301,18 +301,18 @@ def check_all_current_convergence():
                             datetime.datetime.now()) + ' job not allowed to restart since no prog geo could be found')
                         if this_run.alpha == 20:
                             try:
-                shutil.copy(this_run.init_geopath, path_dictionary['stalled_jobs'] + this_run.name + '.xyz')
-                except:
-                print("GEOMETRY NOT FOUND FOR THIS JOB!")
-                    try:
-                        this_run.obtain_mol3d()
+                                shutil.copy(this_run.init_geopath, path_dictionary['stalled_jobs'] + this_run.name + '.xyz')
+                            except:
+                                 print("GEOMETRY NOT FOUND FOR THIS JOB!")
                         try:
-                            this_run.obtain_rmsd()
-                        except:
-                            this_run.rmsd = "undef"
+                            this_run.obtain_mol3d()
+                            try:
+                               this_run.obtain_rmsd()
+                            except:
+                                this_run.rmsd = "undef"
 
-                    except:
-                        print("ERROR: scr not found for" + str(this_run.scrpath))
+                        except:
+                            print("ERROR: scr not found for" + str(this_run.scrpath))
 
                 ## record convergence status
                 update_converged_job_dictionary(jobs, this_run.status)
