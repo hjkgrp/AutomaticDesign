@@ -71,6 +71,20 @@ def _gen_gene_fitness_csv(base_path, generation, end_results,sumt):
         writer.writerow( (generation,mean_fitness,len(end_results)))
     fo.close()
 
+def _human_readable_csv(base_path, generation, end_results):
+    from molSimplifyAD.get_distances import _find_distances
+    gene_dist_dict, _, gene_prop_dict, gene_name_dict = _find_distances()
+    csv_results_path = base_path + "human_readable_results.csv"
+    with open(csv_results_path,_write_mode(generation)) as fo:
+        writer = csv.writer(fo)
+        if int(generation) == 0:
+            writer.writerow( ('Generation','Gene','Chem Name','Fitness','Property','Distance','Frequency') )
+        else:
+            writer.writerow(('\n'))
+        for i in xrange(len(end_results)):
+            t = end_results[i]
+            writer.writerow( (t.generation,t.name,gene_name_dict[t.name],t.fitness,gene_prop_dict[t.name], gene_dist_dict[t.name],t.frequency) )
+    fo.close()
 ##########################################################################################
 #Find unique genes and their frequencies by name in current_genes and their fitness from gene_fitness. Output to a text file named results.txt
 def _get_freq_fitness(lastgen, npool):
@@ -100,13 +114,15 @@ def _get_freq_fitness(lastgen, npool):
         #First find all unique genes and add to list from current_genes.csv.
         ## If gene is already present, increase its frequency by 1.
         base_path = get_run_dir()+"statespace/"
-        read_path = base_path + "gen_"+str(generation)+"/current_genes.csv"
+        read_path = base_path + "gen_"+str(generation)+"/gene_fitness.csv"
         fi = open(read_path,'r')
         print "opened Gen: " + str(generation)
 
-        for h in xrange(npool):
-            n, geneName = fi.readline().split(",")
+        for line in fi:
+            #print(fi.readline())
+            geneName = line.split(",")[0]
             geneName = geneName.strip('\n')
+            # print('GET GENERAL GENENAME:',geneName)
             current_gene_list.append(geneName)
             index = _find_gene(geneName, end_results)
             if index >= 0:
@@ -139,6 +155,7 @@ def _get_freq_fitness(lastgen, npool):
         _write_all_txt(base_path, generation, end_results)
         _write_all_csv(base_path, generation, end_results)
         _gen_gene_fitness_csv(base_path, generation, end_results,sumt)
+        _human_readable_csv(base_path, generation, end_results)
         
         # Fourth, recover actual splitting energies only in ANN case
         if not isDFT():
