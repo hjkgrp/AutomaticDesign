@@ -34,8 +34,8 @@ def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary):
                     postProc = True
             else:
                 postProc = True
-	else:
-	    postProc = False
+    else:
+        postProc = False
     else:
         postProc = False
     return (postProc)
@@ -85,8 +85,7 @@ def check_all_current_convergence():
             if postprocessJob(job=jobs, live_job_dictionary=live_job_dictionary,
                               converged_jobs_dictionary=converged_jobs):
                 ##upack job name
-                gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(
-                    jobs)
+                gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(jobs)
                 ## create run
                 this_run = DFTRun(base_name)
                 
@@ -302,9 +301,9 @@ def check_all_current_convergence():
                             datetime.datetime.now()) + ' job not allowed to restart since no prog geo could be found')
                         if this_run.alpha == 20:
                             try:
-				shutil.copy(this_run.init_geopath, path_dictionary['stalled_jobs'] + this_run.name + '.xyz')
-			    except:
-				print("GEOMETRY NOT FOUND FOR THIS JOB!")
+                shutil.copy(this_run.init_geopath, path_dictionary['stalled_jobs'] + this_run.name + '.xyz')
+                except:
+                print("GEOMETRY NOT FOUND FOR THIS JOB!")
                     try:
                         this_run.obtain_mol3d()
                         try:
@@ -360,17 +359,11 @@ def check_all_current_convergence():
                         remove_outstanding_jobs(jobs)  # take out of pool
                 print('END OF JOB \n *******************\n')
             elif "sp_infiles" in jobs:
-		#if not postprocessJob(job=jobs, live_job_dictionary=live_job_dictionary,
-                #              converged_jobs_dictionary=converged_jobs):
-		#    print('Already checked ' + str(jobs))
-		#    continue
-                #print('checking status of SP job ' + str(jobs))
-                gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(
-                    jobs)
+                gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(jobs)
+                this_run = DFTRun(base_name)
                 metal_list = get_metals()
                 metal = metal_list[metal]
-                name = "_".join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), 'ahf',
-                                 str(int(alpha)).zfill(2), str(spin)])
+                name = "_".join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), 'ahf', str(int(alpha)).zfill(2), str(spin)])
                 this_run.chem_name = name
                 if (jobs not in live_job_dictionary.keys()) and ((len(jobs.strip('\n')) != 0)):
                     print('checking status of SP job ' + str(jobs))
