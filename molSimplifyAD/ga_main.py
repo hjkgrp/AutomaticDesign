@@ -309,7 +309,6 @@ class GA_generation:
             elif runtype == 'homo':
                 this_spin = float(ANN_dict[keys]['split'])
                 if (this_spin > 0 and spin_cat == 'LS') or (this_spin <= 0 and spin_cat == 'HS'):
-                    this_prop = float(1/ANN_dict[keys][runtype])
                     set_fitness = True
             elif runtype == 'gap':
                 this_spin = float(ANN_dict[keys]['split'])
@@ -319,6 +318,18 @@ class GA_generation:
                 if self.status_dictionary['scoring_function'] == "prop+dist":
                     fitness = find_prop_dist_fitness(this_prop, self.status_dictionary['property_parameter'],
                                                   this_dist, self.status_dictionary['distance_parameter'])
+                elif self.status_dictionary['scoring_function'] == "prop_hinge+dist":
+                    # print('ENTERED THE CORRECT SCORING FUNCTION')
+                    fitness = find_prop_hinge_dist_fitness(this_prop, self.status_dictionary['property_parameter'],
+                                                  this_dist, self.status_dictionary['distance_parameter'], range_value=0.5)
+                    # print('gene:',gene)
+                    # print('prop:',this_prop)
+                    # print('dist:',this_dist)
+                    # print('fitness:',fitness)
+                    
+                elif self.status_dictionary['scoring_function'] == "prop_hinge":
+                    fitness = find_prop_hinge_fitness(this_prop, self.status_dictionary['property_parameter'],
+                                                  this_dist, self.status_dictionary['distance_parameter'], range_value=0.5)
                 else:
                     fitness = find_prop_fitness(this_prop, self.status_dictionary['property_parameter'])
 
