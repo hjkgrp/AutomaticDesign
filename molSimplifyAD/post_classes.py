@@ -382,10 +382,10 @@ class DFTRun:
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         new_name = renameHFX(self.job, newHFX).strip('.in')
         reference_name = renameHFX(self.job, refHFX).strip('.in')
-	if int(new_name[-1]) == 1:
-		guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/c0\n'
-	else:
-        	guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/ca0' + \
+        if int(new_name[-1]) == 1:
+            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/c0\n'
+        else:
+            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/ca0' + \
                        ' ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/cb0\n'
         geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
         self.HFX_inpath = path_dictionary['infiles'] + new_name + '.in'
@@ -411,14 +411,14 @@ class DFTRun:
                 with open(self.HFX_job, 'r') as ref:
                     for line in ref:
                         if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
-			    if (int(new_name[-1]) == 1) and "method" in line: #restrict singlets
-                            	## these lines should be common
-                            	f.write("method b3lyp\n")
-			    else:
-				f.write(line)
-                f.write('coordinates ' + geo_ref + ' \n')
-                f.write(guess_string)
-                f.write('end\n')
+                            if (int(new_name[-1]) == 1) and "method" in line: #restrict singlets
+                                f.write("method b3lyp\n")
+                            else:
+                                f.write(line)
+                    f.write('coordinates ' + geo_ref + ' \n')
+                    f.write(guess_string)
+                    f.write('end\n')
+                    f.close()
 
         return (self.HFX_job)
 
@@ -427,7 +427,7 @@ class DFTRun:
         ## the fixed ordering is 
         ## HFX20 Oxo --> HFX20 Empty SP + HFX20 Empty Geo --> HFX25 Oxo --> HFX25 Empty SP + HFX25 Empty Geo... etc.
         _, _, _, _, _, _, _, _, _, _, _, this_spin, _, _, _, _ = translate_job_name(self.job)
-	emptyrefdict = {"25": "20", "30": "25", "15": "20", "10": "15", "05": "10", "00": "05"}
+        emptyrefdict = {"25": "20", "30": "25", "15": "20", "10": "15", "05": "10", "00": "05"}
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         new_name, reference_name = renameOxoEmpty(self.job)
@@ -445,7 +445,7 @@ class DFTRun:
         print('NEW REF is THIS:', new_ref, 'Referenced THIS:', geo_ref)
         self.empty_sp_inpath = path_dictionary['sp_in_path'] + new_name + '.in'
         self.empty_inpath = path_dictionary['infiles'] + new_name + '.in'
-	### write files
+        ### write files
         if not os.path.exists(self.empty_sp_inpath):
             f_emptysp = open(self.empty_sp_inpath, 'w')
             ## write SP
@@ -463,16 +463,15 @@ class DFTRun:
                 emptyrefval = emptyrefdict[splist[-2]]
                 splist[-2] = emptyrefval
                 wfnrefempty = "_".join(splist)
-		if int(this_spin)==1:
-			guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/c0\n'
-		else:
-                	guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/ca0' + \
-                                  ' ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/cb0\n'
-                f_emptysp.write(guess_string_sp)
-	    if int(this_spin) == 1:
-		f_emptysp.write('method b3lyp\n')
-	    else:
-		f_emptysp.write('method ub3lyp')
+            if int(this_spin)==1:
+                guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/c0\n'
+            else:
+                guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/ca0' + ' ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/cb0\n'
+            f_emptysp.write(guess_string_sp)
+            if int(this_spin) == 1:
+                f_emptysp.write('method b3lyp\n')
+            else:
+                f_emptysp.write('method ub3lyp\n')
             f_emptysp.write('end')
             f_emptysp.close()
 
@@ -689,8 +688,8 @@ class Comp:
         self.metal = 'undef'
         self.axlig1 = 'undef'
         if not isOxocatalysis():
-		self.axlig2 = 'undef'
-		self.axlig2_ind = 'undef'
+        self.axlig2 = 'undef'
+        self.axlig2_ind = 'undef'
         self.eqlig = 'undef'
         self.axlig1_ind = 'undef'
         self.eqlig_ind = 'undef'
@@ -752,38 +751,38 @@ class Comp:
                 for sc in ["LS", "HS"]:
                     this_attribute = "_".join(['ox', ox, sc, props])
                     setattr(self, this_attribute, False)
-	if isOxocatalysis():
-	    for props in list_of_init_props:
-                for spin_cat in ['LS', 'IS', 'HS']:
-                    for catax in ['x', 'oxo', 'hydroxyl']:
-                        if catax == 'x':
-                            for ox in ['2', '3']:
-                                this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
-				setattr(self, this_attribute, 'undef')
-                        elif catax == 'oxo':
-                            for ox in ['4', '5']:
-                        	this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
-                                setattr(self, this_attribute, 'undef')
-			else:
-                            for ox in ['3', '4']:
-				this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
-                                setattr(self, this_attribute, 'undef')        
-            for props in list_of_init_falses:
-                for spin_cat in ['LS', 'IS', 'HS']:
-                    for catax in ['x', 'oxo', 'hydroxyl']:
-                        if catax == 'x':
-                            for ox in ['2', '3']:
-                                this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
-                                setattr(self, this_attribute, False)
-                        elif catax == 'oxo':
-                            for ox in ['4', '5']:
-                                this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
-                                setattr(self, this_attribute, False)
-                        else:
-                            for ox in ['3', '4']:
-                                this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
-                                setattr(self, this_attribute, False)
-	### MOPAC
+    if isOxocatalysis():
+        for props in list_of_init_props:
+            for spin_cat in ['LS', 'IS', 'HS']:
+                for catax in ['x', 'oxo', 'hydroxyl']:
+                    if catax == 'x':
+                        for ox in ['2', '3']:
+                            this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
+                            setattr(self, this_attribute, 'undef')
+                    elif catax == 'oxo':
+                        for ox in ['4', '5']:
+                            this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
+                            setattr(self, this_attribute, 'undef')
+                    else:
+                        for ox in ['3', '4']:
+                            this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
+                            setattr(self, this_attribute, 'undef')        
+        for props in list_of_init_falses:
+            for spin_cat in ['LS', 'IS', 'HS']:
+                for catax in ['x', 'oxo', 'hydroxyl']:
+                    if catax == 'x':
+                        for ox in ['2', '3']:
+                            this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
+                            setattr(self, this_attribute, False)
+                    elif catax == 'oxo':
+                        for ox in ['4', '5']:
+                            this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
+                            setattr(self, this_attribute, False)
+                    else:
+                        for ox in ['3', '4']:
+                            this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
+                            setattr(self, this_attribute, False)
+        ### MOPAC
         self.mop_convergence = 0
         ### Coulomb
         self.cmmat = list()
