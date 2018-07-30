@@ -566,6 +566,30 @@ def find_prop_fitness(prop_energy, prop_parameter):
     fitness = numpy.exp(en)
     return fitness
 
+########################
+
+def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value = 1, lower_bound = None, upper_bound = None):
+    ############################################################################################################
+    # This fitness function contains two hinge loss terms, so that a range of values can be chosen for design. #
+    #         This fitness is different from the JPCL fitness because it will care about the used sign.        #
+    #         If upper and lower bounds are not provided by the user, then they are designed to be +/- 1       #
+    #             (range_value) of the property parameter (which would maintain a fitness of 1)                #
+    ############################################################################################################
+    if lower_bound == None and upper_bound == None:
+        lower_bound = float(prop_parameter) - float(range_value)
+        upper_bound = float(prop_parameter) + float(range_value)
+    elif lower_bound == None and upper_bound != None:
+        lower_bound = float(prop_parameter) - float(range_value)
+    elif lower_bound != None and upper_bound == None:
+        upper_bound = float(prop_parameter) + float(range_value)
+
+    upper_hinge = float(max(0.0, prop_energy-upper_bound))
+    lower_hinge = float(max(0.0, lower_bound-prop_energy))
+    ####### This set of two hinges will penalize values that are not within a certain range
+    en = -1*(upper_hinge + lower_hinge)
+    fitness = numpy.exp(en)
+    return fitness
+
 
 ########################
 
@@ -577,6 +601,31 @@ def find_prop_dist_fitness(prop_energy, prop_parameter, distance, distance_param
     fitness = numpy.exp(en)
     return fitness
 
+########################
+
+def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance_parameter, range_value = 1, lower_bound=None, upper_bound=None):
+    ############################################################################################################
+    # This fitness function contains two hinge loss terms, so that a range of values can be chosen for design. #
+    #        This fitness is different from the JPCL fitness because it will care about the used sign.         #
+    #          The distance portion of the fitness function is kept the same as previously designed.           # 
+    #    If upper and lower bounds are not provided by the user, then they are designed to be +/- 1.           #
+    #                of 1/3 of the property parameter (which would maintain a fitness of 1)                    #
+    ############################################################################################################
+    print('---------------------------------------USING PROP HINGE DIST FITNESS!!!!!!!!---------------------------------------')
+    if lower_bound == None and upper_bound == None:
+        lower_bound = float(prop_parameter) - float(range_value)
+        upper_bound = float(prop_parameter) + float(range_value)
+    elif lower_bound == None and upper_bound != None:
+        lower_bound = float(prop_parameter) - float(range_value)
+    elif lower_bound != None and upper_bound == None:
+        upper_bound = float(prop_parameter) + float(range_value)
+
+    upper_hinge = float(max(0.0, prop_energy-upper_bound))
+    lower_hinge = float(max(0.0, lower_bound-prop_energy))
+    ####### This set of two hinges will penalize values that are not within a certain range
+    en = -1*((upper_hinge + lower_hinge)+numpy.power((float(distance) / distance_parameter), 2.0))
+    fitness = numpy.exp(en)
+    return fitness
 
 ########################
 
