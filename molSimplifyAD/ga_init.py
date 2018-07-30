@@ -45,23 +45,25 @@ def wake_up_routine():
         new_tree.assess_fitness()
         print(new_tree.status_dictionary["ready_to_advance"])
         if current_gen <= maxgen and not GA_run.config["runtype"] == "redox":
-               ## check if there is still
-                ## work to be done
-                if (new_tree.status_dictionary["ready_to_advance"]):
-                        print('ready to advance')
-                        ## if all jobs are complete:
-                        ## choose genes for next gen
-                        new_tree.select_best_genes()
-                        new_tree.write_state()
-                        ## advance to next gen:
-                        new_tree.advance_generation()
-                        new_tree.assess_fitness()
-                        new_tree.write_state()
-                else:
-                        logger(new_tree.base_path_dictionary['state_path'],str(datetime.datetime.now())
-                               + ":  Gen  " + str(new_tree.status_dictionary['gen']) + ' has calcs oustanding,waiting')
-                        new_tree.write_state()
+            print('Current gen <= Maxgen in wakeup routine...')
+            ## check if there is still
+            ## work to be done
+            if (new_tree.status_dictionary["ready_to_advance"]):
+                    print('ready to advance')
+                    ## if all jobs are complete:
+                    ## choose genes for next gen
+                    new_tree.select_best_genes()
+                    new_tree.write_state()
+                    ## advance to next gen:
+                    new_tree.advance_generation()
+                    new_tree.assess_fitness()
+                    new_tree.write_state()
+            else:
+                    logger(new_tree.base_path_dictionary['state_path'],str(datetime.datetime.now())
+                           + ":  Gen  " + str(new_tree.status_dictionary['gen']) + ' has calcs oustanding,waiting')
+                    new_tree.write_state()
         else:
+            print('Current gen > Maxgen in wakeup routine...')
             logger(new_tree.base_path_dictionary['state_path'],str(datetime.datetime.now())
                                + ":  Gen  " + str(new_tree.status_dictionary['gen']) + ' has reached maxgen')
 
