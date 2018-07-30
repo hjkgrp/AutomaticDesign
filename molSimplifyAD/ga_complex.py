@@ -505,7 +505,7 @@ class octahedral_complex:
                             gap_dist = float(line.split(",")[1])
                             ANN_results.update({'gap_dist':float(line.split(",")[1])})
                             print('ANN_gap_distance is ' +"{0:.2f}".format(gap_dist))
-                    if len(list(set(property_list).difference(ANN_results.keys())))>0:
+                    if len(list(set(property_list).difference(ANN_results.keys())))>0 and not isDFT():
                         for i in property_list:
                             ANN_results.update({i:float(10000)}) #Chosen to be arbitrarily large to reduce the fitness value to 0.
                             print(str(i)+ ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.')
