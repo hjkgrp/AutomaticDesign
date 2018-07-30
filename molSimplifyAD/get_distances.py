@@ -21,7 +21,6 @@ def _find_distances():
                 GA_run = get_current_GA()
                 runtype = GA_run.config["runtype"]
                 for i, line in enumerate(lol):
-                    print(line)
                     if i == 0:
                         line_list = line.split(",")
                         prop_idx = line_list.index(runtype)
