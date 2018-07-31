@@ -148,6 +148,18 @@ class GA_generation:
             open(state_path, 'a').close()
         else:  ## backup state data
             shutil.copyfile(state_path, self.current_path_dictionary["state_path"] + "current_genes.csv.bcp")
+            ### Temperary fix for current_gene.csv
+            _state_path = self.current_path_dictionary["state_path"] + "_current_genes.csv"
+            with open(state_path, 'r') as fin:
+                with open(_state_path, 'w') as fo:
+                    if not '/gen_0/' in state_path:
+                        for idx, line in enumerate(fin):
+                            if idx >= self.status_dictionary['npool']:
+                                ll = '%d,%s' % (idx - self.status_dictionary['npool'], line.split(',')[-1])
+                                fo.write(ll)
+                    else:
+                        for line in fin:
+                            fo.write(line)
         emsg = write_dictionary(self.genes, state_path)
         ## second write live info to base directory
         state_path = self.base_path_dictionary["state_path"] + "/current_status.csv"
@@ -549,7 +561,6 @@ class GA_generation:
                    + " fitness is = " + "{0:.2f}".format((float(self.gene_fitness_dictionary[self.genes[keys]]))))
 
         outcome_list.sort(key=lambda tup: tup[2], reverse=True)
-
         full_size = len(outcome_list)
 
         if not os.path.isfile(summary_path):

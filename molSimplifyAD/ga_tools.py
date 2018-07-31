@@ -38,7 +38,7 @@ def get_infile_from_job(job):
     ## create paths
     path_dictionary = setup_paths()
     path_dictionary = advance_paths(path_dictionary, gen)
-    scr_path = path_dictionary["scr_path"] + base_name +'/'
+    scr_path = path_dictionary["scr_path"] + base_name + '/'
     target_inpath = path_dictionary["infiles"] + base_name + '.in'
     path_dictionary = setup_paths()
     ll = os.path.split(job)
@@ -55,7 +55,7 @@ def get_infile_from_job(job):
         track_elec_prop = get_current_GA().config['track_elec_prop']
     else:
         track_elec_prop = False
-    if track_elec_prop and (not check_txt_infile(target_inpath, 'ml_prop yes')) :
+    if track_elec_prop and (not check_txt_infile(target_inpath, 'ml_prop yes')):
         add_ml_prop_infiles(target_inpath)
     if (not check_txt_infile(target_inpath, 'scrdir')):
         print('---scrdir is not in the input file! Adding---')
@@ -67,6 +67,7 @@ def get_infile_from_job(job):
 #############
 def check_txt_infile(target_inpath, target_txt):
     return target_txt in open(target_inpath).read()
+
 
 #########################
 def add_ml_prop_infiles(filepath):
@@ -81,6 +82,7 @@ def add_ml_prop_infiles(filepath):
         f.write('bond_order_list yes\n')
         f.write('end\n')
 
+
 ######################
 def add_scrdir_infiles(filepath, scr_path):
     with open(filepath, 'r') as f:
@@ -88,7 +90,7 @@ def add_scrdir_infiles(filepath, scr_path):
     with open(filepath, 'w') as f:
         if not ftxt == None:
             f.writelines(ftxt[:-1])
-        f.write('scrdir '+ scr_path +'\n')
+        f.write('scrdir ' + scr_path + '\n')
         f.write('end\n')
 
 
@@ -148,7 +150,7 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
         with open(target_inpath, 'w') as newf:
             for line in source_lines:
                 if "$end" in line:
-                        newf.write(line)
+                    newf.write(line)
                 elif not ("coordinates" in line) and (not "end" in line) and (not "new_minimizer" in line):
                     if ("method ub3lyp" in line) and this_spin == 1:
                         newf.write('method b3lyp\n')
@@ -163,7 +165,7 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
         else:
             newf.write("new_minimizer yes\n")
         newf.write(guess_string)
-        newf.write('scrdir '+guess_path+'\n')
+        newf.write('scrdir ' + guess_path + '\n')
         newf.write('end\n')
 
 
@@ -176,7 +178,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
     list_of_props.append('alpha')
     list_of_props.append('axlig1')
     if (not oxocatalysis) and (not comp):
-    	list_of_props.append('axlig2')
+        list_of_props.append('axlig2')
     list_of_props.append('eqlig')
     list_of_prop_names = ['chem_name', 'converged', 'status', 'time', 'charge', 'spin',
                           'energy', 'init_energy',
@@ -201,7 +203,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
         list_of_prop_names.append("area")
     if oxocatalysis:
         if comp:
-            list_of_props.insert(1,'job_gene')
+            list_of_props.insert(1, 'job_gene')
             list_of_props.append('convergence')
             for props in list_of_prop_names:
                 for spin_cat in ['LS', 'IS', 'HS']:
@@ -222,7 +224,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
         if comp:
             list_of_props.insert(1, 'ox2RN')
             list_of_props.insert(2, 'ox3RN')
-            list_of_props.insert(3,'job_gene')
+            list_of_props.insert(3, 'job_gene')
             for props in list_of_prop_names:
                 for spin_cat in ['LS', 'HS']:
                     for ox in ['2', '3']:
@@ -331,6 +333,8 @@ def isall_post():
         return GA_run.config["post_all"]
     else:
         return False
+
+
 ########################
 def get_maxresub():
     GA_run = get_current_GA()
@@ -369,18 +373,18 @@ def translate_job_name(job):
     axlig2_ind = int(ll[8])
     ligands_dict = get_ligands()
     if hasattr(ligands_dict[int(eqlig_ind)][0], '__iter__'):  # SMILEs string
-        #eqlig = 'smi' + str(eqlig_ind)
+        # eqlig = 'smi' + str(eqlig_ind)
         eqlig = ligands_dict[int(eqlig_ind)][0][0]
     else:
         eqlig = ligands_dict[int(eqlig_ind)][0]
     if hasattr(ligands_dict[int(axlig1_ind)][0], '__iter__'):  # SMILEs string
-        #axlig1 = 'smi' + str(axlig1_ind)
+        # axlig1 = 'smi' + str(axlig1_ind)
         axlig1 = ligands_dict[int(axlig1_ind)][0][0]
     else:
         axlig1 = ligands_dict[int(axlig1_ind)][0]
 
     if hasattr(ligands_dict[int(axlig2_ind)][0], '__iter__'):  # SMILEs string
-        #axlig2 = 'smi' + str(axlig2_ind)
+        # axlig2 = 'smi' + str(axlig2_ind)
         axlig2 = ligands_dict[int(axlig2_ind)][0][0]
     else:
         axlig2 = ligands_dict[int(axlig2_ind)][0]
@@ -496,7 +500,7 @@ def setup_paths():
         "prog_geo_path": working_dir + "prog_geo/",
         "stalled_jobs": working_dir + "stalled_jobs/",
         "archive_path": working_dir + "archive_resub/",
-        "results_comb_path": working_dir + "results_comb/",        
+        "results_comb_path": working_dir + "results_comb/",
         "state_path": working_dir + "statespace/",
         "molsimplify_inps": working_dir + "ms_inps/",
         "infiles": working_dir + "infiles/",
@@ -566,9 +570,10 @@ def find_prop_fitness(prop_energy, prop_parameter):
     fitness = numpy.exp(en)
     return fitness
 
+
 ########################
 
-def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value = 1, lower_bound = None, upper_bound = None):
+def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=1, lower_bound=None, upper_bound=None):
     ############################################################################################################
     # This fitness function contains two hinge loss terms, so that a range of values can be chosen for design. #
     #         This fitness is different from the JPCL fitness because it will care about the used sign.        #
@@ -583,10 +588,10 @@ def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value = 1, lower_
     elif lower_bound != None and upper_bound == None:
         upper_bound = float(prop_parameter) + float(range_value)
 
-    upper_hinge = float(max(0.0, prop_energy-upper_bound))
-    lower_hinge = float(max(0.0, lower_bound-prop_energy))
+    upper_hinge = float(max(0.0, prop_energy - upper_bound))
+    lower_hinge = float(max(0.0, lower_bound - prop_energy))
     ####### This set of two hinges will penalize values that are not within a certain range
-    en = -1*(upper_hinge + lower_hinge)
+    en = -1 * (upper_hinge + lower_hinge)
     fitness = numpy.exp(en)
     return fitness
 
@@ -601,9 +606,11 @@ def find_prop_dist_fitness(prop_energy, prop_parameter, distance, distance_param
     fitness = numpy.exp(en)
     return fitness
 
+
 ########################
 
-def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance_parameter, range_value = 1, lower_bound=None, upper_bound=None):
+def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance_parameter, range_value=1,
+                                 lower_bound=None, upper_bound=None):
     ############################################################################################################
     # This fitness function contains two hinge loss terms, so that a range of values can be chosen for design. #
     #        This fitness is different from the JPCL fitness because it will care about the used sign.         #
@@ -611,7 +618,8 @@ def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance
     #    If upper and lower bounds are not provided by the user, then they are designed to be +/- 1.           #
     #                of 1/3 of the property parameter (which would maintain a fitness of 1)                    #
     ############################################################################################################
-    print('---------------------------------------USING PROP HINGE DIST FITNESS!!!!!!!!---------------------------------------')
+    print(
+        '---------------------------------------USING PROP HINGE DIST FITNESS!!!!!!!!---------------------------------------')
     if lower_bound == None and upper_bound == None:
         lower_bound = float(prop_parameter) - float(range_value)
         upper_bound = float(prop_parameter) + float(range_value)
@@ -620,12 +628,13 @@ def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance
     elif lower_bound != None and upper_bound == None:
         upper_bound = float(prop_parameter) + float(range_value)
 
-    upper_hinge = float(max(0.0, prop_energy-upper_bound))
-    lower_hinge = float(max(0.0, lower_bound-prop_energy))
+    upper_hinge = float(max(0.0, prop_energy - upper_bound))
+    lower_hinge = float(max(0.0, lower_bound - prop_energy))
     ####### This set of two hinges will penalize values that are not within a certain range
-    en = -1*((upper_hinge + lower_hinge)+numpy.power((float(distance) / distance_parameter), 2.0))
+    en = -1 * ((upper_hinge + lower_hinge) + numpy.power((float(distance) / distance_parameter), 2.0))
     fitness = numpy.exp(en)
     return fitness
+
 
 ########################
 
@@ -656,6 +665,8 @@ def read_dictionary(path):
     except:
         emsg = "Error, could not read state space: " + path
     return emsg, dictionary
+
+
 ########################
 def read_ANN_results_dictionary(path):
     emsg = False
@@ -663,27 +674,28 @@ def read_ANN_results_dictionary(path):
     try:
         with open(path, 'r') as f:
             for i, val in enumerate(f.readlines()):
-				if i == 0:
-					keynames = val.strip().split(',')
-				else:
-					ll = val.strip().split(',')
-					key = ll[0]
-					dictionary2 = {}
-					for j, val2 in enumerate(ll[1:]):
-						dictionary2[keynames[j+1]] = float(val2)
-					dictionary[key] = dictionary2
+                if i == 0:
+                    keynames = val.strip().split(',')
+                else:
+                    ll = val.strip().split(',')
+                    key = ll[0]
+                    dictionary2 = {}
+                    for j, val2 in enumerate(ll[1:]):
+                        dictionary2[keynames[j + 1]] = float(val2)
+                    dictionary[key] = dictionary2
     except:
         emsg = "Error, could not read ANN dictionary: " + path
     return emsg, dictionary
-    
+
+
 ########################
 def write_ANN_results_dictionary(path, dictionary):
-	with open(path, 'w') as f:
-		for i, val in enumerate(dictionary.keys()):
-			if i == 0:
-				f.write(",".join(["name"]+dictionary[val].keys())+'\n')
-			f.write(",".join([val]+[str(k) for k in dictionary[val].values()])+'\n')
-					
+    with open(path, 'w') as f:
+        for i, val in enumerate(dictionary.keys()):
+            if i == 0:
+                f.write(",".join(["name"] + dictionary[val].keys()) + '\n')
+            f.write(",".join([val] + [str(k) for k in dictionary[val].values()]) + '\n')
+
 
 ########################
 def logger(path, message):
@@ -859,13 +871,13 @@ def write_descriptor_csv(list_of_runs, file_handle, append=False):
             print('first element has ' + str(n_cols) + ' columns')
             if n_cols == 0:
                 print('reshuffling vector so that first element does have no names')
-                for i,runs in enumerate(list_of_runs):
+                for i, runs in enumerate(list_of_runs):
                     n_cols = len(runs.descriptor_names)
-                    if n_cols >0: 
+                    if n_cols > 0:
                         break
-            else: # first element is ok!
-                i =0
-                #file_handle.write('\n')
+            else:  # first element is ok!
+                i = 0
+                # file_handle.write('\n')
             for j, names in enumerate(list_of_runs[i].descriptor_names):
                 if j < (n_cols - 1):
                     file_handle.write(names + ',')
@@ -875,7 +887,7 @@ def write_descriptor_csv(list_of_runs, file_handle, append=False):
             try:
                 file_handle.write(runs.name)
                 counter = 0
-                #print('found ' + str(len(runs.descriptors)) + ' descriptors ')
+                # print('found ' + str(len(runs.descriptors)) + ' descriptors ')
                 for properties in runs.descriptors:
                     file_handle.write(',' + str(properties))
                 file_handle.write('\n')
@@ -963,7 +975,7 @@ def process_run_post(filepost, filedescriptors):
     for kw in keywords_needed:
         if not kw in header:
             flag = False
-            print('---column %s does not exist. dataframe spliting is aborted---'%kw)
+            print('---column %s does not exist. dataframe spliting is aborted---' % kw)
     if flag:
         df2 = pd.read_csv(filedescriptors)
         df2 = df2.rename(index=str, columns={'runs': 'name'})
