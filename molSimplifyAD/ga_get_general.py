@@ -107,73 +107,73 @@ def _get_freq_fitness(lastgen, npool):
                         ANN_prop_dict.update({this_gene:this_prop})
     
     
-    for generation in range(lastgen+1):
-        end_results = []
-        current_gene_list = list()
+        for generation in range(lastgen+1):
+            end_results = []
+            current_gene_list = list()
 
-        #First find all unique genes and add to list from current_genes.csv.
-        ## If gene is already present, increase its frequency by 1.
-        base_path = get_run_dir()+"statespace/"
-        read_path = base_path + "gen_"+str(generation)+"/gene_fitness.csv"
-        fi = open(read_path,'r')
-        print("opened Gen: " + str(generation))
+            #First find all unique genes and add to list from current_genes.csv.
+            ## If gene is already present, increase its frequency by 1.
+            base_path = get_run_dir()+"statespace/"
+            read_path = base_path + "gen_"+str(generation)+"/gene_fitness.csv"
+            fi = open(read_path,'r')
+            print("opened Gen: " + str(generation))
 
-        for line in fi:
-            #print(fi.readline())
-            geneName = line.split(",")[0]
-            geneName = geneName.strip('\n')
-            # print('GET GENERAL GENENAME:',geneName)
-            current_gene_list.append(geneName)
-            index = _find_gene(geneName, end_results)
-            if index >= 0:
-                end_results[index].frequency += 1
-            else:
-                end_results.append(gene(geneName, 0, 1,generation))
-
-        fi.close()
-
-        #Second, find fitness values of genes, add to list, and calculate mean fitness.
-        sumt = 0
-
-        read_path = base_path + "gen_"+str(generation)+"/gene_fitness.csv"
-        with open(read_path, 'r') as fi:
-            list_of_lines = fi.readlines()
-            for line in list_of_lines:
-                geneName, fitness = line.split(",")
-
-                fitness = fitness.strip('\n')
+            for line in fi:
+                #print(fi.readline())
+                geneName = line.split(",")[0]
+                geneName = geneName.strip('\n')
+                # print('GET GENERAL GENENAME:',geneName)
+                current_gene_list.append(geneName)
                 index = _find_gene(geneName, end_results)
                 if index >= 0:
-                    temp = end_results[index]
-                    sumt += temp.frequency * float(fitness)
-                    temp.fitness = format(float(fitness), '.12f')
-                    print(temp._long())
-
-        fi.close()
-
-        #Third, output the unique genes and their fitness values to .txt and .csv files.
-        _write_all_txt(base_path, generation, end_results)
-        _write_all_csv(base_path, generation, end_results)
-        _gen_gene_fitness_csv(base_path, generation, end_results,sumt)
-        _human_readable_csv(base_path, generation, end_results)
-        
-        # Fourth, recover actual splitting energies only in ANN case
-        if not isDFT():
-            mean_split = 0.0 
-            count = 0
-            print('ANN keys are ')
-            print(ANN_prop_dict.keys())
-            for geneName in current_gene_list:
-                
-                if geneName in ANN_prop_dict.keys():
-                    mean_split += abs(ANN_prop_dict[geneName])
-                    count += 1
+                    end_results[index].frequency += 1
                 else:
-                    print('Error: expected ' + geneName + ' to be in ANN results...')
-                    pass
-            mean_split = mean_split/float(count)
-            ## write
-            _write_split_csv(base_path, generation, mean_split)  
+                    end_results.append(gene(geneName, 0, 1,generation))
+
+            fi.close()
+
+            #Second, find fitness values of genes, add to list, and calculate mean fitness.
+            sumt = 0
+
+            read_path = base_path + "gen_"+str(generation)+"/gene_fitness.csv"
+            with open(read_path, 'r') as fi:
+                list_of_lines = fi.readlines()
+                for line in list_of_lines:
+                    geneName, fitness = line.split(",")
+
+                    fitness = fitness.strip('\n')
+                    index = _find_gene(geneName, end_results)
+                    if index >= 0:
+                        temp = end_results[index]
+                        sumt += temp.frequency * float(fitness)
+                        temp.fitness = format(float(fitness), '.12f')
+                        print(temp._long())
+
+            fi.close()
+
+            #Third, output the unique genes and their fitness values to .txt and .csv files.
+            _write_all_txt(base_path, generation, end_results)
+            _write_all_csv(base_path, generation, end_results)
+            _gen_gene_fitness_csv(base_path, generation, end_results,sumt)
+            _human_readable_csv(base_path, generation, end_results)
+            
+            # Fourth, recover actual splitting energies only in ANN case
+            if not isDFT():
+                mean_split = 0.0 
+                count = 0
+                print('ANN keys are ')
+                print(ANN_prop_dict.keys())
+                for geneName in current_gene_list:
+                    
+                    if geneName in ANN_prop_dict.keys():
+                        mean_split += abs(ANN_prop_dict[geneName])
+                        count += 1
+                    else:
+                        print('Error: expected ' + geneName + ' to be in ANN results...')
+                        pass
+                mean_split = mean_split/float(count)
+                ## write
+                _write_split_csv(base_path, generation, mean_split)  
 
 
 
