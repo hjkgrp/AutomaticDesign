@@ -138,7 +138,8 @@ def _get_freq_fitness(lastgen, npool):
                 if not (this_gene in ANN_prop_dict.keys()):
                     ANN_prop_dict.update({this_gene: this_prop})
 
-    for generation in range(lastgen):
+    generation = 0
+    while (generation == 0 or generation < lastgen):
         end_results = []
         current_gene_list = list()
 
@@ -216,8 +217,10 @@ def _get_freq_fitness(lastgen, npool):
             mean_split = mean_split / float(count)
             ## write
             _write_split_csv(base_path, generation, mean_split)
+        generation += 1
 
 
 def format_freqeuncies():
     lastgen, npool = _get_gen_npool(get_run_dir())
-    _get_freq_fitness(lastgen, npool, )
+    print('lastgen', lastgen)
+    _get_freq_fitness(lastgen, npool)
