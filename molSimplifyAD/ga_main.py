@@ -76,7 +76,7 @@ class GA_generation:
         ### of ligand list (not smiles)
         ligands_list_inds = [i[0] for i in self.ligands_list]
         metal_list_inds = get_metals()
-        
+
         ## check if ligs are known
         print('!!!!set:', [ligs[0][0], ligs[1][0], ligs[1][1]])
         print('!!!!!ind:', ligands_list_inds[0:7])
@@ -84,20 +84,20 @@ class GA_generation:
         print('asking about :')
         print(ligs[0][0])
         print('has type ' + str(type(ligs[0][0])))
-        print(isinstance(ligs[0][0],basestring))          
-        if isinstance(ligs[0][0],basestring):
+        print(isinstance(ligs[0][0], basestring))
+        if isinstance(ligs[0][0], basestring):
             print('dictionary  lig: ' + str(ligs[0][0]))
             this_eq = ligs[0][0]
         else:
             print('smiles lig: ' + str(ligs[0][0]))
             this_eq = ligs[0][0][0]
-        if isinstance(ligs[1][0],basestring):
+        if isinstance(ligs[1][0], basestring):
             print('dictionary  lig: ' + str(ligs[1][0]))
             this_ax1 = ligs[1][0]
         else:
             print('smiles lig: ' + str(ligs[1][0]))
             this_ax1 = ligs[1][0][0]
-        if isinstance(ligs[1][1],basestring):
+        if isinstance(ligs[1][1], basestring):
             print('dictionary  lig: ' + str(ligs[1][1]))
 
             this_ax2 = ligs[1][1]
@@ -148,6 +148,18 @@ class GA_generation:
             open(state_path, 'a').close()
         else:  ## backup state data
             shutil.copyfile(state_path, self.current_path_dictionary["state_path"] + "current_genes.csv.bcp")
+            ### Temperary fix for current_gene.csv
+            _state_path = self.current_path_dictionary["state_path"] + "_current_genes.csv"
+            with open(state_path, 'r') as fin:
+                with open(_state_path, 'w') as fo:
+                    if not '/gen_0/' in state_path:
+                        for idx, line in enumerate(fin):
+                            if idx >= self.status_dictionary['npool']:
+                                ll = '%d,%s' % (idx - self.status_dictionary['npool'], line.split(',')[-1])
+                                fo.write(ll)
+                    else:
+                        for line in fin:
+                            fo.write(line)
         emsg = write_dictionary(self.genes, state_path)
         ## second write live info to base directory
         state_path = self.base_path_dictionary["state_path"] + "/current_status.csv"
@@ -274,7 +286,7 @@ class GA_generation:
         ## if we are using the ANN only, populate the gene-fitnes dictionary
         if self.status_dictionary["DFT"] == False:
             self.ANN_fitness()
-        #sardines
+        # sardines
         if os.path.exists('bad_initgeo_log.txt'):
             with open('bad_initgeo_log.txt', 'r') as fin:
                 print('!!!!!!!These are jobs with bad initial geometry generated from molSimplify!!!!!')
@@ -303,13 +315,12 @@ class GA_generation:
                 keys)
             set_fitness = False
             this_prop = float(ANN_dict[keys][runtype])
-            this_dist = float(ANN_dict[keys][runtype+'_dist'])
+            this_dist = float(ANN_dict[keys][runtype + '_dist'])
             if runtype == 'split':
                 set_fitness = True
             elif runtype == 'homo':
                 this_spin = float(ANN_dict[keys]['split'])
                 if (this_spin > 0 and spin_cat == 'LS') or (this_spin <= 0 and spin_cat == 'HS'):
-                    this_prop = float(1/ANN_dict[keys][runtype])
                     set_fitness = True
             elif runtype == 'gap':
                 this_spin = float(ANN_dict[keys]['split'])
@@ -318,7 +329,23 @@ class GA_generation:
             if set_fitness:
                 if self.status_dictionary['scoring_function'] == "prop+dist":
                     fitness = find_prop_dist_fitness(this_prop, self.status_dictionary['property_parameter'],
-                                                  this_dist, self.status_dictionary['distance_parameter'])
+                                                     this_dist, self.status_dictionary['distance_parameter'])
+                elif self.status_dictionary['scoring_function'] == "prop_hinge+dist":
+                    # print('ENTERED THE CORRECT SCORING FUNCTION')
+                    fitness = find_prop_hinge_dist_fitness(this_prop, self.status_dictionary['property_parameter'],
+                                                           this_dist, self.status_dictionary['distance_parameter'],
+                                                           range_value=0.5)
+                    print('gene:', gene)
+                    print('prop:', this_prop)
+                    print('dist:', this_dist)
+                    print('fitness:', fitness)
+                    print('this_spin', this_spin)
+                    print('-----------')
+
+                elif self.status_dictionary['scoring_function'] == "prop_hinge":
+                    fitness = find_prop_hinge_fitness(this_prop, self.status_dictionary['property_parameter'],
+                                                      this_dist, self.status_dictionary['distance_parameter'],
+                                                      range_value=0.5)
                 else:
                     fitness = find_prop_fitness(this_prop, self.status_dictionary['property_parameter'])
 
@@ -329,10 +356,11 @@ class GA_generation:
 
     def job_dispatcher(self):
         jobpaths = list()
-        emsg, ANN_results_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + '/ANN_results.csv')
+        emsg, ANN_results_dict = read_ANN_results_dictionary(
+            self.current_path_dictionary["ANN_output"] + '/ANN_results.csv')
         current_outstanding = get_outstanding_jobs()
         converged_jobs = find_converged_job_dictionary()
-       
+
         for keys in self.outstanding_jobs.keys():
 
             jobs = self.outstanding_jobs[keys]
@@ -350,13 +378,14 @@ class GA_generation:
                 ## generate HS/LS
                 ## convert the gene into a job file and geometery
                 jobpath, mol_name, ANN_results, flag_oct = jobs.generate_geometery(prefix=job_prefix,
-                                                                                               spin=spins,
-                                                                                               path_dictionary=self.current_path_dictionary,
-                                                                                               rundirpath=get_run_dir(),
-                                                                                               gen=self.status_dictionary['gen'])
+                                                                                   spin=spins,
+                                                                                   path_dictionary=self.current_path_dictionary,
+                                                                                   rundirpath=get_run_dir(),
+                                                                                   gen=self.status_dictionary['gen'])
                 if flag_oct:
                     if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
-                        msg, ANN_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
+                        msg, ANN_dict = read_ANN_results_dictionary(
+                            self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
                         if not mol_name in ANN_dict.keys():
                             print('saving result in ANN dict: ' + mol_name)
                             ANN_results_dict.update({mol_name: ANN_results})
@@ -366,13 +395,15 @@ class GA_generation:
                                + " missing information for gene number  " + str(keys) + ' with  name ' + str(jobs.name))
                 else:
                     if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
-                        msg, ANN_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
+                        msg, ANN_dict = read_ANN_results_dictionary(
+                            self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
                         if not mol_name in ANN_dict.keys():
                             print('saving result in ANN dict: ' + mol_name)
                             ANN_results_dict.update({mol_name: ANN_results})
                     log_bad_initial(jobpath)
                     update_converged_job_dictionary(jobpath, 3)
-            write_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv', ANN_results_dict)
+            write_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv',
+                                         ANN_results_dict)
         set_outstanding_jobs(current_outstanding + jobpaths)
 
     # Tree doctor will do checkup on tree's diversity and distance. Functionality can be switched on or off. Automatically off if DFT enabled.
@@ -385,9 +416,9 @@ class GA_generation:
             emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
             for keys in ANN_dict.keys():
                 this_gene = "_".join(keys.split("_")[4:10])
-                print('using '+str(runtype)+ ': '+"_".join(keys.split("_")))
+                print('using ' + str(runtype) + ': ' + "_".join(keys.split("_")))
                 this_prop = float(ANN_dict[keys][runtype])
-                this_dist = float(ANN_dict[keys][runtype+'_dist'])
+                this_dist = float(ANN_dict[keys][runtype + '_dist'])
                 if not (this_gene in full_gene_info.keys()):
                     full_gene_info.update({this_gene: [this_prop, this_dist]})
         return full_gene_info
@@ -408,7 +439,7 @@ class GA_generation:
             this_ann_dist = float(full_gene_info[gene][1])
             if self.status_dictionary['scoring_function'] == "prop+dist":
                 fitness = find_prop_dist_fitness(this_prop, self.status_dictionary['property_parameter'],
-                                                  this_ann_dist, self.status_dictionary['distance_parameter'])
+                                                 this_ann_dist, self.status_dictionary['distance_parameter'])
             else:
                 fitness = find_prop_fitness(this_prop, self.status_dictionary['property_parameter'])
             self.gene_fitness_dictionary.update({gene: fitness})
@@ -511,7 +542,8 @@ class GA_generation:
 
         diagnosis.append('****************************************************************')
         for message in diagnosis:
-            print message
+            print
+            message
             logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + '   ' + str(message))
 
     ################################################################
@@ -529,7 +561,6 @@ class GA_generation:
                    + " fitness is = " + "{0:.2f}".format((float(self.gene_fitness_dictionary[self.genes[keys]]))))
 
         outcome_list.sort(key=lambda tup: tup[2], reverse=True)
-
         full_size = len(outcome_list)
 
         if not os.path.isfile(summary_path):
@@ -600,13 +631,13 @@ class GA_generation:
             keep_equitorial = selected_compound_dictionary[these_partners[1]]
             old_genes = [selected_genes[key] for key in these_partners]
             new_complex_1 = keep_axial.exchange_ligands(keep_equitorial, True)
-            #new_complex_1 = new_complex_1.exchange_metal(keep_equitorial)
-            #new_complex_1 = new_complex_1.exchange_ox(keep_equitorial)
+            # new_complex_1 = new_complex_1.exchange_metal(keep_equitorial)
+            # new_complex_1 = new_complex_1.exchange_ox(keep_equitorial)
             print('FINAL : 1st new gene from this cross ' + str(new_complex_1.name) + '\n')
 
             new_complex_2 = keep_equitorial.exchange_ligands(keep_axial, False)
-            #new_complex_2 = new_complex_2.exchange_metal(keep_axial)
-            #new_complex_2 = new_complex_2.exchange_ox(keep_axial)
+            # new_complex_2 = new_complex_2.exchange_metal(keep_axial)
+            # new_complex_2 = new_complex_2.exchange_ox(keep_axial)
             new_gene_1 = new_complex_1.name
             new_gene_2 = new_complex_2.name
             print('FINAL : 2nd new gene from this cross ' + str(new_complex_2.name) + '\n')

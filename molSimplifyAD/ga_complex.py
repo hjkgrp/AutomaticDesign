@@ -551,8 +551,11 @@ class octahedral_complex:
                         print(str(i)+ ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.')
         else:
             flag_oct = 1
-        
-        return jobpath,mol_name, ANN_results, flag_oct
+        sorted_ANN_results = {}
+        if len(ANN_results.keys())>0:
+            for key in sorted(ANN_results.iterkeys()):
+                sorted_ANN_results[key] = ANN_results[key]
+        return jobpath,mol_name, sorted_ANN_results, flag_oct
     
     def inspect_initial_geo(self,geometry_path):
         ## this function contains the logic for inspecting a

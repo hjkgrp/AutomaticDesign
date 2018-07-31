@@ -340,7 +340,7 @@ class DFTRun:
             ## write solvent
             f_insp.write('run energy \n')
             f_insp.write('scrdir scr/init_sp/  \n')
-            f_insp.write('coordinates ' + self.init_geopath + ' \n')
+            f_insp.write('coordinates ' + self.geopath + ' \n')
             f_insp.write(
                 'guess ' + get_run_dir() + 'scr/geo/' + self.name + '/ca0' + ' ' + get_run_dir() + 'scr/geo/' + self.name + '/cb0')
             with open(self.inpath, 'r') as ref:
@@ -373,7 +373,70 @@ class DFTRun:
                         f_solvent.write(line)
             f_solvent.write('end')
             f_solvent.close()
-
+    def write_solvent_input(self,dielectric=78.39):
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
+        if not (self.spin == 1):
+            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
+                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0'
+        else:
+            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0' 
+        self.solvent_inpath = path_dictionary['solvent_infiles'] + self.name + '.in'
+        ### check solvent
+        if not os.path.exists(self.solvent_inpath):
+            f_solvent = open(self.solvent_inpath, 'w')
+            ## write solvent
+            f_solvent.write('run energy \n')
+            f_solvent.write('pcm cosmo \n')
+            f_solvent.write('pcm_grid iswig \n')
+            f_solvent.write('epsilon '+str(dielectric)+' \n')
+            f_solvent.write('pcm_radii read \n')
+            f_solvent.write('print_ms yes \n')
+            f_solvent.write('pcm_radii_file /home/jp/pcm_radii \n')
+            f_solvent.write('scrdir scr/solvent/  \n')
+            f_solvent.write('coordinates ' + self.geopath + ' \n')
+            f_solvent.write(guess_string)
+            with open(self.inpath, 'r') as ref:
+                for line in ref:
+                    if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
+                        ## these lines should be common
+                        f_solvent.write(line)
+            f_solvent.write('end')
+            f_solvent.close()
+    def write_bigbasis_input(self):
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
+        if not (self.spin == 1):
+            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
+                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0'
+        else:
+            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0' 
+        self.init_sp_inpath = path_dictionary['sp_in_path'] + self.name + '.in'
+        ### check sp inpath
+        if not os.path.exists(self.init_sp_inpath):
+            f_insp = open(self.init_sp_inpath, 'w')
+            ## write solvent
+            f_insp.write('run energy \n')
+            f_insp.write('scrdir scr/init_sp/  \n')
+            f_insp.write('coordinates ' + self.geopath + ' \n')
+            f_insp.write(guess_string + '\n')
+            f_insp.write("basis aug-cc-pvdz\n")
+            f_insp.write("$multibasis\n")
+            f_insp.write("Cr lacvps_ecp\n")
+            f_insp.write("Mn lacvps_ecp\n")
+            f_insp.write("Fe lacvps_ecp\n")
+            f_insp.write("Co lacvps_ecp\n")
+            f_insp.write("Ni lacvps_ecp\n")
+            f_insp.write("$end\n")
+            with open(self.inpath, 'r') as ref:
+                for line in ref:
+                    if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not ("basis" in line) :
+                        ## these lines should be common
+                        f_insp.write(line)
+            f_insp.write('end')
+            f_insp.close()
     def write_HFX_inputs(self, newHFX, refHFX):
         ## set file paths for HFX resampling
         ## the fixed ordering is 
