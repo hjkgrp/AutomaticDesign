@@ -100,6 +100,23 @@ def _human_readable_csv(base_path, generation, end_results):
     fo.close()
 
 
+def _write_summary_csv(base_path, generation, sum_results):
+    from molSimplifyAD.get_distances import _find_distances
+    gene_dist_dict, _, gene_prop_dict, gene_name_dict = _find_distances()
+    csv_results_path = base_path + "results_summary.csv"
+    with open(csv_results_path, _write_mode(generation)) as fo:
+        writer = csv.writer(fo)
+        if int(generation) == 0:
+            writer.writerow(('Generation', 'Gene', 'Chem Name', 'Fitness', 'Property', 'Distance'))
+        else:
+            writer.writerow(('\n'))
+        for i in range(len(sum_results)):
+            t = sum_results[i]
+            writer.writerow((t.generation, t.name, gene_name_dict[t.name], t.fitness, gene_prop_dict[t.name],
+                             gene_dist_dict[t.name]))
+    fo.close()
+
+
 ##########################################################################################
 # Find unique genes and their frequencies by name in current_genes and their fitness from gene_fitness. Output to a text file named results.txt
 def _get_freq_fitness(lastgen, npool):
@@ -131,7 +148,6 @@ def _get_freq_fitness(lastgen, npool):
         read_path = base_path + "gen_" + str(generation) + "/_current_genes.csv"
         fi = open(read_path, 'r')
         print("opened Gen: " + str(generation))
-
         for line in fi:
             # print(fi.readline())
             geneName = line.split(",")[-1]
@@ -147,7 +163,6 @@ def _get_freq_fitness(lastgen, npool):
 
         # Second, find fitness values of genes, add to list, and calculate mean fitness.
         sumt = 0
-
         read_path = base_path + "gen_" + str(generation) + "/gene_fitness.csv"
         with open(read_path, 'r') as fi:
             list_of_lines = fi.readlines()
@@ -161,7 +176,20 @@ def _get_freq_fitness(lastgen, npool):
                     sumt += temp.frequency * float(fitness)
                     temp.fitness = format(float(fitness), '.12f')
                     print(temp._long())
+        fi.close()
 
+        ## Write a summary file for the property, distance, and fitness.
+        sum_results = []
+        read_path = base_path + "gen_" + str(generation) + "/gene_fitness.csv"
+        fi = open(read_path, 'r')
+        for line in fi:
+            geneName = line.split(",")[0]
+            geneName = geneName.strip('\n')
+            index = _find_gene(geneName, sum_results)
+            if index >= 0:
+                sum_results[index].frequency += 1
+            else:
+                sum_results.append(gene(geneName, 0, 1, generation))
         fi.close()
 
         # Third, output the unique genes and their fitness values to .txt and .csv files.
@@ -169,6 +197,7 @@ def _get_freq_fitness(lastgen, npool):
         _write_all_csv(base_path, generation, end_results)
         _gen_gene_fitness_csv(base_path, generation, end_results, sumt)
         _human_readable_csv(base_path, generation, end_results)
+        _write_summary_csv(base_path, generation, sum_results)
 
         # Fourth, recover actual splitting energies only in ANN case
         if not isDFT():
