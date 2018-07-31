@@ -50,7 +50,7 @@ def _write_all_csv(base_path, generation, end_results):
     csv_results_path = base_path + "all_results.csv"
     with open(csv_results_path,_write_mode(generation)) as fo:
         writer = csv.writer(fo)
-        for i in xrange(len(end_results)):
+        for i in range(len(end_results)):
             t = end_results[i]
             writer.writerow( (t.generation,t.name,t.fitness,t.frequency) )
     fo.close()
@@ -81,7 +81,7 @@ def _human_readable_csv(base_path, generation, end_results):
             writer.writerow( ('Generation','Gene','Chem Name','Fitness','Property','Distance','Frequency') )
         else:
             writer.writerow(('\n'))
-        for i in xrange(len(end_results)):
+        for i in range(len(end_results)):
             t = end_results[i]
             writer.writerow( (t.generation,t.name,gene_name_dict[t.name],t.fitness,gene_prop_dict[t.name], gene_dist_dict[t.name],t.frequency) )
     fo.close()
@@ -107,7 +107,7 @@ def _get_freq_fitness(lastgen, npool):
                         ANN_prop_dict.update({this_gene:this_prop})
     
     
-    for generation in xrange(lastgen+1):
+    for generation in range(lastgen+1):
         end_results = []
         current_gene_list = list()
 
@@ -116,7 +116,7 @@ def _get_freq_fitness(lastgen, npool):
         base_path = get_run_dir()+"statespace/"
         read_path = base_path + "gen_"+str(generation)+"/gene_fitness.csv"
         fi = open(read_path,'r')
-        print "opened Gen: " + str(generation)
+        print("opened Gen: " + str(generation))
 
         for line in fi:
             #print(fi.readline())
@@ -147,7 +147,7 @@ def _get_freq_fitness(lastgen, npool):
                     temp = end_results[index]
                     sumt += temp.frequency * float(fitness)
                     temp.fitness = format(float(fitness), '.12f')
-                    print temp._long()
+                    print(temp._long())
 
         fi.close()
 
