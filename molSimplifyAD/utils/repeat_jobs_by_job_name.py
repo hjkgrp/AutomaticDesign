@@ -54,7 +54,7 @@ print('found:  ' + str(len(joblist)) + ' jobs to check')
 job_to_rep = []
 with open("jobs_to_repeat.txt",'r') as f:
     for job in f.readlines():
-    job_to_rep.append(job.strip())
+        job_to_rep.append(job.strip())
 ## holder for jobs to delete
 delete_list = []
 restart_list = []
@@ -167,32 +167,32 @@ for runs in restart_list:
                         os.remove(runs.outpath)
                 else:
                         print('would delete '+  runs.outpath)
-        if os.path.isfile(runs.progpath):
-                if not dry_run:
-                        os.remove(runs.progpath)
-                else:
-                        print('would delete '+  runs.progpath)
-        if os.path.isfile(runs.comppath):
-                if not dry_run:
-                        os.remove(runs.comppath)
-                else:
-                        print('would delete '+  runs.comppath)
+    if os.path.isfile(runs.progpath):
+            if not dry_run:
+                    os.remove(runs.progpath)
+            else:
+                    print('would delete '+  runs.progpath)
+    if os.path.isfile(runs.comppath):
+            if not dry_run:
+                    os.remove(runs.comppath)
+            else:
+                    print('would delete '+  runs.comppath)
     if os.path.isfile(runs.spinpath) and isOxocatalysis():
                 if not dry_run:
                         os.remove(runs.spinpath)
                 else:
                         print('would delete '+  runs.spinpath)
-        if os.path.isfile(runs.spoutpath) and isOxocatalysis():
+    if os.path.isfile(runs.spoutpath) and isOxocatalysis():
                 if not dry_run:
                         os.remove(runs.spoutpath)
                 else:
                         print('would delete '+ runs.spoutpath)
-        if not keep_scr:
+    if not keep_scr:
                 if os.path.isdir(runs.scrfolder):
                         if not dry_run:
                                 shutil.rmtree(runs.scrfolder)
                         else:
                                 print('would delete FOLDER '+  runs.scrfolder)
-        if not dry_run: # delete jobs from converged and submitted:
+    if not dry_run: # delete jobs from converged and submitted:
                 purge_converged_jobs(runs.job)
                 purge_submitted_jobs(runs.job)

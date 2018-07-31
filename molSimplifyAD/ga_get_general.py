@@ -90,23 +90,21 @@ def _human_readable_csv(base_path, generation, end_results):
 def _get_freq_fitness(lastgen, npool):
     ## if not DFT, get all current ANN splitting energies
     if not isDFT():
-            full_gene_info = dict()
-            ANN_prop_dict = dict()
-            GA_run = get_current_GA()
-            runtype = GA_run.config["runtype"]
-            for generation in xrange(lastgen+1):
-                ANN_dir = get_run_dir() + "ANN_ouput/gen_"+str(generation)+"/ANN_results.csv"
-                emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
-                for keys in ANN_dict.keys():
-                    this_gene = "_".join(keys.split("_")[4:10])
-                    if runtype == "redox":
-                        this_gene = "_".join(keys.split("_")[4:9])                    
-                    this_prop = float(ANN_dict[keys][runtype])
-                    this_dist = float(ANN_dict[keys][runtype+'_dist'])
-                    if not(this_gene in ANN_prop_dict.keys()):
-                        ANN_prop_dict.update({this_gene:this_prop})
-    
-    
+        full_gene_info = dict()
+        ANN_prop_dict = dict()
+        GA_run = get_current_GA()
+        runtype = GA_run.config["runtype"]
+        for generation in xrange(lastgen+1):
+            ANN_dir = get_run_dir() + "ANN_ouput/gen_"+str(generation)+"/ANN_results.csv"
+            emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
+            for keys in ANN_dict.keys():
+                this_gene = "_".join(keys.split("_")[4:10])
+                if runtype == "redox":
+                    this_gene = "_".join(keys.split("_")[4:9])                    
+                this_prop = float(ANN_dict[keys][runtype])
+                this_dist = float(ANN_dict[keys][runtype+'_dist'])
+                if not(this_gene in ANN_prop_dict.keys()):
+                    ANN_prop_dict.update({this_gene:this_prop})
         for generation in range(lastgen+1):
             end_results = []
             current_gene_list = list()
