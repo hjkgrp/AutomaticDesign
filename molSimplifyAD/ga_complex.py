@@ -59,6 +59,11 @@ class octahedral_complex:
         ### choose the equitorial ligand
         n = len(self.ligands_list)
         eq_ind = numpy.random.randint(low = 0,high = n)
+        if isOxocatalysis():
+            while (self.ligands_list[eq_ind][0] in ['x','hydroxyl','oxo']):
+                eq_ind = numpy.random.randint(low = 0,high = n)
+                if self.ligands_list[eq_ind][0] not in ['x','hydroxyl','oxo']:
+                    break
         #print('choosing '+str(eq_ind) + ' from '+str(n))
         # now we test if it is a SMILEs or molsimplify ligand    
         #print('name  is ' +str(self.ligands_list[eq_ind][0]))
@@ -76,9 +81,14 @@ class octahedral_complex:
         self.ax_inds = list()
         while not self.ready_for_assembly:
             ax_ind = numpy.random.randint(low = 0,high = n)
+            if isOxocatalysis():
+                while (self.ligands_list[ax_ind][0] in ['x','hydroxyl','oxo']) or (self.ligands_list[ax_ind][1] > 1): #No bidentate axials
+                    ax_ind = numpy.random.randint(low = 0,high = n)
+                    if (self.ligands_list[ax_ind][0] not in ['x','hydroxyl','oxo']) and (self.ligands_list[ax_ind][1][0] == 1):
+                        break
             ax_ligand_properties  = self.ligands_list[ax_ind][1]
             ax_dent = ax_ligand_properties[0]
-            if ax_dent > 1:
+            if ax_dent > 1 and not isOxocatalysis():
                 if ((self.eq_dent == 2) and (ax_dent == 2) and (len(self.ax_ligands) == 0)):
                     three_bidentate  = True
                     self.ax_ligands = [self.ligands_list[ax_ind][0],self.ligands_list[ax_ind][0]]
@@ -90,9 +100,17 @@ class octahedral_complex:
                     self.ready_for_assembly = False
             elif ax_dent == 1:
                 GA_run = get_current_GA()
-                if GA_run.config["symclass"] == "strong":
+                if GA_run.config["symclass"] == "strong" and not isOxocatalysis():
                     self.ax_ligands = [self.ligands_list[ax_ind][0],self.ligands_list[ax_ind][0]]
                     self.ax_inds = [ax_ind, ax_ind]
+                    if (len(self.ax_ligands) ==2):
+                        self.ax_dent = 1
+                        self.ax_oc = [1,1]
+                        self.ready_for_assembly = True
+                elif isOxocatalysis():
+                    oxo = find_ligand_idx('oxo')
+                    self.ax_ligands = [self.ligands_list[ax_ind][0],self.ligands_list[oxo][0]]
+                    self.ax_inds = [ax_ind, oxo]
                     if (len(self.ax_ligands) ==2):
                         self.ax_dent = 1
                         self.ax_oc = [1,1]
@@ -144,14 +162,14 @@ class octahedral_complex:
         self.eq_oc  = int(4/self.eq_dent)
         self.eq_ligands = [self.ligands_list[new_eq_ind[0]][0] for i in range(0,self.eq_oc)]
         self.eq_inds = new_eq_ind
-        if (self.ax_dent == 1) or ((self.ax_dent == 2) and (self.eq_dent ==2)):
+        if (self.ax_dent == 1) or ((self.ax_dent == 2) and (self.eq_dent ==2) and not isOxocatalysis()): #No triple bidentate in oxocat
                 ## everything is ok!
                 if (self.ax_dent == 2):
                     self.three_bidentate = True
         else: ## this complex cannot exist. keeping  equitorial,
               ## regenerating axial ligands
-           #print("complex with" + str(self.eq_ligands) + " and " + str(self.ax_ligands) + " cannot exist, randomizing axial")
-           self._get_random_axial()
+            #print("complex with" + str(self.eq_ligands) + " and " + str(self.ax_ligands) + " cannot exist, randomizing axial")
+            self._get_random_axial()
         self._name_self()
 
     def replace_axial(self,new_ax_ind):
@@ -247,19 +265,31 @@ class octahedral_complex:
         if (lig_to_mutate == 0):
             print("mutating equitorial ligand")
             rand_ind = numpy.random.randint(low = 0,high = n)
+            if isOxocatalysis():
+                while (self.ligands_list[rand_ind][0] in ['x','hydroxyl','oxo']):
+                    rand_ind = numpy.random.randint(low = 0,high = n)
+                    if self.ligands_list[rand_ind][0] not in ['x','hydroxyl','oxo']:
+                        break
             child.replace_equitorial([rand_ind])
         elif (lig_to_mutate == 1) or (lig_to_mutate == 2):
             print('mutating axial ligand')
+            if isOxocatalysis():
+                lig_to_mutate = 1 #Always keep lig_to_mutate = 1 since do not want to mutate axial moiety
             ready_flag = False
             while not ready_flag:
                 new_ax_list = list()
                 rand_ind = numpy.random.randint(low = 0,high = n)
+                if isOxocatalysis():
+                    while (self.ligands_list[rand_ind][0] in ['x','hydroxyl','oxo']) or (self.ligands_list[rand_ind][1] > 1): #No bidentate axials
+                        rand_ind = numpy.random.randint(low = 0,high = n)
+                        if (self.ligands_list[rand_ind][0] not in ['x','hydroxyl','oxo']) and (self.ligands_list[rand_ind][1][0] == 1):
+                            break
                 ax_ligand_properties  = self.ligands_list[rand_ind][1]
                 ax_dent = ax_ligand_properties[0]
                 if (ax_dent == self.ax_dent):
                     if (lig_to_mutate == 1):
                         print("mutating axial 1 ")
-                        if GA_run.config['symclass'] =="strong":
+                        if GA_run.config['symclass'] =="strong" and not isOxocatalysis():
                             new_ax_list = [rand_ind,rand_ind]
                         else:
                             new_ax_list = [rand_ind,self.ax_inds[1]]
@@ -434,7 +464,7 @@ class octahedral_complex:
         
         #Initialize ANN results dictionary
         ANN_results = {}
-        property_list = ['split', 'split_dist','homo', 'homo_dist','gap', 'gap_dist']
+        property_list = ['split', 'split_dist','homo', 'homo_dist','gap', 'gap_dist','oxo','oxo_dist']
         if not (geo_exists):
                 print('generating '+ str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and'  + str(self.ax_ligands))
                 try:
@@ -505,10 +535,25 @@ class octahedral_complex:
                             gap_dist = float(line.split(",")[1])
                             ANN_results.update({'gap_dist':float(line.split(",")[1])})
                             print('ANN_gap_distance is ' +"{0:.2f}".format(gap_dist))
+                        if ("oxo" in line) and not ("dist" in line) and not ("trust" in line):
+                            print('****')
+                            print(line)
+                            oxo = float(line.split(",")[1])
+                            ANN_results.update({'oxo':float(line.split(",")[1])})
+                            print('ANN_oxo is ' +"{0:.2f}".format(oxo))
+                        if ("oxo" in line) and ("dist" in line):
+                            print('****')
+                            print(line)
+                            oxo_dist = float(line.split(",")[1])
+                            ANN_results.update({'oxo_dist':float(line.split(",")[1])})
+                            print('ANN_oxo_distance is ' +"{0:.2f}".format(oxo_dist))
                     if len(list(set(property_list).difference(ANN_results.keys())))>0 and not isDFT():
                         for i in property_list:
-                            ANN_results.update({i:float(10000)}) #Chosen to be arbitrarily large to reduce the fitness value to 0.
-                            print(str(i)+ ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.')
+                            if i not in ANN_results.keys():
+                                ANN_results.update({i:float(10000)}) #Chosen to be arbitrarily large to reduce the fitness value to 0.
+                                print(str(i)+ ' set to 10000 in ANN_results, chosen so that the fitness goes to 0. The key was not present.')
+                            else:
+                                print(str(i)+ ' set to '+str(ANN_results[i])+' since the key was present')
 
                                 
                 if isOxocatalysis() and 'oxo' in liglist and isDFT(): #Subbing in 1.65 as Oxo BL
