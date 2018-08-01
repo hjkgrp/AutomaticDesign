@@ -36,6 +36,9 @@ def launch_job(job,sub_num):
     elif axlig2 == 'x' and "sp_infiles" in job:
         cmd_script = "launch_script_sp.sh"
         infile = job
+    elif "sp_infiles" in job and not isOxocatalysis():
+        cmd_script = "launch_script_sp.sh"
+        infile = job
     else:
         if GA_run.config["optimize"]:
             cmd_script = "launch_script_geo.sh"
