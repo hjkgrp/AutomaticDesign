@@ -326,6 +326,17 @@ class GA_generation:
                 this_spin = float(ANN_dict[keys]['split'])
                 if (this_spin > 0 and spin_cat == 'LS') or (this_spin <= 0 and spin_cat == 'HS'):
                     set_fitness = True
+            elif runtype in ['oxo','hat']:
+                metals_list = get_metals()
+                print('THIS PROP',this_prop,'THIS DIST',this_dist)
+                print('SPINCAT:',spin_cat, spin)
+                print('METAL',metals_list[metal],'OX:', ox)
+                if spin_cat == 'HS' or (metals_list[metal] == 'cr' and int(spin) == 2): #This is temporary, only on the high spin cases...
+                    print('FITNESS SET OXO GA!')
+                    set_fitness = True
+            else:
+                print('-------------------RUNTYPE is invalid!--------------------')
+
             if set_fitness:
                 if self.status_dictionary['scoring_function'] == "prop+dist":
                     fitness = find_prop_dist_fitness(this_prop, self.status_dictionary['property_parameter'],
@@ -334,18 +345,19 @@ class GA_generation:
                     # print('ENTERED THE CORRECT SCORING FUNCTION')
                     fitness = find_prop_hinge_dist_fitness(this_prop, self.status_dictionary['property_parameter'],
                                                            this_dist, self.status_dictionary['distance_parameter'],
-                                                           range_value=0.5)
+                                                           range_value=1)
                     print('gene:', gene)
                     print('prop:', this_prop)
                     print('dist:', this_dist)
                     print('fitness:', fitness)
-                    print('this_spin', this_spin)
+                    if runtype in ['gap', 'homo']:
+                        print('this_spin', this_spin)
                     print('-----------')
 
                 elif self.status_dictionary['scoring_function'] == "prop_hinge":
                     fitness = find_prop_hinge_fitness(this_prop, self.status_dictionary['property_parameter'],
                                                       this_dist, self.status_dictionary['distance_parameter'],
-                                                      range_value=0.5)
+                                                      range_value=1)
                 else:
                     fitness = find_prop_fitness(this_prop, self.status_dictionary['property_parameter'])
 
@@ -427,7 +439,13 @@ class GA_generation:
         mean_dist = 0
         npool = int(self.status_dictionary['npool'])
         for i in range(0, npool):
-            mean_dist += float(full_gene_info[genes_list[i]][1])
+            if int(full_gene_info[genes_list[i]][1])==10000: #Do not count these in mean distance because they arent assigned.
+                npool -= 1
+                continue
+            else:
+                mean_dist += float(full_gene_info[genes_list[i]][1])
+        if npool == 0:
+            npool += 1
         mean_dist = mean_dist / npool  # average distance
         return mean_dist
 
@@ -436,10 +454,18 @@ class GA_generation:
         ## update gene-fitness
         for gene in self.gene_fitness_dictionary.keys():
             this_prop = float(full_gene_info[gene][0])
-            this_ann_dist = float(full_gene_info[gene][1])
+            this_dist = float(full_gene_info[gene][1])
             if self.status_dictionary['scoring_function'] == "prop+dist":
                 fitness = find_prop_dist_fitness(this_prop, self.status_dictionary['property_parameter'],
-                                                 this_ann_dist, self.status_dictionary['distance_parameter'])
+                                                 this_dist, self.status_dictionary['distance_parameter'])
+            elif self.status_dictionary['scoring_function'] == "prop_hinge+dist":
+                fitness = find_prop_hinge_dist_fitness(this_prop, self.status_dictionary['property_parameter'],
+                                                       this_dist, self.status_dictionary['distance_parameter'],
+                                                       range_value=1)
+            elif self.status_dictionary['scoring_function'] == "prop_hinge":
+                fitness = find_prop_hinge_fitness(this_prop, self.status_dictionary['property_parameter'],
+                                                  this_dist, self.status_dictionary['distance_parameter'],
+                                                  range_value=1)
             else:
                 fitness = find_prop_fitness(this_prop, self.status_dictionary['property_parameter'])
             self.gene_fitness_dictionary.update({gene: fitness})
@@ -465,10 +491,12 @@ class GA_generation:
         ## read in scoring function info
         dist_score = ("dist" in self.status_dictionary['scoring_function'])
         dist_param = float(self.status_dictionary['distance_parameter'])
+
         pmut = float(self.status_dictionary['pmut'])
 
         ## print mean_distance, mean_fitness, and diversity
         full_gene_info = self.get_full_values(curr_gen)
+
         mean_dist = float(self.calc_mean_dist(self.genes, full_gene_info))
         diversity = self.get_diversity()
 
@@ -481,6 +509,7 @@ class GA_generation:
         ### if diversity drops below 25% of npool, pmut will be raised to 0.50
         ### if diveristy is at least 25% of npool, pmut will return to original
         if (self.status_dictionary['monitor_diversity']):
+            print('ENTERED INTO DIVERSITY')
             current_pmut = self.status_dictionary['pmut']
             low_diversity = (diversity < 0.25 * (int(self.status_dictionary['npool'])))
             if (low_diversity) and (current_pmut < 0.50) and (current_pmut >= 0):
@@ -495,11 +524,15 @@ class GA_generation:
                 healthy = False
                 symptom00 = "Diversity low. Pmut already high. No medicine available. Check after a few more generations."
                 diagnosis.append(symptom00)
-            elif (
-                    current_pmut < 0):  # check if pmut has been inflated - if it has and diversity is ok, restore to original
+            elif (current_pmut < 0):  # check if pmut has been inflated - if it has and diversity is ok, restore to original
                 orig_pmut = float(current_pmut + 0.50)
                 diagnosis.append("Low diversity has been cured. Pmut now restored to " + str(orig_pmut))
                 self.status_dictionary.update({'pmut': orig_pmut})
+            elif self.status_dictionary['mean_fitness'] == 0:
+                healthy = False
+                symptom02 = "Fitness bad. Pmut increased. Check after a few more generations."
+                new_pmut = float(current_pmut - 0.50)
+                diagnosis.append(symptom02)
 
         ## adjust scoring_function based on calculated mean_distance
         if (self.status_dictionary['monitor_distance']):
@@ -542,8 +575,7 @@ class GA_generation:
 
         diagnosis.append('****************************************************************')
         for message in diagnosis:
-            print
-            message
+            print(message)
             logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + '   ' + str(message))
 
     ################################################################
