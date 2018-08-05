@@ -447,6 +447,27 @@ def check_thermo_file(this_run):
 
 	return(this_run)
 
+def check_sp_file(this_run):
+    ## function to test a big basis single point convergence
+    ##  for terachem files
+    #  @param this_run a run class
+    #  @return this_run populated run class
+    found_data = False
+    if os.path.exists(this_run.init_outpath):
+        with open(this_run.outpath) as f: 
+            data=f.readlines()
+            found_conv =False 
+            found_data =False
+            found_time = False 
+            for i,lines in enumerate(data):
+                if str(lines).find('FINAL ENERGY') != -1:
+                    energy =str(lines.split()[2])
+                    found_data = True
+        if (found_data == True):
+            this_run.sp_energy = energy
+            this_run.sp_status =  True
+    return this_run
+
 def check_init_sp(this_run):
     ## function to test initial single point convergence
     ##  for terachem files
@@ -464,7 +485,7 @@ def check_init_sp(this_run):
                     energy =str(lines.split()[2])
                     found_data = True
         if (found_data == True):
-			this_run.init_energy = energy
+            this_run.init_energy = energy
     return this_run
 def check_mopac(this_run):
     ## function to test mopac convergence

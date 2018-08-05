@@ -198,7 +198,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
                           'init_ax1_MLB', 'init_ax2_MLB', 'init_eq_MLB', 'thermo_cont', 'imag', 'solvent_cont',
                           'terachem_version', 'terachem_detailed_version',
                           'basis', 'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
-                          'mop_coord']
+                          'mop_coord','sp_energy']
     if SASA:
         list_of_prop_names.append("area")
     if oxocatalysis:
@@ -312,8 +312,36 @@ def isSASA():
             return False
     except:
         return False
-
-
+########################
+def isSolvent():
+    GA_run = get_current_GA()
+    try:
+        if GA_run.config["solvent"]:
+            return True
+        else:
+            return False
+    except:
+        return False
+########################
+def isThermo():
+    GA_run = get_current_GA()
+    try:
+        if GA_run.config["thermo"]:
+            return True
+        else:
+            return False
+    except:
+        return False
+########################
+def isSinglePoint():
+    GA_run = get_current_GA()
+    try:
+        if GA_run.config["single_point"]:
+            return True
+        else:
+            return False
+    except:
+        return False
 ########################
 def isOxocatalysis():
     GA_run = get_current_GA()
@@ -348,11 +376,13 @@ def get_maxresub():
 ########################
 def isOptimize():
     GA_run = get_current_GA()
-    if GA_run.config["optimize"]:
-        return True
-    else:
+    try:
+        if GA_run.config["optimize"]:
+            return True
+        else:
+            return False
+    except:
         return False
-    return rdir
 
 
 ########################
