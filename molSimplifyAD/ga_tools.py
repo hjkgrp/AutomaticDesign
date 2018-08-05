@@ -253,12 +253,19 @@ def get_metals():
     metals_list = ['cr', 'mn', 'fe', 'co']
     return metals_list
 
+########################
+def find_ligand_idx(lig):
+    ligs = get_ligands()
+    for i, item in enumerate(ligs):
+        if lig in item:
+            idx = int(i)
+    return idx
 
 ########################
 def get_ox_states():  # could be made metal dependent like spin
     GA_run = get_current_GA()
     if GA_run.config["oxocatalysis"]:
-        ox_list = [2, 3, 4, 5]
+        ox_list = [4, 5]
     else:
         ox_list = [2, 3]
     return ox_list
@@ -269,7 +276,7 @@ def spin_dictionary():
     GA_run = get_current_GA()
     if GA_run.config["use_singlets"]:
         if GA_run.config["all_spins"]:
-            metal_spin_dictionary = {'co': {2: [2, 4], 3: [1, 3, 5], 4: [2, 4, 6], 5: [1, 3, 5]},
+            metal_spin_dictionary = {'co': {2: [2, 4], 3: [1, 3, 5], 4: [2, 4], 5: [1, 3, 5]},
                                      'cr': {2: [1, 3, 5], 3: [2, 4], 4: [1, 3], 5: [2]},
                                      'fe': {2: [1, 3, 5], 3: [2, 4, 6], 4: [1, 3, 5], 5: [2, 4]},
                                      'mn': {2: [2, 4, 6], 3: [1, 3, 5], 4: [2, 4], 5: [1, 3]}}
@@ -610,6 +617,7 @@ def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=1, lower_bo
     #         If upper and lower bounds are not provided by the user, then they are designed to be +/- 1       #
     #             (range_value) of the property parameter (which would maintain a fitness of 1)                #
     ############################################################################################################
+    print('-------------------------USING PROP HINGE FITNESS!!!!!!!!--------------------------')
     if lower_bound == None and upper_bound == None:
         lower_bound = float(prop_parameter) - float(range_value)
         upper_bound = float(prop_parameter) + float(range_value)
@@ -617,7 +625,7 @@ def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=1, lower_bo
         lower_bound = float(prop_parameter) - float(range_value)
     elif lower_bound != None and upper_bound == None:
         upper_bound = float(prop_parameter) + float(range_value)
-
+    #print('USED RANGE VALUE:',range_value)
     upper_hinge = float(max(0.0, prop_energy - upper_bound))
     lower_hinge = float(max(0.0, lower_bound - prop_energy))
     ####### This set of two hinges will penalize values that are not within a certain range
@@ -648,8 +656,7 @@ def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance
     #    If upper and lower bounds are not provided by the user, then they are designed to be +/- 1.           #
     #                of 1/3 of the property parameter (which would maintain a fitness of 1)                    #
     ############################################################################################################
-    print(
-        '---------------------------------------USING PROP HINGE DIST FITNESS!!!!!!!!---------------------------------------')
+    print('-------------------------USING PROP HINGE DIST FITNESS!!!!!!!!--------------------------')
     if lower_bound == None and upper_bound == None:
         lower_bound = float(prop_parameter) - float(range_value)
         upper_bound = float(prop_parameter) + float(range_value)
@@ -657,6 +664,7 @@ def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance
         lower_bound = float(prop_parameter) - float(range_value)
     elif lower_bound != None and upper_bound == None:
         upper_bound = float(prop_parameter) + float(range_value)
+    #print('USED RANGE VALUE:',range_value)
 
     upper_hinge = float(max(0.0, prop_energy - upper_bound))
     lower_hinge = float(max(0.0, lower_bound - prop_energy))

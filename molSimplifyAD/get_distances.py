@@ -14,47 +14,58 @@ def _find_distances():
     gene_dist_dict = dict()
     gene_prop_dict = dict()
     gene_name_dict = dict()
+    GA_run = get_current_GA()
+    runtype = GA_run.config["runtype"]
     # lastgen is the last generation that has been run
     for generation in range(lastgen + 1):
-        ANN_path = get_run_dir() + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
-
-        if os.path.isfile(ANN_path):
-            with open(ANN_path, 'r') as fi:
-                # lol stands for list_of_lines
-                lol = fi.readlines()
-                GA_run = get_current_GA()
-                runtype = GA_run.config["runtype"]
-                for i, line in enumerate(lol):
-                    if i == 0:
-                        line_list = line.strip('\n').split(",")
-                        prop_idx = line_list.index(runtype)
-                        dist_idx = line_list.index(runtype + '_dist')
-                        spin_idx = line_list.index('split')
-                        continue
-                    line_list = line.split(",")
-                    job = line_list[0]
-                    # print('job:', job)
-                    gene, _, _, metal, ox, eqlig, axlig1, axlig2, _, _, _, spin, _, ahf, _, _ = translate_job_name(job)
-                    split_energy = float(line_list[spin_idx])
-                    spinmult = int(job.split('_')[-1])
-                    if (split_energy > 0 and spinmult <= 3) or (split_energy < 0 and spinmult > 3):
-                        prop = float(line_list[prop_idx])
-                        dist = float(line_list[dist_idx])
-                        # print(job, prop, dist, split_energy, spinmult)
-                        ll = job.split("_")
-
-                        geneName = "_".join(ll[4:10])
-                        metal = get_metals()[metal]
-                        chem_name = '_'.join(
-                            [str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), str(ahf),
-                             str(spin)])
-                        if geneName in gene_dist_dict.keys():
-                            pass
-                        else:
-                            gene_dist_dict.update({geneName: dist})
-                            gene_prop_dict.update({geneName: prop})
-                            gene_name_dict.update({geneName: chem_name})
-            fi.close()
+        ANN_dir = get_run_dir() + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
+        emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
+        for keys in ANN_dict.keys():
+            gene, _, _, metal, ox, eqlig, axlig1, axlig2, _, _, _, spin, spin_cat, ahf, _, _ = translate_job_name(keys)
+            split_energy = float(ANN_dict[keys]['split'])
+            if runtype in ['homo','gap']:
+                if (split_energy > 0 and int(spin)<=3) or (split_energy < 0 and int(spin)>3):
+                    this_prop = float(ANN_dict[keys][runtype])
+                    this_dist = float(ANN_dict[keys][runtype + '_dist'])
+                    geneName = "_".join(keys.split('_')[4:10])
+                    metal = get_metals()[metal]
+                    chem_name = '_'.join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), str(ahf),str(spin)])
+                    if geneName in gene_dist_dict.keys():
+                        pass
+                    else:
+                        gene_dist_dict.update({geneName: this_dist})
+                        gene_prop_dict.update({geneName: this_prop})
+                        gene_name_dict.update({geneName: chem_name})
+            elif runtype in ['oxo','hat']:
+                if (spin_cat == 'HS' or (get_metals()[metal] == 'cr' and int(spin) == 2)):
+                    # print('Entered into HAT and OXO statement because HIGH SPIN')
+                    this_prop = float(ANN_dict[keys][runtype])
+                    this_dist = float(ANN_dict[keys][runtype + '_dist'])
+                    geneName = "_".join(keys.split('_')[4:10])
+                    metal = get_metals()[metal]
+                    chem_name = '_'.join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), str(ahf),str(spin)])
+                    print(chem_name+' logged in dictionary')
+                    if (int(spin) == 2 and not metal == 'cr') or int(spin) == 1:
+                        sardines
+                    if geneName in gene_dist_dict.keys():
+                        pass
+                    else:
+                        gene_dist_dict.update({geneName: this_dist})
+                        gene_prop_dict.update({geneName: this_prop})
+                        gene_name_dict.update({geneName: chem_name})
+            elif runtype == 'split':
+                this_prop = float(ANN_dict[keys][runtype])
+                this_dist = float(ANN_dict[keys][runtype + '_dist'])
+                geneName = "_".join(keys.split('_')[4:10])
+                metal = get_metals()[metal]
+                chem_name = '_'.join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), str(ahf),str(spin)])
+                print(chem_name)
+                if geneName in gene_dist_dict.keys():
+                    pass
+                else:
+                    gene_dist_dict.update({geneName: this_dist})
+                    gene_prop_dict.update({geneName: this_prop})
+                    gene_name_dict.update({geneName: chem_name})
 
     ## Writes genes and distances to a .csv file
     write_path = get_run_dir() + "statespace/all_distances.csv"

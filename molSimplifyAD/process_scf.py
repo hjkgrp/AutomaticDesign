@@ -323,19 +323,19 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
         if int(this_run.spin) not in metal_spins:
            print('ERROR! not in metal spins : ' +  str(this_run) + ' not in ' +  str(metal_spins))
            continue
-	else:
+        else:
             spin_ind = metal_spins.index(this_run.spin)
-	    if spin_ind == 0:
-                spin_cat = 'LS'
-            elif spin_ind == 1:
-                spin_cat = 'IS'
-            else:
-                spin_cat = 'HS'
+        if spin_ind == 0:
+            spin_cat = 'LS'
+        elif spin_ind == 1:
+            spin_cat = 'IS'
+        else:
+            spin_cat = 'HS'
         print('spin ind is found to be ' + str(this_run.spin) + ' interpretted as ' + str(spin_cat))
         if this_name not in final_results.keys():
             ## need to create a new holder to store this gene
             this_comp = Comp(this_name)
-	    this_comp.set_properties(this_run)            
+            this_comp.set_properties(this_run)            
         else:
             this_comp = final_results[this_name]
         print(runkeys)
@@ -344,40 +344,32 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
         ## assuming no duplicates:
         if True:
             this_comp.gene = "_".join([this_metal,str(eqlig_name),str(axlig1_name)])
-	    this_comp.job_gene = this_run.gene
-	    print('----gene:----', this_comp.gene, this_comp.job_gene)
+            this_comp.job_gene = this_run.gene
+            print('----gene:----', this_comp.gene, this_comp.job_gene)
             if this_run.converged and this_run.flag_oct==1:
                 this_comp.convergence += 1
             if this_run.flag_oct==1  and not this_comp.set_desc:
-                #try:
-                    if not os.path.isdir('used_geos/'):
-                        os.mkdir('used_geos/')
-                    this_run.mol.writexyz('used_geos/'+this_name+'.xyz')
-                    this_comp.axlig1 = this_run.axlig1
-                    #this_comp.axlig2 = this_run.axlig2
-                    this_comp.eqlig = this_run.eqlig
-                    this_comp.set_rep_mol(this_run)
-                    this_comp.get_descriptor_vector(loud=False,name=this_name)
-                #except:
-                #    if not os.path.isdir('bad_geos/'):
-                #        os.mkdir('bad_geos/')
-                #    this_run.mol.writexyz('bad_geos/'+this_name+'.xyz')
-                #    this_comp.convergence -= 1
-                #    this_run.coord = 'error'
+                if not os.path.isdir('used_geos/'):
+                    os.mkdir('used_geos/')
+                this_run.mol.writexyz('used_geos/'+this_name+'.xyz')
+                this_comp.axlig1 = this_run.axlig1
+                this_comp.eqlig = this_run.eqlig
+                this_comp.set_rep_mol(this_run)
+                this_comp.get_descriptor_vector(loud=False,name=this_name)
             for props in output_properties(comp=False,oxocatalysis=True):
-                    this_attribute = "_".join(['ox',str(this_ox),spin_cat,str(axlig2_name),props])
-	            print('looking for '+str(props)+' as '+this_attribute + ' from run class')
-		    if hasattr(this_run, props):
-			print('found, '+str(getattr(this_run,props)))
-			setattr(this_comp, this_attribute, getattr(this_run,props))
-	    this_attribute = "_".join(['ox',str(this_ox),spin_cat,str(axlig2_name),"DFT_RUN"])
-	            #print('attribute: ',this_attribute)
+                this_attribute = "_".join(['ox',str(this_ox),spin_cat,str(axlig2_name),props])
+                print('looking for '+str(props)+' as '+this_attribute + ' from run class')
+                if hasattr(this_run, props):
+                    print('found, '+str(getattr(this_run,props)))
+                    setattr(this_comp, this_attribute, getattr(this_run,props))
+            this_attribute = "_".join(['ox',str(this_ox),spin_cat,str(axlig2_name),"DFT_RUN"])
+	        #print('attribute: ',this_attribute)
 		    #print('assigned: ',getattr(this_run,props))
-                    #setattr(this_comp,this_attribute,getattr(this_comp,props))
-       	    setattr(this_comp,this_attribute,this_run)
-	this_comp.get_some_split()
-        ###
-        final_results.update({this_name:this_comp})
+            #setattr(this_comp,this_attribute,getattr(this_comp,props))
+            setattr(this_comp,this_attribute,this_run)
+            this_comp.get_some_split()
+                ###
+            final_results.update({this_name:this_comp})
     return final_results
 
 

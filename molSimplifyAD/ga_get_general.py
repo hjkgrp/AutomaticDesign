@@ -64,11 +64,11 @@ def _write_all_csv(base_path, generation, end_results):
     fo.close()
 
 
-def _write_split_csv(base_path, generation, split_results):
-    csv_results_path = base_path + "_final_ANN_split_results.csv"
+def _write_prop_csv(base_path, generation, prop_results):
+    csv_results_path = base_path + "_final_ANN_prop_results.csv"
     with open(csv_results_path, _write_mode(generation)) as fo:
         writer = csv.writer(fo)
-        writer.writerow((generation, split_results))
+        writer.writerow((generation, prop_results))
     fo.close()
 
 
@@ -130,13 +130,34 @@ def _get_freq_fitness(lastgen, npool):
             ANN_dir = get_run_dir() + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
             emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
             for keys in ANN_dict.keys():
+                _, _, _, metal, _, _, _, _, _, _, _, spin, spin_cat, _, _, _ = translate_job_name(keys)
                 this_gene = "_".join(keys.split("_")[4:10])
                 if runtype == "redox":
                     this_gene = "_".join(keys.split("_")[4:9])
-                this_prop = float(ANN_dict[keys][runtype])
-                this_dist = float(ANN_dict[keys][runtype + '_dist'])
-                if not (this_gene in ANN_prop_dict.keys()):
+               
+                split_energy = ANN_dict[keys]['split']
+                if runtype in ['oxo','hat']:
+                    if (spin_cat == 'HS') or (get_metals()[metal]=='cr' and spin == 2) and not(this_gene in ANN_prop_dict.keys()):
+                        this_prop = float(ANN_dict[keys][runtype])
+                        this_dist = float(ANN_dict[keys][runtype + '_dist'])
+                        ANN_prop_dict.update({this_gene: this_prop})
+                elif runtype in ['homo','gap']:
+                    if (split_energy > 0 and int(spin) <= 3) or (split_energy < 0 and int(spin) > 3):
+                        this_prop = float(ANN_dict[keys][runtype])
+                        this_dist = float(ANN_dict[keys][runtype + '_dist'])
+                        ANN_prop_dict.update({this_gene: this_prop})
+                elif not (this_gene in ANN_prop_dict.keys()):
+                    this_prop = float(ANN_dict[keys][runtype])
+                    this_dist = float(ANN_dict[keys][runtype + '_dist'])
                     ANN_prop_dict.update({this_gene: this_prop})
+                ############################################################################################
+                # Note: in the way this loop is currently set up, it loops over everything in ANN_dict.    #
+                # Thus, if the ANN prediction predicts something for multiple spin states, you need to     #
+                # Make sure that the property is assigned for the right spin state (the ground state)      #
+                # See logic in the function _find_distances() in get_distances. In order for the property  #
+                # to be assigned, certain criteria must be met as can be seen above. For spin splitting    #
+                # Not an issue for spin splitting because both spins inherit the same splitting energy     #
+                ############################################################################################
 
     generation = 0
     while (generation == 0 or generation < lastgen):
@@ -202,21 +223,22 @@ def _get_freq_fitness(lastgen, npool):
 
         # Fourth, recover actual splitting energies only in ANN case
         if not isDFT():
-            mean_split = 0.0
+            mean_prop = 0.0
             count = 0
             print('ANN keys are ')
             print(ANN_prop_dict.keys())
             for geneName in current_gene_list:
 
                 if geneName in ANN_prop_dict.keys():
-                    mean_split += abs(ANN_prop_dict[geneName])
+                    mean_prop += abs(ANN_prop_dict[geneName])
                     count += 1
                 else:
                     print('Error: expected ' + geneName + ' to be in ANN results...')
                     pass
-            mean_split = mean_split / float(count)
+            if count > 0:
+                mean_prop = mean_prop / float(count)
             ## write
-            _write_split_csv(base_path, generation, mean_split)
+            _write_prop_csv(base_path, generation, mean_prop)
         generation += 1
 
 
