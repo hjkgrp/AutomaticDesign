@@ -59,12 +59,12 @@ class DFTRun:
                               'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max','area',
                               'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
-                              'mop_energy', 'chem_name']
+                              'mop_energy', 'chem_name','sp_energy']
         list_of_init_empty = ['descriptor_names','descriptors']            
         list_of_init_false = ['solvent_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
-                              'islive', 'set_desc']
+                              'islive', 'set_desc','sp_status']
         list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord']
         for this_attribute in list_of_init_props:
             setattr(self, this_attribute, 'undef')
@@ -526,11 +526,11 @@ class DFTRun:
                 emptyrefval = emptyrefdict[splist[-2]]
                 splist[-2] = emptyrefval
                 wfnrefempty = "_".join(splist)
-            if int(this_spin)==1:
-                guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/c0\n'
-            else:
-                guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/ca0' + ' ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/cb0\n'
-            f_emptysp.write(guess_string_sp)
+                if int(this_spin)==1:
+                    guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/c0\n'
+                else:
+                    guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/ca0' + ' ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/cb0\n'
+                f_emptysp.write(guess_string_sp)
             if int(this_spin) == 1:
                 f_emptysp.write('method b3lyp\n')
             else:

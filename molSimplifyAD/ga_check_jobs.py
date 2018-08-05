@@ -126,9 +126,13 @@ def check_all_current_convergence():
 
                 this_run.outpath = (path_dictionary["geo_out_path"] + base_name + ".out")
                 this_run.thermo_outpath = (path_dictionary["thermo_out_path"] + base_name + ".out")
+                this_run.solvent_inpath = path_dictionary['solvent_infiles'] + self.name + '.in'
+
                 this_run.solvent_outpath = (path_dictionary["solvent_out_path"] + base_name + ".out")
                 this_run.sp_outpath = (path_dictionary["sp_out_path"] + '/' + base_name + ".out")
+                this_run.sp_inpath = path_dictionary["sp_in_path"]+base_name+".in"
 
+                
                 this_run.scrpath = path_dictionary["scr_path"] + base_name + "/optim.xyz"
                 this_run.inpath = path_dictionary["job_path"] + base_name + ".in"
                 this_run.comppath = path_dictionary["done_path"] + base_name + ".in"
@@ -193,7 +197,7 @@ def check_all_current_convergence():
                             this_run.obtain_area()
                         # only thermo and solvent for
                         # B3LYP, also check HFX sample
-                        if GA_run.config["thermo"]:
+                        if isThermo():
                             this_run = check_thermo_file(this_run)
                             if this_run.thermo_cont and run_success:
                                 print('thermo_cont avail for ' + this_run.name + ' ' + str(this_run.thermo_cont))
@@ -204,8 +208,9 @@ def check_all_current_convergence():
                                     remove_outstanding_jobs(this_run.thermo_inpath)
                             else:
                                 this_run.status = 12
+                                run_success = False
 
-                        if GA_run.config["solvent"]:
+                        if isSolvent():
                             this_run = check_solvent_file(this_run)
                             if this_run.solvent_cont and run_success:
                                 remove_outstanding_jobs(this_run.solvent_inpath)
@@ -213,7 +218,15 @@ def check_all_current_convergence():
                                 this_run.status = 13
                                 run_success = False
 
-                        if run_success:
+                        if isSinglePoint():
+                            this_run = check_sp_file(this_run)
+                            if this_run.sp_conv and run_success:
+                                remove_outstanding_jobs(this_run.solvent_inpath)
+                            elif run_success:
+                                this_run.status = 14
+                                run_success = False
+                         
+                        if run_success and not this_run.status in [12,13,14]:
                             this_run.status = 0  # all done
                         ## mark as compelete
 
@@ -233,7 +246,7 @@ def check_all_current_convergence():
                     ## test if we should launch other HFX fractions
                     ## check alpha HFX against dictionary of strings:
                     ahf = str(ahf)
-                    if ahf in HFXorderingdict.keys():
+                    if ahf in HFXorderingdict.keys() and run_success:
                         newHFX = HFXorderingdict[ahf][0]
                         refHFX = HFXorderingdict[ahf][1]
                         if this_run.coord == 6 and this_run.octahedral == True:  ## don't bother if failed
@@ -330,14 +343,20 @@ def check_all_current_convergence():
                     print('removing job from OSL due to status  ' + str(this_run.status))
                     jobs_complete += 1
                     remove_outstanding_jobs(jobs)  # take out of queue
-                    if GA_run.config["solvent"]:
+                    if isSolvent():
                         if this_run.status == 13:  ## need solvent:
-                            print('addding based on ' + str(jobs))
+                            print('addding solvent based on ' + str(jobs))
+                            this_run.write_solvent_input(self,dielectric=37.5)
                             add_to_outstanding_jobs(this_run.solvent_inpath)
-                    if GA_run.config["thermo"]:
+                    if isThermo():
                         if this_run.status == 12:  ## needs thermo:
-                            print('addding based on ' + str(jobs))
+                            print('addding thermo based on ' + str(jobs))
                             add_to_outstanding_jobs(this_run.thermo_inpath)
+                    if isSinglePoint():
+                        if this_run.status == 14:  ## needs sp:
+                            print('addding single point based on ' + str(jobs))
+                            this_run.write_bigbasis_input()
+                            add_to_outstanding_jobs(this_run.sp_inpath)
                 if this_run.status in [3, 5, 6, 8]:  ##  convergence is not successful!
                     number_of_subs = submitted_job_dictionary[jobs]
                     if this_run.status in [3, 5, 6]:  ## unknown error, allow retry
@@ -358,16 +377,16 @@ def check_all_current_convergence():
                                + ' after ' + str(number_of_subs) + ' subs since prog geo was bad')
                         remove_outstanding_jobs(jobs)  # take out of pool
                 print('END OF JOB \n *******************\n')
-            elif "sp_infiles" in jobs:
+            elif "sp_infiles" in jobs and not isOptimize():
                 gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(jobs)
-                this_run = DFTRun(base_name)
                 metal_list = get_metals()
                 metal = metal_list[metal]
+                alpha = int(ahf)
                 name = "_".join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), 'ahf', str(int(alpha)).zfill(2), str(spin)])
-                this_run.chem_name = name
                 if (jobs not in live_job_dictionary.keys()) and ((len(jobs.strip('\n')) != 0)):
                     print('checking status of SP job ' + str(jobs))
                     this_run = test_terachem_sp_convergence(jobs)
+                    this_run.chem_name = name
                     this_run.number = slot
                     this_run.gen = gen
                     this_run.job = jobs
