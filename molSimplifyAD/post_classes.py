@@ -378,7 +378,7 @@ class DFTRun:
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         if not (self.spin == 1):
             guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
-                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0'
+                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0 \n'
         else:
             guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0' 
         self.solvent_inpath = path_dictionary['solvent_infiles'] + self.name + '.in'
@@ -409,18 +409,18 @@ class DFTRun:
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         if not (self.spin == 1):
             guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
-                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0'
+                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0\n'
         else:
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0' 
+            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
         self.init_sp_inpath = path_dictionary['sp_in_path'] + self.name + '.in'
         ### check sp inpath
         if not os.path.exists(self.init_sp_inpath):
             f_insp = open(self.init_sp_inpath, 'w')
             ## write solvent
             f_insp.write('run energy \n')
-            f_insp.write('scrdir scr/init_sp/  \n')
+            f_insp.write('scrdir scr/sp/  \n')
             f_insp.write('coordinates ' + self.geopath + ' \n')
-            f_insp.write(guess_string + '\n')
+            f_insp.write(guess_string)
             f_insp.write("basis aug-cc-pvdz\n")
             f_insp.write("$multibasis\n")
             f_insp.write("Cr lacvps_ecp\n")

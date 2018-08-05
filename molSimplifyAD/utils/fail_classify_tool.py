@@ -123,6 +123,7 @@ print('found ' + str(len(converged_jobs.keys())) + ' converged jobs to check')
 
 counter = 0
 for jobs in converged_jobs.keys():
+    print('checking job '+ str(jobs))
     job_status = converged_jobs[jobs]
     gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(jobs)
     if ahf == 20:
