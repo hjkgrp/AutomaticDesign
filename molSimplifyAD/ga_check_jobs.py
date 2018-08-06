@@ -126,7 +126,7 @@ def check_all_current_convergence():
 
                 this_run.outpath = (path_dictionary["geo_out_path"] + base_name + ".out")
                 this_run.thermo_outpath = (path_dictionary["thermo_out_path"] + base_name + ".out")
-                this_run.solvent_inpath = path_dictionary['solvent_infiles'] + self.name + '.in'
+                this_run.solvent_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'
 
                 this_run.solvent_outpath = (path_dictionary["solvent_out_path"] + base_name + ".out")
                 this_run.sp_outpath = (path_dictionary["sp_out_path"] + '/' + base_name + ".out")
@@ -220,7 +220,7 @@ def check_all_current_convergence():
 
                         if isSinglePoint():
                             this_run = check_sp_file(this_run)
-                            if this_run.sp_conv and run_success:
+                            if this_run.sp_status and run_success:
                                 remove_outstanding_jobs(this_run.solvent_inpath)
                             elif run_success:
                                 this_run.status = 14
@@ -346,7 +346,7 @@ def check_all_current_convergence():
                     if isSolvent():
                         if this_run.status == 13:  ## need solvent:
                             print('addding solvent based on ' + str(jobs))
-                            this_run.write_solvent_input(self,dielectric=37.5)
+                            this_run.write_solvent_input(dielectric=37.5)
                             add_to_outstanding_jobs(this_run.solvent_inpath)
                     if isThermo():
                         if this_run.status == 12:  ## needs thermo:

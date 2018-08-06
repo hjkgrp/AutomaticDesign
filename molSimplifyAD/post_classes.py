@@ -381,7 +381,7 @@ class DFTRun:
                        '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0 \n'
         else:
             guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0' 
-        self.solvent_inpath = path_dictionary['solvent_infiles'] + self.name + '.in'
+        #self.solvent_inpath = path_dictionary['solvent_inpath'] + self.name + '.in'
         ### check solvent
         if not os.path.exists(self.solvent_inpath):
             f_solvent = open(self.solvent_inpath, 'w')
@@ -776,7 +776,7 @@ class Comp:
 
         ## run class dependent props:
         list_of_init_props = ['chem_name', 'spin', 'charge', 'attempted', 'converged',
-                              'mop_converged', 'time', 'energy',
+                              'mop_converged', 'time', 'energy','sp_energy',
                               'flag_oct', 'flag_list',
                               'num_coord_metal', 'rmsd_max', 'atom_dist_max',
                               'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
