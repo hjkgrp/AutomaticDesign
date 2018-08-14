@@ -445,6 +445,16 @@ def translate_job_name(job):
 
 
 ########################
+def SMILEs_to_liglist(smilesstr,denticity):
+    this_mol = mol3D()
+    this_mol.getOBMol(smilesstr,'smistring')
+    this_mol.convert2mol3D()
+    this_lig  = ligand(mol3D(), [],denticity)
+    this_lig.mol = this_mol
+    return(this_lig)
+
+########################
+
 def renameHFX(job, newHFX):
     # renames job to a new HFX fraction
     base = os.path.basename(job)
