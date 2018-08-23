@@ -177,7 +177,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
     list_of_props.append('metal')
     list_of_props.append('alpha')
     list_of_props.append('axlig1')
-    if (not oxocatalysis) and (not comp):
+    if (not oxocatalysis):
         list_of_props.append('axlig2')
     list_of_props.append('eqlig')
     list_of_prop_names = ['chem_name', 'converged', 'status', 'time', 'charge', 'spin',
