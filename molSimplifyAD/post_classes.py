@@ -380,7 +380,7 @@ class DFTRun:
             guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
                        '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0'
         else:
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0' 
+            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
         self.solvent_inpath = path_dictionary['solvent_infiles'] + self.name + '.in'
         ### check solvent
         if not os.path.exists(self.solvent_inpath):
