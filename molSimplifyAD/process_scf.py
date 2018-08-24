@@ -445,14 +445,16 @@ def check_sp_file(this_run):
     #  @param this_run a run class
     #  @return this_run populated run class
     found_data = False
-    if os.path.exists(this_run.init_outpath):
-        with open(this_run.outpath) as f: 
+    if os.path.exists(this_run.sp_outpath):
+        with open(this_run.sp_outpath) as f: 
             data=f.readlines()
             found_conv =False 
             found_data =False
             found_time = False 
             for i,lines in enumerate(data):
                 if str(lines).find('FINAL ENERGY') != -1:
+                    print("found single point line")
+                    print(lines)
                     energy =str(lines.split()[2])
                     found_data = True
         if (found_data == True):

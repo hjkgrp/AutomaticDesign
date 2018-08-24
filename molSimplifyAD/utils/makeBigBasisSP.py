@@ -52,7 +52,7 @@ for jobs in joblist:
             gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(jobs)
             if jobs in converged_jobs.keys():
                 this_status = converged_jobs[jobs]
-            if this_status  == 1 and not (jobs in live_job_dictionary.keys()) and ahf==20 and not done_something:               
+            if this_status  == '0' and not (jobs in live_job_dictionary.keys()) and ahf==20 and not done_something:               
                 print('found successful job at 20%HFX : ' + str(jobs))
                 this_run = DFTRun(base_name)
                 this_run.scrpath = path_dictionary["scr_path" ]  + base_name +"/optim.xyz"
@@ -94,7 +94,7 @@ for jobs in joblist:
                 this_run.comppath = path_dictionary["done_path"] + base_name + ".in"
                 this_run.write_bigbasis_input()
                 add_to_outstanding_jobs(this_run.init_sp_inpath)
-                this_run.write_solvent_input(self,dielectric=37.5)
+                this_run.write_solvent_input(dielectric=37.5)
                 add_to_outstanding_jobs(this_run.solvent_inpath)
-                done_something = True
+                done_something = False
                 

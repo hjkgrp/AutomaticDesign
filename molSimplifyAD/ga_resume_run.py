@@ -54,8 +54,11 @@ def resume_run(args):
                 logger(path_dictionary['state_path'], str(datetime.datetime.now()) + ' going back to sleep')
                 logger(path_dictionary['state_path'], '************************************************')
             if not GA_run.config['runtype'] == "redox":
-                format_freqeuncies()
-                format_distances()
+                try:     
+                    format_freqeuncies()
+                    format_distances()
+                except:
+                    pass
             its += 1
             if args.sleep:
                 print('sleeping for ' + str(args.sleep))

@@ -445,6 +445,16 @@ def translate_job_name(job):
 
 
 ########################
+def SMILEs_to_liglist(smilesstr,denticity):
+    this_mol = mol3D()
+    this_mol.getOBMol(smilesstr,'smistring')
+    this_mol.convert2mol3D()
+    this_lig  = ligand(mol3D(), [],denticity)
+    this_lig.mol = this_mol
+    return(this_lig)
+
+########################
+
 def renameHFX(job, newHFX):
     # renames job to a new HFX fraction
     base = os.path.basename(job)
@@ -530,6 +540,7 @@ def setup_paths():
         "queue_output": working_dir + "queue_output/",
         "thermo_out_path": working_dir + "thermo_outfiles/",
         "solvent_out_path": working_dir + "solvent_outfiles/",
+        "solvent_in_path": working_dir + "solvent_infiles/",
         "job_path": working_dir + "jobs/",
         "done_path": working_dir + "completejobs/",
         "initial_geo_path": working_dir + "initial_geo/",

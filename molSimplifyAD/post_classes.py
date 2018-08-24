@@ -378,10 +378,10 @@ class DFTRun:
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         if not (self.spin == 1):
             guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
-                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0'
+                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0 \n'
         else:
             guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
-        self.solvent_inpath = path_dictionary['solvent_infiles'] + self.name + '.in'
+        #self.solvent_inpath = path_dictionary['solvent_inpath'] + self.name + '.in'
         ### check solvent
         if not os.path.exists(self.solvent_inpath):
             f_solvent = open(self.solvent_inpath, 'w')
@@ -409,18 +409,18 @@ class DFTRun:
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         if not (self.spin == 1):
             guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
-                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0'
+                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0\n'
         else:
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0' 
+            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
         self.init_sp_inpath = path_dictionary['sp_in_path'] + self.name + '.in'
         ### check sp inpath
         if not os.path.exists(self.init_sp_inpath):
             f_insp = open(self.init_sp_inpath, 'w')
             ## write solvent
             f_insp.write('run energy \n')
-            f_insp.write('scrdir scr/init_sp/  \n')
+            f_insp.write('scrdir scr/sp/  \n')
             f_insp.write('coordinates ' + self.geopath + ' \n')
-            f_insp.write(guess_string + '\n')
+            f_insp.write(guess_string)
             f_insp.write("basis aug-cc-pvdz\n")
             f_insp.write("$multibasis\n")
             f_insp.write("Cr lacvps_ecp\n")
@@ -776,7 +776,7 @@ class Comp:
 
         ## run class dependent props:
         list_of_init_props = ['chem_name', 'spin', 'charge', 'attempted', 'converged',
-                              'mop_converged', 'time', 'energy',
+                              'mop_converged', 'time', 'energy','sp_energy',
                               'flag_oct', 'flag_list',
                               'num_coord_metal', 'rmsd_max', 'atom_dist_max',
                               'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
