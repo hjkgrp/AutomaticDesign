@@ -60,6 +60,7 @@ def check_all_current_convergence():
 
     jobs_complete = 0
     GA_run = get_current_GA()
+    use_old_optimizer = get_optimizer()
     ## allocate holder for result list
     final_results = dict()
     all_runs = dict()
@@ -299,7 +300,7 @@ def check_all_current_convergence():
                         if this_run.progstatus == 0:
                             sub_number = submitted_job_dictionary[jobs]
                             this_run.archive(sub_number)
-                            create_generic_infile(jobs, restart=True)
+                            create_generic_infile(jobs, use_old_optimizer=use_old_optimizer, restart=True)
                             this_run.status = 2  ## prog geo is good
                             logger(base_path_dictionary['state_path'],
                                    str(datetime.datetime.now()) + ' job allowed to restart since good prog geo found ')

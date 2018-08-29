@@ -41,6 +41,8 @@ def get_infile_from_job(job):
     scr_path = path_dictionary["scr_path"] + base_name + '/'
     target_inpath = path_dictionary["infiles"] + base_name + '.in'
     path_dictionary = setup_paths()
+    GA_run = get_current_GA()
+    use_old_optimizer = get_optimizer()
     ll = os.path.split(job)
     base_name = ll[1]
     ll = os.path.split(ll[0])
@@ -50,7 +52,7 @@ def get_infile_from_job(job):
         infile = target_inpath
     else:
         print('no infile found for job ' + job + ' , creating a new one ')
-        create_generic_infile(job, restart=True)
+        create_generic_infile(job, use_old_optimizer=use_old_optimizer, restart=True)
     if 'track_elec_prop' in get_current_GA().config.keys():
         track_elec_prop = get_current_GA().config['track_elec_prop']
     else:
@@ -198,7 +200,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
                           'init_ax1_MLB', 'init_ax2_MLB', 'init_eq_MLB', 'thermo_cont', 'imag', 'solvent_cont',
                           'terachem_version', 'terachem_detailed_version',
                           'basis', 'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
-                          'mop_coord','sp_energy']
+                          'mop_coord', 'sp_energy']
     if SASA:
         list_of_prop_names.append("area")
     if oxocatalysis:
@@ -253,6 +255,7 @@ def get_metals():
     metals_list = ['cr', 'mn', 'fe', 'co']
     return metals_list
 
+
 ########################
 def find_ligand_idx(lig):
     ligs = get_ligands()
@@ -260,6 +263,7 @@ def find_ligand_idx(lig):
         if lig in item:
             idx = int(i)
     return idx
+
 
 ########################
 def get_ox_states():  # could be made metal dependent like spin
@@ -319,6 +323,8 @@ def isSASA():
             return False
     except:
         return False
+
+
 ########################
 def isSolvent():
     GA_run = get_current_GA()
@@ -329,6 +335,8 @@ def isSolvent():
             return False
     except:
         return False
+
+
 ########################
 def isThermo():
     GA_run = get_current_GA()
@@ -339,6 +347,8 @@ def isThermo():
             return False
     except:
         return False
+
+
 ########################
 def isSinglePoint():
     GA_run = get_current_GA()
@@ -349,6 +359,8 @@ def isSinglePoint():
             return False
     except:
         return False
+
+
 ########################
 def isOxocatalysis():
     GA_run = get_current_GA()
@@ -378,6 +390,16 @@ def get_maxresub():
     else:
         print('max_resubmit not set, using default of 3')
         return 3
+
+
+########################
+def get_optimizer():
+    GA_run = get_current_GA()
+    if unicode('old_optimizer', 'utf-8') in GA_run.config.keys():
+        return GA_run.config["old_optimizer"]
+    else:
+        print('old_optimizer not set, using default as False')
+        return False
 
 
 ########################
@@ -445,13 +467,14 @@ def translate_job_name(job):
 
 
 ########################
-def SMILEs_to_liglist(smilesstr,denticity):
+def SMILEs_to_liglist(smilesstr, denticity):
     this_mol = mol3D()
-    this_mol.getOBMol(smilesstr,'smistring')
+    this_mol.getOBMol(smilesstr, 'smistring')
     this_mol.convert2mol3D()
-    this_lig  = ligand(mol3D(), [],denticity)
+    this_lig = ligand(mol3D(), [], denticity)
     this_lig.mol = this_mol
-    return(this_lig)
+    return (this_lig)
+
 
 ########################
 
@@ -636,7 +659,7 @@ def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=1, lower_bo
         lower_bound = float(prop_parameter) - float(range_value)
     elif lower_bound != None and upper_bound == None:
         upper_bound = float(prop_parameter) + float(range_value)
-    #print('USED RANGE VALUE:',range_value)
+    # print('USED RANGE VALUE:',range_value)
     upper_hinge = float(max(0.0, prop_energy - upper_bound))
     lower_hinge = float(max(0.0, lower_bound - prop_energy))
     ####### This set of two hinges will penalize values that are not within a certain range
@@ -675,7 +698,7 @@ def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance
         lower_bound = float(prop_parameter) - float(range_value)
     elif lower_bound != None and upper_bound == None:
         upper_bound = float(prop_parameter) + float(range_value)
-    #print('USED RANGE VALUE:',range_value)
+    # print('USED RANGE VALUE:',range_value)
 
     upper_hinge = float(max(0.0, prop_energy - upper_bound))
     lower_hinge = float(max(0.0, lower_bound - prop_energy))

@@ -44,6 +44,7 @@ outstanding_jobs = get_outstanding_jobs()
 
 jobs_complete = 0
 GA_run = get_current_GA()
+use_old_optimizer = get_optimizer()
 ## allocate holder for result list
 final_results = dict()
 all_runs = dict()
@@ -213,7 +214,7 @@ for runs in restart_list:
                                 
         if True: # always use initial geo:
 		old_optimizer_list = get_old_optimizer_ligand_list()
-		use_old_optimizer = False
+		# use_old_optimizer = False
 		if runs.axlig1 in old_optimizer_list or runs.eqlig in old_optimizer_list:
 			use_old_optimizer = True
 		print('OLD OPTIMIZER: ', use_old_optimizer)

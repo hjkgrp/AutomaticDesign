@@ -7,7 +7,7 @@ class GA_run_defintion:
         ## this function controls run-specific parameters
         def __init__(self):
             ## blank initialization
-            pass        
+            pass
 
         def configure(self,DFT = False,
                       rundir = False,
@@ -37,6 +37,7 @@ class GA_run_defintion:
                       all_post = False,
                       track_elec_prop = True,
                       max_resubmit = 4,
+                      old_optimizer = False,
                       **KWARGS):
             ## first time start-up function
 #                print('configuring status dictionaty')
@@ -50,7 +51,7 @@ class GA_run_defintion:
                               'use_singlets':use_singlets,
                               'all_spins':all_spins,
                               'thermo':thermo,
-                              'solvent':solvent,                              
+                              'solvent':solvent,
                               'liglist':liglist,
                               'symclass':symclass,
                               'HFXsample':HFXsample,
@@ -71,7 +72,8 @@ class GA_run_defintion:
                               'max_jobs':max_jobs,
                               "all_post":all_post,
                               'track_elec_prop':track_elec_prop,
-                              'max_resubmit':max_resubmit
+                              'max_resubmit':max_resubmit,
+                               'old_optimizer': old_optimizer
                                }
         def serialize(self):
             ## serialize run info
@@ -83,8 +85,8 @@ class GA_run_defintion:
             with open(path,'r') as instream:
                 ob = json.load(instream)
             self.config = ob
-    
-            
+
+
 ########################
 class switch_to_rundir:
     """helper class to manage entering/exiting rundir"""
@@ -125,7 +127,7 @@ def process_ligands_file(path):
             print('this lig', this_lig)
             if this_lig in licores.keys():
                 #print(this_lig +' is in dictionary')
-                this_db_lig = licores[this_lig] 
+                this_db_lig = licores[this_lig]
                 this_dent = len(this_db_lig[2])
                 ligands_list.append([this_lig,[int(this_dent)]])
             else:
@@ -153,7 +155,7 @@ def checkinput(args):
     ## verfiy compatible arguments given
     if not args.new and not args.resume:
         print  'Error: choose either -new to start a new run, or -resume to continue an existing one. Aborting.'
-        exit() 
+        exit()
     if args.new:
        if not os.path.isfile(str(args.new)):
             print 'Warning: cannot read input file/none given. Using default parameters'
@@ -171,11 +173,11 @@ def checkinput(args):
             print('Warning: modifying resume path to ' + args.resume)
         if not os.path.isdir(str(args.resume)):
             print 'Warning: no resume directory given or does not exist, assume current dir: ' + os.getcwd()
-            args.resume = os.getcwd() + '/'  
+            args.resume = os.getcwd() + '/'
         print('looking for '+ args.resume + '.madconfig')
         if not os.path.isfile(args.resume + '.madconfig'):
             print  'Error: no .madconfig file in ' + args.resume + ', aborting run'
-            exit() 
+            exit()
     if args.reps:
         try:
             args.reps = int(args.reps)
@@ -190,7 +192,7 @@ def checkinput(args):
         except:
             args.sleep = 0
             print 'Warning: sleep period must be  numeric, ignoring arugment'
-     
+
     return(args)
 ########################
 def get_default_ligand_file():
@@ -214,7 +216,7 @@ def process_new_run_input(path):
     ### import and check new run file
     ### note that exsistence of the file
     ### is already checked in checkinput above
-    
+
     configuration = dict()
     with open(path,'r') as f:
         try:
@@ -229,7 +231,7 @@ def process_new_run_input(path):
                             try:
                                 val = int(val)
                             except:
-                                val = str(val)        
+                                val = str(val)
                                 if val.lower() in ('false','f'):
                                     val = False
                                 elif val.lower() in ('true','t'):
@@ -242,18 +244,18 @@ def process_new_run_input(path):
                         configuration[key] = val
                     else:
                         print('Ignoring unknown input line with wrong length : ' + str(line)  )
-    
+
         except:
             print('Error: processing ' +str(path) + ' failed. Please enusre')
             print( ' the file contains one keyword (space) value per line.')
     return configuration
-    
+
 ########################
 def get_texsource_file(filename):
     ## returns default ligand input file
     req_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/utils/report_tool/tex_source/"+filename)
     return req_file
-        
+
 ########################
 def get_old_optimizer_ligand_list():
     ## returns old opt ligand list
