@@ -351,8 +351,8 @@ def isSinglePoint():
         return False
 ########################
 def isOxocatalysis():
-    GA_run = get_current_GA()
     try:
+        GA_run = get_current_GA()
         if GA_run.config["oxocatalysis"]:
             return True
         else:
