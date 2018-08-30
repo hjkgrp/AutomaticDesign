@@ -139,16 +139,20 @@ def check_all_current_convergence():
                 this_run.comppath = path_dictionary["done_path"] + base_name + ".in"
                 
                 ## thermo and solvent run information 
-                
-                this_run.thermo_outpath = (path_dictionary["thermo_out_path"] + base_name + ".out")
-                
-                this_run.solvent_outpath = (path_dictionary["solvent_out_path"] + base_name + ".out")
-                this_run.water_outpath = (path_dictionary["water_out_path"] + base_name + ".out")
-                this_run.sp_outpath = (path_dictionary["sp_out_path"] + '/' + base_name + ".out")
-                
-                this_run.solvent_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'
-                this_run.water_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'               
+
                 this_run.sp_inpath = path_dictionary["sp_in_path"]+base_name+".in"
+                this_run.sp_outpath = (path_dictionary["sp_out_path"] + '/' + base_name + ".out")
+
+                if isThermo():
+                        this_run.thermo_outpath = (path_dictionary["thermo_out_path"] + base_name + ".out")
+                
+                if isSolvent():
+                        this_run.solvent_outpath = (path_dictionary["solvent_out_path"] + base_name + ".out")
+                        this_run.solvent_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'
+
+                if isWater():
+                        this_run.water_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'               
+                        this_run.water_outpath = (path_dictionary["water_out_path"] + base_name + ".out")
 
                 ## MOP semiempirical (not used)
                 this_run.moppath = path_dictionary["mopac_path"] + base_name + ".out"
