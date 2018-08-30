@@ -306,13 +306,14 @@ def spin_dictionary():
 
 ########################
 def isDFT():
-    
-    if GA_run.config["DFT"]:
+    try:
         GA_run = get_current_GA()
-        return True
-    else:
+        if GA_run.config["DFT"]:
+                return True
+        else:
+                return False
+    except:
         return False
-    return rdir
 
 
 ########################
