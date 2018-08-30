@@ -198,6 +198,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
                           'prog_devi_linear_avrg', 'prog_devi_linear_max',
                           'rmsd', 'maxd',
                           'init_ax1_MLB', 'init_ax2_MLB', 'init_eq_MLB', 'thermo_cont', 'imag', 'solvent_cont',
+                          'water_cont',
                           'terachem_version', 'terachem_detailed_version',
                           'basis', 'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
                           'mop_coord', 'sp_energy']
@@ -305,8 +306,9 @@ def spin_dictionary():
 
 ########################
 def isDFT():
-    GA_run = get_current_GA()
+    
     if GA_run.config["DFT"]:
+        GA_run = get_current_GA()
         return True
     else:
         return False
@@ -315,8 +317,9 @@ def isDFT():
 
 ########################
 def isSASA():
-    GA_run = get_current_GA()
+    
     try:
+        GA_run = get_current_GA()
         if GA_run.config["SASA"]:
             return True
         else:
@@ -327,8 +330,19 @@ def isSASA():
 
 ########################
 def isSolvent():
-    GA_run = get_current_GA()
     try:
+        GA_run = get_current_GA()
+        if GA_run.config["solvent"]:
+            return True
+        else:
+            return False
+    except:
+        return False
+########################
+def isWater():
+    
+    try:
+        GA_run = get_current_GA()
         if GA_run.config["solvent"]:
             return True
         else:
@@ -336,11 +350,11 @@ def isSolvent():
     except:
         return False
 
-
 ########################
 def isThermo():
-    GA_run = get_current_GA()
+    
     try:
+        GA_run = get_current_GA()
         if GA_run.config["thermo"]:
             return True
         else:
@@ -351,8 +365,9 @@ def isThermo():
 
 ########################
 def isSinglePoint():
-    GA_run = get_current_GA()
+    
     try:
+        GA_run = get_current_GA()
         if GA_run.config["single_point"]:
             return True
         else:
@@ -561,9 +576,6 @@ def setup_paths():
         "sp_in_path": working_dir + "sp_infiles/",
         "scr_path": working_dir + "scr/geo/",
         "queue_output": working_dir + "queue_output/",
-        "thermo_out_path": working_dir + "thermo_outfiles/",
-        "solvent_out_path": working_dir + "solvent_outfiles/",
-        "solvent_in_path": working_dir + "solvent_infiles/",
         "job_path": working_dir + "jobs/",
         "done_path": working_dir + "completejobs/",
         "initial_geo_path": working_dir + "initial_geo/",
@@ -587,6 +599,14 @@ def setup_paths():
     ## set scr path to scr/sp for single points
     if not isOptimize():
         path_dictionary.update({"scr_path": working_dir + "scr/geo/"})
+    if isSolvent():
+        path_dictionary.update({"solvent_out_path": working_dir + "solvent_outfiles/"})
+        path_dictionary.update({"solvent_in_path": working_dir + "solvent_infiles/"})
+    if isWater():
+        path_dictionary.update({"water_out_path": working_dir + "water_outfiles/"})
+        path_dictionary.update({"water_in_path": working_dir + "water_infiles/"})
+    if isThermo():
+        path_dictionary.update({"thermo_out_path": working_dir + "thermo_outfiles/"})
     GA_run = get_current_GA()
     if "DLPNO" in GA_run.config.keys():
         if GA_run.config["DLPNO"]:

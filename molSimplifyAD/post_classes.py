@@ -53,7 +53,7 @@ class DFTRun:
                               'init_eq_MLB', 'init_ax1_MLB', 'init_ax2_MLB', 'outpath', 'geopath', 'init_geopath',
                               'terachem_version', 'terachem_detailed_version', 'basis', 'alpha_level_shift',
                               'beta_level_shift', 'functional', 'rmsd', 'maxd', 'thermo_time', 'solvent_time',
-                              'angletest', 'ligrsmd', 'flag_oct', 'flag_list', 'num_coord_metal', 'rmsd_max',
+                              'water_time', 'angletest', 'ligrsmd', 'flag_oct', 'flag_list', 'num_coord_metal', 'rmsd_max',
                               'atom_dist_max', 'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
                               'devi_linear_avrg', 'devi_linear_max', 'flag_oct_loose', 'flag_list_loose',
                               'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max','area',
@@ -61,7 +61,7 @@ class DFTRun:
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
                               'mop_energy', 'chem_name','sp_energy']
         list_of_init_empty = ['descriptor_names','descriptors']            
-        list_of_init_false = ['solvent_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
+        list_of_init_false = ['solvent_cont','water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
                               'islive', 'set_desc','sp_status']
@@ -404,6 +404,42 @@ class DFTRun:
                         f_solvent.write(line)
             f_solvent.write('end')
             f_solvent.close()
+    def write_water_input(self):
+        ## this unfortunate function exists to support logP - parition coefficient calculations
+        ## by providing a duplication of write_solvent_input() with a fixed water
+        ## dielectric. This pairs with the water_cont and water_time attributes
+        ## and lets us record both organic and polar solvent configurations
+        dielectric=78.39
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
+        if not (self.spin == 1):
+            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
+                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0 \n'
+        else:
+            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
+        
+        ### check solvent
+        if not os.path.exists(self.water_inpath):
+            f_solvent = open(self.water_inpath, 'w')
+            ## write solvent
+            f_solvent.write('run energy \n')
+            f_solvent.write('pcm cosmo \n')
+            f_solvent.write('pcm_grid iswig \n')
+            f_solvent.write('epsilon '+str(dielectric)+' \n')
+            f_solvent.write('pcm_radii read \n')
+            f_solvent.write('print_ms yes \n')
+            f_solvent.write('pcm_radii_file /home/jp/pcm_radii \n')
+            f_solvent.write('scrdir scr/water/  \n')
+            f_solvent.write('coordinates ' + self.geopath + ' \n')
+            f_solvent.write(guess_string)
+            with open(self.inpath, 'r') as ref:
+                for line in ref:
+                    if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
+                        ## these lines should be common
+                        f_solvent.write(line)
+            f_solvent.write('end')
+            f_solvent.close()            
     def write_bigbasis_input(self):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
@@ -791,7 +827,7 @@ class Comp:
                               'coord', 'mop_coord',
                               'ligrsmd', 'rmsd', 'maxd',
                               'angletest', 'thermo_cont', 'imag',
-                              'solvent_cont',
+                              'solvent_cont','water_cont',
                               'init_energy',
                               'status', 'comment',
                               'ax1_MLB', 'ax2_MLB', 'eq_MLB',

@@ -401,6 +401,32 @@ def check_solvent_file(this_run):
 			this_run.solvent_cont = solvent_contribution
 	return(this_run)
     
+def check_water_file(this_run):
+    ## function to test water implicit single point convergence
+    ##  for terachem files
+    #  @param this_run a run class
+    #  @return this_run populated run class
+	water_contribution = False
+	found_water_energy = False
+	found_water_cont = False
+	if os.path.exists(this_run.water_outpath):
+		### file is found, check if converged
+		with open(this_run.water_outpath) as f:
+			sol_data=f.readlines()
+			for i,lines in enumerate(sol_data):
+				if str(lines).find('FINAL ENERGY') != -1:
+					found_water_energy = True
+					print('found water-solvent energy ' + this_run.name)
+				if str(lines).find('C-PCM contribution ') != -1:
+						water_contribution =str(lines.split()[4]).split(':')[1]
+						found_water_cont = True
+						print('found water-solvent contri ' + this_run.name)
+        			if str(lines).find('Total processing time') != -1:
+	        			this_run.water_time = str(lines.split()[3])
+
+        if (found_water_energy == True) and (found_water_cont == True):
+			this_run.water_cont = water_contribution
+	return(this_run)
 def check_thermo_file(this_run):
     ## function to test thermodynamic contribution
     ##  for terachem files

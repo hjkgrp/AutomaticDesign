@@ -33,6 +33,11 @@ def launch_job(job,sub_num):
                       # for thermo/solvent
                       # these are stored as 
                       # infiles only
+    elif "water" in job:
+        cmd_script = "launch_script_water.sh"
+        infile = job  # for thermo/solvent
+                      # these are stored as 
+                      # infiles only
     elif axlig2 == 'x' and "sp_infiles" in job:
         cmd_script = "launch_script_sp.sh"
         infile = job

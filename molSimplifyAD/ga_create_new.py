@@ -37,14 +37,16 @@ def create_new_run(args):
   if 'DFT' in configuration.keys(): 
           if configuration['DFT']:
             print 'Using DFT, copying over launch script'
-            sp_file,geo_file,thermo_file,solvent_file = get_launch_script_file(configuration["queue_type"])
+            sp_file,geo_file,thermo_file,solvent_file,water_file = get_launch_script_file(configuration["queue_type"])
             shutil.copy(sp_file,configuration["rundir"]+'launch_script_sp.sh')
             if 'optimize' in configuration.keys():
               shutil.copy(geo_file,configuration["rundir"]+'launch_script_geo.sh')
             if  'solvent' in configuration.keys():
-              shutil.copy(thermo_file,configuration["rundir"]+'launch_script_solvent.sh')
+              shutil.copy(solvent_file, configuration["rundir"]+'launch_script_solvent.sh')
+            if  'water' in configuration.keys():
+              shutil.copy(water_file, configuration["rundir"]+'launch_script_water.sh')
             if 'thermo' in configuration.keys():
-              shutil.copy(solvent_file,configuration["rundir"]+'launch_script_thermo.sh')
+              shutil.copy(thermo_file, configuration["rundir"]+'launch_script_thermo.sh')
   if 'DFT' in configuration.keys() and 'runtype' in configuration.keys():
       if configuration['runtype'] == 'redox' and not configuration['DFT']:
         print('unable to run ANN based GA using redox at this time, changing to spin splitting')
