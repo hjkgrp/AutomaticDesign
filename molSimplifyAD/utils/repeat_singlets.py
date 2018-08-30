@@ -39,6 +39,7 @@ outstanding_jobs = get_outstanding_jobs()
 
 jobs_complete = 0
 GA_run = get_current_GA()
+use_old_optimizer = get_optimizer()
 ## allocate holder for result list
 final_results = dict()
 all_runs = dict()
@@ -136,7 +137,7 @@ for runs in restart_list:
                                 made_new_input = True
                                 keep_scr =  True
                                 if not dry_run:
-                                        create_generic_infile(runs.job, restart=False, use_old_optimizer=False, custom_geo_guess =  runs.job)
+                                        create_generic_infile(runs.job, restart=False, use_old_optimizer=use_old_optimizer, custom_geo_guess =  runs.job)
                                         new_infile = get_infile_from_job(runs.job)
                                         add_to_outstanding_jobs(runs.job)                                               
                                         print('adding ' + new_infile + ' to outstanding list')
@@ -145,7 +146,7 @@ for runs in restart_list:
                                 
         if not made_new_input: # cannot make a better guess, use initial geo:
                 if not dry_run:
-                        create_generic_infile(runs.job, restart=False, use_old_optimizer=False, custom_geo_guess = False)
+                        create_generic_infile(runs.job, restart=False, use_old_optimizer=use_old_optimizer, custom_geo_guess = False)
                         new_infile = get_infile_from_job(runs.job)
                         print('adding ' + new_infile + ' to outstanding list')
                         add_to_outstanding_jobs(runs.job)
