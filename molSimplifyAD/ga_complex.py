@@ -23,7 +23,7 @@ class octahedral_complex:
         self.ax_inds = list()
         self.eq_inds = list()
         GA_run = get_current_GA()
-        self.ahf = int(GA_run.config["exchange"]) # % HFX, B3LYP = 20 
+        self.ahf = int(GA_run.config["exchange"]) # % HFX, B3LYP = 20
     def random_gen(self):
         self._get_random_metal()
         self._get_random_ox()
@@ -76,7 +76,7 @@ class octahedral_complex:
         self.eq_oc  = int(4/self.eq_dent)
         self.eq_ligands = [self.ligands_list[eq_ind][0] for i in range(0,self.eq_oc)]
         self.eq_inds = [eq_ind]
-        
+
     def _get_random_axial(self):
         ### choose axial ligands:
         n = len(self.ligands_list)
@@ -132,13 +132,13 @@ class octahedral_complex:
                     print('AXLIGS ARE ', self.ax_ligands)
                 else:
 #                    This section is intended to allow for vacant axial sites
-#                    It is not currently implemented               
+#                    It is not currently implemented
 #                    if ((ax_ind == 0) and (not has_zero)):
 #                        has_zero = True
 #                        self.ax_ligands.append(self.ligands_dict[ax_ind][0])
 #                        self.ax_inds.append(ax_ind)
 #                        self.geo = "spy"
-#         
+#
 #                    elif ax_ind !=  0:
                     self.ax_ligands.append(self.ligands_list[ax_ind][0])
                     self.ax_inds.append(ax_ind)
@@ -171,8 +171,6 @@ class octahedral_complex:
         self.ox = new_ox
     def replace_equitorial(self,new_eq_ind):
         #print('in repcoding, setting eq to ' + str(new_eq_ind))
-        print(self.ligands_list)
-        print(new_eq_ind)
         eq_ligand_properties  = self.ligands_list[new_eq_ind[0]][1]
         self.eq_dent = eq_ligand_properties[0]
         self.eq_oc  = int(4/self.eq_dent)
@@ -235,7 +233,7 @@ class octahedral_complex:
     def exchange_ligands(self,partner,eq_swap):
         child = octahedral_complex(self.ligands_list)
         child.copy(self) # copies this parent
-        
+
         print("swapping from",partner.name," to ",self.name)
         self.examine()
         if eq_swap:
@@ -247,7 +245,7 @@ class octahedral_complex:
         child.examine()
         child._name_self()
         return child
-        
+
     def exchange_metal(self,partner):
         child = octahedral_complex(self.ligands_list)
         child.copy(self) # copies this parent
@@ -256,7 +254,7 @@ class octahedral_complex:
         child.replace_metal(partner.core)
         child._name_self()
         return child
-        
+
     def exchange_ox(self,partner):
         child = octahedral_complex(self.ligands_list)
         child.copy(self) # copies this parent
@@ -323,7 +321,7 @@ class octahedral_complex:
                             new_ax_list = [rand_ind,rand_ind]
                         else:
                             new_ax_list = [self.ax_inds[0],rand_ind]
-                        
+
                     child.ax_dent = 1
                     child.three_bidentate = False
                     ready_flag = True
@@ -351,9 +349,9 @@ class octahedral_complex:
         ligloc_cont = True
         # set metal properties:
         this_metal = self.metals_list[self.core]
-        
+
         mol_name = prefix + self.name + "_" + str(spin)
-        
+
         smicat = False # holder for connection atoms calls for SMILES ligands
         if self.ax_dent == 1:
             # assemble SMILEs ligands
@@ -366,10 +364,10 @@ class octahedral_complex:
                 elif  hasattr(eq_lig,'__iter__'): # this is the mark of SMILES strings:
                     #print('SMILEs ligand in eq position  '+ str(eq_lig))
                     liglist += " " +  "'"+str(eq_lig[0])+ "'"
-                    if not smicat: # false on first hit 
-                        smicat = " ["    + str(eq_lig[1]).replace("'","") # cat list 
+                    if not smicat: # false on first hit
+                        smicat = " ["    + str(eq_lig[1]).replace("'","") # cat list
                     else:
-                        smicat += ",  " + str(eq_lig[1]).replace("'","") # cat list 
+                        smicat += ",  " + str(eq_lig[1]).replace("'","") # cat list
             #print(' after eq-shell, liglist is ' + liglist)
             #print(' after eq-shell, smicat is ' + str(smicat))
             for ax_lig in self.ax_ligands:
@@ -380,15 +378,15 @@ class octahedral_complex:
                 elif  hasattr(ax_lig,'__iter__'): # this is the mark of SMILES strings:
                     #print('SMILEs ligand in ax position  '+ str(ax_lig))
                     liglist += " " +  "'"+ str(ax_lig[0])+  "'"
-                    if not smicat: # false on first hit 
-                        smicat = " [ "    + str(ax_lig[1]).replace("'","") # cat list 
+                    if not smicat: # false on first hit
+                        smicat = " [ "    + str(ax_lig[1]).replace("'","") # cat list
                     else:
-                        smicat += ",  " + str(ax_lig[1]).replace("'","")  # cat list 
+                        smicat += ",  " + str(ax_lig[1]).replace("'","")  # cat list
             #liglist.replace("'","")
             if smicat:
                 smicat += "]"
             #print(' after ax-shell, liglist is ' + liglist)
-            #print(' after ax-shell, smicat is ' + str(smicat))            
+            #print(' after ax-shell, smicat is ' + str(smicat))
             ligloc = 1
             ligalign = 0
         elif self.ax_dent == 2:
@@ -403,13 +401,13 @@ class octahedral_complex:
             elif  hasattr(eq_lig,'__iter__'): # this is the mark of SMILES strings:
                 #print('SMILEs ligand in eq position  '+ str(eq_lig))
                 liglist += " " + str(eq_lig[0])
-                if not smicat: # false on first hit 
-                    smicat = " ["    + str(eq_lig[1]).replace("'","") # cat list 
+                if not smicat: # false on first hit
+                    smicat = " ["    + str(eq_lig[1]).replace("'","") # cat list
                 else:
-                    smicat += ",  " + str(eq_lig[1]).replace("'","") # cat list 
+                    smicat += ",  " + str(eq_lig[1]).replace("'","") # cat list
             #print(' after eq-shell 1, liglist is ' + liglist)
             #print(' after eq-shell 1, smicat is ' + str(smicat))
-            
+
             # only one axial ligand allowed
             ax_lig = self.ax_ligands[0]
             #print('processing ligand ' + str(ax_lig))
@@ -419,11 +417,11 @@ class octahedral_complex:
             elif  hasattr(ax_lig,'__iter__'): # this is the mark of SMILES strings:
                 #print('SMILEs ligand in ax position  '+ str(ax_lig))
                 liglist += " " + str(ax_lig[0])
-                if not smicat: # false on first hit 
-                    smicat = " ["    + str(ax_lig[1]).replace("'","") # cat list 
+                if not smicat: # false on first hit
+                    smicat = " ["    + str(ax_lig[1]).replace("'","") # cat list
                 else:
-                    smicat += ",  " + str(ax_lig[1]).replace("'","")  # cat list 
-            
+                    smicat += ",  " + str(ax_lig[1]).replace("'","")  # cat list
+
             # second eq ligand 
             eq_lig = self.eq_ligands[1]
             #print('processing ligand ' + str(eq_lig))
@@ -433,15 +431,15 @@ class octahedral_complex:
             elif  hasattr(eq_lig,'__iter__'): # this is the mark of SMILES strings:
                 #print('SMILEs ligand in eq position  '+ str(eq_lig))
                 liglist += " " + str(eq_lig[0])
-                if not smicat: # false on first hit 
-                    smicat = " ["    + str(eq_lig[1]).replace("'","") # cat list 
+                if not smicat: # false on first hit
+                    smicat = " ["    + str(eq_lig[1]).replace("'","") # cat list
                 else:
-                    smicat += ",  " + str(eq_lig[1]).replace("'","") # cat list 
+                    smicat += ",  " + str(eq_lig[1]).replace("'","") # cat list
             #print(' after eq-shell 2, liglist is ' + liglist)
             #print(' after eq-shell 2, smicat is ' + str(smicat))
             liglist.replace("'","")
             if smicat:
-                smicat += "]"            
+                smicat += "]"
 #            liglist = (str([str(element).strip("'[]'") for element in (self.eq_ligands[:half])] +
 #             [str(self.ax_ligands[0]).strip("'[]'")] +
 #              [str(element).strip("'[]'") for element in (self.eq_ligands[half:])]).strip("[]")).replace("'", "")
@@ -460,9 +458,10 @@ class octahedral_complex:
                 ff_opt = 'no'
         ## get custom exchange fraction
         this_GA = get_current_GA()
+        use_old_optimizer = get_optimizer()
         exchange = this_GA.config['exchange']
         optimize = this_GA.config['optimize']
-        
+
         if optimize:
             #print(' setting up GEO optimization ')
             rty = 'minimize'
@@ -470,22 +469,22 @@ class octahedral_complex:
         else:
             rty = 'energy'
             scrpath =  "scr/sp/gen_"+str(gen) + '/'  + mol_name
-            
+
         geometry = "oct"
-        
+
         ## set paths for generation
         ms_dump_path = path_dictionary["molsimplify_inps"] +  'ms_output.txt'
         ms_error_path = path_dictionary["molsimplify_inps"] +  'ms_errors.txt'
         jobpath = path_dictionary["job_path"]  + mol_name + '.in'
         inpath = path_dictionary["infiles"]  + mol_name + '.in'
-        
-        
+
+
 
         geometry_path = path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz'
-        
+
         ## check if already exists:
         geo_exists = os.path.isfile(path_dictionary["initial_geo_path"] + mol_name + '.xyz')
-        
+
         #Initialize ANN results dictionary
         ANN_results = {}
         property_list = ['split', 'split_dist','homo', 'homo_dist','gap', 'gap_dist','oxo','oxo_dist']
@@ -517,9 +516,9 @@ class octahedral_complex:
                         print('Error: molSimplify failure when calling ')
                         print(call)
                         sys.exit()
-                    
+
                 #if this_GA.config['symclass']=="strong":
-                                        
+
                 with open(rundirpath + 'temp' +'/' + mol_name + '.report') as report_f:
                     for line in report_f:
                         if ("split" in line) and not ("dist" in line) and not ("trust" in line):
@@ -578,7 +577,7 @@ class octahedral_complex:
                             else:
                                 print(str(i)+ ' set to '+str(ANN_results[i])+' since the key was present')
 
-                                
+
                 if isOxocatalysis() and 'oxo' in liglist and isDFT(): #Subbing in 1.65 as Oxo BL
                     print('Modifying initial oxo geom file '+ mol_name + '.xyz to have oxo BL 1.65')
                     geo_ref_file = open(path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz','r')
@@ -588,7 +587,7 @@ class octahedral_complex:
                     adjusted_lines = lines[:-1]+[lines[-1][:-9]+'1.650000\n']
                     geo_replacement.writelines(adjusted_lines)
                     geo_replacement.close()
-                
+
                 shutil.move(rundirpath + 'temp' +'/' + mol_name + '.report', path_dictionary["ms_reps"] +'/'+ mol_name + '.report')
 
                 ## write the job file
@@ -599,16 +598,16 @@ class octahedral_complex:
                                 newf.writelines(line)
                     newf.writelines("scrdir " +scrpath + "\n")
                 os.remove(rundirpath + 'temp/' + mol_name + '.in')
-                
-                
+
+
                 ### check if ligands in old optimizer list
                 old_optimizer_list = get_old_optimizer_ligand_list()
-                use_old_optimizer = False
+                # use_old_optimizer = False
                 for ligs in (self.eq_ligands+self.ax_ligands):
                     if ligs in old_optimizer_list:
                         use_old_optimizer = True
                 ### make an infile!
-                create_generic_infile(jobpath,restart=False,use_old_optimizer = use_old_optimizer)
+                create_generic_infile(jobpath,restart=False,use_old_optimizer=use_old_optimizer)
                 flag_oct, _, _ = self.inspect_initial_geo(geometry_path)
                 if flag_oct == 0:
                     print('Bad initial geometry. Setting all of the fitness values to 0 so it is not used.')
@@ -624,7 +623,7 @@ class octahedral_complex:
             for key in sorted(ANN_results.iterkeys()):
                 sorted_ANN_results[key] = ANN_results[key]
         return jobpath,mol_name, sorted_ANN_results, flag_oct
-    
+
     def inspect_initial_geo(self,geometry_path):
         ## this function contains the logic for inspecting a
         ## initial geo file and reporting if there are problems with it
@@ -634,7 +633,7 @@ class octahedral_complex:
         flag_oct, flag_list, dict_oct_info = mol.IsOct()
         flag_H = not mol.closest_H_2_metal()[0]
         flag_oct = flag_oct and flag_H
-        return flag_oct, flag_list, dict_oct_info 
- 
-    
+        return flag_oct, flag_list, dict_oct_info
+
+
 

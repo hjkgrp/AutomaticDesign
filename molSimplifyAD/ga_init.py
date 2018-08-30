@@ -66,5 +66,6 @@ def wake_up_routine():
             print('Current gen > Maxgen in wakeup routine...')
             logger(new_tree.base_path_dictionary['state_path'],str(datetime.datetime.now())
                                + ":  Gen  " + str(new_tree.status_dictionary['gen']) + ' has reached maxgen')
+            new_tree.write_state()
 
         return(new_tree)

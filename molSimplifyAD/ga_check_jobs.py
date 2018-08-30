@@ -23,7 +23,7 @@ def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary):
 
     ## be post processed:
     if (job not in live_job_dictionary.keys()) and (len(job.strip('\n')) != 0):
-        if not ("sp_infiles" in job) and not ("thermo" in job) and not ("solvent" in job):
+        if not ("sp_infiles" in job) and not ("thermo" in job) and not ("solvent" in job) and not ("water" in job):
             if isall_post():
                 postProc = True
             elif job in converged_jobs_dictionary.keys():
@@ -60,6 +60,7 @@ def check_all_current_convergence():
 
     jobs_complete = 0
     GA_run = get_current_GA()
+    use_old_optimizer = get_optimizer()
     ## allocate holder for result list
     final_results = dict()
     all_runs = dict()
@@ -67,20 +68,26 @@ def check_all_current_convergence():
     if GA_run.config["optimize"]:
         print('post processing geometry files')
         ### return codes:
-        ## 0 -> success! converged, has 6-coord etc
-        ## 1 -> converged, but potential issues
-        ## 2 -> not converged, prog geo found and extracted, candidate for 
+        ## 0  -> success! converged, has 6-coord etc
+        ## 1  -> converged, but potential issues
+        ## 2  -> not converged, prog geo found and extracted, candidate for 
         ##      restart
-        ## 3 -> not converged,  no prog geo found, considered dead
-        ## 4 -> job appears to be live
-        ## 5 -> unknown result, not assigned
-        ## 6 -> uncaught error, likely SCF did not converge or other error
-        ## 7 -> allowed submissions exceeded  (in ga_monitor)
-        ## 8 -> prog geo was found, but was a bad geo
-        ## 12-> job requests thermo
-        ## 13-> job requests solvent
+        ## 3 - > not converged,  no prog geo found, considered dead
+        ## 4  -> job appears to be live
+        ## 5  -> unknown result, not assigned
+        ## 6  -> uncaught error, likely SCF did not converge or other error
+        ## 7  -> allowed submissions exceeded  (in ga_monitor)
+        ## 8  -> prog geo was found, but was a bad geo
+        ## 12 -> job requests thermo
+        ## 13 -> job requests solvent
+        ## 14 -> job requests sp calc
+        ## 15 -> job requests water-implicit calc
+        
+        ## sort to get consistent transversal order
         joblist.sort()
-        print('----post-all?---', isall_post())
+        
+        print('testing if  post-all is on: ', isall_post())
+        
         for jobs in joblist:
             if postprocessJob(job=jobs, live_job_dictionary=live_job_dictionary,
                               converged_jobs_dictionary=converged_jobs):
@@ -99,7 +106,7 @@ def check_all_current_convergence():
                 this_run.job = jobs
 
                 ## check empty
-                # print('AXLIG2 HERE!!!!!!!',axlig2)
+
                 if axlig2 == 'x':
                     this_run.octahedral = False
                 else:
@@ -119,24 +126,35 @@ def check_all_current_convergence():
                 ## set file paths
                 path_dictionary = setup_paths()
                 path_dictionary = advance_paths(path_dictionary, gen)  ## this adds the /gen_x/ to the paths
-
+                
+                ## geo location 
                 this_run.geopath = (path_dictionary["optimial_geo_path"] + base_name + ".xyz")
                 this_run.progpath = (path_dictionary["prog_geo_path"] + base_name + ".xyz")
                 this_run.init_geopath = (path_dictionary["initial_geo_path"] + base_name + ".xyz")
-
-                this_run.outpath = (path_dictionary["geo_out_path"] + base_name + ".out")
-                this_run.thermo_outpath = (path_dictionary["thermo_out_path"] + base_name + ".out")
-                this_run.solvent_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'
-
-                this_run.solvent_outpath = (path_dictionary["solvent_out_path"] + base_name + ".out")
-                this_run.sp_outpath = (path_dictionary["sp_out_path"] + '/' + base_name + ".out")
-                this_run.sp_inpath = path_dictionary["sp_in_path"]+base_name+".in"
-
-                
                 this_run.scrpath = path_dictionary["scr_path"] + base_name + "/optim.xyz"
+                
+                ## main energy calculation paths
                 this_run.inpath = path_dictionary["job_path"] + base_name + ".in"
+                this_run.outpath = (path_dictionary["geo_out_path"] + base_name + ".out")
                 this_run.comppath = path_dictionary["done_path"] + base_name + ".in"
+                
+                ## thermo and solvent run information 
 
+                this_run.sp_inpath = path_dictionary["sp_in_path"]+base_name+".in"
+                this_run.sp_outpath = (path_dictionary["sp_out_path"] + '/' + base_name + ".out")
+
+                if isThermo():
+                        this_run.thermo_outpath = (path_dictionary["thermo_out_path"] + base_name + ".out")
+                
+                if isSolvent():
+                        this_run.solvent_outpath = (path_dictionary["solvent_out_path"] + base_name + ".out")
+                        this_run.solvent_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'
+
+                if isWater():
+                        this_run.water_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'               
+                        this_run.water_outpath = (path_dictionary["water_out_path"] + base_name + ".out")
+
+                ## MOP semiempirical (not used)
                 this_run.moppath = path_dictionary["mopac_path"] + base_name + ".out"
                 this_run.mop_geopath = path_dictionary["mopac_path"] + base_name + ".xyz"
                 
@@ -160,11 +178,7 @@ def check_all_current_convergence():
                     else:
                         # if NOT live, test convergance
                         test_terachem_go_convergence(this_run)
-                # logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
-                #                       + 'test_go status' + str(this_run.status))
-
-                ##logger(base_path_dictionary['state_path'],str(datetime.datetime.now())
-                #                      + 'test_go oct flag' + str(this_run.flag_oct))
+                
 
                 ## get the initial mol 
                 if os.path.isfile(this_run.init_geopath):
@@ -172,9 +186,9 @@ def check_all_current_convergence():
 
                 # store the status
                 metal_spin_dictionary = spin_dictionary()
-                #metal_list = get_metals()
+                
                 ## convert metal from index to str
-                #metal = metal_list[metal]
+                
                 print('metal is ' + str(metal))
                 print('base_name', this_run.name)
                 print('chem_name', this_run.chem_name)
@@ -226,7 +240,14 @@ def check_all_current_convergence():
                                 this_run.status = 14
                                 run_success = False
                          
-                        if run_success and not this_run.status in [12,13,14]:
+                        if isWater(): # additional solvent SP with implict water
+                            this_run = check_water_file(this_run)
+                            if this_run.water_cont and run_success:
+                                remove_outstanding_jobs(this_run.water_inpath)
+                            elif run_success:
+                                this_run.status = 15
+                                run_success = False
+                        if run_success and not this_run.status in [12,13,14,15]:
                             this_run.status = 0  # all done
                         ## mark as compelete
 
@@ -299,7 +320,7 @@ def check_all_current_convergence():
                         if this_run.progstatus == 0:
                             sub_number = submitted_job_dictionary[jobs]
                             this_run.archive(sub_number)
-                            create_generic_infile(jobs, restart=True)
+                            create_generic_infile(jobs, use_old_optimizer=use_old_optimizer, restart=True)
                             this_run.status = 2  ## prog geo is good
                             logger(base_path_dictionary['state_path'],
                                    str(datetime.datetime.now()) + ' job allowed to restart since good prog geo found ')
@@ -339,7 +360,7 @@ def check_all_current_convergence():
                 logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                        + ' added ' + this_run.name + ' to all_runs with status ' + str(this_run.status))
 
-                if this_run.status in [0, 1, 12, 13, 14]:  ##  convergence is successful!
+                if this_run.status in [0, 1, 12, 13, 14,15]:  ##  convergence is successful!
                     print('removing job from OSL due to status  ' + str(this_run.status))
                     jobs_complete += 1
                     remove_outstanding_jobs(jobs)  # take out of queue
