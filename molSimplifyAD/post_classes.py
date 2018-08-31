@@ -373,7 +373,7 @@ class DFTRun:
                         f_solvent.write(line)
             f_solvent.write('end')
             f_solvent.close()
-    def write_solvent_input(self,dielectric=78.39):
+    def write_solvent_input(self,dielectric=10.3):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         if not (self.spin == 1):

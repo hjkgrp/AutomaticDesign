@@ -344,7 +344,7 @@ def isWater():
     
     try:
         GA_run = get_current_GA()
-        if GA_run.config["solvent"]:
+        if GA_run.config["water"]:
             return True
         else:
             return False

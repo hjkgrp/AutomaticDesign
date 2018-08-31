@@ -95,7 +95,8 @@ def check_all_current_convergence():
                 gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(jobs)
                 ## create run
                 this_run = DFTRun(base_name)
-                
+                print('Here!')
+                print(isSinglePoint())
                 ## regenerate opt geo
                 this_run.scrpath = path_dictionary["scr_path" ]  + base_name +"/optim.xyz"
                 if isOxocatalysis():
@@ -241,6 +242,7 @@ def check_all_current_convergence():
                                 run_success = False
                          
                         if isWater(): # additional solvent SP with implict water
+                            print('water on')
                             this_run = check_water_file(this_run)
                             if this_run.water_cont and run_success:
                                 remove_outstanding_jobs(this_run.water_inpath)
@@ -250,7 +252,6 @@ def check_all_current_convergence():
                         if run_success and not this_run.status in [12,13,14,15]:
                             this_run.status = 0  # all done
                         ## mark as compelete
-
                     else:  # not B3LYP, check coord only:
                         if run_success:
                             this_run.status = 0  # all done
@@ -367,7 +368,7 @@ def check_all_current_convergence():
                     if isSolvent():
                         if this_run.status == 13:  ## need solvent:
                             print('addding solvent based on ' + str(jobs))
-                            this_run.write_solvent_input(dielectric=37.5)
+                            this_run.write_solvent_input(dielectric=10.3)
                             add_to_outstanding_jobs(this_run.solvent_inpath)
                     if isThermo():
                         if this_run.status == 12:  ## needs thermo:
@@ -378,6 +379,12 @@ def check_all_current_convergence():
                             print('addding single point based on ' + str(jobs))
                             this_run.write_bigbasis_input()
                             add_to_outstanding_jobs(this_run.sp_inpath)
+                    if isWater():
+                        if this_run.status == 15:  ## need solvent:
+                            print('addding water based on ' + str(jobs))
+                            this_run.write_water_input()
+                            add_to_outstanding_jobs(this_run.water_inpath)
+ 
                 if this_run.status in [3, 5, 6, 8]:  ##  convergence is not successful!
                     number_of_subs = submitted_job_dictionary[jobs]
                     if this_run.status in [3, 5, 6]:  ## unknown error, allow retry
