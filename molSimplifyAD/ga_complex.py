@@ -60,10 +60,14 @@ class octahedral_complex:
         n = len(self.ligands_list)
         eq_ind = numpy.random.randint(low = 0,high = n)
         if isOxocatalysis():
-            while (self.ligands_list[eq_ind][0] in ['x','hydroxyl','oxo']):
+            smiles = False
+            if hasattr(self.ligands_list[eq_ind][0],'__iter__'):
+                smiles = True
+            while (self.ligands_list[eq_ind][0] in ['x','hydroxyl','oxo']) or (smiles and self.ligands_list[eq_ind][0][0] in ['[O--]','[OH-]']):
                 eq_ind = numpy.random.randint(low = 0,high = n)
-                if self.ligands_list[eq_ind][0] not in ['x','hydroxyl','oxo']:
+                if (self.ligands_list[eq_ind][0] not in ['x','hydroxyl','oxo']) or (smiles and self.ligands_list[eq_ind][0][0] in ['[O--]','[OH-]']):
                     break
+            print('CHOSEN RANDOM EQLIG: ',self.ligands_list[eq_ind])
         #print('choosing '+str(eq_ind) + ' from '+str(n))
         # now we test if it is a SMILEs or molsimplify ligand    
         #print('name  is ' +str(self.ligands_list[eq_ind][0]))
@@ -82,10 +86,17 @@ class octahedral_complex:
         while not self.ready_for_assembly:
             ax_ind = numpy.random.randint(low = 0,high = n)
             if isOxocatalysis():
-                while (self.ligands_list[ax_ind][0] in ['x','hydroxyl','oxo']) or (self.ligands_list[ax_ind][1] > 1): #No bidentate axials
+                if hasattr(self.eq_ligands[0],'__iter__'):
+                    oxo = find_ligand_idx('[O--]')
+                    dent = self.ligands_list[ax_ind][0][1]
+                else:
+                    oxo = find_ligand_idx('oxo')
+                    dent = self.ligands_list[ax_ind][1]
+                while (ax_ind == oxo) or (dent > 1): #No bidentate axials
                     ax_ind = numpy.random.randint(low = 0,high = n)
-                    if (self.ligands_list[ax_ind][0] not in ['x','hydroxyl','oxo']) and (self.ligands_list[ax_ind][1][0] == 1):
+                    if (ax_ind !=  int(oxo)):
                         break
+                print('CHOSEN RANDOM AXLIG: ',self.ligands_list[ax_ind])
             ax_ligand_properties  = self.ligands_list[ax_ind][1]
             ax_dent = ax_ligand_properties[0]
             if ax_dent > 1 and not isOxocatalysis():
@@ -108,13 +119,17 @@ class octahedral_complex:
                         self.ax_oc = [1,1]
                         self.ready_for_assembly = True
                 elif isOxocatalysis():
-                    oxo = find_ligand_idx('oxo')
+                    if hasattr(self.eq_ligands[0],'__iter__'):
+                        oxo = find_ligand_idx('[O--]')
+                    else:
+                        oxo = find_ligand_idx('oxo')
                     self.ax_ligands = [self.ligands_list[ax_ind][0],self.ligands_list[oxo][0]]
                     self.ax_inds = [ax_ind, oxo]
                     if (len(self.ax_ligands) ==2):
                         self.ax_dent = 1
                         self.ax_oc = [1,1]
                         self.ready_for_assembly = True
+                    print('AXLIGS ARE ', self.ax_ligands)
                 else:
 #                    This section is intended to allow for vacant axial sites
 #                    It is not currently implemented
@@ -156,7 +171,6 @@ class octahedral_complex:
         self.ox = new_ox
     def replace_equitorial(self,new_eq_ind):
         #print('in repcoding, setting eq to ' + str(new_eq_ind))
-
         eq_ligand_properties  = self.ligands_list[new_eq_ind[0]][1]
         self.eq_dent = eq_ligand_properties[0]
         self.eq_oc  = int(4/self.eq_dent)
@@ -254,7 +268,7 @@ class octahedral_complex:
         ## mutates either the axial
         ## or equitorial ligand a random
         GA_run = get_current_GA()
-        lig_to_mutate = random.randint(0,3)
+        lig_to_mutate = random.randint(0,3) #SWITCHED TO DISALLOW METAL MUT
         child = octahedral_complex(self.ligands_list)
         child.copy(self) # copies this parent
         n = len(self.ligands_list)
@@ -265,11 +279,15 @@ class octahedral_complex:
         if (lig_to_mutate == 0):
             print("mutating equitorial ligand")
             rand_ind = numpy.random.randint(low = 0,high = n)
+            smiles = False
+            if hasattr(self.ligands_list[rand_ind][0],'__iter__'):
+                smiles = True
             if isOxocatalysis():
-                while (self.ligands_list[rand_ind][0] in ['x','hydroxyl','oxo']):
+                while (self.ligands_list[rand_ind][0] in ['x','hydroxyl','oxo']) or (smiles and self.ligands_list[rand_ind][0][0] in ['[O--]','[OH-]']):
                     rand_ind = numpy.random.randint(low = 0,high = n)
-                    if self.ligands_list[rand_ind][0] not in ['x','hydroxyl','oxo']:
+                    if self.ligands_list[rand_ind][0] not in ['x','hydroxyl','oxo'] or (smiles and self.ligands_list[rand_ind][0][0] not in ['[O--]','[OH-]']):
                         break
+                print('MUTATED EQUATIORIAL IS ', self.ligands_list[rand_ind][0])
             child.replace_equitorial([rand_ind])
         elif (lig_to_mutate == 1) or (lig_to_mutate == 2):
             print('mutating axial ligand')
@@ -280,9 +298,13 @@ class octahedral_complex:
                 new_ax_list = list()
                 rand_ind = numpy.random.randint(low = 0,high = n)
                 if isOxocatalysis():
-                    while (self.ligands_list[rand_ind][0] in ['x','hydroxyl','oxo']) or (self.ligands_list[rand_ind][1] > 1): #No bidentate axials
+                    smiles = False
+                    if hasattr(self.ligands_list[rand_ind][0],'__iter__'):
+                        smiles = True
+                    while (self.ligands_list[rand_ind][0] in ['x','hydroxyl','oxo']) or (smiles and self.ligands_list[rand_ind][0][0] in ['[O--]','[OH-]']) or \
+                        (self.ligands_list[rand_ind][1][0] > 1): #No bidentate axials
                         rand_ind = numpy.random.randint(low = 0,high = n)
-                        if (self.ligands_list[rand_ind][0] not in ['x','hydroxyl','oxo']) and (self.ligands_list[rand_ind][1][0] == 1):
+                        if ((self.ligands_list[rand_ind][0] not in ['x','hydroxyl','oxo']) or (smiles and self.ligands_list[rand_ind][0][0] not in ['[O--]','[OH-]'])) and self.ligands_list[rand_ind][1][0] == 1:
                             break
                 ax_ligand_properties  = self.ligands_list[rand_ind][1]
                 ax_dent = ax_ligand_properties[0]
@@ -472,8 +494,7 @@ class octahedral_complex:
                 #if True:
                     with open(ms_dump_path,'a') as ms_pipe:
                         with open(ms_error_path,'a') as ms_error_pipe:
-
-                            call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +liglist,'-ligocc 1,1,1,1,1,1',
+                            call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +str(liglist),'-ligocc 1,1,1,1,1,1',
                                      '-rundir ' +"'"+ rundirpath.rstrip("/")+"'",'-keepHs yes,yes,yes,yes,yes,yes','-jobdir','temp',
                                      '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
                                      '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ str(self.ox), '-exchange '+str(exchange),
