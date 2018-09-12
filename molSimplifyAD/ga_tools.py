@@ -261,7 +261,7 @@ def get_metals():
 def find_ligand_idx(lig):
     ligs = get_ligands()
     for i, item in enumerate(ligs):
-        if lig in item:
+        if lig in item or (lig in item[0]):
             idx = int(i)
     return idx
 
@@ -530,7 +530,7 @@ def renameOxoEmpty(job):
     ll = (str(basename)).split("_")
     ligs = get_ligands()
     for i, item in enumerate(ligs):
-        if 'x' in item:
+        if 'x' in item or 'x' in item[0]:
             value = str(i)
     ## replace ax2 with x index
     ll[8] = value
