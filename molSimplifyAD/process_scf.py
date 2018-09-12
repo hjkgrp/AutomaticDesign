@@ -310,7 +310,8 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
             axlig2_name = 'smi' + str(this_run.axlig2_ind)
         else:
             axlig2_name = this_run.axlig2
-            
+        if axlig2_name == '[O--]':
+            axlig2_name = 'oxo'    
                 
         this_name = "_".join([this_metal,'eq',str(eqlig_name),'ax1',str(axlig1_name),'ahf',str(this_run.alpha).zfill(2)])
                 ### add alpha value to list owned by this_comp:
