@@ -201,8 +201,7 @@ def check_all_current_convergence():
                     print('converged run, alpha is ' + str(this_run.alpha))
                     run_success = False
                     # perfrom health checks on complex here
-                    if (this_run.coord == 6 and this_run.octahedral == True) or (
-                            this_run.coord == 5 and this_run.octahedral == False):
+                    if (this_run.coord == 6 and this_run.octahedral == True) or (this_run.coord == 5 and this_run.octahedral == False):
                         run_success = True
 
                     # check run is complete?
@@ -282,7 +281,7 @@ def check_all_current_convergence():
                                            this_run.alpha) + ' to ' + newHFX + ' with ref ' + refHFX)
 
                                 add_to_outstanding_jobs(HFX_job)
-                            if isOxocatalysis() and int(ox) > 3 and (axlig2 == 'oxo'):
+                            if isOxocatalysis() and int(ox) > 3 and (axlig2 == 'oxo' or '[O--]' in axlig2[0] or '[O--]' in axlig2):
                                 empty_sp = this_run.write_empty_inputs(refHFX)
                                 if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (
                                         empty_sp not in converged_jobs.keys()):
@@ -290,8 +289,7 @@ def check_all_current_convergence():
                                     logger(base_path_dictionary['state_path'], str(
                                         datetime.datetime.now()) + ' converting from oxo structure to empty structure (SP)')
                                     add_to_outstanding_jobs(empty_sp)
-                    elif isOxocatalysis() and int(ox) > 3 and (
-                            axlig2 == 'oxo'):  # Must do this because the empty sites are one step behind the 6-coordinates at different HFX
+                    elif isOxocatalysis() and int(ox) > 3 and (axlig2 == 'oxo' or '[O--]' in axlig2[0] or '[O--]' in axlig2):  # Must do this because the empty sites are one step behind the 6-coordinates at different HFX
                         empty_sp = this_run.write_empty_inputs('00')
                         if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (
                                 empty_sp not in converged_jobs.keys()):
