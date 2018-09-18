@@ -326,12 +326,12 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
            continue
         else:
             spin_ind = metal_spins.index(this_run.spin)
-        if spin_ind == 0:
+        if int(this_run.spin) == metal_spins[0]:
             spin_cat = 'LS'
-        elif spin_ind == 1:
-            spin_cat = 'IS'
-        else:
+        elif int(this_run.spin) == metal_spins[-1]:
             spin_cat = 'HS'
+        else:
+            spin_cat = 'IS'
         print('spin ind is found to be ' + str(this_run.spin) + ' interpretted as ' + str(spin_cat))
         if this_name not in final_results.keys():
             ## need to create a new holder to store this gene
