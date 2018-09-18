@@ -66,6 +66,10 @@ class DFTRun:
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
                               'islive', 'set_desc','sp_status']
         list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord']
+        
+        if isOxocatalysis():
+            list_of_init_props += ['metal_alpha','metal_beta','net_metal_spin','metal_mulliken_charge','oxygen_alpha','oxygen_beta','net_oxygen_spin','oxygen_mulliken_charge']
+        
         for this_attribute in list_of_init_props:
             setattr(self, this_attribute, 'undef')
         for this_attribute in list_of_init_empty:
@@ -851,6 +855,7 @@ class Comp:
                     this_attribute = "_".join(['ox', ox, sc, props])
                     setattr(self, this_attribute, False)
         if isOxocatalysis():
+            list_of_init_props += ['metal_alpha','metal_beta','net_metal_spin','metal_mulliken_charge','oxygen_alpha','oxygen_beta','net_oxygen_spin','oxygen_mulliken_charge']
             for props in list_of_init_props:
                 for spin_cat in ['LS', 'IS', 'HS']:
                     for catax in ['x', 'oxo', 'hydroxyl']:
