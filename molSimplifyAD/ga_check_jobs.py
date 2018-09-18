@@ -382,7 +382,23 @@ def check_all_current_convergence():
                             print('addding water based on ' + str(jobs))
                             this_run.write_water_input()
                             add_to_outstanding_jobs(this_run.water_inpath)
- 
+                    if isOxocatalysis(): #Scrape spin and partial charge info from molden
+                        print('Now scraping the molden file for charge and spin info.')
+                        current_folder = path_dictionary["scr_path"]+base_name+"/"
+                        multiwfnpath = glob.glob(current_folder+"*.molden")
+                        if len(multiwfnpath)>0:
+                            multiwfnpath = multiwfnpath[0]
+                            metalalpha, metalbeta, metaldiff, metalcharge, oxoalpha, oxobeta, oxodiff, oxocharge = get_mulliken_oxocatalysis(multiwfnpath,axlig2,spin)
+                            this_run.metal_alpha = metalalpha
+                            this_run.metal_beta = metalbeta
+                            this_run.net_metal_spin = metaldiff
+                            this_run.metal_mulliken_charge = metalcharge
+                            this_run.oxygen_alpha = oxoalpha
+                            this_run.oxygen_beta = oxobeta
+                            this_run.net_oxygen_spin = oxodiff
+                            this_run.oxygen_mulliken_charge = oxocharge
+                        else:
+                            print("No molden path found for this run ("+str(jobs)+")")
                 if this_run.status in [3, 5, 6, 8]:  ##  convergence is not successful!
                     number_of_subs = submitted_job_dictionary[jobs]
                     if this_run.status in [3, 5, 6]:  ## unknown error, allow retry
@@ -446,6 +462,23 @@ def check_all_current_convergence():
                         print('removing job from OSL due to status 0 ')
                         jobs_complete += 1
                         remove_outstanding_jobs(jobs)  # take out of queue
+                        if isOxocatalysis(): #Scrape spin and partial charge info from molden
+                            print('Now scraping the molden file for charge and spin info.')
+                            current_folder = path_dictionary["scr_path"].replace("geo", "sp")+base_name+"/"
+                            multiwfnpath = glob.glob(current_folder+"*.molden")
+                            if len(multiwfnpath)>0:
+                                multiwfnpath = multiwfnpath[0]
+                                metalalpha, metalbeta, metaldiff, metalcharge, oxoalpha, oxobeta, oxodiff, oxocharge = get_mulliken_oxocatalysis(multiwfnpath,axlig2,spin)
+                                this_run.metal_alpha = metalalpha
+                                this_run.metal_beta = metalbeta
+                                this_run.net_metal_spin = metaldiff
+                                this_run.metal_mulliken_charge = metalcharge
+                                this_run.oxygen_alpha = oxoalpha
+                                this_run.oxygen_beta = oxobeta
+                                this_run.net_oxygen_spin = oxodiff
+                                this_run.oxygen_mulliken_charge = oxocharge
+                        else:
+                            print("No molden path found for this run ("+str(jobs)+")")
                     if this_run.status == 6:  ##  convergence is not successful!
                         logger(base_path_dictionary['state_path'],
                                str(datetime.datetime.now()) + " failure at SP job : " + str(
