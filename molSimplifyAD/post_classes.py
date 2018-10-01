@@ -34,7 +34,7 @@ HF_to_Kcal_mol = 627.509  ###
 
 ###########################
 
-class DFTRun:
+class DFTRun(object):
     """ This is a class for each run"""
     numRuns = 0
 
@@ -780,7 +780,7 @@ class DFTRun:
                        octahedral=self.octahedral)
 
 
-class Comp:
+class Comp(object):
     """ This is a class for each unique composition and configuration"""
 
     def __init__(self, name):
