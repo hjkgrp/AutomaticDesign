@@ -1,6 +1,6 @@
-import os
+import os, subprocess
 import shutil
-import numpy
+import numpy as np
 import pickle
 import pandas as pd
 from molSimplifyAD.ga_io_control import *
@@ -205,6 +205,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
     if SASA:
         list_of_prop_names.append("area")
     if oxocatalysis:
+        list_of_prop_names += ['metal_alpha','metal_beta','net_metal_spin','metal_mulliken_charge','oxygen_alpha','oxygen_beta','net_oxygen_spin','oxygen_mulliken_charge']
         if comp:
             list_of_props.insert(1, 'job_gene')
             list_of_props.append('convergence')
@@ -261,7 +262,7 @@ def get_metals():
 def find_ligand_idx(lig):
     ligs = get_ligands()
     for i, item in enumerate(ligs):
-        if lig in item:
+        if lig in item or (lig in item[0]):
             idx = int(i)
     return idx
 
@@ -275,7 +276,59 @@ def get_ox_states():  # could be made metal dependent like spin
         ox_list = [2, 3]
     return ox_list
 
-
+########################
+def get_mulliken_oxocatalysis(moldenpath,catlig, spin):
+    subprocess.call("module load multiwfn/GUI", shell=True)
+    metalalpha, metalbeta, metaldiff, metalcharge = "undef","undef","undef","undef"
+    oxoalpha, oxobeta, oxodiff, oxocharge = "undef","undef","undef","undef"
+    proc = subprocess.Popen("multiwfn "+moldenpath,stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    commands = ['7','5','1','y','n']
+    newline = os.linesep
+    output = proc.communicate(newline.join(commands))
+    lines = output[0].split('\n')
+    x_flag = False
+    if str(catlig) == "x":
+        x_flag = True
+    if str(catlig) in ["[O--]","oxo"]:
+        modifier = 1
+    if str(catlig) in ["[OH-]","hydroxyl"]:
+        modifier = 2
+    try:
+        if int(spin) == 1:
+            for num, line in enumerate(lines):
+                if "Population of atoms" in line:
+                    idx = 4
+                    if len(lines[num+1].split()) == 7:
+                        idx -= 1
+                    metalalpha = np.divide(float(lines[num+1].split()[idx]),2)
+                    metalbeta = np.divide(float(lines[num+1].split()[idx]),2)
+                    metaldiff = 0
+                    metalcharge = float(lines[num+1].split()[idx+3])
+                if "Total net" in line and not x_flag:
+                    oxoalpha = np.divide(float(lines[num-modifier].split()[4]),2)
+                    oxobeta = np.divide(float(lines[num-modifier].split()[4]),2)
+                    oxodiff = 0
+                    oxocharge = float(float(lines[num-modifier].split()[7]))
+        else:
+            print('Mulliken analyzer fed unrestricted molden file.')
+            for num, line in enumerate(lines):
+                if "Population of atoms" in line:
+                    idx = 2
+                    if len(lines[num+2].split()) == 5:
+                        idx -= 1
+                    metalalpha = float(lines[num+2].split()[idx])
+                    metalbeta = float(lines[num+2].split()[idx+1])
+                    metaldiff = float(lines[num+2].split()[idx+2])
+                    metalcharge = float(lines[num+2].split()[idx+3])
+                if "Total net" in line and not x_flag:
+                    oxoalpha = float(lines[num-modifier].split()[2]) 
+                    oxobeta = float(lines[num-modifier].split()[3])
+                    oxodiff = float(lines[num-modifier].split()[4])
+                    oxocharge = float(lines[num-modifier].split()[5])
+        return metalalpha, metalbeta, metaldiff, metalcharge, oxoalpha, oxobeta, oxodiff, oxocharge
+    except:
+        return metalalpha, metalbeta, metaldiff, metalcharge, oxoalpha, oxobeta, oxodiff, oxocharge
+    
 ########################
 def spin_dictionary():
     GA_run = get_current_GA()
@@ -530,7 +583,7 @@ def renameOxoEmpty(job):
     ll = (str(basename)).split("_")
     ligs = get_ligands()
     for i, item in enumerate(ligs):
-        if 'x' in item:
+        if 'x' in item or 'x' in item[0]:
             value = str(i)
     ## replace ax2 with x index
     ll[8] = value
@@ -658,8 +711,8 @@ def write_dictionary(dictionary, path, force_append=False):
 ########################
 
 def find_prop_fitness(prop_energy, prop_parameter):
-    en = -1 * numpy.power((float(prop_energy) / prop_parameter), 2.0)
-    fitness = numpy.exp(en)
+    en = -1 * np.power((float(prop_energy) / prop_parameter), 2.0)
+    fitness = np.exp(en)
     return fitness
 
 
@@ -685,7 +738,7 @@ def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=1, lower_bo
     lower_hinge = float(max(0.0, lower_bound - prop_energy))
     ####### This set of two hinges will penalize values that are not within a certain range
     en = -1 * (upper_hinge + lower_hinge)
-    fitness = numpy.exp(en)
+    fitness = np.exp(en)
     return fitness
 
 
@@ -694,9 +747,9 @@ def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=1, lower_bo
 def find_prop_dist_fitness(prop_energy, prop_parameter, distance, distance_parameter):
     ##FITNESS DEBUGGING: print "scoring function: split+dist YAY"
 
-    en = -1 * (numpy.power((float(prop_energy) / prop_parameter), 2.0) + numpy.power(
+    en = -1 * (np.power((float(prop_energy) / prop_parameter), 2.0) + np.power(
         (float(distance) / distance_parameter), 2.0))
-    fitness = numpy.exp(en)
+    fitness = np.exp(en)
     return fitness
 
 
@@ -724,8 +777,8 @@ def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance
     upper_hinge = float(max(0.0, prop_energy - upper_bound))
     lower_hinge = float(max(0.0, lower_bound - prop_energy))
     ####### This set of two hinges will penalize values that are not within a certain range
-    en = -1 * ((upper_hinge + lower_hinge) + numpy.power((float(distance) / distance_parameter), 2.0))
-    fitness = numpy.exp(en)
+    en = -1 * ((upper_hinge + lower_hinge) + np.power((float(distance) / distance_parameter), 2.0))
+    fitness = np.exp(en)
     return fitness
 
 

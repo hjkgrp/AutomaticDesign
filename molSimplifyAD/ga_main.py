@@ -74,7 +74,10 @@ class GA_generation:
         ### function to add a given complex to the pool
         ### arguments are positions in ligand names (1st elemet)
         ### of ligand list (not smiles)
-        ligands_list_inds = [i[0] for i in self.ligands_list]
+        if isinstance(ligs[0][0], basestring):
+            ligands_list_inds = [i[0] for i in self.ligands_list]
+        else:
+            ligands_list_inds = [i[0][0] for i in self.ligands_list]
         metal_list_inds = get_metals()
 
         ## check if ligs are known

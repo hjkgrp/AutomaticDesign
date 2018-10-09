@@ -210,7 +210,7 @@ def get_launch_script_file(queue_type='SGE'):
     thermo_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/"+queue_type.lower()+"_thermo.sh")
     solvent_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/"+queue_type.lower()+"_solvent.sh")
     water_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/"+queue_type.lower()+"_water.sh")
-    return sp_file, geo_file, thermo_file, solvent_file, water
+    return sp_file, geo_file, thermo_file, solvent_file, water_file
 
 ########################
 def process_new_run_input(path):
