@@ -311,8 +311,8 @@ class GA_generation:
 
     def ANN_fitness(self):
         msg, ANN_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
-        GA_run = get_current_GA()
-        runtype = GA_run.config["runtype"]
+        #GA_run = get_current_GA()
+        runtype = isKeyword("runtype")
         for keys in ANN_dict.keys():
             gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, basename, basegene = translate_job_name(
                 keys)
@@ -424,8 +424,8 @@ class GA_generation:
     # Tree doctor will do checkup on tree's diversity and distance. Functionality can be switched on or off. Automatically off if DFT enabled.
     def get_full_values(self, curr_gen):
         full_gene_info = dict()
-        GA_run = get_current_GA()
-        runtype = GA_run.config["runtype"]
+        #GA_run = get_current_GA()
+        runtype = isKeyword("runtype")
         for gen in xrange(curr_gen + 1):
             ANN_dir = get_run_dir() + "ANN_ouput/gen_" + str(gen) + "/ANN_results.csv"
             emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
