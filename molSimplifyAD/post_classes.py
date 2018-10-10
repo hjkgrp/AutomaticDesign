@@ -318,8 +318,8 @@ class DFTRun(object):
         oldHFX = '20'
         newHFX = '15'
         new_name = renameHFX(self.job, newHFX)
-        guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
-                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0'
+        guess_string = 'guess ' + isKeyword('rundir')+ 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
+                       '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0'
         self.thermo_inpath = path_dictionary['thermo_infiles'] + self.name + '.in'
         self.solvent_inpath = path_dictionary['solvent_infiles'] + self.name + '.in'
         self.init_sp_inpath = path_dictionary['sp_in_path'] + self.name + '.in'
@@ -346,7 +346,7 @@ class DFTRun(object):
             f_insp.write('scrdir scr/init_sp/  \n')
             f_insp.write('coordinates ' + self.geopath + ' \n')
             f_insp.write(
-                'guess ' + get_run_dir() + 'scr/geo/' + self.name + '/ca0' + ' ' + get_run_dir() + 'scr/geo/' + self.name + '/cb0')
+                'guess ' + isKeyword('rundir') + 'scr/geo/' + self.name + '/ca0' + ' ' + isKeyword('rundir') + 'scr/geo/' + self.name + '/cb0')
             with open(self.inpath, 'r') as ref:
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
@@ -381,10 +381,10 @@ class DFTRun(object):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         if not (self.spin == 1):
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
-                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0 \n'
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
+                       '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0 \n'
         else:
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
         #self.solvent_inpath = path_dictionary['solvent_inpath'] + self.name + '.in'
         ### check solvent
         if not os.path.exists(self.solvent_inpath):
@@ -417,10 +417,10 @@ class DFTRun(object):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         if not (self.spin == 1):
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
-                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0 \n'
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
+                       '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0 \n'
         else:
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
         
         ### check solvent
         if not os.path.exists(self.water_inpath):
@@ -448,10 +448,10 @@ class DFTRun(object):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         if not (self.spin == 1):
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
-                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0\n'
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
+                       '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0\n'
         else:
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
         self.init_sp_inpath = path_dictionary['sp_in_path'] + self.name + '.in'
         ### check sp inpath
         if not os.path.exists(self.init_sp_inpath):
@@ -486,10 +486,10 @@ class DFTRun(object):
         new_name = renameHFX(self.job, newHFX).strip('.in')
         reference_name = renameHFX(self.job, refHFX).strip('.in')
         if int(new_name[-1]) == 1:
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/c0\n'
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/c0\n'
         else:
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/ca0' + \
-                       ' ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/cb0\n'
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/ca0' + \
+                       ' ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/cb0\n'
         geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
         self.HFX_inpath = path_dictionary['infiles'] + new_name + '.in'
         self.HFX_job = path_dictionary['job_path'] + new_name + '.in'
@@ -567,9 +567,9 @@ class DFTRun(object):
                 splist[-2] = emptyrefval
                 wfnrefempty = "_".join(splist)
                 if int(this_spin)==1:
-                    guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/c0\n'
+                    guess_string_sp = 'guess ' + isKeyword('rundir') + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/c0\n'
                 else:
-                    guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/ca0' + ' ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/cb0\n'
+                    guess_string_sp = 'guess ' + isKeyword('rundir') + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/ca0' + ' ' + isKeyword('rundir') + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/cb0\n'
                 f_emptysp.write(guess_string_sp)
             if int(this_spin) == 1:
                 f_emptysp.write('method b3lyp\n')
