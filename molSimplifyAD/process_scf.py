@@ -565,7 +565,7 @@ def test_terachem_go_convergence(this_run):
     #base_path_dictionary = setup_paths()
     print('we have access go to test_terachem_go function' )
     if not this_run.logpath:
-        this_run.logpath = get_run_dir()
+        this_run.logpath = isKeyword('rundir')
     print('logging to ' +this_run.logpath)
     if os.path.exists(this_run.geopath):
         this_run.geo_exists = True
