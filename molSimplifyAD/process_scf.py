@@ -37,7 +37,7 @@ def test_terachem_sp_convergence(job):
     ### get paths
     path_dictionary = setup_paths()
     gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename,basegene = translate_job_name(job)
-    this_GA = get_current_GA()
+    #this_GA = get_current_GA()
     exchange = ahf
     alpha=float(exchange)
     metal_list = get_metals()
@@ -48,7 +48,7 @@ def test_terachem_sp_convergence(job):
     this_run=DFTRun(basename)
     this_run.status = 1
     ### test if outfile exits
-    if this_GA.config["oxocatalysis"]:
+    if isKeyword("oxocatalysis"):
         this_run.outpath = (path_dictionary["sp_out_path"] + "/gen_" + str(gen) +"/"
                            + basename + ".out")
 	basegene = '_'.join(basegene.split('_')[:-1])
