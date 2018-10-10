@@ -19,12 +19,12 @@ from molSimplifyAD.ga_oct_check import *
 #######################
 def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary):
     ## function to choos if a job should
-    GA_run = get_current_GA()
+    #GA_run = get_current_GA()
 
     ## be post processed:
     if (job not in live_job_dictionary.keys()) and (len(job.strip('\n')) != 0):
         if not ("sp_infiles" in job) and not ("thermo" in job) and not ("solvent" in job) and not ("water" in job):
-            if isall_post():
+            if isKeyword('post_all'):
                 postProc = True
             elif job in converged_jobs_dictionary.keys():
                 this_outcome = int(converged_jobs_dictionary[job])
@@ -59,13 +59,13 @@ def check_all_current_convergence():
     outstanding_jobs = get_outstanding_jobs()
 
     jobs_complete = 0
-    GA_run = get_current_GA()
+    #GA_run = get_current_GA()
     use_old_optimizer = get_optimizer()
     ## allocate holder for result list
     final_results = dict()
     all_runs = dict()
     print('found:  ' + str(len(joblist)) + ' jobs to check')
-    if GA_run.config["optimize"]:
+    if isKeyword("optimize"):
         print('post processing geometry files')
         ### return codes:
         ## 0  -> success! converged, has 6-coord etc
@@ -86,7 +86,7 @@ def check_all_current_convergence():
         ## sort to get consistent transversal order
         joblist.sort()
         
-        print('testing if  post-all is on: ', isall_post())
+        print('testing if  post-all is on: ', isKeyword('post_all'))
         
         for jobs in joblist:
             if postprocessJob(job=jobs, live_job_dictionary=live_job_dictionary,
@@ -96,10 +96,10 @@ def check_all_current_convergence():
                 ## create run
                 this_run = DFTRun(base_name)
                 print('Here!')
-                print(isSinglePoint())
+                print(isKeyword('single_point'))
                 ## regenerate opt geo
                 this_run.scrpath = path_dictionary["scr_path" ]  + base_name +"/optim.xyz"
-                if isOxocatalysis():
+                if isKeyword('oxocatalysis'):
                     base_gene = '_'.join(base_gene.split('_')[:-1])
                 this_run.gene = base_gene
                 this_run.number = slot
@@ -144,14 +144,14 @@ def check_all_current_convergence():
                 this_run.sp_inpath = path_dictionary["sp_in_path"]+base_name+".in"
                 this_run.sp_outpath = (path_dictionary["sp_out_path"] + '/' + base_name + ".out")
 
-                if isThermo():
+                if isKeyword('thermo'):
                         this_run.thermo_outpath = (path_dictionary["thermo_out_path"] + base_name + ".out")
                 
-                if isSolvent():
+                if isKeyword('solvent'):
                         this_run.solvent_outpath = (path_dictionary["solvent_out_path"] + base_name + ".out")
                         this_run.solvent_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'
 
-                if isWater():
+                if isKeyword('water'):
                         this_run.water_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'               
                         this_run.water_outpath = (path_dictionary["water_out_path"] + base_name + ".out")
 
@@ -160,7 +160,7 @@ def check_all_current_convergence():
                 this_run.mop_geopath = path_dictionary["mopac_path"] + base_name + ".xyz"
                 
                 # extract geo and append results if post-all
-                if isall_post():
+                if isKeyword('post_all'):
                     if os.path.exists(this_run.scrpath):
                         this_run.extract_geo()
                         print('  geo extracted to  ' +this_run.geopath)
@@ -206,12 +206,12 @@ def check_all_current_convergence():
 
                     # check run is complete?
                     if this_run.alpha == 20:  
-                        if isSASA(): ## if we want SASA
+                        if isKeyword('SASA'): ## if we want SASA
                             print('getting area for ' +this_run.name )
                             this_run.obtain_area()
                         # only thermo and solvent for
                         # B3LYP, also check HFX sample
-                        if isThermo():
+                        if isKeyword('thermo'):
                             this_run = check_thermo_file(this_run)
                             if this_run.thermo_cont and run_success:
                                 print('thermo_cont avail for ' + this_run.name + ' ' + str(this_run.thermo_cont))
@@ -224,7 +224,7 @@ def check_all_current_convergence():
                                 this_run.status = 12
                                 run_success = False
 
-                        if isSolvent():
+                        if isKeyword('solvent'):
                             this_run = check_solvent_file(this_run)
                             if this_run.solvent_cont and run_success:
                                 remove_outstanding_jobs(this_run.solvent_inpath)
@@ -232,7 +232,7 @@ def check_all_current_convergence():
                                 this_run.status = 13
                                 run_success = False
 
-                        if isSinglePoint():
+                        if isKeyword('single_point'):
                             this_run = check_sp_file(this_run)
                             if this_run.sp_status and run_success:
                                 remove_outstanding_jobs(this_run.solvent_inpath)
@@ -240,7 +240,7 @@ def check_all_current_convergence():
                                 this_run.status = 14
                                 run_success = False
                          
-                        if isWater(): # additional solvent SP with implict water
+                        if isKeyword('water'): # additional solvent SP with implict water
                             print('water on')
                             this_run = check_water_file(this_run)
                             if this_run.water_cont and run_success:
@@ -281,7 +281,7 @@ def check_all_current_convergence():
                                            this_run.alpha) + ' to ' + newHFX + ' with ref ' + refHFX)
 
                                 add_to_outstanding_jobs(HFX_job)
-                            if isOxocatalysis() and int(ox) > 3 and (axlig2 == 'oxo' or '[O--]' in axlig2[0] or '[O--]' in axlig2):
+                            if isKeyword('oxocatalysis') and int(ox) > 3 and (axlig2 == 'oxo' or '[O--]' in axlig2[0] or '[O--]' in axlig2):
                                 empty_sp = this_run.write_empty_inputs(refHFX)
                                 if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (
                                         empty_sp not in converged_jobs.keys()):
@@ -289,7 +289,7 @@ def check_all_current_convergence():
                                     logger(base_path_dictionary['state_path'], str(
                                         datetime.datetime.now()) + ' converting from oxo structure to empty structure (SP)')
                                     add_to_outstanding_jobs(empty_sp)
-                    elif isOxocatalysis() and int(ox) > 3 and (axlig2 == 'oxo' or '[O--]' in axlig2[0] or '[O--]' in axlig2):  # Must do this because the empty sites are one step behind the 6-coordinates at different HFX
+                    elif isKeyword('oxocatalysis') and int(ox) > 3 and (axlig2 == 'oxo' or '[O--]' in axlig2[0] or '[O--]' in axlig2):  # Must do this because the empty sites are one step behind the 6-coordinates at different HFX
                         empty_sp = this_run.write_empty_inputs('00')
                         if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (
                                 empty_sp not in converged_jobs.keys()):
@@ -363,26 +363,26 @@ def check_all_current_convergence():
                     print('removing job from OSL due to status  ' + str(this_run.status))
                     jobs_complete += 1
                     remove_outstanding_jobs(jobs)  # take out of queue
-                    if isSolvent():
+                    if isKeyword('solvent'):
                         if this_run.status == 13:  ## need solvent:
                             print('addding solvent based on ' + str(jobs))
                             this_run.write_solvent_input(dielectric=10.3)
                             add_to_outstanding_jobs(this_run.solvent_inpath)
-                    if isThermo():
+                    if isKeyword('thermo'):
                         if this_run.status == 12:  ## needs thermo:
                             print('addding thermo based on ' + str(jobs))
                             add_to_outstanding_jobs(this_run.thermo_inpath)
-                    if isSinglePoint():
+                    if isKeyword('single_point'):
                         if this_run.status == 14:  ## needs sp:
                             print('addding single point based on ' + str(jobs))
                             this_run.write_bigbasis_input()
                             add_to_outstanding_jobs(this_run.sp_inpath)
-                    if isWater():
+                    if isKeyword('water'):
                         if this_run.status == 15:  ## need solvent:
                             print('addding water based on ' + str(jobs))
                             this_run.write_water_input()
                             add_to_outstanding_jobs(this_run.water_inpath)
-                    if isOxocatalysis(): #Scrape spin and partial charge info from molden
+                    if isKeyword('oxocatalysis'): #Scrape spin and partial charge info from molden
                         print('Now scraping the molden file for charge and spin info.')
                         current_folder = path_dictionary["scr_path"]+base_name+"/"
                         multiwfnpath = glob.glob(current_folder+"*.molden")
@@ -419,7 +419,7 @@ def check_all_current_convergence():
                                + ' after ' + str(number_of_subs) + ' subs since prog geo was bad')
                         remove_outstanding_jobs(jobs)  # take out of pool
                 print('END OF JOB \n *******************\n')
-            elif "sp_infiles" in jobs and not isOptimize():
+            elif "sp_infiles" in jobs and not isKeyword('optimize'):
                 gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(jobs)
                 metal_list = get_metals()
                 metal = metal_list[metal]
@@ -462,21 +462,30 @@ def check_all_current_convergence():
                         print('removing job from OSL due to status 0 ')
                         jobs_complete += 1
                         remove_outstanding_jobs(jobs)  # take out of queue
-                        if isOxocatalysis(): #Scrape spin and partial charge info from molden
+                        if isKeyword('oxocatalysis'): #Scrape spin and partial charge info from molden
                             print('Now scraping the molden file for charge and spin info.')
                             current_folder = path_dictionary["scr_path"].replace("geo", "sp")+base_name+"/"
                             multiwfnpath = glob.glob(current_folder+"*.molden")
                             if len(multiwfnpath)>0:
-                                multiwfnpath = multiwfnpath[0]
-                                metalalpha, metalbeta, metaldiff, metalcharge, oxoalpha, oxobeta, oxodiff, oxocharge = get_mulliken_oxocatalysis(multiwfnpath,axlig2,spin)
-                                this_run.metal_alpha = metalalpha
-                                this_run.metal_beta = metalbeta
-                                this_run.net_metal_spin = metaldiff
-                                this_run.metal_mulliken_charge = metalcharge
-                                this_run.oxygen_alpha = oxoalpha
-                                this_run.oxygen_beta = oxobeta
-                                this_run.net_oxygen_spin = oxodiff
-                                this_run.oxygen_mulliken_charge = oxocharge
+                                temp = 0
+                                analyzepath = None
+                                for moldenfile in multiwfnpath:
+                                    size = os.path.getsize(moldenfile)
+                                    if size > temp:
+                                        analyzepath = moldenfile 
+                                #multiwfnpath = multiwfnpath[0]
+                                if analyzepath != None:
+                                    metalalpha, metalbeta, metaldiff, metalcharge, oxoalpha, oxobeta, oxodiff, oxocharge = get_mulliken_oxocatalysis(analyzepath,axlig2,spin)
+                                    this_run.metal_alpha = metalalpha
+                                    this_run.metal_beta = metalbeta
+                                    this_run.net_metal_spin = metaldiff
+                                    this_run.metal_mulliken_charge = metalcharge
+                                    this_run.oxygen_alpha = oxoalpha
+                                    this_run.oxygen_beta = oxobeta
+                                    this_run.net_oxygen_spin = oxodiff
+                                    this_run.oxygen_mulliken_charge = oxocharge
+                                else:
+                                    print('Moldens exist but are empty for this run ('+str(jobs)+')')
                         else:
                             print("No molden path found for this run ("+str(jobs)+")")
                     if this_run.status == 6:  ##  convergence is not successful!
@@ -490,7 +499,7 @@ def check_all_current_convergence():
                 print('END OF SP JOB \n *******************\n')
         print('matching DFT runs ... \n')
 
-        if isOxocatalysis():
+        if isKeyword('oxocatalysis'):
             final_results = process_runs_oxocatalysis(all_runs, spin_dictionary())
         else:
             final_results = process_runs_geo(all_runs, spin_dictionary())
@@ -499,13 +508,13 @@ def check_all_current_convergence():
         # for comparisons
         logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                + " starting output logs ")
-        comp_output_path, comp_descriptor_path = write_output('comps', final_results.values(),output_properties(comp=True,oxocatalysis = isOxocatalysis(), SASA = isSASA() ))
+        comp_output_path, comp_descriptor_path = write_output('comps', final_results.values(),output_properties(comp=True,oxocatalysis = isKeyword('oxocatalysis'), SASA = isKeyword('SASA')))
         # for runs
-        run_output_path, run_descriptor_path = write_output('runs', all_runs.values(), output_properties(comp=False,oxocatalysis = isOxocatalysis(), SASA = isSASA() ))
+        run_output_path, run_descriptor_path = write_output('runs', all_runs.values(), output_properties(comp=False,oxocatalysis = isKeyword('oxocatalysis'), SASA = isKeyword('SASA')))
 
         # print('-------')
         # print(final_results)
-        if isall_post():
+        if isKeyword('post_all'):
             write_run_reports(all_runs)
             write_run_pickle(final_results)
             process_run_post(run_output_path, run_descriptor_path)
