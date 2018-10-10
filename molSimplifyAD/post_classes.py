@@ -67,7 +67,7 @@ class DFTRun(object):
                               'islive', 'set_desc','sp_status']
         list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord']
         
-        if isOxocatalysis():
+        if isKeyword('oxocatalysis'):
             list_of_init_props += ['metal_alpha','metal_beta','net_metal_spin','metal_mulliken_charge','oxygen_alpha','oxygen_beta','net_oxygen_spin','oxygen_mulliken_charge']
         
         for this_attribute in list_of_init_props:
@@ -80,11 +80,11 @@ class DFTRun(object):
             setattr(self, this_attribute, 0)
 
     def set_geo_check_func(self):
-        try:
-            GA_run = get_current_GA()
-            self.octahedral = GA_run.config['octahedral']
-        except:
-            self.octahedral = True
+        #try:
+        #    GA_run = get_current_GA()
+        self.octahedral = isKeyword('octahedral')
+        #except:
+        #    self.octahedral = True
 
     def obtain_mopac_mol(self):
         this_mol = mol3D()
@@ -306,11 +306,11 @@ class DFTRun(object):
             self.init_coord = 0
 
     def get_track_elec_prop(self):
-        try:
-            GA_run = get_current_GA()
-            self.track_elec_prop = GA_run.config['track_elec_prop']
-        except:
-            self.track_elec_prop = False
+        #try:
+        #    GA_run = get_current_GA()
+        self.track_elec_prop = isKeyword('track_elec_prop')
+        #except:
+        #    self.track_elec_prop = False
 
     def write_new_inputs(self):
         path_dictionary = setup_paths()
@@ -790,7 +790,7 @@ class Comp(object):
         self.time = "undef"
         self.metal = 'undef'
         self.axlig1 = 'undef'
-        if not isOxocatalysis():
+        if not isKeyword('oxocatalysis'):
             self.axlig2 = 'undef'
             self.axlig2_ind = 'undef'
         self.eqlig = 'undef'
@@ -854,7 +854,7 @@ class Comp(object):
                 for sc in ["LS", "HS"]:
                     this_attribute = "_".join(['ox', ox, sc, props])
                     setattr(self, this_attribute, False)
-        if isOxocatalysis():
+        if isKeyword('oxocatalysis'):
             list_of_init_props += ['metal_alpha','metal_beta','net_metal_spin','metal_mulliken_charge','oxygen_alpha','oxygen_beta','net_oxygen_spin','oxygen_mulliken_charge']
             for props in list_of_init_props:
                 for spin_cat in ['LS', 'IS', 'HS']:
