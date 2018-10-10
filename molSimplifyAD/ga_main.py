@@ -395,7 +395,7 @@ class GA_generation:
                 jobpath, mol_name, ANN_results, flag_oct = jobs.generate_geometery(prefix=job_prefix,
                                                                                    spin=spins,
                                                                                    path_dictionary=self.current_path_dictionary,
-                                                                                   rundirpath=get_run_dir(),
+                                                                                   rundirpath=isKeyword('rundir'),
                                                                                    gen=self.status_dictionary['gen'])
                 if flag_oct:
                     if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
@@ -427,7 +427,7 @@ class GA_generation:
         #GA_run = get_current_GA()
         runtype = isKeyword("runtype")
         for gen in xrange(curr_gen + 1):
-            ANN_dir = get_run_dir() + "ANN_ouput/gen_" + str(gen) + "/ANN_results.csv"
+            ANN_dir = isKeyword('rundir') + "ANN_ouput/gen_" + str(gen) + "/ANN_results.csv"
             emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
             for keys in ANN_dict.keys():
                 this_gene = "_".join(keys.split("_")[4:10])
