@@ -565,13 +565,13 @@ def check_all_current_convergence():
         for props in spin_dep_prop_names:
             for spin_cat in ['LS', 'HS']:
                 list_of_props.append("_".join([spin_cat, props]))
-        if not (os.path.isfile(get_run_dir() + '/results_post.csv')):
+        if not (os.path.isfile(isKeyword('rundir') + '/results_post.csv')):
             logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
-                   + " starting output log file at " + get_run_dir() + '/results_post.csv')
-        with open(get_run_dir() + '/results_post.csv', 'w') as f:
+                   + " starting output log file at " + isKeyword('rundir') + '/results_post.csv')
+        with open(isKeyword('rundir') + '/results_post.csv', 'w') as f:
             writeprops(list_of_props, f)
 
-        with open(get_run_dir() + '/results_post.csv', 'a+') as f:
+        with open(isKeyword('rundir') + '/results_post.csv', 'a+') as f:
             for reskeys in final_results.keys():
                 values = atrextract(final_results[reskeys], list_of_props)
                 writeprops(values, f)
