@@ -21,7 +21,7 @@ def launch_job(job,sub_num):
     
     opath = path_dictionary["queue_output"]+name + '.o'
     epath = path_dictionary["queue_output"]+name + '.e'
-    GA_run = get_current_GA()
+    #GA_run = get_current_GA()
     if "thermo" in job:
          cmd_script = "launch_script_thermo.sh"
          infile = job # for thermo/solvent
@@ -41,17 +41,17 @@ def launch_job(job,sub_num):
     elif axlig2 == 'x' and "sp_infiles" in job:
         cmd_script = "launch_script_sp.sh"
         infile = job
-    elif "sp_infiles" in job and not isOxocatalysis():
+    elif "sp_infiles" in job and not isKeyword('oxocatalysis'):
         cmd_script = "launch_script_sp.sh"
         infile = job
     else:
-        if GA_run.config["optimize"]:
+        if isKeyword("optimize"):
             cmd_script = "launch_script_geo.sh"
             infile = get_infile_from_job(job)
         else:
             cmd_script = "launch_script_sp.sh"
             infile = get_infile_from_job(job)
-    if GA_run.config["queue_type"].lower() == "sge":
+    if isKeyword("queue_type").lower() == "sge":
         cmd_str ='qsub -j y -N  ' +name + ' '+ '-o ' + opath + ' ' +'-e '+epath +' ' +get_run_dir() + cmd_script + ' ' + infile
     else:
         cmd_str ='sbatch -J' + name + ' ' + ' -o ' + opath + ' ' + '-e '+epath + ' '+ get_run_dir() + cmd_script + ' ' + infile
@@ -59,7 +59,7 @@ def launch_job(job,sub_num):
     p_sub = subprocess.Popen(cmd_str,shell=True,stdout=subprocess.PIPE)
     ll = p_sub.communicate()[0]
     ll =  ll.split()
-    if GA_run.config["queue_type"].lower() == "sge":
+    if isKeyword("queue_type").lower() == "sge":
         job_id = ll[2]
     else:
         job_id = ll[3]
@@ -67,8 +67,8 @@ def launch_job(job,sub_num):
 ########################
 def is_job_live(job_id):
     print(job_id)
-    GA_run = get_current_GA()
-    if GA_run.config["queue_type"].lower() == "sge":
+    #GA_run = get_current_GA()
+    if isKeyword('queue_type').lower() == "sge":
         cmd_str = ('qstat -j '+ str(job_id))
     else:
         cmd_str = ('squeue -j '+ str(job_id))
@@ -83,7 +83,7 @@ def is_job_live(job_id):
             if (str(lines).find('Following jobs do not exist:') != -1) or (str(lines).find("slurm_load_jobs error: Invalid job id") != -1) or (len(ll)<=2):
                     print('job ' + str(job_id) + ' is not live')
                     verdict = False
-    if not GA_run.config["queue_type"].lower() == "sge":
+    if not isKeyword('queue_type').lower() == "sge":
         if len(ll)==1:
             verdict = False
 
@@ -92,7 +92,7 @@ def is_job_live(job_id):
 def submit_outstanding_jobs():
     print('submitting outstanding jobs')
     ## load GA
-    this_GA = get_current_GA()
+    #this_GA = get_current_GA()
     ## set up environment:        
     path_dictionary = setup_paths()
     ## previously dispatched jobs:
@@ -107,7 +107,7 @@ def submit_outstanding_jobs():
 
     sub_count = 0;
     resub_count = 0;
-    lmax = this_GA.config['max_jobs']  #number of live jobs
+    lmax = isKeyword('max_jobs')  #number of live jobs
     if number_live_jobs < lmax:
         print('space in queue for ' + str(lmax - number_live_jobs) + ' new jobs')
         for jobs in joblist:
@@ -143,7 +143,7 @@ def submit_outstanding_jobs():
                         update_converged_job_dictionary(jobs,7) # mark job as abandoned 
                         if not "thermo" in jobs and not "solvent" in jobs:
                             gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename,basegene=translate_job_name(jobs)
-                            if ahf == float(this_GA.config["exchange"]): # if this is the target HFX frac
+                            if ahf == float(isKeyword('exchange')): # if this is the target HFX frac
                                 update_current_gf_dictionary(gene,0) # zero out fitness
             else:
                 print('job is live or empty or queue is full')
