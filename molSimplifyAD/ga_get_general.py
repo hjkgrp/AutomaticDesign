@@ -121,11 +121,11 @@ def _write_summary_csv(base_path, generation, sum_results):
 # Find unique genes and their frequencies by name in current_genes and their fitness from gene_fitness. Output to a text file named results.txt
 def _get_freq_fitness(lastgen, npool):
     ## if not DFT, get all current ANN splitting energies
-    if not isDFT():
+    if not isKeyword('DFT'):
         full_gene_info = dict()
         ANN_prop_dict = dict()
-        GA_run = get_current_GA()
-        runtype = GA_run.config["runtype"]
+        #GA_run = get_current_GA()
+        runtype = isKeyword("runtype")
         for generation in xrange(lastgen + 1):
             ANN_dir = get_run_dir() + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
             emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
@@ -222,7 +222,7 @@ def _get_freq_fitness(lastgen, npool):
         _write_summary_csv(base_path, generation, sum_results)
 
         # Fourth, recover actual splitting energies only in ANN case
-        if not isDFT():
+        if not isKeyword('DFT'):
             mean_prop = 0.0
             count = 0
             print('ANN keys are ')
