@@ -95,7 +95,7 @@ for jobs in joblist:
                 this_run.inpath = path_dictionary["job_path"] + base_name + ".in"
                 this_run.infiles = path_dictionary["infiles"] + base_name + ".in"
                 this_run.comppath = path_dictionary["done_path"] + base_name + ".in"
-                if isOxocatalysis():
+                if isKeyword('oxocatalysis'):
                     if ahf == 20 and ox > 3 and not ('sp_infiles' in jobs):
                         print('found HFX 20 singlet, will restart')
                         restart_list.append(this_run)
@@ -205,17 +205,17 @@ for runs in delete_list:
                         os.remove(runs.infiles)
                 else:
                         print('would delete '+ runs.infiles)
-        if os.path.isfile(runs.spinpath) and isOxocatalysis():
+        if os.path.isfile(runs.spinpath) and isKeyword('oxocatalysis'):
                 if not dry_run:
                         os.remove(runs.spinpath)
                 else:
                         print('would delete '+  runs.spinpath)
-        if os.path.isfile(runs.spoutpath) and isOxocatalysis():
+        if os.path.isfile(runs.spoutpath) and isKeyword('oxocatalysis'):
                 if not dry_run:
                         os.remove(runs.spoutpath)
                 else:
                         print('would delete '+ runs.spoutpath)
-        if runs.ox < 4 and os.path.isfile(runs.init_geopath) and isOxocatalysis():
+        if runs.ox < 4 and os.path.isfile(runs.init_geopath) and isKeyword('oxocatalysis'):
                 if not dry_run:
                         os.remove(runs.init_geopath)
                 else:
