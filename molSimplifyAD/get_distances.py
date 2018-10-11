@@ -4,21 +4,21 @@
 import csv
 import os
 from molSimplifyAD.ga_tools import *
-from molSimplifyAD.ga_tools import get_run_dir
+#from molSimplifyAD.ga_tools import get_run_dir
 from molSimplifyAD.ga_get_general import _get_gen_npool
 
 
 ##Finds the ANN distances, writes them to a dictionary and then to a file
 def _find_distances():
-    lastgen, npool = _get_gen_npool(get_run_dir())
+    lastgen, npool = _get_gen_npool(isKeyword('rundir'))
     gene_dist_dict = dict()
     gene_prop_dict = dict()
     gene_name_dict = dict()
-    GA_run = get_current_GA()
-    runtype = GA_run.config["runtype"]
+    #GA_run = get_current_GA()
+    runtype = isKeyword("runtype")
     # lastgen is the last generation that has been run
     for generation in range(lastgen + 1):
-        ANN_dir = get_run_dir() + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
+        ANN_dir = isKeyword('rundir') + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
         emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
         for keys in ANN_dict.keys():
             gene, _, _, metal, ox, eqlig, axlig1, axlig2, _, _, _, spin, spin_cat, ahf, _, _ = translate_job_name(keys)
@@ -68,7 +68,7 @@ def _find_distances():
                     gene_name_dict.update({geneName: chem_name})
 
     ## Writes genes and distances to a .csv file
-    write_path = get_run_dir() + "statespace/all_distances.csv"
+    write_path = isKeyword('rundir') + "statespace/all_distances.csv"
     if not os.path.isfile(write_path):
         open(write_path, 'w').close()
     emsg = write_dictionary(gene_dist_dict, write_path)
@@ -79,12 +79,12 @@ def _find_distances():
 
 
 def _mean_distances(gene_dist_dict):
-    lastgen, npool = _get_gen_npool(get_run_dir())
+    lastgen, npool = _get_gen_npool(isKeyword('rundir'))
     mean_dist_dict = dict()
     dist_dict = gene_dist_dict
     dist_sum = 0
     curr_gen = 0
-    read_path = get_run_dir() + "statespace/all_results.csv"
+    read_path = isKeyword('rundir') + "statespace/all_results.csv"
     with open(read_path, 'r') as fi:
         list_of_lines = fi.readlines()
         for line in list_of_lines:
@@ -101,7 +101,7 @@ def _mean_distances(gene_dist_dict):
         mean_dist_dict.update({curr_gen: mean_dist})
     fi.close()
 
-    write_path = get_run_dir() + "statespace/_mean_distances.csv"
+    write_path = isKeyword('rundir') + "statespace/_mean_distances.csv"
     with open(write_path, 'w') as fi:
         emsg = write_dictionary(mean_dist_dict, write_path)
         if emsg:

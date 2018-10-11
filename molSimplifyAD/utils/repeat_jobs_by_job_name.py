@@ -66,9 +66,9 @@ ligs = get_ligands()
 ########################################
 # Find empty site index in ligand list #
 ########################################
-if isOxocatalysis():
+if isKeyword('oxocatalysis'):
     for i, item in enumerate(ligs):
-        if 'x' in item:
+        if 'x' == item or 'x' == item[0]:
             value = str(i)
 
 ####### JOB CHECK STARTS HERE #########
@@ -177,12 +177,12 @@ for runs in restart_list:
                     os.remove(runs.comppath)
             else:
                     print('would delete '+  runs.comppath)
-    if os.path.isfile(runs.spinpath) and isOxocatalysis():
+    if os.path.isfile(runs.spinpath) and isKeyword('oxocatalysis'):
                 if not dry_run:
                         os.remove(runs.spinpath)
                 else:
                         print('would delete '+  runs.spinpath)
-    if os.path.isfile(runs.spoutpath) and isOxocatalysis():
+    if os.path.isfile(runs.spoutpath) and isKeyword('oxocatalysis'):
                 if not dry_run:
                         os.remove(runs.spoutpath)
                 else:

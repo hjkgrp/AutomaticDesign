@@ -262,7 +262,7 @@ def get_metals():
 def find_ligand_idx(lig):
     ligs = get_ligands()
     for i, item in enumerate(ligs):
-        if lig in item or (lig in item[0]):
+        if lig == item or (lig == item[0]):
             idx = int(i)
     return idx
 
@@ -394,7 +394,6 @@ def isSolvent():
         return False
 ########################
 def isWater():
-    
     try:
         GA_run = get_current_GA()
         if GA_run.config["water"]:
@@ -405,8 +404,7 @@ def isWater():
         return False
 
 ########################
-def isThermo():
-    
+def isThermo():   
     try:
         GA_run = get_current_GA()
         if GA_run.config["thermo"]:
@@ -419,7 +417,6 @@ def isThermo():
 
 ########################
 def isSinglePoint():
-    
     try:
         GA_run = get_current_GA()
         if GA_run.config["single_point"]:
@@ -441,7 +438,33 @@ def isOxocatalysis():
     except:
         return False
 
-
+########################
+def isKeyword(keyword):
+    ##################################################################################
+    # if the passed in object is a list, will make a list to return with the values  #
+    # in the same order that the list was passed in. If one of the list items is not #
+    # present, will return false. If a string is passed in, only that item will be   #
+    # returned in its base form - Aditya (10/10/2018)                                #
+    ##################################################################################
+    GA_run = get_current_GA()
+    if isinstance(keyword, basestring):
+        keyword = unicode(keyword, 'utf-8')
+        try:
+            return GA_run.config[str(keyword)]
+        except:
+            return False
+    elif isinstance(keyword, list):
+        total_len = len(keyword)
+        return_list = []
+        try:
+            for i in range(total_len):
+                temp_key = unicode(str(keyword[i]), 'utf-8')
+                return_list.append(GA_run.config[temp_key])
+            return return_list
+        except:
+            return False
+    else:
+        return False
 ########################
 def isall_post():
     GA_run = get_current_GA()
@@ -582,9 +605,7 @@ def renameOxoEmpty(job):
     basename = base.strip(".out")
     ll = (str(basename)).split("_")
     ligs = get_ligands()
-    for i, item in enumerate(ligs):
-        if 'x' in item or 'x' in item[0]:
-            value = str(i)
+    value = str(find_ligand_idx('x'))
     ## replace ax2 with x index
     ll[8] = value
     ## replace metal oxidation with 2 less
