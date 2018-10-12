@@ -1,7 +1,7 @@
 from molSimplifyAD.ga_tools import *
 import shutil
 
-rundir = str(get_run_dir())
+rundir = str(isKeyword('rundir'))
 pathToConvergedJobs = rundir+'jobs/converged_job_dictionary.csv'
 pathToOutstandingJobs = rundir+'jobs/outstanding_job_list.txt'
 pathToSubmittedJobs = rundir+'jobs/submitted_jobs.csv'

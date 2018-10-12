@@ -65,9 +65,9 @@ class DFTRun(object):
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
                               'islive', 'set_desc','sp_status']
-        list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord']
+        list_of_init_zero = ['ss_target', 'ss_act', 'coord', 'mop_coord']
         
-        if isOxocatalysis():
+        if isKeyword('oxocatalysis'):
             list_of_init_props += ['metal_alpha','metal_beta','net_metal_spin','metal_mulliken_charge','oxygen_alpha','oxygen_beta','net_oxygen_spin','oxygen_mulliken_charge']
         
         for this_attribute in list_of_init_props:
@@ -80,11 +80,11 @@ class DFTRun(object):
             setattr(self, this_attribute, 0)
 
     def set_geo_check_func(self):
-        try:
-            GA_run = get_current_GA()
-            self.octahedral = GA_run.config['octahedral']
-        except:
-            self.octahedral = True
+        #try:
+        #    GA_run = get_current_GA()
+        self.octahedral = isKeyword('octahedral')
+        #except:
+        #    self.octahedral = True
 
     def obtain_mopac_mol(self):
         this_mol = mol3D()
@@ -212,21 +212,21 @@ class DFTRun(object):
             
     def obtain_ML_dists(self):
         try:
-            self.mind = minimum_ML_dist(self.mol)
-            self.maxd = maximum_any_dist(self.mol)
-            self.meand = mean_ML_dist(self.mol)
+            self.mind = float(minimum_ML_dist(self.mol))
+            self.maxd = float(maximum_any_dist(self.mol))
+            self.meand = float(mean_ML_dist(self.mol))
             ax_dist, eq_dist = getOctBondDistances(self.mol)
             if len(ax_dist) < 2:
                 ax_dist.append(ax_dist[0])
-            self.ax1_MLB = np.mean(ax_dist[0])
-            self.ax2_MLB = np.mean(ax_dist[1])
+            self.ax1_MLB = float(np.mean(ax_dist[0]))
+            self.ax2_MLB = float(np.mean(ax_dist[1]))
             total_eq_distance = 0
             counter = 0
             for eqligs in eq_dist:
                 for bonds in eqligs:
                     total_eq_distance += bonds
                     counter += 1
-            self.eq_MLB = total_eq_distance / counter
+            self.eq_MLB = float(total_eq_distance / counter)
         except:
             # self.coord = 'error'
             self.eq_MLB = 'error'
@@ -237,15 +237,15 @@ class DFTRun(object):
             ax_dist, eq_dist = getOctBondDistances(self.init_mol)
             if len(ax_dist) < 2:
                 ax_dist.append(ax_dist[0])
-            self.init_ax1_MLB = np.mean(ax_dist[0])
-            self.init_ax2_MLB = np.mean(ax_dist[1])
+            self.init_ax1_MLB = float(np.mean(ax_dist[0]))
+            self.init_ax2_MLB = float(np.mean(ax_dist[1]))
             total_eq_distance = 0
             counter = 0
             for eqligs in eq_dist:
                 for bonds in eqligs:
                     total_eq_distance += bonds
                     counter += 1
-            self.init_eq_MLB = total_eq_distance / counter
+            self.init_eq_MLB = float(total_eq_distance / counter)
         except:
             # self.init_coord = 'error'
             self.init_eq_MLB = 'error'
@@ -306,11 +306,11 @@ class DFTRun(object):
             self.init_coord = 0
 
     def get_track_elec_prop(self):
-        try:
-            GA_run = get_current_GA()
-            self.track_elec_prop = GA_run.config['track_elec_prop']
-        except:
-            self.track_elec_prop = False
+        #try:
+        #    GA_run = get_current_GA()
+        self.track_elec_prop = isKeyword('track_elec_prop')
+        #except:
+        #    self.track_elec_prop = False
 
     def write_new_inputs(self):
         path_dictionary = setup_paths()
@@ -318,8 +318,8 @@ class DFTRun(object):
         oldHFX = '20'
         newHFX = '15'
         new_name = renameHFX(self.job, newHFX)
-        guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
-                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0'
+        guess_string = 'guess ' + isKeyword('rundir')+ 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
+                       '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0'
         self.thermo_inpath = path_dictionary['thermo_infiles'] + self.name + '.in'
         self.solvent_inpath = path_dictionary['solvent_infiles'] + self.name + '.in'
         self.init_sp_inpath = path_dictionary['sp_in_path'] + self.name + '.in'
@@ -346,7 +346,7 @@ class DFTRun(object):
             f_insp.write('scrdir scr/init_sp/  \n')
             f_insp.write('coordinates ' + self.geopath + ' \n')
             f_insp.write(
-                'guess ' + get_run_dir() + 'scr/geo/' + self.name + '/ca0' + ' ' + get_run_dir() + 'scr/geo/' + self.name + '/cb0')
+                'guess ' + isKeyword('rundir') + 'scr/geo/' + self.name + '/ca0' + ' ' + isKeyword('rundir') + 'scr/geo/' + self.name + '/cb0')
             with open(self.inpath, 'r') as ref:
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
@@ -381,10 +381,10 @@ class DFTRun(object):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         if not (self.spin == 1):
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
-                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0 \n'
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
+                       '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0 \n'
         else:
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
         #self.solvent_inpath = path_dictionary['solvent_inpath'] + self.name + '.in'
         ### check solvent
         if not os.path.exists(self.solvent_inpath):
@@ -417,10 +417,10 @@ class DFTRun(object):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         if not (self.spin == 1):
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
-                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0 \n'
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
+                       '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0 \n'
         else:
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
         
         ### check solvent
         if not os.path.exists(self.water_inpath):
@@ -448,10 +448,10 @@ class DFTRun(object):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         if not (self.spin == 1):
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
-                       '              ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0\n'
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
+                       '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0\n'
         else:
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
         self.init_sp_inpath = path_dictionary['sp_in_path'] + self.name + '.in'
         ### check sp inpath
         if not os.path.exists(self.init_sp_inpath):
@@ -486,10 +486,10 @@ class DFTRun(object):
         new_name = renameHFX(self.job, newHFX).strip('.in')
         reference_name = renameHFX(self.job, refHFX).strip('.in')
         if int(new_name[-1]) == 1:
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/c0\n'
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/c0\n'
         else:
-            guess_string = 'guess ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/ca0' + \
-                       ' ' + get_run_dir() + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/cb0\n'
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/ca0' + \
+                       ' ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/cb0\n'
         geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
         self.HFX_inpath = path_dictionary['infiles'] + new_name + '.in'
         self.HFX_job = path_dictionary['job_path'] + new_name + '.in'
@@ -567,9 +567,9 @@ class DFTRun(object):
                 splist[-2] = emptyrefval
                 wfnrefempty = "_".join(splist)
                 if int(this_spin)==1:
-                    guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/c0\n'
+                    guess_string_sp = 'guess ' + isKeyword('rundir') + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/c0\n'
                 else:
-                    guess_string_sp = 'guess ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/ca0' + ' ' + get_run_dir() + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/cb0\n'
+                    guess_string_sp = 'guess ' + isKeyword('rundir') + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/ca0' + ' ' + isKeyword('rundir') + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/cb0\n'
                 f_emptysp.write(guess_string_sp)
             if int(this_spin) == 1:
                 f_emptysp.write('method b3lyp\n')
@@ -790,7 +790,7 @@ class Comp(object):
         self.time = "undef"
         self.metal = 'undef'
         self.axlig1 = 'undef'
-        if not isOxocatalysis():
+        if not isKeyword('oxocatalysis'):
             self.axlig2 = 'undef'
             self.axlig2_ind = 'undef'
         self.eqlig = 'undef'
@@ -854,7 +854,7 @@ class Comp(object):
                 for sc in ["LS", "HS"]:
                     this_attribute = "_".join(['ox', ox, sc, props])
                     setattr(self, this_attribute, False)
-        if isOxocatalysis():
+        if isKeyword('oxocatalysis'):
             list_of_init_props += ['metal_alpha','metal_beta','net_metal_spin','metal_mulliken_charge','oxygen_alpha','oxygen_beta','net_oxygen_spin','oxygen_mulliken_charge']
             for props in list_of_init_props:
                 for spin_cat in ['LS', 'IS', 'HS']:

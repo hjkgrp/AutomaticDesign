@@ -31,7 +31,7 @@ def resume_run(args):
                 GA_run.serialize()
             path_dictionary = setup_paths()
             print(GA_run.config)
-            if GA_run.config['DFT']:
+            if isKeyword('DFT'):
                 print('DFT ON')
                 ## update which jobs are live
                 logger(path_dictionary['state_path'], '************************************************')
@@ -42,7 +42,7 @@ def resume_run(args):
                 ## wake the run
             logger(path_dictionary['state_path'], str(datetime.datetime.now()) + ' resuming MAD')
             wake_up_routine()
-            if GA_run.config['DFT']:
+            if isKeyword('DFT'):
                 ## send off oustanding jobs
                 joblist = submit_outstanding_jobs()
                 logger(path_dictionary['state_path'],
@@ -53,7 +53,7 @@ def resume_run(args):
                            live_job_count))
                 logger(path_dictionary['state_path'], str(datetime.datetime.now()) + ' going back to sleep')
                 logger(path_dictionary['state_path'], '************************************************')
-            if not GA_run.config['runtype'] == "redox":
+            if not isKeyword('runtype') == "redox":
                 try:     
                     format_freqeuncies()
                     format_distances()
