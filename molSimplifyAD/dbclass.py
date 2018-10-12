@@ -7,6 +7,7 @@ from molSimplify.Classes.atom3D import *
 from molSimplifyAD.db_base_generator import Base
 import jsonpickle
 import getpass
+import copy
 from datetime import datetime as dtn
 class TMC(Base):
     ## this class ingests a DFT run class
@@ -78,41 +79,19 @@ class TMC(Base):
         
         ## get energy 
         self.energy = float(run_class.energy)
-        print('before mapping on save ')
-        print(len(str(( jsonpickle.encode(run_class)))))
+        
+
         ## get json of class for reconstruction
-        #run_class.descriptors = []
-        #run_class.descriptor_names = []
-        #run_class.mol = []
-        print('after desc purge on save ')
-        print(len(str(( jsonpickle.encode(run_class)))))
-        self.reconstructor = jsonpickle.encode(run_class)
-        print('\n')
-        print('on save ')
-        print(len(str((self.reconstructor))))
-        print('*****')
+        self.reconstructor = jsonpickle.encode(create_compress_run(run_class))
+
         # capture geos
         if run_class.mol: 
             self.opt_geo = run_class.mol.returnxyz()
         if run_class.init_mol: 
             self.init_geo = run_class.init_mol.returnxyz()
     def reinstate_run_class(self):
-        print('\n')
-        print('length of stored ')
-        print(len(str(self.reconstructor)))
-        with open('rc-1-loaded.json','w') as f:
-            f.write(self.reconstructor)
-        print('*****')
-        print('length of json ')
-        print(len(jsonpickle.decode(self.reconstructor)))
-        print('*****')
-        print('\n')
-
-        print('\n')
-        #run_class = jsonpickle.decode(self.reconstructor)
-        run_class = 0
-
-        print('*****')
+        ## recreate run from json
+        run_class = uncompress_run(jsonpickle.decode(self.reconstructor))
         return(run_class)
 ########################
            
@@ -147,3 +126,45 @@ def match_against_db(session,metal,ox,spin,geo,eqliq,axlig1,axlig2,eqlig,aHF):
            (r.aHF == aHF):
             matches.append(r)
     return(matches)
+    
+    
+def create_compress_run(run_class):
+    ## this method takes a run class
+    ## and strips out incompatible attributes
+    ## due to jsonpickle and numpy
+    ## not playing nice
+    ## the returned object
+    ## is suitable for serialization
+    # make a copy to not break the orig
+    cpy = copy.deepcopy(run_class)
+    cpy.descriptors = []
+    cpy.descriptor_names = []
+    if cpy.mol:
+        cpy.mol.graph = []
+        cpy.mol.my_mol_trunc = False
+        cpy.mol.init_mol_trunc = False        
+    if cpy.init_mol:
+        cpy.init_mol.graph = []
+        cpy.init_mol.my_mol_trunc = False
+        cpy.init_mol.init_mol_trunc = False
+    return(cpy)
+def uncompress_run(compress_run):
+    ## this method takes a run class
+    ## load from the json
+    ## and carries out the reverse
+    ## of the compress operation
+    ## to retstore lost features
+    cpy = copy.deepcopy(compress_run)
+    
+    if cpy.mol:
+        try:
+            cpy.mol.createMolecularGraph(oct=cpy.octahedral)
+        except:
+            pass
+    if cpy.init_mol:
+        try:
+            cpy.init_mol.createMolecularGraph(oct=cpy.octahedral)
+        except:
+            pass
+    cpy.get_descriptor_vector()
+    return(cpy) 
