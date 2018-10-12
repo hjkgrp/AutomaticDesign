@@ -32,7 +32,8 @@ with open(pathToOutstandingJobs+'.backup', 'rb') as infile:
 			index = line.find("jobs/")
 			if index == -1:
         			index = line.find("solvent_infiles/")
-
+			if index == -1:
+        			index = line.find("water_infiles/")
 			if index == -1:
 				print('could not change path in line:' +line)
 			else:
@@ -48,6 +49,8 @@ with open(pathToSubmittedJobs+'.backup', 'rb') as infile:
 			index = line.find("jobs/")
 			if index == -1:
         			index = line.find("solvent_infiles/")
+			if index == -1:
+        			index = line.find("water_infiles/")
 
 			if index == -1:
 				print('could not change path in line:' +line)
