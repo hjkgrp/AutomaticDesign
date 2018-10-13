@@ -23,7 +23,7 @@ def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary):
 
     ## be post processed:
     if (job not in live_job_dictionary.keys()) and (len(job.strip('\n')) != 0):
-        if not ("sp_infiles" in job) and not ("thermo" in job) and not ("solvent" in job) and not ("water" in job):
+        if not ("sp_infiles" in job) and not ("thermo" in job) and not ("solvent" in job) and not ("water" in job) and not ("PRFO" in job):
             if isKeyword('post_all'):
                 postProc = True
             elif job in converged_jobs_dictionary.keys():
@@ -82,7 +82,9 @@ def check_all_current_convergence():
         ## 13 -> job requests solvent
         ## 14 -> job requests sp calc
         ## 15 -> job requests water-implicit calc
-        
+        ## 16 -> job requests HAT and Oxo PRFO jobs
+        ## 17 -> job requests HAT PRFO job
+        ## 18 -> job requests Oxo PRFO job
         ## sort to get consistent transversal order
         joblist.sort()
         
@@ -154,6 +156,18 @@ def check_all_current_convergence():
                 if isKeyword('water'):
                         this_run.water_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'               
                         this_run.water_outpath = (path_dictionary["water_out_path"] + base_name + ".out")
+                if isKeyword('TS'):
+                        this_run.PRFO_HAT_inpath = path_dictionary["PRFO_in_path_HAT"] + base_name + '.in'
+                        this_run.PRFO_HAT_initialgeo = path_dictionary["PRFO_initial_geo_HAT"] + base_name + '.xyz'
+                        this_run.PRFO_HAT_scrpath = path_dictionary["PRFO_scr_path_HAT"]+ base_name + "/optim.xyz"
+                        this_run.PRFO_HAT_geopath = path_dictionary["PRFO_optimized_geo_HAT"] + base_name + '.xyz'
+                        this_run.PRFO_HAT_outpath = path_dictionary["PRFO_out_path_HAT"]+ base_name+'.out'
+                        this_run.PRFO_Oxo_inpath = path_dictionary["PRFO_in_path_Oxo"] + base_name + '.in'
+                        this_run.PRFO_Oxo_initialgeo = path_dictionary["PRFO_initial_geo_Oxo"] + base_name + '.xyz'
+                        this_run.PRFO_Oxo_scrpath = path_dictionary["PRFO_scr_path_Oxo"]+ base_name + "/optim.xyz"
+                        this_run.PRFO_Oxo_geopath = path_dictionary["PRFO_optimized_geo_Oxo"] + base_name + '.xyz'
+                        this_run.PRFO_Oxo_outpath = path_dictionary["PRFO_out_path_Oxo"]+ base_name+'.out'
+
 
                 ## MOP semiempirical (not used)
                 this_run.moppath = path_dictionary["mopac_path"] + base_name + ".out"
@@ -248,7 +262,21 @@ def check_all_current_convergence():
                             elif run_success:
                                 this_run.status = 15
                                 run_success = False
-                        if run_success and not this_run.status in [12,13,14,15]:
+                        if isKeyword('TS'):
+                            print('TS on')
+                            this_run = test_terachem_TS_convergence(this_run)
+                            if this_run.converged_HAT_TS and this_run.converged_Oxo_TS and run_success:
+                                remove_outstanding_jobs(this_run.PRFO_HAT_inpath)
+                                remove_outstanding_jobs(this_run.PRFO_Oxo_inpath)
+                                this_run.status = 0
+                            elif this_run.converged_HAT_TS and run_success:
+                                this_run.status = 18
+                            elif this_run.converged_Oxo_TS and run_success:
+                                this_run.status = 17
+                            else:
+                                this_run.status = 16
+                            
+                        if run_success and not this_run.status in [12,13,14,15,16,17,18]:
                             this_run.status = 0  # all done
                         ## mark as compelete
                     else:  # not B3LYP, check coord only:
@@ -271,33 +299,67 @@ def check_all_current_convergence():
                         newHFX = HFXorderingdict[ahf][0]
                         refHFX = HFXorderingdict[ahf][1]
                         if this_run.coord == 6 and this_run.octahedral == True:  ## don't bother if failed
-                            HFX_job = this_run.write_HFX_inputs(newHFX, refHFX)
-                            if (HFX_job not in joblist) and (HFX_job not in outstanding_jobs) and (
-                                    HFX_job not in converged_jobs.keys()):
-                                print('note: converting from HFX = ' + str(
-                                    this_run.alpha) + ' to ' + newHFX + ' with ref ' + refHFX)
-                                logger(base_path_dictionary['state_path'],
-                                       str(datetime.datetime.now()) + ' converting from HFX = ' + str(
-                                           this_run.alpha) + ' to ' + newHFX + ' with ref ' + refHFX)
-
-                                add_to_outstanding_jobs(HFX_job)
+                            if not isKeyword('oxocatalysis'):
+                                HFX_job = this_run.write_HFX_inputs(newHFX, refHFX)
+                                if (HFX_job not in joblist) and (HFX_job not in outstanding_jobs) and (HFX_job not in converged_jobs.keys()):
+                                    print('note: converting from HFX = ' + str(this_run.alpha) + ' to ' + newHFX + ' with ref ' + refHFX)
+                                    logger(base_path_dictionary['state_path'],
+                                       str(datetime.datetime.now()) + ' converting from HFX = ' + str(this_run.alpha) + ' to ' + newHFX + ' with ref ' + refHFX)
+                                    add_to_outstanding_jobs(HFX_job)
                             if isKeyword('oxocatalysis') and int(ox) > 3 and (axlig2 == 'oxo' or '[O--]' in axlig2[0] or '[O--]' in axlig2):
+                                HFX_job = this_run.write_HFX_inputs(newHFX, refHFX)
+                                if (HFX_job not in joblist) and (HFX_job not in outstanding_jobs) and (HFX_job not in converged_jobs.keys()):
+                                    print('note: converting from HFX = ' + str(this_run.alpha) + ' to ' + newHFX + ' with ref ' + refHFX)
+                                    logger(base_path_dictionary['state_path'],
+                                       str(datetime.datetime.now()) + ' converting from HFX = ' + str(this_run.alpha) + ' to ' + newHFX + ' with ref ' + refHFX)
+                                    add_to_outstanding_jobs(HFX_job)
                                 empty_sp = this_run.write_empty_inputs(refHFX)
-                                if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (
-                                        empty_sp not in converged_jobs.keys()):
+                                if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (empty_sp not in converged_jobs.keys()):
                                     print('note: converting from oxo structure to empty structure (SP)')
                                     logger(base_path_dictionary['state_path'], str(
-                                        datetime.datetime.now()) + ' converting from oxo structure to empty structure (SP)')
+                                        datetime.datetime.now()) + ' converting from oxo structure to empty structure (SP) for '+base_name)
                                     add_to_outstanding_jobs(empty_sp)
+                                hydroxyl_upper, hydroxyl_lower = this_run.write_hydroxyl_inputs(refHFX)
+                                if hydroxyl_upper:
+                                    if (hydroxyl_upper not in joblist) and (hydroxyl_upper not in outstanding_jobs) and (hydroxyl_upper not in converged_jobs.keys()):
+                                        print('note: converting from oxo structure to upper spin hydroxyl structure')
+                                        logger(base_path_dictionary['state_path'], str(
+                                            datetime.datetime.now()) + ' converting from oxo structure to upper spin hydroxyl structure for '+base_name)
+                                        add_to_outstanding_jobs(hydroxyl_upper)
+                                if hydroxyl_lower:
+                                    if (hydroxyl_lower not in joblist) and (hydroxyl_lower not in outstanding_jobs) and (hydroxyl_lower not in converged_jobs.keys()):
+                                        print('note: converting from oxo structure to lower spin hydroxyl structure')
+                                        logger(base_path_dictionary['state_path'], str(
+                                            datetime.datetime.now()) + ' converting from oxo structure to lower spin hydroxyl structure for '+base_name)
+                                        add_to_outstanding_jobs(hydroxyl_lower)
+                            if isKeyword('TS') and isKeyword('oxocatalysis') and int(ahf)==20:
+                                print('preparing PRFO calculations for HAT and Oxo')
+                                empty_sp = this_run.write_empty_inputs(refHFX)
+                                HAT_TS, Oxo_TS = this_run.write_HAT_and_Oxo_TS(empty_sp)
+                                logger(base_path_dictionary['state_path'],
+                                       str(datetime.datetime.now()) + ' adding HAT and Oxo PRFO TS to '+base_name)
+                                add_to_outstanding_jobs(HAT_TS)
+                                add_to_outstanding_jobs(Oxo_TS)                        
                     elif isKeyword('oxocatalysis') and int(ox) > 3 and (axlig2 == 'oxo' or '[O--]' in axlig2[0] or '[O--]' in axlig2):  # Must do this because the empty sites are one step behind the 6-coordinates at different HFX
                         empty_sp = this_run.write_empty_inputs('00')
-                        if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (
-                                empty_sp not in converged_jobs.keys()):
+                        if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (empty_sp not in converged_jobs.keys()):
                             print('note: converting from oxo structure to empty structure (SP)')
                             logger(base_path_dictionary['state_path'], str(
-                                datetime.datetime.now()) + ' converting from oxo structure to empty structure (SP)')
+                                datetime.datetime.now()) + ' converting from oxo structure to empty structure (SP) for '+base_name)
                             add_to_outstanding_jobs(empty_sp)
-
+                        hydroxyl_upper, hydroxyl_lower = this_run.write_hydroxyl_inputs('00')
+                        if hydroxyl_upper:
+                            if (hydroxyl_upper not in joblist) and (hydroxyl_upper not in outstanding_jobs) and (hydroxyl_upper not in converged_jobs.keys()):
+                                print('note: converting from oxo structure to upper spin hydroxyl structure')
+                                logger(base_path_dictionary['state_path'], str(
+                                    datetime.datetime.now()) + ' converting from oxo structure to upper spin hydroxyl structure for '+base_name)
+                                add_to_outstanding_jobs(hydroxyl_upper)
+                        if hydroxyl_lower:
+                            if (hydroxyl_lower not in joblist) and (hydroxyl_lower not in outstanding_jobs) and (hydroxyl_lower not in converged_jobs.keys()):
+                                print('note: converting from oxo structure to lower spin hydroxyl structure')
+                                logger(base_path_dictionary['state_path'], str(
+                                    datetime.datetime.now()) + ' converting from oxo structure to lower spin hydroxyl structure for '+base_name)
+                                add_to_outstanding_jobs(hydroxyl_lower)
                 if not this_run.converged and not this_run.islive:
                     print(' job  ' + str(this_run.outpath) + ' not converged')
                     logger(base_path_dictionary['state_path'],
@@ -359,7 +421,7 @@ def check_all_current_convergence():
                 logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                        + ' added ' + this_run.name + ' to all_runs with status ' + str(this_run.status))
 
-                if this_run.status in [0, 1, 12, 13, 14,15]:  ##  convergence is successful!
+                if this_run.status in [0, 1, 12, 13, 14, 15, 16, 17, 18]:  ##  convergence is successful!
                     print('removing job from OSL due to status  ' + str(this_run.status))
                     jobs_complete += 1
                     remove_outstanding_jobs(jobs)  # take out of queue
@@ -382,6 +444,7 @@ def check_all_current_convergence():
                             print('addding water based on ' + str(jobs))
                             this_run.write_water_input()
                             add_to_outstanding_jobs(this_run.water_inpath)
+
                     if isKeyword('oxocatalysis'): #Scrape spin and partial charge info from molden
                         print('Now scraping the molden file for charge and spin info.')
                         current_folder = path_dictionary["scr_path"]+base_name+"/"
@@ -419,7 +482,7 @@ def check_all_current_convergence():
                                + ' after ' + str(number_of_subs) + ' subs since prog geo was bad')
                         remove_outstanding_jobs(jobs)  # take out of pool
                 print('END OF JOB \n *******************\n')
-            elif "sp_infiles" in jobs and not isKeyword('optimize'):
+            elif ("sp_infiles" in jobs and not isKeyword('optimize')) or ("sp_infiles" in jobs and isKeyword('oxocatalysis')):
                 gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(jobs)
                 metal_list = get_metals()
                 metal = metal_list[metal]
