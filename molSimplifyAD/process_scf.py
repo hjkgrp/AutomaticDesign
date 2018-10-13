@@ -428,18 +428,19 @@ def check_water_file(this_run):
         if (found_water_energy == True) and (found_water_cont == True):
 			this_run.water_cont = water_contribution
 	return(this_run)
+
 def check_thermo_file(this_run):
     ## function to test thermodynamic contribution
     ##  for terachem files
     #  @param this_run a run class
     #  @return this_run populated run class
-	found_vib_correction = False
-	found_grad_error = False
-	vib_correction = False
-	if os.path.exists(this_run.thermo_outpath):
-		with open(this_run.thermo_outpath) as f:
-			thermo_data=f.readlines()
-			for i,lines in enumerate(thermo_data):
+    found_vib_correction = False
+    found_grad_error = False
+    vib_correction = False
+    if os.path.exists(this_run.thermo_outpath):
+        with open(this_run.thermo_outpath) as f:
+            thermo_data=f.readlines()
+            for i,lines in enumerate(thermo_data):
 				if str(lines).find('Total Vibrational Energy Correction') != -1:
 					vib_correction =str(lines.split()[5])
 					found_vib_correction = True
@@ -455,13 +456,12 @@ def check_thermo_file(this_run):
 				        print(lines)
         			if str(lines).find('Total processing time') != -1:
 	        			this_run.thermo_time = str(lines.split()[3])
-
-		if (found_vib_correction == True) and (found_grad_error == False):
-			this_run.thermo_cont = vib_correction
-		if (found_vib_correction == True) and (found_grad_error == True):
-			this_run.thermo_cont = "grad_error"
-			this_run.comment +="grad_error\n"
-    return(this_run)
+        if (found_vib_correction == True) and (found_grad_error == False):
+        	this_run.thermo_cont = vib_correction
+        if (found_vib_correction == True) and (found_grad_error == True):
+            this_run.thermo_cont = "grad_error"
+            this_run.comment +="grad_error\n"
+    return this_run
 
 def read_terachem_PRFO_output(this_run):
     ## function to test HAT PRFO
