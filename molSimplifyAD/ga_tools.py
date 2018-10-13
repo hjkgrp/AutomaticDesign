@@ -667,9 +667,25 @@ def HFXordering():
                          "10": ["05", "10"],
                          "5": ["00", "05"]}
     return (HFXdictionary)
-
-
+    
 ########################
+
+def get_sql_path():
+    ## function to bd string
+    ## if available
+    try:
+        GA_run = get_current_GA()
+        if GA_run.config["sqlpath"]:
+            return GA_run.config["sqlpath"]
+        else:
+            return False
+    except:
+        return False
+ 
+    
+########################
+
+
 
 def setup_paths():
     working_dir = get_run_dir()
