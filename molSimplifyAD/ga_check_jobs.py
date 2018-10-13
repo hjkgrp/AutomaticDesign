@@ -320,7 +320,8 @@ def check_all_current_convergence():
                         if this_run.progstatus == 0:
                             sub_number = submitted_job_dictionary[jobs]
                             this_run.archive(sub_number)
-                            create_generic_infile(jobs, use_old_optimizer=use_old_optimizer, restart=True)
+                            if this_run.alpha == 20:  
+                                create_generic_infile(jobs, use_old_optimizer=use_old_optimizer, restart=True)
                             this_run.status = 2  ## prog geo is good
                             logger(base_path_dictionary['state_path'],
                                    str(datetime.datetime.now()) + ' job allowed to restart since good prog geo found ')
@@ -518,7 +519,10 @@ def check_all_current_convergence():
         if isKeyword('post_all'):
             write_run_reports(all_runs)
             write_run_pickle(final_results)
-            process_run_post(run_output_path, run_descriptor_path)
+            try:
+                           process_run_post(run_output_path, run_descriptor_path)
+            except:
+                    print("Pandas/file load error!")
         print('\n**** end of file inspection **** \n')
     else:
         print('post processing SP/spin files')

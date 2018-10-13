@@ -64,9 +64,15 @@ class DFTRun(object):
         list_of_init_false = ['solvent_cont', 'water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
+<<<<<<< HEAD
                               'islive', 'set_desc', 'sp_status']
         list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord']
 
+=======
+                              'islive', 'set_desc','sp_status']
+        list_of_init_zero = ['ss_target', 'ss_act', 'coord', 'mop_coord']
+        
+>>>>>>> 2509c4f9568733df883c276fb3a3ed5e457e6761
         if isKeyword('oxocatalysis'):
             list_of_init_props += ['metal_alpha', 'metal_beta', 'net_metal_spin', 'metal_mulliken_charge',
                                    'oxygen_alpha', 'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
@@ -213,21 +219,21 @@ class DFTRun(object):
 
     def obtain_ML_dists(self):
         try:
-            self.mind = minimum_ML_dist(self.mol)
-            self.maxd = maximum_any_dist(self.mol)
-            self.meand = mean_ML_dist(self.mol)
+            self.mind = float(minimum_ML_dist(self.mol))
+            self.maxd = float(maximum_any_dist(self.mol))
+            self.meand = float(mean_ML_dist(self.mol))
             ax_dist, eq_dist = getOctBondDistances(self.mol)
             if len(ax_dist) < 2:
                 ax_dist.append(ax_dist[0])
-            self.ax1_MLB = np.mean(ax_dist[0])
-            self.ax2_MLB = np.mean(ax_dist[1])
+            self.ax1_MLB = float(np.mean(ax_dist[0]))
+            self.ax2_MLB = float(np.mean(ax_dist[1]))
             total_eq_distance = 0
             counter = 0
             for eqligs in eq_dist:
                 for bonds in eqligs:
                     total_eq_distance += bonds
                     counter += 1
-            self.eq_MLB = total_eq_distance / counter
+            self.eq_MLB = float(total_eq_distance / counter)
         except:
             # self.coord = 'error'
             self.eq_MLB = 'error'
@@ -238,15 +244,15 @@ class DFTRun(object):
             ax_dist, eq_dist = getOctBondDistances(self.init_mol)
             if len(ax_dist) < 2:
                 ax_dist.append(ax_dist[0])
-            self.init_ax1_MLB = np.mean(ax_dist[0])
-            self.init_ax2_MLB = np.mean(ax_dist[1])
+            self.init_ax1_MLB = float(np.mean(ax_dist[0]))
+            self.init_ax2_MLB = float(np.mean(ax_dist[1]))
             total_eq_distance = 0
             counter = 0
             for eqligs in eq_dist:
                 for bonds in eqligs:
                     total_eq_distance += bonds
                     counter += 1
-            self.init_eq_MLB = total_eq_distance / counter
+            self.init_eq_MLB = float(total_eq_distance / counter)
         except:
             # self.init_coord = 'error'
             self.init_eq_MLB = 'error'
