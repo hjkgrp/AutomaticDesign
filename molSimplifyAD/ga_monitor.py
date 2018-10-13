@@ -38,6 +38,12 @@ def launch_job(job,sub_num):
         infile = job  # for thermo/solvent
                       # these are stored as 
                       # infiles only
+    elif "PRFO" in job and "HAT" in job:
+        cmd_script = "launch_script_PRFO_HAT.sh"
+        infile = job
+    elif "PRFO" in job and "Oxo" in job:
+        cmd_script = "launch_script_PRFO_Oxo.sh"
+        infile = job
     elif axlig2 == 'x' and "sp_infiles" in job:
         cmd_script = "launch_script_sp.sh"
         infile = job

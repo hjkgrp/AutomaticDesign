@@ -428,18 +428,19 @@ def check_water_file(this_run):
         if (found_water_energy == True) and (found_water_cont == True):
 			this_run.water_cont = water_contribution
 	return(this_run)
+
 def check_thermo_file(this_run):
     ## function to test thermodynamic contribution
     ##  for terachem files
     #  @param this_run a run class
     #  @return this_run populated run class
-	found_vib_correction = False
-	found_grad_error = False
-	vib_correction = False
-	if os.path.exists(this_run.thermo_outpath):
-		with open(this_run.thermo_outpath) as f:
-			thermo_data=f.readlines()
-			for i,lines in enumerate(thermo_data):
+    found_vib_correction = False
+    found_grad_error = False
+    vib_correction = False
+    if os.path.exists(this_run.thermo_outpath):
+        with open(this_run.thermo_outpath) as f:
+            thermo_data=f.readlines()
+            for i,lines in enumerate(thermo_data):
 				if str(lines).find('Total Vibrational Energy Correction') != -1:
 					vib_correction =str(lines.split()[5])
 					found_vib_correction = True
@@ -455,15 +456,114 @@ def check_thermo_file(this_run):
 				        print(lines)
         			if str(lines).find('Total processing time') != -1:
 	        			this_run.thermo_time = str(lines.split()[3])
+        if (found_vib_correction == True) and (found_grad_error == False):
+        	this_run.thermo_cont = vib_correction
+        if (found_vib_correction == True) and (found_grad_error == True):
+            this_run.thermo_cont = "grad_error"
+            this_run.comment +="grad_error\n"
+    return this_run
 
-		if (found_vib_correction == True) and (found_grad_error == False):
-			this_run.thermo_cont = vib_correction
-		if (found_vib_correction == True) and (found_grad_error == True):
-			this_run.thermo_cont = "grad_error"
-			this_run.comment +="grad_error\n"
-
-            
-
+def read_terachem_PRFO_output(this_run):
+    ## function to test HAT PRFO
+    ##  for terachem files
+    #  @param this_run a run class
+    #  @return this_run populated run class
+    found_conv_HAT = False
+    found_data_HAT = False
+    found_time_HAT = False
+    found_init_HAT = False
+    if os.path.exists(this_run.PRFO_HAT_outpath):
+        with open(this_run.PRFO_HAT_outpath) as f:
+            this_run.attempted_HAT_TS = True
+            data = f.readlines()
+            for i, lines in enumerate(data):
+                if str(lines).find('TeraChem v') != -1:
+                    this_run.terachem_version_HAT_TS = lines.split()[2]
+                if str(lines).find('Hg Version') != -1:
+                    this_run.terachem_detailed_version_HAT_TS = lines.split()[3]
+                if str(lines).find('Using basis set') != -1:
+                    this_run.basis_HAT_TS = lines.split()[3]
+                if str(lines).find('Spin multiplicity') != -1:
+                    this_run.tspin_HAT_TS = int(lines.split()[2])
+                if str(lines).find('Total charge:') != -1: 
+                    this_run.charge_HAT_TS = int(lines.split()[2])
+                if str(lines).find('Alpha level shift') != -1:
+                    this_run.alpha_level_shift_HAT_TS = float(lines.split()[3])
+                if str(lines).find('Beta level shift') != -1:
+                    this_run.beta_level_shift_HAT_TS = float(lines.split()[3])
+                if str(lines).find('DFT Functional requested:') != -1:
+                    this_run.functional_HAT_TS = lines.split()[3]
+                if (str(lines).find('Optimization Converged.') != -1) or (str(lines).find('Converged!') != -1):
+                    found_conv_HAT = True
+                if str(lines).find('FINAL ENERGY') != -1:
+                    this_run.energy_HAT_TS =str(lines.split()[2])
+                    found_data_HAT = True
+                    if not found_init:
+                        this_run.init_energy_HAT_TS = str(lines.split()[2])
+                        found_init_HAT = True
+                if str(lines).find('Total processing time') != -1:
+                    this_run.time_HAT_TS =str(lines.split()[3])
+                    found_time_HAT = True
+                if str(lines).find('SPIN S-SQUARED') != -1:
+                    this_str=(lines.split())
+                    this_run.ss_act_HAT_TS =float( this_str[2])
+                    this_run.ss_target_HAT_TS = float(this_str[4].strip('()'))
+                if str(lines).find('Eigenvalues of the Hessian:') != -1:
+                    eigenvalue = float(data[i+1].split()[0])
+                    this_run.eigenvalue_HAT_TS = eigenvalue
+    else:
+        this_run.attempted_HAT_TS = False
+    if (found_data_HAT) and (found_time_HAT) and (found_conv_HAT):
+        this_run.converged_HAT_TS = True
+        print('HAT TS converged.') 
+    found_conv_Oxo = False
+    found_data_Oxo = False
+    found_time_Oxo = False
+    found_init_Oxo = False
+    if os.path.exists(this_run.PRFO_Oxo_outpath):
+        with open(this_run.PRFO_Oxo_outpath) as f:
+            this_run.attempted_Oxo_TS = True
+            data = f.readlines()
+            for i, lines in enumerate(data):
+                if str(lines).find('TeraChem v') != -1:
+                    this_run.terachem_version_Oxo_TS = lines.split()[2]
+                if str(lines).find('Hg Version') != -1:
+                    this_run.terachem_detailed_version_Oxo_TS = lines.split()[3]
+                if str(lines).find('Using basis set') != -1:
+                    this_run.basis_Oxo_TS = lines.split()[3]
+                if str(lines).find('Spin multiplicity') != -1:
+                    this_run.tspin_Oxo_TS = int(lines.split()[2])
+                if str(lines).find('Total charge:') != -1: 
+                    this_run.charge_Oxo_TS = int(lines.split()[2])
+                if str(lines).find('Alpha level shift') != -1:
+                    this_run.alpha_level_shift_Oxo_TS = float(lines.split()[3])
+                if str(lines).find('Beta level shift') != -1:
+                    this_run.beta_level_shift_Oxo_TS = float(lines.split()[3])
+                if str(lines).find('DFT Functional requested:') != -1:
+                    this_run.functional_Oxo_TS = lines.split()[3]
+                if (str(lines).find('Optimization Converged.') != -1) or (str(lines).find('Converged!') != -1):
+                    found_conv_Oxo = True
+                if str(lines).find('FINAL ENERGY') != -1:
+                    this_run.energy_Oxo_TS =str(lines.split()[2])
+                    found_data_Oxo = True
+                    if not found_init:
+                        this_run.init_energy_Oxo_TS = str(lines.split()[2])
+                        found_init_Oxo = True
+                if str(lines).find('Total processing time') != -1:
+                    this_run.time_Oxo_TS =str(lines.split()[3])
+                    found_time_Oxo = True
+                if str(lines).find('SPIN S-SQUARED') != -1:
+                    this_str=(lines.split())
+                    this_run.ss_act_Oxo_TS =float( this_str[2])
+                    this_run.ss_target_Oxo_TS = float(this_str[4].strip('()'))
+                if str(lines).find('Eigenvalues of the Hessian:') != -1:
+                    eigenvalue = float(data[i+1].split()[0])
+                    this_run.eigenvalue_Oxo_TS = eigenvalue
+    else:
+        this_run.attempted_Oxo_TS = False
+    if (found_data_Oxo) and (found_time_Oxo) and (found_conv_Oxo):
+        this_run.converged_Oxo_TS = True
+        print('Oxo TS converged.') 
 	return(this_run)
 
 def check_sp_file(this_run):
@@ -652,7 +752,40 @@ def test_terachem_go_convergence(this_run):
             this_run.status = 1
             this_run.comment += 'coord not good ' +str(this_run.coord) +'\n '
             this_run.comment += 'flag_oct_list: %s\n'%(this_run.flag_list)
-            
+
+def test_terachem_TS_convergence(this_run):
+    print('we have access to the test_terachem_TS function')
+    if os.path.exists(this_run.PRFO_HAT_geopath):
+        this_run.geo_exists_HAT_TS = True
+        print('HAT TS exists '+this_run.PRFO_HAT_geopath)
+    else:
+        this_run.comment += 'no HAT TS geo found\n'
+        print('no HAT TS geo exists '+this_run.PRFO_HAT_geopath)
+        if os.path.exists(this_run.PRFO_HAT_scrpath):
+            this_run.extract_TS_geo('HAT')
+            print('HAT TS Geo extracted to '+this_run.PRFO_HAT_geopath)
+        else:
+            print('Cannot find HAT optim file at '+this_run.PRFO_HAT_scrpath)
+    if os.path.exists(this_run.PRFO_Oxo_geopath):
+        this_run.geo_exists_Oxo_TS = True
+        print('Oxo TS exists '+this_run.PRFO_Oxo_geopath)
+    else:
+        this_run.comment += 'no Oxo TS geo found\n'
+        print('no Oxo TS geo exists '+this_run.PRFO_Oxo_geopath)
+        if os.path.exists(this_run.PRFO_Oxo_scrpath):
+            this_run.extract_TS_geo('Oxo')
+            print('Oxo TS Geo extracted to '+this_run.PRFO_Oxo_geopath)
+        else:
+            print('Cannot find Oxo optim file at '+this_run.PRFO_Oxo_scrpath)
+    if os.path.exists(this_run.PRFO_HAT_outpath):
+        read_terachem_PRFO_output(this_run)
+    else:
+        this_run.comment += ' no HAT TS outfile found\n'
+    if os.path.exists(this_run.PRFO_Oxo_outpath):
+        read_terachem_PRFO_output(this_run)
+    else:
+        this_run.comment += ' no Oxo TS outfile found\n'
+    return this_run
 
 def read_terachem_go_output(this_run):
     ## function to parse geometry optimization outfile
