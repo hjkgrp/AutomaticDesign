@@ -647,28 +647,19 @@ class DFTRun(object):
                     sourcelines = sourcef.readlines()
                     with open(path_dictionary["job_path"]+new_name_upper+'.in','w') as newf:
                         for line in sourcelines:
-                            if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not ("run" in line) and not ("spinmult" in line):
+                            if (not "end" in line) and not ("scr" in line) and not ("spinmult" in line):
                                 ## these lines should be common
                                 newf.write(line)
                             elif "spinmult" in line:
                                 newf.write("spinmult "+new_name_upper.strip('.in').split('_')[-1]+'\n')
-                        newf.write('end')
+                            elif "method" in line:
+                                if int(new_name_upper.strip('.in').split('_')[-1]) == 1:
+                                    newf.write("method b3lyp\n")
+                                else:
+                                    newf.write(line)
+                        newf.write('scrdir scr/geo/gen_0/'+new_name_upper.strip('.in')+'/\n')     
                 newf.close()
                 sourcef.close()           
-                with open(path_dictionary['infiles']+new_name_upper+'.in', 'w') as f:
-                    with open(path_dictionary["job_path"]+new_name_upper+'.in', 'r') as ref:
-                        for line in ref:
-                            if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
-                                if (int(new_name_upper[-1]) == 1) and "method" in line: #restrict singlets
-                                    f.write("method b3lyp\n")
-                                else:
-                                    f.write(line)
-                        f.write('coordinates ' + path_dictionary["initial_geo_path"]+new_name_upper+'.xyz' + ' \n')
-                        if int(refHFX) != 20:
-                            f.write(guess_string)
-                        f.write('end\n')
-                f.close()
-                ref.close()
                 returnval1 = path_dictionary['job_path'] + new_name_upper + '.in'
         if new_name_lower:
             if int(refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
@@ -689,29 +680,19 @@ class DFTRun(object):
                     sourcelines = sourcef.readlines()
                     with open(path_dictionary["job_path"]+new_name_lower+'.in','w') as newf:
                         for line in sourcelines:
-                            if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not ("run" in line) and not ("spinmult" in line):
+                            if (not "end" in line) and not ("scr" in line) and not ("spinmult" in line):
                                 ## these lines should be common
                                 newf.write(line)
                             elif "spinmult" in line:
                                 newf.write("spinmult "+new_name_lower.strip('.in').split('_')[-1]+'\n')
-                        newf.write('end')
+                            elif "method" in line:
+                                if int(new_name_lower.strip('.in').split('_')[-1]) == 1:
+                                    newf.write("method b3lyp\n")
+                                else:
+                                    newf.write(line)
+                        newf.write('scrdir scr/geo/gen_0/'+new_name_lower.strip('.in')+'/\n')     
                 newf.close()
                 sourcef.close()           
-
-                with open(path_dictionary['infiles']+new_name_lower+'.in', 'w') as f:
-                    with open(path_dictionary["job_path"]+new_name_lower+'.in', 'r') as ref:
-                        for line in ref:
-                            if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
-                                if (int(new_name_lower[-1]) == 1) and "method" in line: #restrict singlets
-                                    f.write("method b3lyp\n")
-                                else:
-                                    f.write(line)
-                        f.write('coordinates ' + path_dictionary["initial_geo_path"]+new_name_lower+'.xyz' + ' \n')
-                        if int(refHFX)!= 20:
-                            f.write(guess_string)
-                        f.write('end\n')
-                f.close()
-                ref.close()
                 returnval2 = path_dictionary['job_path'] + new_name_lower + '.in'
         return returnval1, returnval2 
     
