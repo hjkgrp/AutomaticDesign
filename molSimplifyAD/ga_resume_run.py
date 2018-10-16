@@ -54,7 +54,8 @@ def resume_run(args):
                 logger(path_dictionary['state_path'], str(datetime.datetime.now()) + ' going back to sleep')
                 logger(path_dictionary['state_path'], '************************************************')
             if not GA_run.config['runtype'] == "redox":
-                try:     
+                try:
+                    print('-----format_frequencies and format_distances being carried out')     
                     format_freqeuncies()
                     format_distances()
                 except:
