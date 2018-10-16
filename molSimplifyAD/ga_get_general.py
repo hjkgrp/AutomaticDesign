@@ -3,15 +3,16 @@ from molSimplifyAD.ga_tools import *
 
 
 class gene:
-    def __init__(self, name, fitness, frequency, generation):
+    def __init__(self, name, fitness, frequency, generation, fit_func, dist_param):
         self.name = name
         self.fitness = '{0:.12g}'.format(float(fitness))
         self.frequency = frequency
         self.generation = generation
+        self.dist_param = str(dist_param)
+        self.fitness_function = str(fit_func)
 
     def _long(self):
-        return 'The gene {0} has a fitness {1} and appears {2} time(s).'.format(self.name, self.fitness,
-                                                                                str(self.frequency))
+        return 'The gene {0} has a fitness {1} and appears {2} time(s).'.format(self.name, self.fitness,str(self.frequency))
 
 
 # Find a gene by name in a given list.
@@ -31,6 +32,7 @@ def _get_gen_npool(data_dir):
                 lastgen = int(row[1].strip('\n'))
             elif row[0] == "npool":
                 npool = int(row[1].strip('\n'))
+        print('lastgen is ', lastgen)
     return lastgen, npool
 
 
@@ -84,19 +86,21 @@ def _gen_gene_fitness_csv(base_path, generation, end_results, sumt):
 
 
 def _human_readable_csv(base_path, generation, end_results):
+    print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ HR CSV $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
     from molSimplifyAD.get_distances import _find_distances
+    from molSimplifyAD.ga_main import *
     gene_dist_dict, _, gene_prop_dict, gene_name_dict = _find_distances()
     csv_results_path = base_path + "human_readable_results.csv"
     with open(csv_results_path, _write_mode(generation)) as fo:
         writer = csv.writer(fo)
         if int(generation) == 0:
-            writer.writerow(('Generation', 'Gene', 'Chem Name', 'Fitness', 'Property', 'Distance', 'Frequency'))
+            writer.writerow(('Generation', 'Gene', 'Chem Name', 'Fitness', 'Property', 'Distance', 'Frequency','Fitness Function','Dist Parameter'))
         else:
             writer.writerow(('\n'))
         for i in range(len(end_results)):
             t = end_results[i]
             writer.writerow((t.generation, t.name, gene_name_dict[t.name], t.fitness, gene_prop_dict[t.name],
-                             gene_dist_dict[t.name], t.frequency))
+                             gene_dist_dict[t.name], t.frequency, t.fitness_function, t.dist_param))
     fo.close()
 
 
@@ -127,6 +131,7 @@ def _get_freq_fitness(lastgen, npool):
         GA_run = get_current_GA()
         runtype = GA_run.config["runtype"]
         for generation in xrange(lastgen + 1):
+            print('------GENERATION IN XRANGE IS '+str(generation))
             ANN_dir = get_run_dir() + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
             emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
             for keys in ANN_dict.keys():
@@ -134,19 +139,26 @@ def _get_freq_fitness(lastgen, npool):
                 this_gene = "_".join(keys.split("_")[4:10])
                 if runtype == "redox":
                     this_gene = "_".join(keys.split("_")[4:9])
-               
+                elif runtype in ['oxo','hat']:
+                    this_gene = "_".join(keys.split("_")[4:10])
                 split_energy = ANN_dict[keys]['split']
                 if runtype in ['oxo','hat']:
-                    if (spin_cat == 'HS') or (get_metals()[metal]=='cr' and spin == 2) and not(this_gene in ANN_prop_dict.keys()):
+                    if not (this_gene in ANN_prop_dict.keys()):
                         this_prop = float(ANN_dict[keys][runtype])
                         this_dist = float(ANN_dict[keys][runtype + '_dist'])
-                        ANN_prop_dict.update({this_gene: this_prop})
+                        # if spin_cat == 'HS' or (metal == 'cr' and int(spin) == 2):
+                        if spin_cat == 'LS':
+                            ANN_prop_dict.update({this_gene: this_prop})
+                        else:
+                            ANN_prop_dict.update({this_gene: 10000})
+                            print('SKIPPED ANN PROP DICT ASSIGNMENT BC '+str(this_gene)+' '+str(spin))
                 elif runtype in ['homo','gap']:
                     if (split_energy > 0 and int(spin) <= 3) or (split_energy < 0 and int(spin) > 3):
                         this_prop = float(ANN_dict[keys][runtype])
                         this_dist = float(ANN_dict[keys][runtype + '_dist'])
                         ANN_prop_dict.update({this_gene: this_prop})
                 elif not (this_gene in ANN_prop_dict.keys()):
+                    # sardines
                     this_prop = float(ANN_dict[keys][runtype])
                     this_dist = float(ANN_dict[keys][runtype + '_dist'])
                     ANN_prop_dict.update({this_gene: this_prop})
@@ -158,12 +170,15 @@ def _get_freq_fitness(lastgen, npool):
                 # to be assigned, certain criteria must be met as can be seen above. For spin splitting    #
                 # Not an issue for spin splitting because both spins inherit the same splitting energy     #
                 ############################################################################################
+        print(ANN_prop_dict)
 
     generation = 0
+    print('------------!!!!! ASSIGNED GENERATION '+str(generation)+' !!!!!-------------')
     while (generation == 0 or generation < lastgen):
+        print('@@@@@@@@@@@@@@@@@@@@@@@@ GENERATION @@@@@@@@@@@@@@@@@@@@@@@@@@: '+str(generation))
         end_results = []
         current_gene_list = list()
-
+        # print('_____________________________________________________________________Entered part 1.')
         # First find all unique genes and add to list from current_genes.csv.
         ## If gene is already present, increase its frequency by 1.
         base_path = get_run_dir() + "statespace/"
@@ -172,7 +187,10 @@ def _get_freq_fitness(lastgen, npool):
         print("opened Gen: " + str(generation))
         for line in fi:
             # print(fi.readline())
-            geneName = line.split(",")[-1]
+            print(line)
+            geneName = line.split(",")[1]
+            dist_param = line.split(",")[2].strip('\n')
+            fit_func = line.split(",")[3].strip('\n')
             geneName = geneName.strip('\n')
             # print('GET GENERAL GENENAME:',geneName)
             current_gene_list.append(geneName)
@@ -180,18 +198,26 @@ def _get_freq_fitness(lastgen, npool):
             if index >= 0:
                 end_results[index].frequency += 1
             else:
-                end_results.append(gene(geneName, 0, 1, generation))
+                end_results.append(gene(geneName, 0, 1, generation, fit_func, dist_param))
         fi.close()
-
+        print('got to this point 1')
         # Second, find fitness values of genes, add to list, and calculate mean fitness.
+        # print('_____________________________________________________________________Entered part 2.')
         sumt = 0
         read_path = base_path + "gen_" + str(generation) + "/gene_fitness.csv"
         with open(read_path, 'r') as fi:
             list_of_lines = fi.readlines()
             for line in list_of_lines:
-                geneName, fitness = line.split(",")
+                # geneName, fitness = line.split(",",1)
+                geneName, _ = line.split(",",1)
+                prop = ANN_prop_dict[geneName]
+                if 'hinge' in str(GA_run.config['scoring_function']):
+                    fitness = find_prop_hinge_fitness(prop, int(GA_run.config['property_parameter']))
+                else:
+                    fitness = find_prop_fitness(prop, GA_run.config['property_parameter'])
 
-                fitness = fitness.strip('\n')
+                # fitness = fitness.strip('\n')
+                print('FITNESS ASSIGNED', fitness)
                 index = _find_gene(geneName, end_results)
                 if index >= 0:
                     temp = end_results[index]
@@ -201,6 +227,7 @@ def _get_freq_fitness(lastgen, npool):
         fi.close()
 
         ## Write a summary file for the property, distance, and fitness.
+        # print('_____________________________________________________________________Entered part 3.')
         sum_results = []
         read_path = base_path + "gen_" + str(generation) + "/gene_fitness.csv"
         fi = open(read_path, 'r')
@@ -211,7 +238,7 @@ def _get_freq_fitness(lastgen, npool):
             if index >= 0:
                 sum_results[index].frequency += 1
             else:
-                sum_results.append(gene(geneName, 0, 1, generation))
+                sum_results.append(gene(geneName, 0, 1, generation, None, None))
         fi.close()
 
         # Third, output the unique genes and their fitness values to .txt and .csv files.
@@ -223,15 +250,22 @@ def _get_freq_fitness(lastgen, npool):
 
         # Fourth, recover actual splitting energies only in ANN case
         if not isDFT():
+            # print('_____________________________________________________________________Entered part 4.')
             mean_prop = 0.0
             count = 0
             print('ANN keys are ')
             print(ANN_prop_dict.keys())
             for geneName in current_gene_list:
-
                 if geneName in ANN_prop_dict.keys():
-                    mean_prop += abs(ANN_prop_dict[geneName])
-                    count += 1
+                    if ANN_prop_dict[geneName] == 10000:
+                        continue
+                    else:
+                        if runtype == 'split':
+                            mean_prop += abs(ANN_prop_dict[geneName])
+                            count += 1
+                        else:
+                            mean_prop += ANN_prop_dict[geneName]
+                            count += 1
                 else:
                     print('Error: expected ' + geneName + ' to be in ANN results...')
                     pass
@@ -240,7 +274,7 @@ def _get_freq_fitness(lastgen, npool):
             ## write
             _write_prop_csv(base_path, generation, mean_prop)
         generation += 1
-
+        print('Moving to generation: ',generation)
 
 def format_freqeuncies():
     lastgen, npool = _get_gen_npool(get_run_dir())
