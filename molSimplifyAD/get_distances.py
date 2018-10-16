@@ -37,17 +37,20 @@ def _find_distances():
                         gene_prop_dict.update({geneName: this_prop})
                         gene_name_dict.update({geneName: chem_name})
             elif runtype in ['oxo','hat']:
-                if (spin_cat == 'HS' or (get_metals()[metal] == 'cr' and int(spin) == 2)):
+                # if (spin_cat == 'HS' or (get_metals()[metal] == 'cr' and int(spin) == 2)):
+                if (spin_cat == 'LS'):
                     # print('Entered into HAT and OXO statement because HIGH SPIN')
+                    print('Entered into HAT and OXO statement because LOW SPIN')
                     this_prop = float(ANN_dict[keys][runtype])
                     this_dist = float(ANN_dict[keys][runtype + '_dist'])
-                    geneName = "_".join(keys.split('_')[4:10])
+                    keys_temp = keys.split('_')[4:10]
+                    geneName = "_".join(keys_temp)
                     metal = get_metals()[metal]
                     chem_name = '_'.join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), str(ahf),str(spin)])
                     print(chem_name+' logged in dictionary')
-                    if (int(spin) == 2 and not metal == 'cr') or int(spin) == 1:
-                        sardines
+                    print('genename is '+geneName)
                     if geneName in gene_dist_dict.keys():
+                        print('SKIPPING GENENAME '+str(geneName))
                         pass
                     else:
                         gene_dist_dict.update({geneName: this_dist})
@@ -74,7 +77,10 @@ def _find_distances():
     emsg = write_dictionary(gene_dist_dict, write_path)
     if emsg:
         print(emsg)
-
+    print('Now printing all dictionaries (dist, prop, name)')
+    print(gene_dist_dict)
+    print(gene_prop_dict)
+    print(gene_name_dict)
     return gene_dist_dict, npool, gene_prop_dict, gene_name_dict
 
 
@@ -111,4 +117,6 @@ def _mean_distances(gene_dist_dict):
 # Uses the same directory as get_general, which is get_run_dir() from ga_tools
 def format_distances():
     gene_dist_dict, npool, _, _ = _find_distances()
+    print('DONE with find distances')
     _mean_distances(gene_dist_dict)
+    print('DONE with mean distances')
