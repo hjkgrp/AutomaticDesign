@@ -38,6 +38,8 @@ class GA_run_defintion:
                       track_elec_prop = True,
                       max_resubmit = 4,
                       old_optimizer = False,
+                      TS = False,
+                      TSsoftware = 'TeraChem',
                       **KWARGS):
             ## first time start-up function
 #                print('configuring status dictionaty')
@@ -73,7 +75,9 @@ class GA_run_defintion:
                               "all_post":all_post,
                               'track_elec_prop':track_elec_prop,
                               'max_resubmit':max_resubmit,
-                               'old_optimizer': old_optimizer
+                              'old_optimizer': old_optimizer,
+                              'TS': TS,
+                              'TSsoftware':TSsoftware,
                                }
         def serialize(self):
             ## serialize run info
@@ -210,7 +214,9 @@ def get_launch_script_file(queue_type='SGE'):
     thermo_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/"+queue_type.lower()+"_thermo.sh")
     solvent_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/"+queue_type.lower()+"_solvent.sh")
     water_file = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/"+queue_type.lower()+"_water.sh")
-    return sp_file, geo_file, thermo_file, solvent_file, water
+    PRFO_HAT = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/"+queue_type.lower()+"_PRFO_HAT.sh")
+    PRFO_Oxo = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/"+queue_type.lower()+"_PRFO_Oxo.sh")
+    return sp_file, geo_file, thermo_file, solvent_file, water_file, PRFO_HAT, PRFO_Oxo
 
 ########################
 def process_new_run_input(path):
@@ -245,7 +251,6 @@ def process_new_run_input(path):
                         configuration[key] = val
                     else:
                         print('Ignoring unknown input line with wrong length : ' + str(line)  )
-
         except:
             print('Error: processing ' +str(path) + ' failed. Please enusre')
             print( ' the file contains one keyword (space) value per line.')
@@ -266,4 +271,3 @@ def get_old_optimizer_ligand_list():
         for lines in f.readlines():
             old_optimizer_list.append(lines.strip().strip('\n'))
     return old_optimizer_list
-

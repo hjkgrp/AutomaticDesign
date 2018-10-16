@@ -22,8 +22,8 @@ class octahedral_complex:
         self.ax_ligands= list()
         self.ax_inds = list()
         self.eq_inds = list()
-        GA_run = get_current_GA()
-        self.ahf = int(GA_run.config["exchange"]) # % HFX, B3LYP = 20
+        #GA_run = get_current_GA()
+        self.ahf = int(isKeyword("exchange")) # % HFX, B3LYP = 20
     def random_gen(self):
         self._get_random_metal()
         self._get_random_ox()
@@ -32,7 +32,7 @@ class octahedral_complex:
         self._name_self()
     def _name_self(self):
         ## this creates the gene for a given complex
-        GA_run = get_current_GA()
+        #GA_run = get_current_GA()
         self.name = "_".join([str(self.core),str(self.ox),str(self.eq_inds[0]),str(self.ax_inds[0]),str(self.ax_inds[1]),str(self.ahf)])
 
     def copy(self,partner):
@@ -64,7 +64,7 @@ class octahedral_complex:
         ### choose the equitorial ligand
         n = len(self.ligands_list)
         eq_ind = numpy.random.randint(low = 0,high = n)
-        if isOxocatalysis():
+        if isKeyword('oxocatalysis'):
             smiles = False
             if hasattr(self.ligands_list[eq_ind][0],'__iter__'):
                 smiles = True
@@ -90,7 +90,7 @@ class octahedral_complex:
         self.ax_inds = list()
         while not self.ready_for_assembly:
             ax_ind = numpy.random.randint(low = 0,high = n)
-            if isOxocatalysis():
+            if isKeyword('oxocatalysis'):
                 if hasattr(self.eq_ligands[0],'__iter__'):
                     oxo = find_ligand_idx('[O--]')
                     dent = self.ligands_list[ax_ind][0][1]
@@ -104,7 +104,7 @@ class octahedral_complex:
                 print('CHOSEN RANDOM AXLIG: ',self.ligands_list[ax_ind])
             ax_ligand_properties  = self.ligands_list[ax_ind][1]
             ax_dent = ax_ligand_properties[0]
-            if ax_dent > 1 and not isOxocatalysis():
+            if ax_dent > 1 and not isKeyword('oxocatalysis'):
                 if ((self.eq_dent == 2) and (ax_dent == 2) and (len(self.ax_ligands) == 0)):
                     three_bidentate  = True
                     self.ax_ligands = [self.ligands_list[ax_ind][0],self.ligands_list[ax_ind][0]]
@@ -115,15 +115,15 @@ class octahedral_complex:
                 else:
                     self.ready_for_assembly = False
             elif ax_dent == 1:
-                GA_run = get_current_GA()
-                if GA_run.config["symclass"] == "strong" and not isOxocatalysis():
+                #GA_run = get_current_GA()
+                if isKeyword("symclass") == "strong" and not isKeyword('oxocatalysis'):
                     self.ax_ligands = [self.ligands_list[ax_ind][0],self.ligands_list[ax_ind][0]]
                     self.ax_inds = [ax_ind, ax_ind]
                     if (len(self.ax_ligands) ==2):
                         self.ax_dent = 1
                         self.ax_oc = [1,1]
                         self.ready_for_assembly = True
-                elif isOxocatalysis():
+                elif isKeyword('oxocatalysis'):
                     if hasattr(self.eq_ligands[0],'__iter__'):
                         oxo = find_ligand_idx('[O--]')
                     else:
@@ -181,7 +181,7 @@ class octahedral_complex:
         self.eq_oc  = int(4/self.eq_dent)
         self.eq_ligands = [self.ligands_list[new_eq_ind[0]][0] for i in range(0,self.eq_oc)]
         self.eq_inds = new_eq_ind
-        if (self.ax_dent == 1) or ((self.ax_dent == 2) and (self.eq_dent ==2) and not isOxocatalysis()): #No triple bidentate in oxocat
+        if (self.ax_dent == 1) or ((self.ax_dent == 2) and (self.eq_dent ==2) and not isKeyword('oxocatalysis')): #No triple bidentate in oxocat
                 ## everything is ok!
                 if (self.ax_dent == 2):
                     self.three_bidentate = True
@@ -272,7 +272,7 @@ class octahedral_complex:
     def mutate(self):
         ## mutates either the axial
         ## or equitorial ligand a random
-        GA_run = get_current_GA()
+        #GA_run = get_current_GA()
         lig_to_mutate = random.randint(0,3) #SWITCHED TO DISALLOW METAL MUT
         child = octahedral_complex(self.ligands_list)
         child.copy(self) # copies this parent
@@ -287,7 +287,7 @@ class octahedral_complex:
             smiles = False
             if hasattr(self.ligands_list[rand_ind][0],'__iter__'):
                 smiles = True
-            if isOxocatalysis():
+            if isKeyword('oxocatalysis'):
                 while (self.ligands_list[rand_ind][0] in ['x','hydroxyl','oxo']) or (smiles and self.ligands_list[rand_ind][0][0] in ['[O--]','[OH-]']):
                     rand_ind = numpy.random.randint(low = 0,high = n)
                     if self.ligands_list[rand_ind][0] not in ['x','hydroxyl','oxo'] or (smiles and self.ligands_list[rand_ind][0][0] not in ['[O--]','[OH-]']):
@@ -296,13 +296,13 @@ class octahedral_complex:
             child.replace_equitorial([rand_ind])
         elif (lig_to_mutate == 1) or (lig_to_mutate == 2):
             print('mutating axial ligand')
-            if isOxocatalysis():
+            if isKeyword('oxocatalysis'):
                 lig_to_mutate = 1 #Always keep lig_to_mutate = 1 since do not want to mutate axial moiety
             ready_flag = False
             while not ready_flag:
                 new_ax_list = list()
                 rand_ind = numpy.random.randint(low = 0,high = n)
-                if isOxocatalysis():
+                if isKeyword('oxocatalysis'):
                     smiles = False
                     if hasattr(self.ligands_list[rand_ind][0],'__iter__'):
                         smiles = True
@@ -316,13 +316,13 @@ class octahedral_complex:
                 if (ax_dent == self.ax_dent):
                     if (lig_to_mutate == 1):
                         print("mutating axial 1 ")
-                        if GA_run.config['symclass'] =="strong" and not isOxocatalysis():
+                        if isKeyword('symclass') =="strong" and not isKeyword('oxocatalysis'):
                             new_ax_list = [rand_ind,rand_ind]
                         else:
                             new_ax_list = [rand_ind,self.ax_inds[1]]
                     elif (lig_to_mutate == 2):
                         print("mutating axial 2 ")
-                        if GA_run.config['symclass'] =="strong":
+                        if isKeyword('symclass') =="strong":
                             new_ax_list = [rand_ind,rand_ind]
                         else:
                             new_ax_list = [self.ax_inds[0],rand_ind]
@@ -462,10 +462,10 @@ class octahedral_complex:
         if smicat:
                 ff_opt = 'no'
         ## get custom exchange fraction
-        this_GA = get_current_GA()
-        use_old_optimizer = get_optimizer()
-        exchange = this_GA.config['exchange']
-        optimize = this_GA.config['optimize']
+        #this_GA = get_current_GA()
+        use_old_optimizer = isKeyword('old_optimizer')
+        exchange = isKeyword('exchange')
+        optimize = isKeyword('optimize')
 
         if optimize:
             #print(' setting up GEO optimization ')
@@ -507,7 +507,7 @@ class octahedral_complex:
                             if smicat:
                                 call += ' -smicat ' + smicat
 
-                            if this_GA.config['oxocatalysis']:
+                            if isKeyword('oxocatalysis'):
                                 call += ' -qoption dftd,d3 -qoption min_maxiter,1100'
                             print(call)
 #                            p2 = subprocess.call(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
@@ -574,7 +574,7 @@ class octahedral_complex:
                             oxo_dist = float(line.split(",")[1])
                             ANN_results.update({'oxo_dist':float(line.split(",")[1])})
                             print('ANN_oxo_distance is ' +"{0:.2f}".format(oxo_dist))
-                    if len(list(set(property_list).difference(ANN_results.keys())))>0 and not isDFT():
+                    if len(list(set(property_list).difference(ANN_results.keys())))>0 and not isKeyword('DFT'):
                         for i in property_list:
                             if i not in ANN_results.keys():
                                 ANN_results.update({i:float(10000)}) #Chosen to be arbitrarily large to reduce the fitness value to 0.
@@ -583,7 +583,7 @@ class octahedral_complex:
                                 print(str(i)+ ' set to '+str(ANN_results[i])+' since the key was present')
 
 
-                if isOxocatalysis() and 'oxo' in liglist and isDFT(): #Subbing in 1.65 as Oxo BL
+                if isKeyword('oxocatalysis') and 'oxo' in liglist and isKeyword('DFT'): #Subbing in 1.65 as Oxo BL
                     print('Modifying initial oxo geom file '+ mol_name + '.xyz to have oxo BL 1.65')
                     geo_ref_file = open(path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz','r')
                     lines = geo_ref_file.readlines()

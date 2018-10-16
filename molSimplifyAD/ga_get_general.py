@@ -76,7 +76,7 @@ def _write_prop_csv(base_path, generation, prop_results):
 
 # Write generation, mean fitness, and number of unique genes to .csv file.
 def _gen_gene_fitness_csv(base_path, generation, end_results, sumt):
-    lastgen, npool = _get_gen_npool(get_run_dir())
+    lastgen, npool = _get_gen_npool(isKeyword('rundir'))
     mean_fitness = sumt / float(npool)
     csv_results_path = base_path + "_generation_meanFitness_diversity.csv"
     with open(csv_results_path, _write_mode(generation)) as fo:
@@ -125,14 +125,14 @@ def _write_summary_csv(base_path, generation, sum_results):
 # Find unique genes and their frequencies by name in current_genes and their fitness from gene_fitness. Output to a text file named results.txt
 def _get_freq_fitness(lastgen, npool):
     ## if not DFT, get all current ANN splitting energies
-    if not isDFT():
+    if not isKeyword('DFT'):
         full_gene_info = dict()
         ANN_prop_dict = dict()
-        GA_run = get_current_GA()
-        runtype = GA_run.config["runtype"]
+        #GA_run = get_current_GA()
+        runtype = isKeyword("runtype")
         for generation in xrange(lastgen + 1):
             print('------GENERATION IN XRANGE IS '+str(generation))
-            ANN_dir = get_run_dir() + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
+            ANN_dir = isKeyword('rundir') + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
             emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
             for keys in ANN_dict.keys():
                 _, _, _, metal, _, _, _, _, _, _, _, spin, spin_cat, _, _, _ = translate_job_name(keys)
@@ -181,7 +181,7 @@ def _get_freq_fitness(lastgen, npool):
         # print('_____________________________________________________________________Entered part 1.')
         # First find all unique genes and add to list from current_genes.csv.
         ## If gene is already present, increase its frequency by 1.
-        base_path = get_run_dir() + "statespace/"
+        base_path = isKeyword('rundir') + "statespace/"
         read_path = base_path + "gen_" + str(generation) + "/_current_genes.csv"
         fi = open(read_path, 'r')
         print("opened Gen: " + str(generation))
@@ -249,8 +249,7 @@ def _get_freq_fitness(lastgen, npool):
         _write_summary_csv(base_path, generation, sum_results)
 
         # Fourth, recover actual splitting energies only in ANN case
-        if not isDFT():
-            # print('_____________________________________________________________________Entered part 4.')
+        if not isKeyword('DFT'):
             mean_prop = 0.0
             count = 0
             print('ANN keys are ')
@@ -277,6 +276,6 @@ def _get_freq_fitness(lastgen, npool):
         print('Moving to generation: ',generation)
 
 def format_freqeuncies():
-    lastgen, npool = _get_gen_npool(get_run_dir())
+    lastgen, npool = _get_gen_npool(isKeyword('rundir'))
     print('lastgen', lastgen)
     _get_freq_fitness(lastgen, npool)

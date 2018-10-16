@@ -65,9 +65,9 @@ ligs = get_ligands()
 ########################################
 # Find empty site index in ligand list #
 ########################################
-if isOxocatalysis():
+if isKeyword('oxocatalysis'):
 	for i, item in enumerate(ligs):
-		if 'x' in item:
+		if 'x' == item or 'x' == item[0]:
 			value = str(i)
 
 ####### JOB CHECK STARTS HERE #########
@@ -113,7 +113,7 @@ for jobs in joblist:
                 this_run.inpath = path_dictionary["job_path"] + base_name + ".in"
                 this_run.infiles = path_dictionary["infiles"] + base_name + ".in"
                 this_run.comppath = path_dictionary["done_path"] + base_name + ".in"
-                if isOxocatalysis():
+                if isKeyword('oxocatalysis'):
                     if ahf == 20 and not ('sp_infiles' in jobs) and (axlig2 == 'oxo'):
                         this_run.obtain_mol3d()
 			this_run.check_oct_needs_final_only()
@@ -149,7 +149,7 @@ for jobs in joblist:
                     else:
                         print('found HFX != 20 singlet, will purge')
                         delete_list.append(this_run)
-if isOxocatalysis():
+if isKeyword('oxocatalysis'):
 	print('---------------SKIPLIST---------------')
 	print(skiplist) #Jobs that converged to a good geometry with new optimizer (and related jobs)
 	print('--------------RESTART_LIST-------------')
@@ -195,7 +195,7 @@ for runs in restart_list:
 	new_tree = GA_generation('current_gen')
         new_tree.read_state()
 	gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(runs.job)
-        if isOxocatalysis():	
+        if isKeyword('oxocatalysis'):	
 		if base_name in skiplist:
                 	print('SERIOUS ERROR, SOMETHING IN SKIPLIST REMAINED IN THE DELETE LIST')
 			sardines
@@ -255,12 +255,12 @@ for runs in restart_list:
                         os.remove(runs.comppath)
                 else:
                         print('would delete '+  runs.comppath)
-	if os.path.isfile(runs.spinpath) and isOxocatalysis():
+	if os.path.isfile(runs.spinpath) and isKeyword('oxocatalysis'):
                 if not dry_run:
                         os.remove(runs.spinpath)
                 else:
                         print('would delete '+  runs.spinpath)
-        if os.path.isfile(runs.spoutpath) and isOxocatalysis():
+        if os.path.isfile(runs.spoutpath) and isKeyword('oxocatalysis'):
                 if not dry_run:
                         os.remove(runs.spoutpath)
                 else:
@@ -281,7 +281,7 @@ for runs in delete_list:
 	new_tree = GA_generation('current_gen')
 	new_tree.read_state()
 	gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(runs.job)
-	if isOxocatalysis():
+	if isKeyword('oxocatalysis'):
 		if base_name in skiplist:
 			print('SERIOUS ERROR, SOMETHING IN SKIPLIST REMAINED IN THE DELETE LIST')
 			sardines
@@ -310,7 +310,7 @@ for runs in delete_list:
                         os.remove(runs.outpath)
                 else:
                         print('would delete '+  runs.outpath)
-	if os.path.isfile(runs.inpath) and isOxocatalysis():
+	if os.path.isfile(runs.inpath) and isKeyword('oxocatalysis'):
 		if not dry_run:
 			os.remove(runs.inpath)
 		else:
@@ -330,17 +330,17 @@ for runs in delete_list:
                         os.remove(runs.infiles)
                 else:
                         print('would delete '+ runs.infiles)
-        if os.path.isfile(runs.spinpath) and isOxocatalysis():
+        if os.path.isfile(runs.spinpath) and isKeyword('oxocatalysis'):
                 if not dry_run:
                         os.remove(runs.spinpath)
                 else:
                         print('would delete '+  runs.spinpath)
-        if os.path.isfile(runs.spoutpath) and isOxocatalysis():
+        if os.path.isfile(runs.spoutpath) and isKeyword('oxocatalysis'):
                 if not dry_run:
                         os.remove(runs.spoutpath)
                 else:
                         print('would delete '+ runs.spoutpath)
-        if runs.ox < 4 and os.path.isfile(runs.init_geopath) and isOxocatalysis():
+        if runs.ox < 4 and os.path.isfile(runs.init_geopath) and isKeyword('oxocatalysis'):
                 if not dry_run:
                         os.remove(runs.init_geopath)
                 else:

@@ -1,7 +1,7 @@
 from molSimplifyAD.ga_tools import *
 import shutil
 
-rundir = str(get_run_dir())
+rundir = str(isKeyword('rundir'))
 pathToConvergedJobs = rundir+'jobs/converged_job_dictionary.csv'
 pathToOutstandingJobs = rundir+'jobs/outstanding_job_list.txt'
 pathToSubmittedJobs = rundir+'jobs/submitted_jobs.csv'
@@ -16,7 +16,9 @@ with open(pathToConvergedJobs+'.backup', 'rb') as infile:
 		else:
 			index = line.find("jobs/")
 			if index == -1:
-				print('could not change path in line:' +line)
+        			index = line.find("solvent_infiles/")
+        		if index == -1:
+        				print('could not change path in line:' +line)
 			else:
 				line = line.replace(line[:index],rundir)
 				outfile.write(line)
@@ -28,6 +30,10 @@ with open(pathToOutstandingJobs+'.backup', 'rb') as infile:
 			continue
 		else:
 			index = line.find("jobs/")
+			if index == -1:
+        			index = line.find("solvent_infiles/")
+			if index == -1:
+        			index = line.find("water_infiles/")
 			if index == -1:
 				print('could not change path in line:' +line)
 			else:
@@ -41,6 +47,11 @@ with open(pathToSubmittedJobs+'.backup', 'rb') as infile:
 			continue
 		else:
 			index = line.find("jobs/")
+			if index == -1:
+        			index = line.find("solvent_infiles/")
+			if index == -1:
+        			index = line.find("water_infiles/")
+
 			if index == -1:
 				print('could not change path in line:' +line)
 			else:

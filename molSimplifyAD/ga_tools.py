@@ -1,6 +1,6 @@
-import os
+import os, subprocess
 import shutil
-import numpy
+import numpy as np
 import pickle
 import pandas as pd
 from molSimplifyAD.ga_io_control import *
@@ -201,10 +201,11 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
                           'water_cont',
                           'terachem_version', 'terachem_detailed_version',
                           'basis', 'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
-                          'mop_coord', 'sp_energy']
+                          'mop_coord', 'sp_energy', 'tot_time', 'tot_step', 'metal_translation']
     if SASA:
         list_of_prop_names.append("area")
     if oxocatalysis:
+        list_of_prop_names += ['metal_alpha','metal_beta','net_metal_spin','metal_mulliken_charge','oxygen_alpha','oxygen_beta','net_oxygen_spin','oxygen_mulliken_charge']
         if comp:
             list_of_props.insert(1, 'job_gene')
             list_of_props.append('convergence')
@@ -261,7 +262,7 @@ def get_metals():
 def find_ligand_idx(lig):
     ligs = get_ligands()
     for i, item in enumerate(ligs):
-        if lig in item:
+        if lig == item or (lig == item[0]):
             idx = int(i)
     return idx
 
@@ -275,7 +276,59 @@ def get_ox_states():  # could be made metal dependent like spin
         ox_list = [2, 3]
     return ox_list
 
-
+########################
+def get_mulliken_oxocatalysis(moldenpath,catlig, spin):
+    subprocess.call("module load multiwfn/GUI", shell=True)
+    metalalpha, metalbeta, metaldiff, metalcharge = "undef","undef","undef","undef"
+    oxoalpha, oxobeta, oxodiff, oxocharge = "undef","undef","undef","undef"
+    proc = subprocess.Popen("multiwfn "+moldenpath,stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    commands = ['7','5','1','y','n']
+    newline = os.linesep
+    output = proc.communicate(newline.join(commands))
+    lines = output[0].split('\n')
+    x_flag = False
+    if str(catlig) == "x":
+        x_flag = True
+    if str(catlig) in ["[O--]","oxo"]:
+        modifier = 1
+    if str(catlig) in ["[OH-]","hydroxyl"]:
+        modifier = 2
+    try:
+        if int(spin) == 1:
+            for num, line in enumerate(lines):
+                if "Population of atoms" in line:
+                    idx = 4
+                    if len(lines[num+1].split()) == 7:
+                        idx -= 1
+                    metalalpha = np.divide(float(lines[num+1].split()[idx]),2)
+                    metalbeta = np.divide(float(lines[num+1].split()[idx]),2)
+                    metaldiff = 0
+                    metalcharge = float(lines[num+1].split()[idx+3])
+                if "Total net" in line and not x_flag:
+                    oxoalpha = np.divide(float(lines[num-modifier].split()[4]),2)
+                    oxobeta = np.divide(float(lines[num-modifier].split()[4]),2)
+                    oxodiff = 0
+                    oxocharge = float(float(lines[num-modifier].split()[7]))
+        else:
+            print('Mulliken analyzer fed unrestricted molden file.')
+            for num, line in enumerate(lines):
+                if "Population of atoms" in line:
+                    idx = 2
+                    if len(lines[num+2].split()) == 5:
+                        idx -= 1
+                    metalalpha = float(lines[num+2].split()[idx])
+                    metalbeta = float(lines[num+2].split()[idx+1])
+                    metaldiff = float(lines[num+2].split()[idx+2])
+                    metalcharge = float(lines[num+2].split()[idx+3])
+                if "Total net" in line and not x_flag:
+                    oxoalpha = float(lines[num-modifier].split()[2]) 
+                    oxobeta = float(lines[num-modifier].split()[3])
+                    oxodiff = float(lines[num-modifier].split()[4])
+                    oxocharge = float(lines[num-modifier].split()[5])
+        return metalalpha, metalbeta, metaldiff, metalcharge, oxoalpha, oxobeta, oxodiff, oxocharge
+    except:
+        return metalalpha, metalbeta, metaldiff, metalcharge, oxoalpha, oxobeta, oxodiff, oxocharge
+    
 ########################
 def spin_dictionary():
     GA_run = get_current_GA()
@@ -341,10 +394,9 @@ def isSolvent():
         return False
 ########################
 def isWater():
-    
     try:
         GA_run = get_current_GA()
-        if GA_run.config["solvent"]:
+        if GA_run.config["water"]:
             return True
         else:
             return False
@@ -352,8 +404,7 @@ def isWater():
         return False
 
 ########################
-def isThermo():
-    
+def isThermo():   
     try:
         GA_run = get_current_GA()
         if GA_run.config["thermo"]:
@@ -366,7 +417,6 @@ def isThermo():
 
 ########################
 def isSinglePoint():
-    
     try:
         GA_run = get_current_GA()
         if GA_run.config["single_point"]:
@@ -388,7 +438,33 @@ def isOxocatalysis():
     except:
         return False
 
-
+########################
+def isKeyword(keyword):
+    ##################################################################################
+    # if the passed in object is a list, will make a list to return with the values  #
+    # in the same order that the list was passed in. If one of the list items is not #
+    # present, will return false. If a string is passed in, only that item will be   #
+    # returned in its base form - Aditya (10/10/2018)                                #
+    ##################################################################################
+    GA_run = get_current_GA()
+    if isinstance(keyword, basestring):
+        keyword = unicode(keyword, 'utf-8')
+        try:
+            return GA_run.config[str(keyword)]
+        except:
+            return False
+    elif isinstance(keyword, list):
+        total_len = len(keyword)
+        return_list = []
+        try:
+            for i in range(total_len):
+                temp_key = unicode(str(keyword[i]), 'utf-8')
+                return_list.append(GA_run.config[temp_key])
+            return return_list
+        except:
+            return False
+    else:
+        return False
 ########################
 def isall_post():
     GA_run = get_current_GA()
@@ -525,13 +601,11 @@ def renameOxoEmpty(job):
     base = os.path.basename(job)
     base = base.strip("\n")
     basename = base.strip(".in")
-    basename = base.strip(".xyz")
-    basename = base.strip(".out")
+    basename = basename.strip(".xyz")
+    basename = basename.strip(".out")
     ll = (str(basename)).split("_")
     ligs = get_ligands()
-    for i, item in enumerate(ligs):
-        if 'x' in item:
-            value = str(i)
+    value = str(find_ligand_idx('x'))
     ## replace ax2 with x index
     ll[8] = value
     ## replace metal oxidation with 2 less
@@ -539,7 +613,35 @@ def renameOxoEmpty(job):
     new_name = "_".join(ll)
     return new_name, basename
 
-
+#######################
+def renameOxoHydroxyl(job):
+    _, _, _, metal, ox, _, _, axlig2, _, _, _, spin, _, _, basename, _ = translate_job_name(job)
+    # renames Oxo job to empty job
+    ll = (str(basename)).split("_")
+    ligs = get_ligands()
+    value = str(find_ligand_idx('hydroxyl'))
+    ## replace ax2 with hydroxyl index
+    ll[8] = value
+    ## replace metal oxidation with 1 less
+    hydox = int(ox) - 1
+    ll[5] = str(hydox)
+    upperll = ll[:]
+    lowerll = ll[:]
+    upperspin = int(spin) + 1
+    lowerspin = int(spin) - 1
+    upperll[-1] = str(upperspin)
+    lowerll[-1] = str(lowerspin)
+    metal_spin_dictionary = spin_dictionary()
+    metal_list = get_metals()
+    metal_key = metal_list[metal]
+    these_states = metal_spin_dictionary[metal_key][hydox]
+    new_name_upper = False
+    new_name_lower = False
+    if upperspin in these_states:
+        new_name_upper = "_".join(upperll)
+    if lowerspin in these_states:    
+        new_name_lower = "_".join(lowerll)
+    return new_name_upper, new_name_lower, basename
 #######################
 def to_decimal_string(inp):
     # nusiance function to convert
@@ -565,9 +667,25 @@ def HFXordering():
                          "10": ["05", "10"],
                          "5": ["00", "05"]}
     return (HFXdictionary)
-
-
+    
 ########################
+
+def get_sql_path():
+    ## function to bd string
+    ## if available
+    try:
+        GA_run = get_current_GA()
+        if GA_run.config["sqlpath"]:
+            return GA_run.config["sqlpath"]
+        else:
+            return False
+    except:
+        return False
+ 
+    
+########################
+
+
 
 def setup_paths():
     working_dir = get_run_dir()
@@ -598,21 +716,34 @@ def setup_paths():
 
     #    shutil.copyfile(get_source_dir()+'wake.sh',get_run_dir()+'wake.sh')
     ## set scr path to scr/sp for single points
-    if not isOptimize():
+    if not isKeyword('optimize'):
         path_dictionary.update({"scr_path": working_dir + "scr/geo/"})
-    if isSolvent():
+    if isKeyword('solvent'):
         path_dictionary.update({"solvent_out_path": working_dir + "solvent_outfiles/"})
         path_dictionary.update({"solvent_in_path": working_dir + "solvent_infiles/"})
-    if isWater():
+    if isKeyword('water'):
         path_dictionary.update({"water_out_path": working_dir + "water_outfiles/"})
         path_dictionary.update({"water_in_path": working_dir + "water_infiles/"})
-    if isThermo():
+    if isKeyword('thermo'):
         path_dictionary.update({"thermo_out_path": working_dir + "thermo_outfiles/"})
     GA_run = get_current_GA()
-    if "DLPNO" in GA_run.config.keys():
-        if GA_run.config["DLPNO"]:
-            path_dictionary.update({"DLPNO_path": working_dir + "DLPNO_files/"})
-
+    #if "DLPNO" in GA_run.config.keys():
+    #    if GA_run.config["DLPNO"]:
+    if isKeyword('DLPNO'):
+        path_dictionary.update({"DLPNO_path": working_dir + "DLPNO_files/"})
+    if isKeyword('TS'):
+        path_dictionary.update({"PRFO_initial_geo_HAT":working_dir + "PRFO_initial_geo/HAT/"})
+        path_dictionary.update({"PRFO_prog_geo_HAT":working_dir + "PRFO_prog_geo/HAT/"})
+        path_dictionary.update({"PRFO_optimized_geo_HAT":working_dir + "PRFO_opt_geo/HAT/"})
+        path_dictionary.update({"PRFO_in_path_HAT": working_dir + "PRFO_infiles/HAT/"})
+        path_dictionary.update({"PRFO_out_path_HAT": working_dir + "PRFO_outfiles/HAT/"})
+        path_dictionary.update({"PRFO_scr_path_HAT": working_dir + "scr/PRFO/HAT/"})
+        path_dictionary.update({"PRFO_initial_geo_Oxo":working_dir + "PRFO_initial_geo/Oxo/"})
+        path_dictionary.update({"PRFO_prog_geo_Oxo":working_dir + "PRFO_prog_geo/Oxo/"})
+        path_dictionary.update({"PRFO_optimized_geo_Oxo":working_dir + "PRFO_opt_geo/Oxo/"})
+        path_dictionary.update({"PRFO_in_path_Oxo": working_dir + "PRFO_infiles/Oxo/"})
+        path_dictionary.update({"PRFO_out_path_Oxo": working_dir + "PRFO_outfiles/Oxo/"})
+        path_dictionary.update({"PRFO_scr_path_Oxo": working_dir + "scr/PRFO/Oxo/"})
     for keys in path_dictionary.keys():
         ensure_dir(path_dictionary[keys])
     return path_dictionary
@@ -658,8 +789,8 @@ def write_dictionary(dictionary, path, force_append=False):
 ########################
 
 def find_prop_fitness(prop_energy, prop_parameter):
-    en = -1 * numpy.power((float(prop_energy) / prop_parameter), 2.0)
-    fitness = numpy.exp(en)
+    en = -1 * np.power((float(prop_energy) / prop_parameter), 2.0)
+    fitness = np.exp(en)
     return fitness
 
 
@@ -685,7 +816,7 @@ def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=1, lower_bo
     lower_hinge = float(max(0.0, lower_bound - prop_energy))
     ####### This set of two hinges will penalize values that are not within a certain range
     en = -1 * (upper_hinge + lower_hinge)
-    fitness = numpy.exp(en)
+    fitness = np.exp(en)
     return fitness
 
 
@@ -694,9 +825,9 @@ def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=1, lower_bo
 def find_prop_dist_fitness(prop_energy, prop_parameter, distance, distance_parameter):
     ##FITNESS DEBUGGING: print "scoring function: split+dist YAY"
 
-    en = -1 * (numpy.power((float(prop_energy) / prop_parameter), 2.0) + numpy.power(
+    en = -1 * (np.power((float(prop_energy) / prop_parameter), 2.0) + np.power(
         (float(distance) / distance_parameter), 2.0))
-    fitness = numpy.exp(en)
+    fitness = np.exp(en)
     return fitness
 
 
@@ -724,8 +855,8 @@ def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance
     upper_hinge = float(max(0.0, prop_energy - upper_bound))
     lower_hinge = float(max(0.0, lower_bound - prop_energy))
     ####### This set of two hinges will penalize values that are not within a certain range
-    en = -1 * ((upper_hinge + lower_hinge) + numpy.power((float(distance) / distance_parameter), 2.0))
-    fitness = numpy.exp(en)
+    en = -1 * ((upper_hinge + lower_hinge) + np.power((float(distance) / distance_parameter), 2.0))
+    fitness = np.exp(en)
     return fitness
 
 
@@ -799,7 +930,7 @@ def logger(path, message):
 
 ########################
 def log_bad_initial(job):
-    path = get_run_dir() + 'bad_initgeo_log.txt'
+    path = isKeyword('rundir') + 'bad_initgeo_log.txt'
     if os.path.isfile(path):
         with open(path, 'a') as f:
             f.write(job + "\n")
@@ -944,7 +1075,11 @@ def writeprops(extrct_props, newfile):
     newfile.write("\n")
     return
 
-
+########################
+def propline(extrct_props):
+    string_to_write = ','.join([str(word) for word in extrct_props])
+    string_to_write += '\n'
+    return string_to_write
 ########################
 def atrextract(a_run, list_of_props):
     extrct_props = []
@@ -1000,18 +1135,35 @@ def write_output(name, list_of_things_with_props, list_of_props, base_path_dicti
     if not base_path_dictionary:
         base_path_dictionary = setup_paths()
     if not rdir:
-        rdir = get_run_dir()
+        rdir = isKeyword('rundir')
     if not postall:
-        postall = isall_post()
+        postall = isKeyword('post_all')
 
     output_path = rdir + '/' + name + '_results_post.csv'
     descriptor_path = rdir + '/' + name + '_descriptor_file.csv'
 
     if (not postall) and os.path.isfile(output_path):
-        with open(output_path, 'a') as f:
+        try:
+            with open(outpath, 'r') as f:
+                data = f.readlines()
+            f.close()
+            present_jobs_dict = dict((key, value.split(',')[0]) for (key, value) in enumerate(data))
             for thing in list_of_things_with_props:
                 values = atrextract(thing, list_of_props)
-                writeprops(values, f)
+                string_to_write = propline(values)
+                if string_to_write.split(',')[0] in present_jobs_dict.keys():
+                    idx = int(present_jobs_dict[str(string_to_write.split(',')[0])])
+                    data[idx] = string_to_write
+                else:
+                    data.append(string_to_write)
+            with open(outpath, 'w') as f:
+                f.writelines(data)
+            f.close()
+        except:
+            with open(output_path, 'a') as f:
+                for thing in list_of_things_with_props:
+                    values = atrextract(thing, list_of_props)
+                    writeprops(values, f)
     else:
         with open(output_path, 'w') as f:
             writeprops(list_of_props, f)

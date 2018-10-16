@@ -74,7 +74,10 @@ class GA_generation:
         ### function to add a given complex to the pool
         ### arguments are positions in ligand names (1st elemet)
         ### of ligand list (not smiles)
-        ligands_list_inds = [i[0] for i in self.ligands_list]
+        if isinstance(ligs[0][0], basestring):
+            ligands_list_inds = [i[0] for i in self.ligands_list]
+        else:
+            ligands_list_inds = [i[0][0] for i in self.ligands_list]
         metal_list_inds = get_metals()
 
         ## check if ligs are known
@@ -310,8 +313,8 @@ class GA_generation:
 
     def ANN_fitness(self):
         msg, ANN_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
-        GA_run = get_current_GA()
-        runtype = GA_run.config["runtype"]
+        #GA_run = get_current_GA()
+        runtype = isKeyword("runtype")
         for keys in ANN_dict.keys():
             gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, basename, basegene = translate_job_name(keys)
             set_fitness = False
@@ -396,7 +399,7 @@ class GA_generation:
                 jobpath, mol_name, ANN_results, flag_oct = jobs.generate_geometery(prefix=job_prefix,
                                                                                    spin=spins,
                                                                                    path_dictionary=self.current_path_dictionary,
-                                                                                   rundirpath=get_run_dir(),
+                                                                                   rundirpath=isKeyword('rundir'),
                                                                                    gen=self.status_dictionary['gen'])
                 if flag_oct:
                     if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
@@ -423,10 +426,10 @@ class GA_generation:
     # Tree doctor will do checkup on tree's diversity and distance. Functionality can be switched on or off. Automatically off if DFT enabled.
     def get_full_values(self, curr_gen):
         full_gene_info = dict()
-        GA_run = get_current_GA()
-        runtype = GA_run.config["runtype"]
+        #GA_run = get_current_GA()
+        runtype = isKeyword("runtype")
         for gen in xrange(curr_gen + 1):
-            ANN_dir = get_run_dir() + "ANN_ouput/gen_" + str(gen) + "/ANN_results.csv"
+            ANN_dir = isKeyword('rundir') + "ANN_ouput/gen_" + str(gen) + "/ANN_results.csv"
             emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
             for keys in ANN_dict.keys():
                 _, _, _, metal, ox, eqlig, axlig1, axlig2, _, _, _, spin, spin_cat, ahf, _, _ = translate_job_name(keys)
