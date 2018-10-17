@@ -151,6 +151,7 @@ def draw3d(load_path, save_path):
     view = [0.8535534, -0.3535534,  0.3826834,       0.5205981,  0.5497281, -0.6532815,       0.0205981,  0.7568349,  0.6532815,         0.000000000,    0.000000000,  -22.395387650,         0.000147820,    0.000066757,    0.000249624,        18.378971100,   26.411804199,  -25.000000000 ]
 
     cmd.set_view(view)
+    cmd.zoom('all', 0.5, 0, 1)
     cmd.png(save_path + '1.png', 500, 500, 300, 0, 0)
     
     #view2 from the other side
@@ -158,6 +159,7 @@ def draw3d(load_path, save_path):
         view[i] = view[i]*(-1)
     
     cmd.set_view(view)
+    cmd.zoom('all', 0.5, 0, 1)
     cmd.png(save_path + '2.png', 500, 500, 300, 0, 0)
 
 
