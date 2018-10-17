@@ -35,6 +35,8 @@ class TMC(Base):
     axlig1 = Column(Text)
     axlig2 = Column(Text)
     eqlig = Column(Text)
+    method = Column(Text)
+    basis = Column(Text)
     aHF = Column(Numeric)    
     author = Column(Text)
     tag = Column(Text)
@@ -64,6 +66,8 @@ class TMC(Base):
         self.aHF = run_class.alpha
         self.date = dtn.now()
         self.tag = tag
+        self.method = run_class.functional
+        self.basis = run_class.basis
         self.author = getpass.getuser()
 
         if run_class.octahedral:
@@ -74,11 +78,18 @@ class TMC(Base):
         ## convergence information
         self.status = int(run_class.status)
         self.geo_flag = str(run_class.flag_oct) 
-        self.spin_squ_target = float(run_class.ss_target)
-        self.spin_squ_act = float(run_class.ss_act)
+        try:
+            self.spin_squ_target = float(run_class.ss_target)
+            self.spin_squ_act = float(run_class.ss_act)
+        except:
+            self.spin_squ_target = None
+            self.spin_squ_act = None
         
         ## get energy 
-        self.energy = float(run_class.energy)
+        try:
+            self.energy = float(run_class.energy)
+        except:
+            self.energy = None
         
 
         ## get json of class for reconstruction
@@ -147,6 +158,10 @@ def create_compress_run(run_class):
         cpy.init_mol.graph = []
         cpy.init_mol.my_mol_trunc = False
         cpy.init_mol.init_mol_trunc = False
+    if cpy.progmol:
+        cpy.progmol.graph = []
+        cpy.progmol.my_mol_trunc = False
+        cpy.progmol.init_mol_trunc = False
     return(cpy)
 def uncompress_run(compress_run):
     ## this method takes a run class
@@ -164,6 +179,11 @@ def uncompress_run(compress_run):
     if cpy.init_mol:
         try:
             cpy.init_mol.createMolecularGraph(oct=cpy.octahedral)
+        except:
+            pass
+    if cpy.progmol:
+        try:
+            cpy.progmol.createMolecularGraph(oct=cpy.octahedral)
         except:
             pass
     cpy.get_descriptor_vector()
