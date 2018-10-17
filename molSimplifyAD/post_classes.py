@@ -64,29 +64,17 @@ class DFTRun(object):
         list_of_init_false = ['solvent_cont', 'water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
-<<<<<<< HEAD
                               'islive', 'set_desc', 'sp_status']
         list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord']
-
-=======
-                              'islive', 'set_desc','sp_status']
-        list_of_init_zero = ['ss_target', 'ss_act', 'coord', 'mop_coord']
-        
->>>>>>> 2509c4f9568733df883c276fb3a3ed5e457e6761
         if isKeyword('oxocatalysis'):
-<<<<<<< HEAD
             list_of_init_props += ['metal_alpha', 'metal_beta', 'net_metal_spin', 'metal_mulliken_charge',
                                    'oxygen_alpha', 'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
-
-=======
-            list_of_init_props += ['metal_alpha','metal_beta','net_metal_spin','metal_mulliken_charge','oxygen_alpha','oxygen_beta','net_oxygen_spin','oxygen_mulliken_charge']
         if isKeyword('TS'):
             list_of_init_props += ['terachem_version_HAT_TS','terachem_detailed_version_HAT_TS','basis_HAT_TS','tspin_HAT_TS','charge_HAT_TS','alpha_level_shift_HAT_TS',
                                    'beta_level_shift_HAT_TS','energy_HAT_TS','time_HAT_TS','terachem_version_Oxo_TS','terachem_detailed_version_Oxo_TS','basis_Oxo_TS',
                                     'tspin_Oxo_TS','charge_Oxo_TS','alpha_level_shift_Oxo_TS','beta_level_shift_Oxo_TS','energy_Oxo_TS','time_Oxo_TS']
             list_of_init_zero += ['ss_act_HAT_TS','ss_target_HAT_TS','eigenvalue_HAT_TS','ss_act_Oxo_TS','ss_target_Oxo_TS','eigenvalue_Oxo_TS']
             list_of_init_false += ['init_energy_HAT_TS','init_energy_Oxo_TS','converged_HAT_TS','converged_Oxo_TS','attempted_HAT_TS','attempted_Oxo_TS']
->>>>>>> 06314e73695fce074638979bec8eb5314f03198b
         for this_attribute in list_of_init_props:
             setattr(self, this_attribute, 'undef')
         for this_attribute in list_of_init_empty:
