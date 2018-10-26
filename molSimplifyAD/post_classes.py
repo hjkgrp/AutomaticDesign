@@ -70,6 +70,7 @@ class DFTRun(object):
         if isKeyword('oxocatalysis'):
             list_of_init_props += ['metal_alpha','metal_beta','net_metal_spin','metal_mulliken_charge','oxygen_alpha','oxygen_beta','net_oxygen_spin','oxygen_mulliken_charge']
         if isKeyword('TS'):
+            print('---------------------------- ENTERED TS SECTION IN POST CLASSES ------------------------------')
             list_of_init_props += ['terachem_version_HAT_TS','terachem_detailed_version_HAT_TS','basis_HAT_TS','tspin_HAT_TS','charge_HAT_TS','alpha_level_shift_HAT_TS',
                                    'beta_level_shift_HAT_TS','energy_HAT_TS','time_HAT_TS','terachem_version_Oxo_TS','terachem_detailed_version_Oxo_TS','basis_Oxo_TS',
                                     'tspin_Oxo_TS','charge_Oxo_TS','alpha_level_shift_Oxo_TS','beta_level_shift_Oxo_TS','energy_Oxo_TS','time_Oxo_TS']
@@ -625,7 +626,7 @@ class DFTRun(object):
         mymol.addAtom(newH)
         hydrogen = mymol.getAtom(-1)
         hydrogen, dxyz = setPdistance(hydrogen, hydrogen.coords(), oxo.coords(),1)
-        
+        converged_jobs = find_converged_job_dictionary()
         if new_name_upper:
             if int(refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
                 print('ref',refHFX)
@@ -642,6 +643,8 @@ class DFTRun(object):
                 guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + wfnrefhyd + '/c0\n'
             elif int(refHFX) != 20:
                 guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + wfnrefhyd + '/ca0' + ' ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + wfnrefhyd + '/cb0\n'
+            else:
+                guess_string = 'guess generate\n'
             if not os.path.exists(path_dictionary['infiles']+new_name_upper+'.in'):
                 with open(self.inpath,'r') as sourcef:
                     sourcelines = sourcef.readlines()
@@ -659,8 +662,25 @@ class DFTRun(object):
                                     newf.write(line)
                         newf.write('scrdir scr/geo/gen_0/'+new_name_upper.strip('.in')+'/\n')     
                 newf.close()
-                sourcef.close()           
+                sourcef.close()
                 returnval1 = path_dictionary['job_path'] + new_name_upper + '.in'
+                if int(refHFX) != 20:
+                    with open(path_dictionary['infiles'] + new_name_upper + '.in', 'w') as f:
+                        with open(path_dictionary["job_path"]+new_name_upper+'.in', 'r') as ref:
+                            for line in ref:
+                                if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
+                                    if (int(new_name_upper[-1]) == 1) and "method" in line: #restrict singlets
+                                        f.write("method b3lyp\n")
+                                    else:
+                                        f.write(line)
+                            if os.path.exists(path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz') and int(converged_jobs[path_dictionary['job_path']+wfnrefhyd+'.in']) == 0:
+                                f.write('coordinates ' + path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz' + ' \n')
+                            else:
+                                f.write('coordinates ' + path_dictionary['initial_geo_path']+new_name_upper+'.xyz'+' \n')
+                            f.write(guess_string)
+                            f.write('end\n')
+                            f.close()
+                            ref.close()
         if new_name_lower:
             if int(refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
                 hydlist = new_name_lower.split('_')
@@ -675,6 +695,8 @@ class DFTRun(object):
                 guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + wfnrefhyd + '/c0\n'
             elif int(refHFX) != 20:
                 guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + wfnrefhyd + '/ca0' + ' ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + wfnrefhyd + '/cb0\n'
+            else:
+                guess_string = 'guess generate\n'
             if not os.path.exists(path_dictionary['infiles']+new_name_lower+'.in'):
                 with open(self.inpath,'r') as sourcef:
                     sourcelines = sourcef.readlines()
@@ -694,6 +716,23 @@ class DFTRun(object):
                 newf.close()
                 sourcef.close()           
                 returnval2 = path_dictionary['job_path'] + new_name_lower + '.in'
+                if int(refHFX) != 20:
+                    with open(path_dictionary['infiles'] + new_name_lower + '.in', 'w') as f:
+                        with open(path_dictionary["job_path"]+new_name_lower + '.in', 'r') as ref:
+                            for line in ref:
+                                if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
+                                    if (int(new_name_lower[-1]) == 1) and "method" in line: #restrict singlets
+                                        f.write("method b3lyp\n")
+                                    else:
+                                        f.write(line)
+                            if os.path.exists(path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz') and int(converged_jobs[path_dictionary['job_path']+wfnrefhyd+'.in']) == 0:
+                                f.write('coordinates ' + path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz' + ' \n')
+                            else:
+                                f.write('coordinates ' + path_dictionary['initial_geo_path']+new_name_lower+'.xyz'+' \n')
+                            f.write(guess_string)
+                            f.write('end\n')
+                            f.close()
+                            ref.close()
         return returnval1, returnval2 
     
     def write_HAT_and_Oxo_TS(self, empty):
@@ -747,7 +786,7 @@ class DFTRun(object):
                             newf.writelines("levelshiftvala 0.25\n")
                         if "levelshiftvalb" in line:
                             newf.writelines("levelshiftvalb 0.25\n")
-                    newf.writelines("scrdir " +path_dictionary["PRFO_scr_path_HAT"]+self.name + "\n")
+                    newf.writelines("scrdir scr/prfo/hat/gen_0/" +self.name + "/\n")
                     newf.writelines("coordinates "+ path_dictionary["PRFO_initial_geo_HAT"] + self.name + '.xyz\n')
                     newf.writelines('end')
                 os.remove(localrundir + 'temp/' + self.name + '.in')
@@ -790,7 +829,7 @@ class DFTRun(object):
                             newf.writelines("levelshiftvala 0.25\n")
                         if "levelshiftvalb" in line:
                             newf.writelines("levelshiftvalb 0.25\n")
-                    newf.writelines("scrdir " +path_dictionary["PRFO_scr_path_Oxo"]+self.name + "/\n")
+                    newf.writelines("scrdir scr/prfo/oxo/gen_0/"+self.name + "/\n")
                     newf.writelines("coordinates "+ path_dictionary["PRFO_initial_geo_Oxo"] + self.name + '.xyz\n')
                     newf.writelines('end')
                 os.remove(localrundir + 'temp/' + self.name + '.in')
@@ -1084,6 +1123,12 @@ class Comp(object):
                     setattr(self, this_attribute, False)
         if isKeyword('oxocatalysis'):
             list_of_init_props += ['metal_alpha','metal_beta','net_metal_spin','metal_mulliken_charge','oxygen_alpha','oxygen_beta','net_oxygen_spin','oxygen_mulliken_charge']
+            if isKeyword('TS'):
+                list_of_init_props += ['terachem_version_HAT_TS','terachem_detailed_version_HAT_TS','basis_HAT_TS','tspin_HAT_TS','charge_HAT_TS','alpha_level_shift_HAT_TS',
+                                    'beta_level_shift_HAT_TS','energy_HAT_TS','time_HAT_TS','terachem_version_Oxo_TS','terachem_detailed_version_Oxo_TS','basis_Oxo_TS',
+                                    'tspin_Oxo_TS','charge_Oxo_TS','alpha_level_shift_Oxo_TS','beta_level_shift_Oxo_TS','energy_Oxo_TS','time_Oxo_TS','ss_act_HAT_TS',
+                                    'ss_target_HAT_TS','eigenvalue_HAT_TS','ss_act_Oxo_TS','ss_target_Oxo_TS','eigenvalue_Oxo_TS']
+                list_of_init_falses += ['init_energy_HAT_TS','init_energy_Oxo_TS','converged_HAT_TS','converged_Oxo_TS','attempted_HAT_TS','attempted_Oxo_TS']
             for props in list_of_init_props:
                 for spin_cat in ['LS', 'IS', 'HS']:
                     for catax in ['x', 'oxo', 'hydroxyl']:
