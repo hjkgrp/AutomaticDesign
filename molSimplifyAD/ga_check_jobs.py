@@ -23,7 +23,7 @@ def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary):
 
     ## be post processed:
     if (job not in live_job_dictionary.keys()) and (len(job.strip('\n')) != 0):
-        if not ("sp_infiles" in job) and not ("thermo" in job) and not ("solvent" in job) and not ("water" in job) and not ("PRFO" in job):
+        if not ("sp_infiles" in job) and not ("thermo" in job) and not ("solvent" in job) and not ("water" in job) and not ("prfo" in job):
             if isKeyword('post_all'):
                 postProc = True
             elif job in converged_jobs_dictionary.keys():
@@ -157,17 +157,19 @@ def check_all_current_convergence():
                         this_run.water_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'               
                         this_run.water_outpath = (path_dictionary["water_out_path"] + base_name + ".out")
                 if isKeyword('TS'):
+                        print('NOW ASSIGNING ALL OF THE PRFO PATHS!')
                         this_run.PRFO_HAT_inpath = path_dictionary["PRFO_in_path_HAT"] + base_name + '.in'
+                        this_run.PRFO_prog_geo_HAT = path_dictionary["PRFO_prog_geo_HAT"] + base_name + '.xyz'
                         this_run.PRFO_HAT_initialgeo = path_dictionary["PRFO_initial_geo_HAT"] + base_name + '.xyz'
                         this_run.PRFO_HAT_scrpath = path_dictionary["PRFO_scr_path_HAT"]+ base_name + "/optim.xyz"
                         this_run.PRFO_HAT_geopath = path_dictionary["PRFO_optimized_geo_HAT"] + base_name + '.xyz'
                         this_run.PRFO_HAT_outpath = path_dictionary["PRFO_out_path_HAT"]+ base_name+'.out'
                         this_run.PRFO_Oxo_inpath = path_dictionary["PRFO_in_path_Oxo"] + base_name + '.in'
+                        this_run.PRFO_prog_geo_Oxo = path_dictionary["PRFO_prog_geo_Oxo"] + base_name + '.xyz'
                         this_run.PRFO_Oxo_initialgeo = path_dictionary["PRFO_initial_geo_Oxo"] + base_name + '.xyz'
                         this_run.PRFO_Oxo_scrpath = path_dictionary["PRFO_scr_path_Oxo"]+ base_name + "/optim.xyz"
                         this_run.PRFO_Oxo_geopath = path_dictionary["PRFO_optimized_geo_Oxo"] + base_name + '.xyz'
                         this_run.PRFO_Oxo_outpath = path_dictionary["PRFO_out_path_Oxo"]+ base_name+'.out'
-
 
                 ## MOP semiempirical (not used)
                 this_run.moppath = path_dictionary["mopac_path"] + base_name + ".out"
@@ -262,20 +264,37 @@ def check_all_current_convergence():
                             elif run_success:
                                 this_run.status = 15
                                 run_success = False
-                        if isKeyword('TS'):
+                        if (isKeyword('TS') and isKeyword('oxocatalysis') and (axlig2 == 'oxo' or '[O--]' in axlig2[0] or '[O--]' in axlig2)):
                             print('TS on')
                             this_run = test_terachem_TS_convergence(this_run)
-                            if this_run.converged_HAT_TS and this_run.converged_Oxo_TS and run_success:
-                                remove_outstanding_jobs(this_run.PRFO_HAT_inpath)
-                                remove_outstanding_jobs(this_run.PRFO_Oxo_inpath)
-                                this_run.status = 0
+                            print('Current TS status (HAT then Oxo for attempted): ', this_run.attempted_HAT_TS, this_run.attempted_Oxo_TS)
+                            if this_run.attempted_HAT_TS and this_run.attempted_Oxo_TS and run_success:
+                                if (this_run.PRFO_HAT_inpath not in live_job_dictionary.keys()) and (this_run.PRFO_Oxo_inpath not in live_job_dictionary.keys()):
+                                    print('Attempted both HAT and Oxo TSs, so going to remove')
+                                    remove_outstanding_jobs(this_run.PRFO_HAT_inpath)
+                                    remove_outstanding_jobs(this_run.PRFO_Oxo_inpath)
+                                    this_run.status = 0
+                                elif (this_run.PRFO_HAT_inpath not in live_job_dictionary.keys()) and (this_run.PRFO_Oxo_inpath in live_job_dictionary.keys()):
+                                    print('HAT TS converged, but not Oxo TS... still running')
+                                    remove_outstanding_jobs(this_run.PRFO_HAT_inpath)
+                                    this_run.status = 18
+                                elif (this_run.PRFO_Oxo_inpath not in live_job_dictionary.keys()) and (this_run.PRFO_HAT_inpath in live_job_dictionary.keys()): 
+                                    print('Oxo TS converged, but not HAT TS... still running')
+                                    remove_outstanding_jobs(this_run.PRFO_Oxo_inpath)
+                                    this_run.status = 17
+                                else:    
+                                    print('TSs still running, not going to remove from outstanding jobs yet.')
                             elif this_run.converged_HAT_TS and run_success:
+                                print('HAT TS converged, but not Oxo TS')
                                 this_run.status = 18
+                                remove_outstanding_jobs(this_run.PRFO_HAT_inpath)
                             elif this_run.converged_Oxo_TS and run_success:
+                                print('Oxo TS converged, but not HAT TS')
                                 this_run.status = 17
+                                remove_outstanding_jobs(this_run.PRFO_Oxo_inpath)
                             else:
+                                print('Both HAT and Oxo TSs still need to be run')
                                 this_run.status = 16
-                            
                         if run_success and not this_run.status in [12,13,14,15,16,17,18]:
                             this_run.status = 0  # all done
                         ## mark as compelete
@@ -285,11 +304,14 @@ def check_all_current_convergence():
                     if run_success:
                         if not os.path.exists(this_run.comppath):
                             print('this run does not have finished files')
-                            shutil.copy(this_run.inpath, this_run.comppath)
-                            logger(path_dictionary['state_path'],
+                            try:
+                                shutil.copy(this_run.inpath, this_run.comppath)
+                                logger(path_dictionary['state_path'],
                                    str(datetime.datetime.now()) + " moving  " + str(this_run.name) + " to " + str(
                                        this_run.comppath))
-                            # if we are doing HFX resampling, need the list of target
+                            except:
+                                print('Could not copy inpath over to comppath.')
+                    # if we are doing HFX resampling, need the list of target
                     # HFX values
                     HFXorderingdict = HFXordering()
                     ## test if we should launch other HFX fractions
@@ -332,14 +354,16 @@ def check_all_current_convergence():
                                         logger(base_path_dictionary['state_path'], str(
                                             datetime.datetime.now()) + ' converting from oxo structure to lower spin hydroxyl structure for '+base_name)
                                         add_to_outstanding_jobs(hydroxyl_lower)
-                            if isKeyword('TS') and isKeyword('oxocatalysis') and int(ahf)==20:
-                                print('preparing PRFO calculations for HAT and Oxo')
+                            if (isKeyword('TS') and isKeyword('oxocatalysis') and int(ahf)==20 and (axlig2 == 'oxo' or '[O--]' in axlig2[0] or '[O--]' in axlig2)):
+                                print('preparing PRFO calculations for HAT and Oxo since axlig2 is '+str(axlig2)+' and ahf = 20')
                                 empty_sp = this_run.write_empty_inputs(refHFX)
                                 HAT_TS, Oxo_TS = this_run.write_HAT_and_Oxo_TS(empty_sp)
                                 logger(base_path_dictionary['state_path'],
                                        str(datetime.datetime.now()) + ' adding HAT and Oxo PRFO TS to '+base_name)
-                                add_to_outstanding_jobs(HAT_TS)
-                                add_to_outstanding_jobs(Oxo_TS)                        
+                                if not this_run.attempted_HAT_TS:
+                                    add_to_outstanding_jobs(HAT_TS)
+                                if not this_run.attempted_Oxo_TS:    
+                                    add_to_outstanding_jobs(Oxo_TS)                        
                     elif isKeyword('oxocatalysis') and int(ox) > 3 and (axlig2 == 'oxo' or '[O--]' in axlig2[0] or '[O--]' in axlig2):  # Must do this because the empty sites are one step behind the 6-coordinates at different HFX
                         empty_sp = this_run.write_empty_inputs('00')
                         if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (empty_sp not in converged_jobs.keys()):
@@ -383,7 +407,7 @@ def check_all_current_convergence():
                             this_run.archive(sub_number)
                             if this_run.alpha == 20:  
                                 create_generic_infile(jobs, use_old_optimizer=use_old_optimizer, restart=True)
-                            this_run.status = 2  ## prog geo is good
+                                this_run.status = 2  ## prog geo is good
                             logger(base_path_dictionary['state_path'],
                                    str(datetime.datetime.now()) + ' job allowed to restart since good prog geo found ')
                         else:
@@ -572,19 +596,19 @@ def check_all_current_convergence():
         # for comparisons
         logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                + " starting output logs ")
-        comp_output_path, comp_descriptor_path = write_output('comps', final_results.values(),output_properties(comp=True,oxocatalysis = isKeyword('oxocatalysis'), SASA = isKeyword('SASA')))
+        comp_output_path, comp_descriptor_path = write_output('comps', final_results.values(),output_properties(comp=True,oxocatalysis = isKeyword('oxocatalysis'), SASA = isKeyword('SASA'), TS = isKeyword('TS')))
         # for runs
-        run_output_path, run_descriptor_path = write_output('runs', all_runs.values(), output_properties(comp=False,oxocatalysis = isKeyword('oxocatalysis'), SASA = isKeyword('SASA')))
+        run_output_path, run_descriptor_path = write_output('runs', all_runs.values(), output_properties(comp=False,oxocatalysis = isKeyword('oxocatalysis'), SASA = isKeyword('SASA'), TS = isKeyword('TS')))
 
         # print('-------')
         # print(final_results)
         if isKeyword('post_all'):
-            write_run_reports(all_runs)
+        #    write_run_reports(all_runs)
             write_run_pickle(final_results)
             try:
-                           process_run_post(run_output_path, run_descriptor_path)
+                process_run_post(run_output_path, run_descriptor_path)
             except:
-                    print("Pandas/file load error!")
+                print("Pandas/file load error!")
         print('\n**** end of file inspection **** \n')
     else:
         print('post processing SP/spin files')
