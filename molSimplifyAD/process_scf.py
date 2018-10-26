@@ -498,7 +498,7 @@ def read_terachem_PRFO_output(this_run):
                 if str(lines).find('FINAL ENERGY') != -1:
                     this_run.energy_HAT_TS =str(lines.split()[2])
                     found_data_HAT = True
-                    if not found_init:
+                    if not found_init_HAT:
                         this_run.init_energy_HAT_TS = str(lines.split()[2])
                         found_init_HAT = True
                 if str(lines).find('Total processing time') != -1:
@@ -509,8 +509,13 @@ def read_terachem_PRFO_output(this_run):
                     this_run.ss_act_HAT_TS =float( this_str[2])
                     this_run.ss_target_HAT_TS = float(this_str[4].strip('()'))
                 if str(lines).find('Eigenvalues of the Hessian:') != -1:
-                    eigenvalue = float(data[i+1].split()[0])
+                    try:
+                        eigenvalue = float(data[i+1].split()[0])
+                    except:
+                        eigenvalue = 'failed'
                     this_run.eigenvalue_HAT_TS = eigenvalue
+                if str(lines).find('Terminated:') != -1:
+                    this_run.attempted_HAT_TS = False
     else:
         this_run.attempted_HAT_TS = False
     if (found_data_HAT) and (found_time_HAT) and (found_conv_HAT):
@@ -546,7 +551,7 @@ def read_terachem_PRFO_output(this_run):
                 if str(lines).find('FINAL ENERGY') != -1:
                     this_run.energy_Oxo_TS =str(lines.split()[2])
                     found_data_Oxo = True
-                    if not found_init:
+                    if not found_init_Oxo:
                         this_run.init_energy_Oxo_TS = str(lines.split()[2])
                         found_init_Oxo = True
                 if str(lines).find('Total processing time') != -1:
@@ -557,14 +562,20 @@ def read_terachem_PRFO_output(this_run):
                     this_run.ss_act_Oxo_TS =float( this_str[2])
                     this_run.ss_target_Oxo_TS = float(this_str[4].strip('()'))
                 if str(lines).find('Eigenvalues of the Hessian:') != -1:
-                    eigenvalue = float(data[i+1].split()[0])
+                    try:
+                        eigenvalue = float(data[i+1].split()[0])
+                    except: 
+                        eigenvalue = 'failed'
                     this_run.eigenvalue_Oxo_TS = eigenvalue
+                if str(lines).find('Terminated:') != -1:
+                    this_run.attempted_Oxo_TS = False
     else:
         this_run.attempted_Oxo_TS = False
     if (found_data_Oxo) and (found_time_Oxo) and (found_conv_Oxo):
         this_run.converged_Oxo_TS = True
         print('Oxo TS converged.') 
-	return(this_run)
+	print('THIS IS THE PRFO OXO PATH', this_run.PRFO_Oxo_outpath)
+    return(this_run)
 
 def check_sp_file(this_run):
     ## function to test a big basis single point convergence
@@ -653,9 +664,6 @@ def check_mopac(this_run):
             this_run.obtain_mopac_mol()
             this_run.check_coordination()
         return(this_run)
-            
-
-
 
 def test_terachem_go_convergence(this_run):
     ## function to test geometry optimization convergence
@@ -778,11 +786,13 @@ def test_terachem_TS_convergence(this_run):
         else:
             print('Cannot find Oxo optim file at '+this_run.PRFO_Oxo_scrpath)
     if os.path.exists(this_run.PRFO_HAT_outpath):
-        read_terachem_PRFO_output(this_run)
+        print('HAT TS outpath exists..... reading it now.')
+        this_run = read_terachem_PRFO_output(this_run)
     else:
         this_run.comment += ' no HAT TS outfile found\n'
     if os.path.exists(this_run.PRFO_Oxo_outpath):
-        read_terachem_PRFO_output(this_run)
+        print('Oxo TS outpath exists..... reading it now.')
+        this_run = read_terachem_PRFO_output(this_run)
     else:
         this_run.comment += ' no Oxo TS outfile found\n'
     return this_run
