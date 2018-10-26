@@ -26,7 +26,6 @@ from molSimplifyAD.utils.report_tool.prepare_report import *
 from molSimplify.Classes.globalvars import dict_oct_check_loose, dict_oct_check_st, dict_oneempty_check_st, \
     dict_oneempty_check_loose, oct_angle_ref, oneempty_angle_ref
 
-
 ########### UNIT CONVERSION
 
 HF_to_Kcal_mol = 627.509  ###
@@ -53,22 +52,23 @@ class DFTRun(object):
                               'init_eq_MLB', 'init_ax1_MLB', 'init_ax2_MLB', 'outpath', 'geopath', 'init_geopath',
                               'terachem_version', 'terachem_detailed_version', 'basis', 'alpha_level_shift',
                               'beta_level_shift', 'functional', 'rmsd', 'maxd', 'thermo_time', 'solvent_time',
-                              'water_time', 'angletest', 'ligrsmd', 'flag_oct', 'flag_list', 'num_coord_metal', 'rmsd_max',
+                              'water_time', 'angletest', 'ligrsmd', 'flag_oct', 'flag_list', 'num_coord_metal',
+                              'rmsd_max',
                               'atom_dist_max', 'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
                               'devi_linear_avrg', 'devi_linear_max', 'flag_oct_loose', 'flag_list_loose',
-                              'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max','area',
+                              'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max', 'area',
                               'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
-                              'mop_energy', 'chem_name','sp_energy']
-        list_of_init_empty = ['descriptor_names','descriptors']            
-        list_of_init_false = ['solvent_cont','water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
+                              'mop_energy', 'chem_name', 'sp_energy', 'tot_time', 'tot_step', 'metal_translation']
+        list_of_init_empty = ['descriptor_names', 'descriptors']
+        list_of_init_false = ['solvent_cont', 'water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
-                              'islive', 'set_desc','sp_status']
-        list_of_init_zero = ['ss_target', 'ss_act', 'coord', 'mop_coord']
-        
+                              'islive', 'set_desc', 'sp_status']
+        list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord']
         if isKeyword('oxocatalysis'):
-            list_of_init_props += ['metal_alpha','metal_beta','net_metal_spin','metal_mulliken_charge','oxygen_alpha','oxygen_beta','net_oxygen_spin','oxygen_mulliken_charge']
+            list_of_init_props += ['metal_alpha', 'metal_beta', 'net_metal_spin', 'metal_mulliken_charge',
+                                   'oxygen_alpha', 'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
         if isKeyword('TS'):
             print('---------------------------- ENTERED TS SECTION IN POST CLASSES ------------------------------')
             list_of_init_props += ['terachem_version_HAT_TS','terachem_detailed_version_HAT_TS','basis_HAT_TS','tspin_HAT_TS','charge_HAT_TS','alpha_level_shift_HAT_TS',
@@ -86,10 +86,10 @@ class DFTRun(object):
             setattr(self, this_attribute, 0)
 
     def set_geo_check_func(self):
-        #try:
+        # try:
         #    GA_run = get_current_GA()
         self.octahedral = isKeyword('octahedral')
-        #except:
+        # except:
         #    self.octahedral = True
 
     def obtain_mopac_mol(self):
@@ -215,13 +215,13 @@ class DFTRun(object):
     
     def obtain_rsmd(self):
         self.rmsd = self.mol.rmsd(self.init_mol)
+
     def obtain_area(self):
-        #try:
+        # try:
         if True:
             from molSimplifyAD.utils.getSASA import get_area
-            get_area(self,self.name)
-            
-            
+            get_area(self, self.name)
+
     def obtain_ML_dists(self):
         try:
             self.mind = float(minimum_ML_dist(self.mol))
@@ -318,10 +318,10 @@ class DFTRun(object):
             self.init_coord = 0
 
     def get_track_elec_prop(self):
-        #try:
+        # try:
         #    GA_run = get_current_GA()
         self.track_elec_prop = isKeyword('track_elec_prop')
-        #except:
+        # except:
         #    self.track_elec_prop = False
 
     def write_new_inputs(self):
@@ -330,8 +330,9 @@ class DFTRun(object):
         oldHFX = '20'
         newHFX = '15'
         new_name = renameHFX(self.job, newHFX)
-        guess_string = 'guess ' + isKeyword('rundir')+ 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
-                       '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0'
+        guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
+                       '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
+            self.gen) + '/' + self.name + '/cb0'
         self.thermo_inpath = path_dictionary['thermo_infiles'] + self.name + '.in'
         self.solvent_inpath = path_dictionary['solvent_infiles'] + self.name + '.in'
         self.init_sp_inpath = path_dictionary['sp_in_path'] + self.name + '.in'
@@ -358,7 +359,8 @@ class DFTRun(object):
             f_insp.write('scrdir scr/init_sp/  \n')
             f_insp.write('coordinates ' + self.geopath + ' \n')
             f_insp.write(
-                'guess ' + isKeyword('rundir') + 'scr/geo/' + self.name + '/ca0' + ' ' + isKeyword('rundir') + 'scr/geo/' + self.name + '/cb0')
+                'guess ' + isKeyword('rundir') + 'scr/geo/' + self.name + '/ca0' + ' ' + isKeyword(
+                    'rundir') + 'scr/geo/' + self.name + '/cb0')
             with open(self.inpath, 'r') as ref:
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
@@ -389,15 +391,17 @@ class DFTRun(object):
                         f_solvent.write(line)
             f_solvent.write('end')
             f_solvent.close()
-    def write_solvent_input(self,dielectric=10.3):
+
+    def write_solvent_input(self, dielectric=10.3):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         if not (self.spin == 1):
             guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
-                       '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0 \n'
+                           '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
+                self.gen) + '/' + self.name + '/cb0 \n'
         else:
-            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
-        #self.solvent_inpath = path_dictionary['solvent_inpath'] + self.name + '.in'
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n'
+            # self.solvent_inpath = path_dictionary['solvent_inpath'] + self.name + '.in'
         ### check solvent
         if not os.path.exists(self.solvent_inpath):
             f_solvent = open(self.solvent_inpath, 'w')
@@ -405,7 +409,7 @@ class DFTRun(object):
             f_solvent.write('run energy \n')
             f_solvent.write('pcm cosmo \n')
             f_solvent.write('pcm_grid iswig \n')
-            f_solvent.write('epsilon '+str(dielectric)+' \n')
+            f_solvent.write('epsilon ' + str(dielectric) + ' \n')
             f_solvent.write('pcm_radii read \n')
             f_solvent.write('print_ms yes \n')
             f_solvent.write('pcm_radii_file /home/jp/pcm_radii \n')
@@ -420,28 +424,30 @@ class DFTRun(object):
                         f_solvent.write(line)
             f_solvent.write('end')
             f_solvent.close()
+
     def write_water_input(self):
         ## this unfortunate function exists to support logP - parition coefficient calculations
         ## by providing a duplication of write_solvent_input() with a fixed water
         ## dielectric. This pairs with the water_cont and water_time attributes
         ## and lets us record both organic and polar solvent configurations
-        dielectric=78.39
+        dielectric = 78.39
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         if not (self.spin == 1):
             guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
-                       '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0 \n'
+                           '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
+                self.gen) + '/' + self.name + '/cb0 \n'
         else:
-            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
-        
-        ### check solvent
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n'
+
+            ### check solvent
         if not os.path.exists(self.water_inpath):
             f_solvent = open(self.water_inpath, 'w')
             ## write solvent
             f_solvent.write('run energy \n')
             f_solvent.write('pcm cosmo \n')
             f_solvent.write('pcm_grid iswig \n')
-            f_solvent.write('epsilon '+str(dielectric)+' \n')
+            f_solvent.write('epsilon ' + str(dielectric) + ' \n')
             f_solvent.write('pcm_radii read \n')
             f_solvent.write('print_ms yes \n')
             f_solvent.write('pcm_radii_file /home/jp/pcm_radii \n')
@@ -455,15 +461,17 @@ class DFTRun(object):
                         ## these lines should be common
                         f_solvent.write(line)
             f_solvent.write('end')
-            f_solvent.close()            
+            f_solvent.close()
+
     def write_bigbasis_input(self):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         if not (self.spin == 1):
             guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
-                       '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/cb0\n'
+                           '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
+                self.gen) + '/' + self.name + '/cb0\n'
         else:
-            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n' 
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n'
         self.init_sp_inpath = path_dictionary['sp_in_path'] + self.name + '.in'
         ### check sp inpath
         if not os.path.exists(self.init_sp_inpath):
@@ -484,11 +492,13 @@ class DFTRun(object):
             with open(self.inpath, 'r') as ref:
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
-                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not ("basis" in line) :
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not (
+                            "basis" in line):
                         ## these lines should be common
                         f_insp.write(line)
             f_insp.write('end')
             f_insp.close()
+
     def write_HFX_inputs(self, newHFX, refHFX):
         ## set file paths for HFX resampling
         ## the fixed ordering is 
@@ -498,10 +508,12 @@ class DFTRun(object):
         new_name = renameHFX(self.job, newHFX).strip('.in')
         reference_name = renameHFX(self.job, refHFX).strip('.in')
         if int(new_name[-1]) == 1:
-            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/c0\n'
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
+                self.gen) + '/' + reference_name + '/c0\n'
         else:
-            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/ca0' + \
-                       ' ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/cb0\n'
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
+                self.gen) + '/' + reference_name + '/ca0' + \
+                           ' ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + reference_name + '/cb0\n'
         geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
         self.HFX_inpath = path_dictionary['infiles'] + new_name + '.in'
         self.HFX_job = path_dictionary['job_path'] + new_name + '.in'
@@ -526,7 +538,7 @@ class DFTRun(object):
                 with open(self.HFX_job, 'r') as ref:
                     for line in ref:
                         if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
-                            if (int(new_name[-1]) == 1) and "method" in line: #restrict singlets
+                            if (int(new_name[-1]) == 1) and "method" in line:  # restrict singlets
                                 f.write("method b3lyp\n")
                             else:
                                 f.write(line)
@@ -569,18 +581,23 @@ class DFTRun(object):
             with open(self.inpath, 'r') as ref:
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
-                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not ("method" in line):
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not (
+                            "method" in line):
                         ## these lines should be common
                         f_emptysp.write(line)
-            if int(refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
+            if int(
+                    refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
                 splist = new_name.split('_')
                 emptyrefval = emptyrefdict[splist[-2]]
                 splist[-2] = emptyrefval
                 wfnrefempty = "_".join(splist)
-                if int(this_spin)==1:
-                    guess_string_sp = 'guess ' + isKeyword('rundir') + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/c0\n'
+                if int(this_spin) == 1:
+                    guess_string_sp = 'guess ' + isKeyword('rundir') + 'scr/sp/gen_' + str(
+                        self.gen) + '/' + wfnrefempty + '/c0\n'
                 else:
-                    guess_string_sp = 'guess ' + isKeyword('rundir') + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/ca0' + ' ' + isKeyword('rundir') + 'scr/sp/gen_' + str(self.gen) + '/' + wfnrefempty + '/cb0\n'
+                    guess_string_sp = 'guess ' + isKeyword('rundir') + 'scr/sp/gen_' + str(
+                        self.gen) + '/' + wfnrefempty + '/ca0' + ' ' + isKeyword('rundir') + 'scr/sp/gen_' + str(
+                        self.gen) + '/' + wfnrefempty + '/cb0\n'
                 f_emptysp.write(guess_string_sp)
             if int(this_spin) == 1:
                 f_emptysp.write('method b3lyp\n')
@@ -912,7 +929,7 @@ class DFTRun(object):
                 print('archiving  ' + scrfolder)
                 shutil.copytree(scrfolder, archive_path + 'scr/')
                 ## remove the scr after archiving.
-                #shutil.rmtree(scrfolder)
+                # shutil.rmtree(scrfolder)
             else:
                 print('archiving did NOT find  ' + scrfolder)
             if os.path.isfile(self.outpath):
@@ -968,7 +985,6 @@ class DFTRun(object):
         print('!!!!archive_list', archive_list)
         self.archive_list = archive_list
 
-
     def merge_geo_outfiles(self):
         self.combine_outfiles()
         path_dictionary = setup_paths()
@@ -976,18 +992,50 @@ class DFTRun(object):
         results_comb_path = path_dictionary["results_comb_path"] + self.name + '/'
         ensure_dir(results_comb_path)
         ## for outfiles
-        current_path = results_comb_path + self.name +'.out'
+        current_path = results_comb_path + self.name + '.out'
         fo = open(current_path, 'w')
         for inpath in self.archive_list:
-            infile = inpath +'.out'
+            infile = inpath + '.out'
             if os.path.isfile(infile):
                 with open(infile, 'r') as fin:
                     txt = fin.readlines()
                     fo.writelines(txt)
             else:
-                print('---%s does not exist---' %infile)
+                print('---%s does not exist---' % infile)
         fo.close()
+        self.get_optimization_time_step(current_path)
 
+    def get_optimization_time_step(self, current_path):
+        tot_step = -1
+        tot_time = -1
+        if os.path.isfile(current_path):
+            with open(current_path, 'r') as fin:
+                for line in fin:
+                    ll = line.split()
+                    if line[:len('FINAL ENERGY:')] == 'FINAL ENERGY:':
+                        tot_step += 1
+                    if ll == ['***', 'Start', 'SCF', 'Iterations', '***']:
+                        _time_tot = 0
+                    elif line[:43] == '-=#=-    Now Returning to Optimizer   -=#=-' or line[
+                                                                                       :20] == 'SCF did not converge' \
+                            or line[:29] == 'Testing convergence  in cycle':
+                        tot_time += _time_tot
+                    else:
+                        if len(ll) == 11:
+                            flag = True
+                            for ele in ll:
+                                try:
+                                    _ = float(ele)
+                                except:
+                                    flag = False
+                            if flag:
+                                _time_tot += float(ll[-1])
+                        if 'sec' in ll and '_time_tot' in dir() and not 'Total processing time:' in line:
+                            _time_tot += float(ll[ll.index('sec') - 1])
+        else:
+            print('!!combined output file not found!!')
+        self.tot_time = tot_time
+        self.tot_step = tot_step
 
     def get_descriptor_vector(self, loud=False, name=False):
         ox_modifier = {self.metal: self.ox}
@@ -1046,6 +1094,14 @@ class DFTRun(object):
                        customDict=customDict,
                        octahedral=self.octahedral)
 
+    def obtain_metal_translation(self):
+        self.obtain_init_mol3d()
+        self.obtain_mol3d()
+        init_posi = self.init_mol.getAtomCoords(self.init_mol.findMetal()[0])
+        final_posi = self.mol.getAtomCoords(self.mol.findMetal()[0])
+        print('!!!', init_posi, final_posi)
+        self.metal_translation = numpy.linalg.norm(numpy.array(final_posi) - numpy.array(init_posi))
+
 
 class Comp(object):
     """ This is a class for each unique composition and configuration"""
@@ -1083,7 +1139,7 @@ class Comp(object):
 
         ## run class dependent props:
         list_of_init_props = ['chem_name', 'spin', 'charge', 'attempted', 'converged',
-                              'mop_converged', 'time', 'energy','sp_energy',
+                              'mop_converged', 'time', 'energy', 'sp_energy',
                               'flag_oct', 'flag_list',
                               'num_coord_metal', 'rmsd_max', 'atom_dist_max',
                               'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
@@ -1094,11 +1150,11 @@ class Comp(object):
                               'prog_dist_del_all',
                               'prog_devi_linear_avrg', 'prog_devi_linear_max',
                               'mop_energy', 'alphaHOMO', 'betaHOMO',
-                              'alphaLUMO', 'betaLUMO','area',
+                              'alphaLUMO', 'betaLUMO', 'area',
                               'coord', 'mop_coord',
                               'ligrsmd', 'rmsd', 'maxd',
                               'angletest', 'thermo_cont', 'imag',
-                              'solvent_cont','water_cont',
+                              'solvent_cont', 'water_cont',
                               'init_energy',
                               'status', 'comment',
                               'ax1_MLB', 'ax2_MLB', 'eq_MLB',
@@ -1107,7 +1163,7 @@ class Comp(object):
                               'terachem_version', 'terachem_detailed_version',
                               'basis', 'functional',
                               'alpha_level_shift', 'beta_level_shift', 'job_gene',
-                              "DFT_RUN"]
+                              "DFT_RUN", 'tot_time', 'tot_step', 'metal_translation']
         list_of_init_falses = ['attempted', 'converged',
                                'mop_converged',
                                "DFT_RUN"]
@@ -1143,7 +1199,7 @@ class Comp(object):
                         else:
                             for ox in ['3', '4']:
                                 this_attribute = "_".join(['ox', str(ox), spin_cat, str(catax), props])
-                                setattr(self, this_attribute, 'undef')        
+                                setattr(self, this_attribute, 'undef')
             for props in list_of_init_falses:
                 for spin_cat in ['LS', 'IS', 'HS']:
                     for catax in ['x', 'oxo', 'hydroxyl']:

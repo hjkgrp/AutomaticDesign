@@ -185,6 +185,7 @@ def check_all_current_convergence():
                     ### Merge scr files and output files
                     this_run.merge_scr_files()
                     this_run.merge_geo_outfiles()
+                    this_run.obtain_metal_translation()
 
                 ## check if outpath exists
                 if os.path.isfile(this_run.outpath):

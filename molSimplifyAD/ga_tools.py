@@ -201,7 +201,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
                           'water_cont',
                           'terachem_version', 'terachem_detailed_version',
                           'basis', 'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
-                          'mop_coord', 'sp_energy']
+                          'mop_coord', 'sp_energy', 'tot_time', 'tot_step', 'metal_translation']
     if SASA:
         list_of_prop_names.append("area")
     if TS:

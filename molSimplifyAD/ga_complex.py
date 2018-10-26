@@ -51,6 +51,11 @@ class octahedral_complex:
     def _get_random_metal(self):
         n = len(self.metals_list)
         metal_ind = numpy.random.randint(low = 0,high = n)
+        if isOxocatalysis():
+            while self.metals_list[metal_ind] in ['cr','co']:
+                metal_ind = numpy.random.randint(low = 0,high = n)
+                if self.metals_list[metal_ind] in ['fe','mn']:
+                    break
         self.core = metal_ind
     def _get_random_ox(self):
         possible_ox_states = get_ox_states()
