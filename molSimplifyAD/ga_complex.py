@@ -1,5 +1,5 @@
 import glob, math, numpy, subprocess, os, random, shutil
-import sys, shlex
+import sys, shlex,time 
 
 from ga_tools import *
 from molSimplify.Classes.mol3D import *
@@ -150,6 +150,12 @@ class octahedral_complex:
                     if (len(self.ax_ligands) ==2):
                         self.ax_dent = 1
                         self.ax_oc = [1,1]
+                         # checks for consistent ordering
+                        self.ax_inds.sort(reverse=True)
+                        self.ax_ligands = [self.ligands_list[ self.ax_inds[0]][0],self.ligands_list[ self.ax_inds[1]][0]]
+                        #print('after sorting, ax ligands are')
+                        #print(self.ax_ligands,self.ax_inds)
+                        #time.sleep(5)
                         self.ready_for_assembly = True
                     else:
                          self.ready_for_assembly = False
@@ -320,12 +326,18 @@ class octahedral_complex:
                             new_ax_list = [rand_ind,rand_ind]
                         else:
                             new_ax_list = [rand_ind,self.ax_inds[1]]
+                            if not isKeyword('oxocatalysis'):
+                                new_ax_list.sort(reverse=True)
                     elif (lig_to_mutate == 2):
                         print("mutating axial 2 ")
                         if isKeyword('symclass') =="strong":
                             new_ax_list = [rand_ind,rand_ind]
                         else:
-                            new_ax_list = [self.ax_inds[0],rand_ind]
+                            if not isKeyword('oxocatalysis'):
+                                new_ax_list = [self.ax_inds[0],rand_ind]
+                                new_ax_list.sort(reverse=True)
+                            else:
+                                new_ax_list = [self.ax_inds[0],rand_ind]
 
                     child.ax_dent = 1
                     child.three_bidentate = False

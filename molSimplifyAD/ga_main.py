@@ -227,7 +227,7 @@ class GA_generation:
         fitkeys = self.gene_fitness_dictionary.keys()
         ## if doing a DFT run, we need to check the filestytem for updates
         if self.status_dictionary["DFT"]:
-            final_results = check_all_current_convergence()
+            final_results, all_runs = check_all_current_convergence()
             for genes in final_results.keys():
                 if genes in fitkeys:
                     print('gene ' + str(genes) + ' already in dict, no action')

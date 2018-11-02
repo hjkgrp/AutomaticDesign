@@ -645,4 +645,4 @@ def check_all_current_convergence():
                 writeprops(values, f)
         print('\n**** end of file inspection **** \n')
 
-    return final_results
+    return final_results, all_runs
