@@ -38,11 +38,17 @@ def launch_job(job,sub_num):
         infile = job  # for thermo/solvent
                       # these are stored as 
                       # infiles only
-    elif "PRFO" in job and "HAT" in job:
+    elif "prfo" in job and "hat" in job:
+        print('HAT PRFO SCRIPT TAKEN!')
         cmd_script = "launch_script_PRFO_HAT.sh"
+        opath = path_dictionary["queue_output"]+name+'_HAT.o'
+        epath = path_dictionary["queue_output"]+name+'_HAT.e'
         infile = job
-    elif "PRFO" in job and "Oxo" in job:
+    elif "prfo" in job and "oxo" in job:
+        print('OXO PRFO SCRIPT TAKEN!')
         cmd_script = "launch_script_PRFO_Oxo.sh"
+        opath = path_dictionary["queue_output"]+name+'_Oxo.o'
+        epath = path_dictionary["queue_output"]+name+'_Oxo.e'
         infile = job
     elif axlig2 == 'x' and "sp_infiles" in job:
         cmd_script = "launch_script_sp.sh"

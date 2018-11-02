@@ -172,7 +172,7 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
 
 
 ########################
-def output_properties(comp=False, oxocatalysis=False, SASA=False):
+def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
     list_of_props = list()
     list_of_props.append('name')
     list_of_props.append('gene')
@@ -204,6 +204,8 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
                           'mop_coord', 'sp_energy', 'tot_time', 'tot_step', 'metal_translation']
     if SASA:
         list_of_prop_names.append("area")
+    if TS:
+        list_of_prop_names += ['terachem_version_HAT_TS','terachem_detailed_version_HAT_TS','basis_HAT_TS','tspin_HAT_TS','charge_HAT_TS','alpha_level_shift_HAT_TS','beta_level_shift_HAT_TS','energy_HAT_TS','time_HAT_TS','terachem_version_Oxo_TS','terachem_detailed_version_Oxo_TS','basis_Oxo_TS','tspin_Oxo_TS','charge_Oxo_TS','alpha_level_shift_Oxo_TS','beta_level_shift_Oxo_TS','energy_Oxo_TS','time_Oxo_TS','ss_act_HAT_TS','ss_target_HAT_TS','eigenvalue_HAT_TS','ss_act_Oxo_TS','ss_target_Oxo_TS','eigenvalue_Oxo_TS','init_energy_HAT_TS','init_energy_Oxo_TS','converged_HAT_TS','converged_Oxo_TS','attempted_HAT_TS','attempted_Oxo_TS']
     if oxocatalysis:
         list_of_prop_names += ['metal_alpha','metal_beta','net_metal_spin','metal_mulliken_charge','oxygen_alpha','oxygen_beta','net_oxygen_spin','oxygen_mulliken_charge']
         if comp:
@@ -732,18 +734,18 @@ def setup_paths():
     if isKeyword('DLPNO'):
         path_dictionary.update({"DLPNO_path": working_dir + "DLPNO_files/"})
     if isKeyword('TS'):
-        path_dictionary.update({"PRFO_initial_geo_HAT":working_dir + "PRFO_initial_geo/HAT/"})
-        path_dictionary.update({"PRFO_prog_geo_HAT":working_dir + "PRFO_prog_geo/HAT/"})
-        path_dictionary.update({"PRFO_optimized_geo_HAT":working_dir + "PRFO_opt_geo/HAT/"})
-        path_dictionary.update({"PRFO_in_path_HAT": working_dir + "PRFO_infiles/HAT/"})
-        path_dictionary.update({"PRFO_out_path_HAT": working_dir + "PRFO_outfiles/HAT/"})
-        path_dictionary.update({"PRFO_scr_path_HAT": working_dir + "scr/PRFO/HAT/"})
-        path_dictionary.update({"PRFO_initial_geo_Oxo":working_dir + "PRFO_initial_geo/Oxo/"})
-        path_dictionary.update({"PRFO_prog_geo_Oxo":working_dir + "PRFO_prog_geo/Oxo/"})
-        path_dictionary.update({"PRFO_optimized_geo_Oxo":working_dir + "PRFO_opt_geo/Oxo/"})
-        path_dictionary.update({"PRFO_in_path_Oxo": working_dir + "PRFO_infiles/Oxo/"})
-        path_dictionary.update({"PRFO_out_path_Oxo": working_dir + "PRFO_outfiles/Oxo/"})
-        path_dictionary.update({"PRFO_scr_path_Oxo": working_dir + "scr/PRFO/Oxo/"})
+        path_dictionary.update({"PRFO_initial_geo_HAT":working_dir + "prfo_initial_geo/hat/"})
+        path_dictionary.update({"PRFO_prog_geo_HAT":working_dir + "prfo_prog_geo/hat/"})
+        path_dictionary.update({"PRFO_optimized_geo_HAT":working_dir + "prfo_opt_geo/hat/"})
+        path_dictionary.update({"PRFO_in_path_HAT": working_dir + "prfo_infiles/hat/"})
+        path_dictionary.update({"PRFO_out_path_HAT": working_dir + "prfo_outfiles/hat/"})
+        path_dictionary.update({"PRFO_scr_path_HAT": working_dir + "scr/prfo/hat/"})
+        path_dictionary.update({"PRFO_initial_geo_Oxo":working_dir + "prfo_initial_geo/oxo/"})
+        path_dictionary.update({"PRFO_prog_geo_Oxo":working_dir + "prfo_prog_geo/oxo/"})
+        path_dictionary.update({"PRFO_optimized_geo_Oxo":working_dir + "prfo_opt_geo/oxo/"})
+        path_dictionary.update({"PRFO_in_path_Oxo": working_dir + "prfo_infiles/oxo/"})
+        path_dictionary.update({"PRFO_out_path_Oxo": working_dir + "prfo_outfiles/oxo/"})
+        path_dictionary.update({"PRFO_scr_path_Oxo": working_dir + "scr/prfo/oxo/"})
     for keys in path_dictionary.keys():
         ensure_dir(path_dictionary[keys])
     return path_dictionary
@@ -1144,22 +1146,27 @@ def write_output(name, list_of_things_with_props, list_of_props, base_path_dicti
 
     if (not postall) and os.path.isfile(output_path):
         try:
-            with open(outpath, 'r') as f:
+            print('TRYING TO READ OLD RESULTS DICTIONARIES FIRST, REPLACING PRESENT VALUES!')
+            with open(output_path, 'r') as f:
                 data = f.readlines()
             f.close()
             present_jobs_dict = dict((key, value.split(',')[0]) for (key, value) in enumerate(data))
+            print('PRESENT JOBS DICT~', present_jobs_dict)
             for thing in list_of_things_with_props:
                 values = atrextract(thing, list_of_props)
                 string_to_write = propline(values)
                 if string_to_write.split(',')[0] in present_jobs_dict.keys():
+                    print('made it into if statement', string_to_write.split(',')[0])
                     idx = int(present_jobs_dict[str(string_to_write.split(',')[0])])
                     data[idx] = string_to_write
                 else:
+                    print('made it into else statement', string_to_write.split(',')[0])
                     data.append(string_to_write)
-            with open(outpath, 'w') as f:
-                f.writelines(data)
-            f.close()
+            with open(output_path, 'w') as g:
+                g.writelines(data)
+            g.close()
         except:
+            print('FAILED to look through results dictionaries. Appending.')
             with open(output_path, 'a') as f:
                 for thing in list_of_things_with_props:
                     values = atrextract(thing, list_of_props)
