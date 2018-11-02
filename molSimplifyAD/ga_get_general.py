@@ -211,10 +211,10 @@ def _get_freq_fitness(lastgen, npool):
                 # geneName, fitness = line.split(",",1)
                 geneName, _ = line.split(",",1)
                 prop = ANN_prop_dict[geneName]
-                if 'hinge' in str(GA_run.config['scoring_function']):
-                    fitness = find_prop_hinge_fitness(prop, int(GA_run.config['property_parameter']))
+                if 'hinge' in str(isKeyword('scoring_function')):
+                    fitness = find_prop_hinge_fitness(prop, int(isKeyword('property_parameter')))
                 else:
-                    fitness = find_prop_fitness(prop, GA_run.config['property_parameter'])
+                    fitness = find_prop_fitness(prop, isKeyword('property_parameter'))
 
                 # fitness = fitness.strip('\n')
                 print('FITNESS ASSIGNED', fitness)
