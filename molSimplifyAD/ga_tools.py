@@ -560,7 +560,7 @@ def translate_job_name(job):
     return gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, basename, basegene
 
 ########################
-def construct_job_name(complex_name, HFX=20)
+def construct_job_name(complex_name, HFX=20):
     #########################################################################################################
     # Takes complex name in metal_ox_eq_eqlig_ax_axlig1_ax2_axlig2_s_spin form and constructs a job name    #
     # This builder does not account for slot or gen number, which must be determined by matching substrings #
