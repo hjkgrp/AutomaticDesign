@@ -572,7 +572,7 @@ def construct_job_name(complex_name, HFX=20):
     eq_lig_idx = find_ligand_idx(str(complex_list[3]))
     ax1_lig_idx = find_ligand_idx(str(complex_list[5]))
     ax2_lig_idx = find_ligand_idx(str(complex_list[7]))
-    job_substring = "_".join([str(metal_idx),str(complex_list[1]),str(eq_lig_idx),str(ax1_lig_idx),str(ax2_lig_idx),str(int(HFX)),str(int(complex_list[9]))])
+    job_substring = "_".join([str(metal_idx),str(complex_list[1]),str(eq_lig_idx),str(ax1_lig_idx),str(ax2_lig_idx),str(HFX),str(int(complex_list[9]))])
     return job_substring
 
 ########################
