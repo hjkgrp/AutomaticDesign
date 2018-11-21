@@ -12,50 +12,94 @@ class octahedral_complex:
         self.ready_for_assembly = False
         self.has_vacant = False
         self.ligands_list=get_ligands()
+        self.gene_template = get_gene_template()
         self.metals_list= get_metals()
         self.ox_list = get_ox_states()
         self.core  = 'U'
-        self.ox = 'U'
-        self.ax_dent =  False
-        self.eq_dent = False
-        self.eq_ligands = list()
-        self.ax_ligands= list()
-        self.ax_inds = list()
-        self.eq_inds = list()
-        #GA_run = get_current_GA()
+        
+        if self.gene_template['legacy']:
+            self.ox = 'U'
+            self.ax_dent =  False
+            self.eq_dent = False
+            self.eq_ligands = list()
+            self.ax_ligands= list()
+            self.ax_inds = list()
+            self.eq_inds = list()
+            #GA_run = get_current_GA()
+        else:
+            if self.gene_template['ox']:
+                self.ox = 'U'
+            if self.gene_template['spin']:
+                self.spin = 'U'
+            self.dent_list = False
+            self.ligands = list()
+            self.inds = list()
+            self.occs = list()
         self.ahf = int(isKeyword("exchange")) # % HFX, B3LYP = 20
     def random_gen(self):
-        self._get_random_metal()
-        self._get_random_ox()
-        self._get_random_equitorial()
-        self._get_random_axial()
-        self._name_self()
+        if self.gene_template['legacy']:
+            self._get_random_metal()
+            self._get_random_ox()
+            self._get_random_equitorial()
+            self._get_random_axial()
+            self._name_self()
+        else:
+            self._get_random_metal()
+            if self.gene_template['ox']:
+                self._get_random_ox()
+            if self.gene_template['spin']:
+                self._get_random_spin()
+            self._get_random_ligands()
+            self._name_self()
+
     def _name_self(self):
         ## this creates the gene for a given complex
         #GA_run = get_current_GA()
-        self.name = "_".join([str(self.core),str(self.ox),str(self.eq_inds[0]),str(self.ax_inds[0]),str(self.ax_inds[1]),str(self.ahf)])
+        if self.gene_template['legacy']:
+            self.name = "_".join([str(self.core),str(self.ox),str(self.eq_inds[0]),str(self.ax_inds[0]),str(self.ax_inds[1]),str(self.ahf)])
+        else:
+            namelist = [str(self.core)]
+            if self.gene_template['ox']:
+                namelist.append(str(self.ox))
+            if self.gene_template['spin']:
+                namelist.append(str(self.spin))
+            for i in self.inds:
+                namelist.append(str(i))
+            namelist.append(str(self.ahf))
+            self.name = "_".join(namelist)
 
     def copy(self,partner):
-         self.core = partner.core
-         self.ox = partner.ox
-         self.ax_dent = partner.ax_dent
-         self.ax_inds = partner.ax_inds
-         self.ax_ligands = partner.ax_ligands
-         self.eq_dent = partner.eq_dent
-         self.eq_inds = partner.eq_inds
-         self.eq_oc = partner.eq_oc
-         self.eq_ligands = partner.eq_ligands
-         self.three_bidentate = partner.three_bidentate
-         self.ahf = partner.ahf
-         self._name_self()
+        self.core = partner.core
+        self.three_bidentate = partner.three_bidentate
+        self.ahf = partner.ahf
+        if self.gene_template['legacy']:
+            self.ox = partner.ox
+            self.ax_dent = partner.ax_dent
+            self.ax_inds = partner.ax_inds
+            self.ax_ligands = partner.ax_ligands
+            self.eq_dent = partner.eq_dent
+            self.eq_inds = partner.eq_inds
+            self.eq_oc = partner.eq_oc
+            self.eq_ligands = partner.eq_ligands
+        else:
+            if self.gene_template['ox']:
+                self.ox = partner.ox
+            if self.gene_template['spin']:
+                self.spin = partner.spin
+            self.dent_list = partner.dent_list
+            self.ligands = partner.ligands
+            self.inds = partner.inds
+            self.occs = partner.occs
+        self._name_self()
+
     def _get_random_metal(self):
         n = len(self.metals_list)
         metal_ind = numpy.random.randint(low = 0,high = n)
-        if isOxocatalysis():
-            while self.metals_list[metal_ind] in ['cr','co']:
-                metal_ind = numpy.random.randint(low = 0,high = n)
-                if self.metals_list[metal_ind] in ['fe','mn']:
-                    break
+        # if isOxocatalysis():
+        #     while self.metals_list[metal_ind] in ['cr','co']:
+        #         metal_ind = numpy.random.randint(low = 0,high = n)
+        #         if self.metals_list[metal_ind] in ['fe','mn']:
+        #             break
         self.core = metal_ind
     def _get_random_ox(self):
         possible_ox_states = get_ox_states()
@@ -160,10 +204,54 @@ class octahedral_complex:
                     else:
                          self.ready_for_assembly = False
 
+    def _get_random_ligands(self):
+        n = len(self.ligands_list)
+        self.ready_for_assembly =  False
+        self.ligands = list()
+        self.inds = list()
+        symclass = isKeyword("symclass")
+        while not self.ready_for_assembly:
+            ## get lig
+            ind = numpy.random.randint(low = 0,high = n)
+            ligand_properties  = self.ligands_list[ind][1]
+            lig_dent = ligand_properties[0]
+            if symclass in ['weak', 'strong']: #Switch this to be consistent with SMU 
+                if len(self.ligands) == 0:    
+                    if lig_dent in [1, 2, 4]:
+                        print('Found eqlig: ', self.ligands_list[ind])
+                        self.ligands += 4*[self.ligands_list[ind][0]]
+                        self.inds += 4*[ind]
+                elif lig_dent == 1:
+                    if symclass == 'weak':
+                        self.ligands.append(self.ligands_list[ind][0])
+                        self.inds.append(ind)
+                    elif symclass == 'strong':
+                        self.ligands += 2*[self.ligands_list[ind][0]]
+                        self.inds += 2*[ind]
+            if len(self.ligands) == 6:
+                self.ready_for_assembly = True
+        self.ligand_sort()
+
+
+    def ligand_sort(self):
+        self.inds[4:6].sort(reverse=True)
+        templist = [self.inds[0],self.inds[2]]
+        templist.sort(reverse=True)
+        self.inds[0],self.inds[2] =  templist[0], templist[1]
+        templist = [self.inds[1],self.inds[3]]
+        templist.sort(reverse=True)
+        self.inds[1],self.inds[3] =  templist[0], templist[1]
+        self.ligands = [self.ligands_list[x][0] for x in self.inds]
+
+
+
     def examine(self):
         print("name is " + self.name)
-        print("eq", self.eq_ligands, self.eq_inds)
-        print("axial", self.ax_ligands, self.ax_inds)
+        if self.gene_template['legacy']:
+            print("eq", self.eq_ligands, self.eq_inds)
+            print("axial", self.ax_ligands, self.ax_inds)
+        else:
+            print("ligands", self.ligands, self.inds)
 
     def encode(self,gene):
         self.random_gen()
@@ -586,6 +674,18 @@ class octahedral_complex:
                             oxo_dist = float(line.split(",")[1])
                             ANN_results.update({'oxo_dist':float(line.split(",")[1])})
                             print('ANN_oxo_distance is ' +"{0:.2f}".format(oxo_dist))
+                        if ("hat" in line) and not ("dist" in line) and not ("trust" in line):
+                            print('****')
+                            print(line)
+                            hat = float(line.split(",")[1])
+                            ANN_results.update({'hat':float(line.split(",")[1])})
+                            print('ANN_hat is ' +"{0:.2f}".format(hat))
+                        if ("hat" in line) and ("dist" in line):
+                            print('****')
+                            print(line)
+                            hat_dist = float(line.split(",")[1])
+                            ANN_results.update({'hat_dist':float(line.split(",")[1])})
+                            print('ANN_hat_distance is ' +"{0:.2f}".format(hat_dist))
                     if len(list(set(property_list).difference(ANN_results.keys())))>0 and not isKeyword('DFT'):
                         for i in property_list:
                             if i not in ANN_results.keys():

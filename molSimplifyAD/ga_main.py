@@ -566,23 +566,23 @@ class GA_generation:
         ## adjust scoring_function based on calculated mean_distance
         if (self.status_dictionary['monitor_distance']):
             print('ENTERED INTO DISTANCE')
-            if (mean_dist > 0.6):
+            if (mean_dist > 5):
                 healthy = False
-                if dist_score and (dist_param > 0.6):  # Decrease distance_parameter for tighter control
-                    dist_param = dist_param - 0.05
+                if dist_score and (dist_param > 5):  # Decrease distance_parameter for tighter control
+                    dist_param = dist_param - 0.5
                     symptom1 = ("Mean distance too high. Lowering distance_parameter to " + str(dist_param))
                     diagnosis.append(symptom1)
-                elif dist_score and dist_param <= 0.5:  # distance_parameter too low
+                elif dist_score and dist_param <= 3:  # distance_parameter too low
                     symptom2 = ("Distance parameter low, but mean distance high. Try a few more generations.")
                     diagnosis.append(symptom2)
                 else:  # Turn on split+dist
                     dist_score = True
-                    dist_param = 0.75
+                    dist_param = 4
                     symptom3 = ("Mean distance high. Using prop_hinge+dist with dist_param = " + str(dist_param))
                     diagnosis.append(symptom3)
             elif dist_score:  # loosen distance control
                 dist_score = False
-                treat1 = "Mean distance below 0.6: loosening distance control by using prop only."
+                treat1 = "Mean distance below 5: loosening distance control by using prop only."
                 diagnosis.append(treat1)
 
             ## update scoring function in status_dictionary

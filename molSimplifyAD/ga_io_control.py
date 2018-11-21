@@ -84,11 +84,15 @@ class GA_run_defintion:
             print('serialziing to '+str(self.config['rundir'] + '.madconfig'))
             with open(self.config['rundir'] + '.madconfig', 'w') as handle:
                 json.dump(self.config,handle)
+
         def deserialize(self,path):
             ## read run info
             with open(path,'r') as instream:
                 ob = json.load(instream)
             self.config = ob
+            with open(self.config['rundir']+'gene_template.json','r') as instream:
+                ob = json.load(instream)
+            self.gene_template = ob
 
 
 ########################
@@ -217,6 +221,12 @@ def get_launch_script_file(queue_type='SGE'):
     PRFO_HAT = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/"+queue_type.lower()+"_PRFO_HAT.sh")
     PRFO_Oxo = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/"+queue_type.lower()+"_PRFO_Oxo.sh")
     return sp_file, geo_file, thermo_file, solvent_file, water_file, PRFO_HAT, PRFO_Oxo
+
+########################
+def get_default_gene_template(queue_type='SGE'):
+    ## returns default ligand input file
+    template = resource_filename(Requirement.parse("molSimplifyAD"),"molSimplifyAD/gene_template.json")
+    return template
 
 ########################
 def process_new_run_input(path):

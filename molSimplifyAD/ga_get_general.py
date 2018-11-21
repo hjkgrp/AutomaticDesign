@@ -150,18 +150,18 @@ def _get_freq_fitness(lastgen, npool):
                         if spin_cat == 'LS':
                             ANN_prop_dict.update({this_gene: this_prop})
                         else:
-                            ANN_prop_dict.update({this_gene: 10000})
+                            # ANN_prop_dict.update({this_gene: 10000})
                             print('SKIPPED ANN PROP DICT ASSIGNMENT BC '+str(this_gene)+' '+str(spin))
                 elif runtype in ['homo','gap']:
                     if (split_energy > 0 and int(spin) <= 3) or (split_energy < 0 and int(spin) > 3):
                         this_prop = float(ANN_dict[keys][runtype])
                         this_dist = float(ANN_dict[keys][runtype + '_dist'])
                         ANN_prop_dict.update({this_gene: this_prop})
-                elif not (this_gene in ANN_prop_dict.keys()):
-                    # sardines
-                    this_prop = float(ANN_dict[keys][runtype])
-                    this_dist = float(ANN_dict[keys][runtype + '_dist'])
-                    ANN_prop_dict.update({this_gene: this_prop})
+                # elif not (this_gene in ANN_prop_dict.keys()):
+                #     sardines
+                #     this_prop = float(ANN_dict[keys][runtype])
+                #     this_dist = float(ANN_dict[keys][runtype + '_dist'])
+                #     ANN_prop_dict.update({this_gene: this_prop})
                 ############################################################################################
                 # Note: in the way this loop is currently set up, it loops over everything in ANN_dict.    #
                 # Thus, if the ANN prediction predicts something for multiple spin states, you need to     #
@@ -170,6 +170,7 @@ def _get_freq_fitness(lastgen, npool):
                 # to be assigned, certain criteria must be met as can be seen above. For spin splitting    #
                 # Not an issue for spin splitting because both spins inherit the same splitting energy     #
                 ############################################################################################
+        print('NOW PRINTING ANN PROP DICT.........')
         print(ANN_prop_dict)
 
     generation = 0

@@ -25,7 +25,6 @@ def get_current_GA():
     GA_run.deserialize('.madconfig')
     return GA_run
 
-
 ########################
 def get_infile_from_job(job):
     ## given a job (file under jobs/gen_x/
@@ -785,6 +784,12 @@ def get_ligands():
     ligands_list = GA_run.config['liglist']
     return ligands_list
 
+########################
+def get_gene_template():
+    GA_run = GA_run_defintion()
+    GA_run.deserialize('.madconfig')
+    gene_template = GA_run.gene_template
+    return gene_template
 
 ########################
 

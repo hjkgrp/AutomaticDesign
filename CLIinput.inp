@@ -1,5 +1,11 @@
 # molSimplify input file generated from CLI input
--core co 
--oxstate III 
--lig water 
--exchange 0
+-core fe
+-lig water, oxo
+-ligocc 5,1
+-oxstate 4
+-spin 3
+-tsgen2
+-substrate cyclohexene
+-subcatoms 9
+-mlig oxo
+-mligcatoms 0

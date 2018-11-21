@@ -15,6 +15,7 @@ def read_ligand_list(filein):
 
 
 def find_ligand_in_list(lig, lig_list):
+    print(lig_list)
     return lig_list.index(lig)
 
 
@@ -38,17 +39,17 @@ def read_csv_to_complex_list(filein, lig_list):
 
 
 # ########
-rundir = '/Users/duanchenru/AutomaticDesign/Catalysis/mad_new/'
-lig_list = './lig_list.txt'
-csv_file = 'merged_basic_checked_regen_shrink.csv'
+rundir = '/Users/adityanandy/Documents/MIT/Kulik/CompletedJobs/08142018/process_test/'
+lig_list = 'smiles_lig_list_csd.txt'
+csv_file = 'test.csv'
 if not os.path.isdir(rundir):
     os.makedirs(rundir)
 shutil.copy(lig_list, rundir + lig_list)
 ll = process_ligands_file(rundir + lig_list)
 print('!!!ll:', ll)
 GA_run = GA_run_defintion()
-GA_run.configure(gen=0, runtype='split', optimize=True, DFT=True, rundir=rundir, liglist=ll, queue_type='SGE',
-                 symclass='weak', use_singlets=True, all_spins=False, queue_reference=False, npool=1, ncross=5,
+GA_run.configure(gen=0, runtype='split', optimize=True, DFT=True, oxocatalysis = True, rundir=rundir, liglist=ll, queue_type='SGE',
+                 symclass='weak', use_singlets=True, all_spins=True, queue_reference=False, npool=1, ncross=5,
                  pmut=0.15, maxgen=20, scoring_function='split', split_parameter=15.0, distance_parameter=1.0,
                  monitor_diversity=True, monitor_distance=True, max_jobs=100, HFXsample=False, track_elec_prop=True)
 GA_run.serialize()
