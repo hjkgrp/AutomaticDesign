@@ -291,10 +291,13 @@ class octahedral_complex:
 
     def replace_metal(self,new_metal_ind):
         self.core = new_metal_ind
+
     def replace_ox(self,new_ox):
         self.ox = new_ox
+
     def replace_spin(self,new_spin):
         self.spin = new_spin
+
     def replace_ahf(self,new_ahf):
         self.ahf = new_ahf
 
