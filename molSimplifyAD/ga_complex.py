@@ -1,5 +1,5 @@
 import glob, math, numpy, subprocess, os, random, shutil
-import sys, shlex
+import sys, shlex,time 
 
 from ga_tools import *
 from molSimplify.Classes.mol3D import *
@@ -22,7 +22,7 @@ class octahedral_complex:
         self.ax_ligands= list()
         self.ax_inds = list()
         self.eq_inds = list()
-        GA_run = get_current_GA()
+        #GA_run = get_current_GA()
         self.ahf = int(isKeyword("exchange")) # % HFX, B3LYP = 20
     def random_gen(self):
         self._get_random_metal()
@@ -32,7 +32,7 @@ class octahedral_complex:
         self._name_self()
     def _name_self(self):
         ## this creates the gene for a given complex
-        GA_run = get_current_GA()
+        #GA_run = get_current_GA()
         self.name = "_".join([str(self.core),str(self.ox),str(self.eq_inds[0]),str(self.ax_inds[0]),str(self.ax_inds[1]),str(self.ahf)])
 
     def copy(self,partner):
@@ -51,6 +51,11 @@ class octahedral_complex:
     def _get_random_metal(self):
         n = len(self.metals_list)
         metal_ind = numpy.random.randint(low = 0,high = n)
+        if isOxocatalysis():
+            while self.metals_list[metal_ind] in ['cr','co']:
+                metal_ind = numpy.random.randint(low = 0,high = n)
+                if self.metals_list[metal_ind] in ['fe','mn']:
+                    break
         self.core = metal_ind
     def _get_random_ox(self):
         possible_ox_states = get_ox_states()
@@ -110,7 +115,7 @@ class octahedral_complex:
                 else:
                     self.ready_for_assembly = False
             elif ax_dent == 1:
-                GA_run = get_current_GA()
+                #GA_run = get_current_GA()
                 if isKeyword("symclass") == "strong" and not isKeyword('oxocatalysis'):
                     self.ax_ligands = [self.ligands_list[ax_ind][0],self.ligands_list[ax_ind][0]]
                     self.ax_inds = [ax_ind, ax_ind]
@@ -145,6 +150,12 @@ class octahedral_complex:
                     if (len(self.ax_ligands) ==2):
                         self.ax_dent = 1
                         self.ax_oc = [1,1]
+                         # checks for consistent ordering
+                        self.ax_inds.sort(reverse=True)
+                        self.ax_ligands = [self.ligands_list[ self.ax_inds[0]][0],self.ligands_list[ self.ax_inds[1]][0]]
+                        #print('after sorting, ax ligands are')
+                        #print(self.ax_ligands,self.ax_inds)
+                        #time.sleep(5)
                         self.ready_for_assembly = True
                     else:
                          self.ready_for_assembly = False
@@ -267,7 +278,7 @@ class octahedral_complex:
     def mutate(self):
         ## mutates either the axial
         ## or equitorial ligand a random
-        GA_run = get_current_GA()
+        #GA_run = get_current_GA()
         lig_to_mutate = random.randint(0,3) #SWITCHED TO DISALLOW METAL MUT
         child = octahedral_complex(self.ligands_list)
         child.copy(self) # copies this parent
@@ -315,12 +326,18 @@ class octahedral_complex:
                             new_ax_list = [rand_ind,rand_ind]
                         else:
                             new_ax_list = [rand_ind,self.ax_inds[1]]
+                            if not isKeyword('oxocatalysis'):
+                                new_ax_list.sort(reverse=True)
                     elif (lig_to_mutate == 2):
                         print("mutating axial 2 ")
                         if isKeyword('symclass') =="strong":
                             new_ax_list = [rand_ind,rand_ind]
                         else:
-                            new_ax_list = [self.ax_inds[0],rand_ind]
+                            if not isKeyword('oxocatalysis'):
+                                new_ax_list = [self.ax_inds[0],rand_ind]
+                                new_ax_list.sort(reverse=True)
+                            else:
+                                new_ax_list = [self.ax_inds[0],rand_ind]
 
                     child.ax_dent = 1
                     child.three_bidentate = False

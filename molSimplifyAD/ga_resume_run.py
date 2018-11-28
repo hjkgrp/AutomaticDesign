@@ -53,8 +53,10 @@ def resume_run(args):
                            live_job_count))
                 logger(path_dictionary['state_path'], str(datetime.datetime.now()) + ' going back to sleep')
                 logger(path_dictionary['state_path'], '************************************************')
+
             if not isKeyword('runtype') == "redox":
                 try:     
+                    print('-----format_frequencies and format_distances being carried out') 
                     format_freqeuncies()
                     format_distances()
                 except:

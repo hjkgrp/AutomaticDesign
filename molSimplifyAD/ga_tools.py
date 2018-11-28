@@ -172,7 +172,7 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
 
 
 ########################
-def output_properties(comp=False, oxocatalysis=False, SASA=False):
+def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
     list_of_props = list()
     list_of_props.append('name')
     list_of_props.append('gene')
@@ -201,9 +201,11 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False):
                           'water_cont',
                           'terachem_version', 'terachem_detailed_version',
                           'basis', 'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
-                          'mop_coord', 'sp_energy']
+                          'mop_coord', 'sp_energy', 'tot_time', 'tot_step', 'metal_translation']
     if SASA:
         list_of_prop_names.append("area")
+    if TS:
+        list_of_prop_names += ['terachem_version_HAT_TS','terachem_detailed_version_HAT_TS','basis_HAT_TS','tspin_HAT_TS','charge_HAT_TS','alpha_level_shift_HAT_TS','beta_level_shift_HAT_TS','energy_HAT_TS','time_HAT_TS','terachem_version_Oxo_TS','terachem_detailed_version_Oxo_TS','basis_Oxo_TS','tspin_Oxo_TS','charge_Oxo_TS','alpha_level_shift_Oxo_TS','beta_level_shift_Oxo_TS','energy_Oxo_TS','time_Oxo_TS','ss_act_HAT_TS','ss_target_HAT_TS','eigenvalue_HAT_TS','ss_act_Oxo_TS','ss_target_Oxo_TS','eigenvalue_Oxo_TS','init_energy_HAT_TS','init_energy_Oxo_TS','converged_HAT_TS','converged_Oxo_TS','attempted_HAT_TS','attempted_Oxo_TS']
     if oxocatalysis:
         list_of_prop_names += ['metal_alpha','metal_beta','net_metal_spin','metal_mulliken_charge','oxygen_alpha','oxygen_beta','net_oxygen_spin','oxygen_mulliken_charge']
         if comp:
@@ -557,6 +559,21 @@ def translate_job_name(job):
     basegene = "_".join([str(metal), str(eqlig_ind), str(axlig1_ind), str(axlig2_ind)])
     return gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, basename, basegene
 
+########################
+def construct_job_name(complex_name, HFX=20):
+    #########################################################################################################
+    # Takes complex name in metal_ox_eq_eqlig_ax_axlig1_ax2_axlig2_s_spin form and constructs a job name    #
+    # This builder does not account for slot or gen number, which must be determined by matching substrings #
+    #########################################################################################################
+    complex_list = complex_name.split('_')
+    metals_list = get_metals()
+    ligands_list = get_ligands()
+    metal_idx = metals_list.index(complex_list[0])
+    eq_lig_idx = find_ligand_idx(str(complex_list[3]))
+    ax1_lig_idx = find_ligand_idx(str(complex_list[5]))
+    ax2_lig_idx = find_ligand_idx(str(complex_list[7]))
+    job_substring = "_".join([str(metal_idx),str(complex_list[1]),str(eq_lig_idx),str(ax1_lig_idx),str(ax2_lig_idx),str(int(HFX)),str(int(complex_list[9]))])
+    return job_substring
 
 ########################
 def SMILEs_to_liglist(smilesstr, denticity):
@@ -601,8 +618,8 @@ def renameOxoEmpty(job):
     base = os.path.basename(job)
     base = base.strip("\n")
     basename = base.strip(".in")
-    basename = base.strip(".xyz")
-    basename = base.strip(".out")
+    basename = basename.strip(".xyz")
+    basename = basename.strip(".out")
     ll = (str(basename)).split("_")
     ligs = get_ligands()
     value = str(find_ligand_idx('x'))
@@ -613,7 +630,35 @@ def renameOxoEmpty(job):
     new_name = "_".join(ll)
     return new_name, basename
 
-
+#######################
+def renameOxoHydroxyl(job):
+    _, _, _, metal, ox, _, _, axlig2, _, _, _, spin, _, _, basename, _ = translate_job_name(job)
+    # renames Oxo job to empty job
+    ll = (str(basename)).split("_")
+    ligs = get_ligands()
+    value = str(find_ligand_idx('hydroxyl'))
+    ## replace ax2 with hydroxyl index
+    ll[8] = value
+    ## replace metal oxidation with 1 less
+    hydox = int(ox) - 1
+    ll[5] = str(hydox)
+    upperll = ll[:]
+    lowerll = ll[:]
+    upperspin = int(spin) + 1
+    lowerspin = int(spin) - 1
+    upperll[-1] = str(upperspin)
+    lowerll[-1] = str(lowerspin)
+    metal_spin_dictionary = spin_dictionary()
+    metal_list = get_metals()
+    metal_key = metal_list[metal]
+    these_states = metal_spin_dictionary[metal_key][hydox]
+    new_name_upper = False
+    new_name_lower = False
+    if upperspin in these_states:
+        new_name_upper = "_".join(upperll)
+    if lowerspin in these_states:    
+        new_name_lower = "_".join(lowerll)
+    return new_name_upper, new_name_lower, basename
 #######################
 def to_decimal_string(inp):
     # nusiance function to convert
@@ -688,21 +733,34 @@ def setup_paths():
 
     #    shutil.copyfile(get_source_dir()+'wake.sh',get_run_dir()+'wake.sh')
     ## set scr path to scr/sp for single points
-    if not isOptimize():
+    if not isKeyword('optimize'):
         path_dictionary.update({"scr_path": working_dir + "scr/geo/"})
-    if isSolvent():
+    if isKeyword('solvent'):
         path_dictionary.update({"solvent_out_path": working_dir + "solvent_outfiles/"})
         path_dictionary.update({"solvent_in_path": working_dir + "solvent_infiles/"})
-    if isWater():
+    if isKeyword('water'):
         path_dictionary.update({"water_out_path": working_dir + "water_outfiles/"})
         path_dictionary.update({"water_in_path": working_dir + "water_infiles/"})
-    if isThermo():
+    if isKeyword('thermo'):
         path_dictionary.update({"thermo_out_path": working_dir + "thermo_outfiles/"})
     GA_run = get_current_GA()
-    if "DLPNO" in GA_run.config.keys():
-        if GA_run.config["DLPNO"]:
-            path_dictionary.update({"DLPNO_path": working_dir + "DLPNO_files/"})
-
+    #if "DLPNO" in GA_run.config.keys():
+    #    if GA_run.config["DLPNO"]:
+    if isKeyword('DLPNO'):
+        path_dictionary.update({"DLPNO_path": working_dir + "DLPNO_files/"})
+    if isKeyword('TS'):
+        path_dictionary.update({"PRFO_initial_geo_HAT":working_dir + "prfo_initial_geo/hat/"})
+        path_dictionary.update({"PRFO_prog_geo_HAT":working_dir + "prfo_prog_geo/hat/"})
+        path_dictionary.update({"PRFO_optimized_geo_HAT":working_dir + "prfo_opt_geo/hat/"})
+        path_dictionary.update({"PRFO_in_path_HAT": working_dir + "prfo_infiles/hat/"})
+        path_dictionary.update({"PRFO_out_path_HAT": working_dir + "prfo_outfiles/hat/"})
+        path_dictionary.update({"PRFO_scr_path_HAT": working_dir + "scr/prfo/hat/"})
+        path_dictionary.update({"PRFO_initial_geo_Oxo":working_dir + "prfo_initial_geo/oxo/"})
+        path_dictionary.update({"PRFO_prog_geo_Oxo":working_dir + "prfo_prog_geo/oxo/"})
+        path_dictionary.update({"PRFO_optimized_geo_Oxo":working_dir + "prfo_opt_geo/oxo/"})
+        path_dictionary.update({"PRFO_in_path_Oxo": working_dir + "prfo_infiles/oxo/"})
+        path_dictionary.update({"PRFO_out_path_Oxo": working_dir + "prfo_outfiles/oxo/"})
+        path_dictionary.update({"PRFO_scr_path_Oxo": working_dir + "scr/prfo/oxo/"})
     for keys in path_dictionary.keys():
         ensure_dir(path_dictionary[keys])
     return path_dictionary
@@ -889,7 +947,7 @@ def logger(path, message):
 
 ########################
 def log_bad_initial(job):
-    path = get_run_dir() + 'bad_initgeo_log.txt'
+    path = isKeyword('rundir') + 'bad_initgeo_log.txt'
     if os.path.isfile(path):
         with open(path, 'a') as f:
             f.write(job + "\n")
@@ -1034,7 +1092,11 @@ def writeprops(extrct_props, newfile):
     newfile.write("\n")
     return
 
-
+########################
+def propline(extrct_props):
+    string_to_write = ','.join([str(word) for word in extrct_props])
+    string_to_write += '\n'
+    return string_to_write
 ########################
 def atrextract(a_run, list_of_props):
     extrct_props = []
@@ -1090,18 +1152,40 @@ def write_output(name, list_of_things_with_props, list_of_props, base_path_dicti
     if not base_path_dictionary:
         base_path_dictionary = setup_paths()
     if not rdir:
-        rdir = get_run_dir()
+        rdir = isKeyword('rundir')
     if not postall:
-        postall = isall_post()
+        postall = isKeyword('post_all')
 
     output_path = rdir + '/' + name + '_results_post.csv'
     descriptor_path = rdir + '/' + name + '_descriptor_file.csv'
 
     if (not postall) and os.path.isfile(output_path):
-        with open(output_path, 'a') as f:
+        try:
+            print('TRYING TO READ OLD RESULTS DICTIONARIES FIRST, REPLACING PRESENT VALUES!')
+            with open(output_path, 'r') as f:
+                data = f.readlines()
+            f.close()
+            present_jobs_dict = dict((key, value.split(',')[0]) for (key, value) in enumerate(data))
+            print('PRESENT JOBS DICT~', present_jobs_dict)
             for thing in list_of_things_with_props:
                 values = atrextract(thing, list_of_props)
-                writeprops(values, f)
+                string_to_write = propline(values)
+                if string_to_write.split(',')[0] in present_jobs_dict.keys():
+                    print('made it into if statement', string_to_write.split(',')[0])
+                    idx = int(present_jobs_dict[str(string_to_write.split(',')[0])])
+                    data[idx] = string_to_write
+                else:
+                    print('made it into else statement', string_to_write.split(',')[0])
+                    data.append(string_to_write)
+            with open(output_path, 'w') as g:
+                g.writelines(data)
+            g.close()
+        except:
+            print('FAILED to look through results dictionaries. Appending.')
+            with open(output_path, 'a') as f:
+                for thing in list_of_things_with_props:
+                    values = atrextract(thing, list_of_props)
+                    writeprops(values, f)
     else:
         with open(output_path, 'w') as f:
             writeprops(list_of_props, f)
