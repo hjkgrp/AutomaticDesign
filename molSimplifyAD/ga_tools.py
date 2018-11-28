@@ -575,6 +575,11 @@ def construct_job_name(complex_name, HFX=20):
     return job_substring
 
 ########################
+def jobname_from_parts(metal, ox, spin, lig_inds, ahf):
+    name = "_".join([str(metal),str(ox)]+[str(inds) for inds in lig_inds]+[str(ahf),str(spin)])
+    return name
+
+########################
 def SMILEs_to_liglist(smilesstr, denticity):
     this_mol = mol3D()
     this_mol.getOBMol(smilesstr, 'smistring')
@@ -583,7 +588,20 @@ def SMILEs_to_liglist(smilesstr, denticity):
     this_lig.mol = this_mol
     return (this_lig)
 
-
+#######################
+def SMILES_converter(ligands):
+    liglist = ''
+    smicat = ''
+    for lig in ligands:
+        if not hasattr(lig,'__iter__'): # test if SMILES:
+            liglist += " " + str(lig).strip("'[]'")
+        elif  hasattr(lig,'__iter__'): # this is the mark of SMILES strings:
+            liglist += " " +  "'"+str(lig[0])+ "'"
+            if not smicat: # false on first hit
+                smicat = " ["    + str(lig[1]).replace("'","") # cat list
+            else:
+                smicat += ",  " + str(lig[1]).replace("'","") # cat list
+    return liglist, smicat
 ########################
 
 def renameHFX(job, newHFX):
