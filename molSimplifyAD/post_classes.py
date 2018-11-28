@@ -279,7 +279,7 @@ class DFTRun(object):
     def estimate_if_job_live(self):
         modtime = os.stat(self.outpath).st_mtime
         #        print('opttest modifed on '+ str(modtime))
-        print('age is ' + str((time.time() - modtime)))
+#        print('age is ' + str((time.time() - modtime)))
         if (time.time() - modtime) >= 1000:
             return (False)
         else:
