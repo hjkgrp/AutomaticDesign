@@ -152,7 +152,7 @@ def check_all_current_convergence():
                         this_run.solvent_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'
 
                 if isKeyword('water'):
-                        this_run.water_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'               
+                        this_run.water_inpath = path_dictionary['water_in_path'] + base_name + '.in'               
                         this_run.water_outpath = (path_dictionary["water_out_path"] + base_name + ".out")
 
                 ## MOP semiempirical (not used)
