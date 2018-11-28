@@ -379,7 +379,7 @@ class GA_generation:
         emsg, ANN_results_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + '/ANN_results.csv')
         current_outstanding = get_outstanding_jobs()
         converged_jobs = find_converged_job_dictionary()
-
+        gene_template = get_gene_template()
         for keys in self.outstanding_jobs.keys():
 
             jobs = self.outstanding_jobs[keys]
@@ -396,11 +396,19 @@ class GA_generation:
                 job_prefix = "gen_" + str(self.status_dictionary["gen"]) + "_slot_" + str(keys) + "_"
                 ## generate HS/LS
                 ## convert the gene into a job file and geometery
-                jobpath, mol_name, ANN_results, flag_oct = jobs.generate_geometery(prefix=job_prefix,
-                                                                                   spin=spins,
-                                                                                   path_dictionary=self.current_path_dictionary,
-                                                                                   rundirpath=isKeyword('rundir'),
-                                                                                   gen=self.status_dictionary['gen'])
+                if gene_template['legacy']:
+                    jobpath, mol_name, ANN_results, flag_oct = jobs.generate_geometry_legacy(prefix=job_prefix,
+                                                                                       spin=spins,
+                                                                                       path_dictionary=self.current_path_dictionary,
+                                                                                       rundirpath=isKeyword('rundir'),
+                                                                                       gen=self.status_dictionary['gen'])
+                else:
+                    jobpath, mol_name, ANN_results, flag_oct = jobs.generate_geometry(prefix=job_prefix,
+                                                                                       ox = jobs.ox,
+                                                                                       spin=spins,
+                                                                                       path_dictionary=self.current_path_dictionary,
+                                                                                       rundirpath=isKeyword('rundir'),
+                                                                                       gen=self.status_dictionary['gen'])
                 if flag_oct:
                     if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
                         msg, ANN_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
