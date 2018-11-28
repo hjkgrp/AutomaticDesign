@@ -230,6 +230,7 @@ class octahedral_complex:
                         self.inds += 2*[ind]
             if len(self.ligands) == 6:
                 self.ready_for_assembly = True
+
         self.ligand_sort()
 
 
@@ -242,8 +243,16 @@ class octahedral_complex:
         templist.sort(reverse=True)
         self.inds[1],self.inds[3] =  templist[0], templist[1]
         self.ligands = [self.ligands_list[x][0] for x in self.inds]
-
-
+        self.lig_occs = 6*[0]
+        ind = 0
+        while ind < 6:
+            ligand_properties  = self.ligands_list[self.inds[ind]][1]
+            lig_dent = ligand_properties[0]
+            print(ligand_properties)
+            self.lig_occs[ind] = 1
+            ind += lig_dent
+        import time
+        time.sleep(3)
 
     def examine(self):
         print("name is " + self.name)
@@ -257,17 +266,49 @@ class octahedral_complex:
         self.random_gen()
         ll = gene.split("_")
         ll = [int(item) for item in ll]
-        #print('ll is '+str(ll))
         self.replace_metal(ll[0])
-        self.replace_ox(ll[1])
-        self.replace_equitorial([ll[2]])
-        self.replace_axial(ll[3:5])
-        self.ahf=ll[5]
+        if self.gene_template['legacy']:
+            #print('ll is '+str(ll))
+            self.replace_ox(ll[1])
+            self.replace_equitorial([ll[2]])
+            self.replace_axial(ll[3:5])
+            self.ahf=ll[5]
+        else:
+            inds = []
+            print(ll)
+            current_index = 1
+            if self.gene_template['ox']:
+                self.replace_ox(ll.pop(current_index))
+            if self.gene_template['spin']:
+                self.replace_spin(ll.pop(current_index))
+            while len(ll)>2:
+                print(ll)
+                inds.append(ll.pop(current_index))
+            self.ahf = ll.pop(current_index) 
+            print('This is inds', inds)
+            self.replace_ligands(inds)
         self._name_self()
+
     def replace_metal(self,new_metal_ind):
         self.core = new_metal_ind
     def replace_ox(self,new_ox):
         self.ox = new_ox
+    def replace_spin(self,new_spin):
+        self.spin = new_spin
+    def replace_ahf(self,new_ahf):
+        self.ahf = new_ahf
+
+    def replace_ligands(self, inds):
+        self.ready_for_assembly =  False
+        self.ligands = list()
+        self.inds = list()
+        for ind in inds:
+            ## get lig
+            self.ligands.append(self.ligands_list[ind][0])
+            self.inds.append(ind)
+        self.ready_for_assembly = True
+        self.ligand_sort()
+
     def replace_equitorial(self,new_eq_ind):
         #print('in repcoding, setting eq to ' + str(new_eq_ind))
         eq_ligand_properties  = self.ligands_list[new_eq_ind[0]][1]
@@ -328,6 +369,7 @@ class octahedral_complex:
                     self.eq_ligands = [self.ligands_list[eq_ind][0] for i in range(0,self.eq_oc)]
                     self.ready_for_assembly =  True
         self._name_self()
+
 
     def exchange_ligands(self,partner,eq_swap):
         child = octahedral_complex(self.ligands_list)
@@ -449,7 +491,7 @@ class octahedral_complex:
         child.examine()
         return child
 
-    def generate_geometery(self,prefix,spin,path_dictionary,rundirpath,gen):
+    def generate_geometry_legacy(self,prefix,spin,path_dictionary,rundirpath,gen):
         # get path info
         ligloc_cont = True
         # set metal properties:
@@ -550,6 +592,220 @@ class octahedral_complex:
 #              [str(element).strip("'[]'") for element in (self.eq_ligands[half:])]).strip("[]")).replace("'", "")
             ligloc = 'false'
             ligalign = 0
+        ## disable force field opt
+        ## if not DFT
+        if isDFT():
+            ff_opt = 'A'
+        else: # optional denticity based FF control
+            if max([self.ax_dent,self.eq_dent]) ==1:
+                ff_opt = 'A'
+            else:
+                ff_opt = 'A'
+        if smicat:
+                ff_opt = 'no'
+        ## get custom exchange fraction
+        #this_GA = get_current_GA()
+        use_old_optimizer = isKeyword('old_optimizer')
+        exchange = isKeyword('exchange')
+        optimize = isKeyword('optimize')
+
+        if optimize:
+            #print(' setting up GEO optimization ')
+            rty = 'minimize'
+            scrpath =  "scr/geo/gen_"+str(gen) + '/'  + mol_name
+        else:
+            rty = 'energy'
+            scrpath =  "scr/sp/gen_"+str(gen) + '/'  + mol_name
+
+        geometry = "oct"
+
+        ## set paths for generation
+        ms_dump_path = path_dictionary["molsimplify_inps"] +  'ms_output.txt'
+        ms_error_path = path_dictionary["molsimplify_inps"] +  'ms_errors.txt'
+        jobpath = path_dictionary["job_path"]  + mol_name + '.in'
+        inpath = path_dictionary["infiles"]  + mol_name + '.in'
+
+
+
+        geometry_path = path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz'
+
+        ## check if already exists:
+        geo_exists = os.path.isfile(path_dictionary["initial_geo_path"] + mol_name + '.xyz')
+
+        #Initialize ANN results dictionary
+        ANN_results = {}
+        property_list = ['split', 'split_dist','homo', 'homo_dist','gap', 'gap_dist','oxo','oxo_dist']
+        if not (geo_exists):
+                print('generating '+ str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and'  + str(self.ax_ligands))
+                try:
+                #if True:
+                    with open(ms_dump_path,'a') as ms_pipe:
+                        with open(ms_error_path,'a') as ms_error_pipe:
+                            call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +str(liglist),'-ligocc 1,1,1,1,1,1',
+                                     '-rundir ' +"'"+ rundirpath.rstrip("/")+"'",'-keepHs yes,yes,yes,yes,yes,yes','-jobdir','temp',
+                                     '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
+                                     '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ str(self.ox), '-exchange '+str(exchange),
+                                     '-qccode TeraChem','-runtyp '+rty,"-ffoption "+ff_opt,' -ff UFF'])
+                            if smicat:
+                                call += ' -smicat ' + smicat
+
+                            if isKeyword('oxocatalysis'):
+                                call += ' -qoption dftd,d3 -qoption min_maxiter,1100'
+                            print(call)
+#                            p2 = subprocess.call(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
+                            p2 = subprocess.Popen(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
+                            p2.wait()
+
+                    assert(os.path.isfile(rundirpath + 'temp'+'/' + mol_name + '.molinp'))
+                    shutil.move(rundirpath + 'temp'+'/' + mol_name + '.molinp', path_dictionary["molsimplify_inps"]+'/' + mol_name + '.molinp')
+                    shutil.move(rundirpath + 'temp'+'/' + mol_name + '.xyz', geometry_path)
+                except:
+                        print('Error: molSimplify failure when calling ')
+                        print(call)
+                        sys.exit()
+
+                #if this_GA.config['symclass']=="strong":
+
+                with open(rundirpath + 'temp' +'/' + mol_name + '.report') as report_f:
+                    for line in report_f:
+                        if ("split" in line) and not ("dist" in line) and not ("trust" in line):
+                            print('****')
+                            print(line)
+                            split = float(line.split(",")[1])
+                            ANN_results.update({'split':float(line.split(",")[1])})
+                            print('ANN_split is ' +"{0:.2f}".format(split))
+                        if ("split" in line) and ("dist" in line):
+                            print('****')
+                            print(line)
+                            split_dist = float(line.split(",")[1])
+                            ANN_results.update({'split_dist':float(line.split(",")[1])})
+                            print('ANN_split_distance is ' +"{0:.2f}".format(split_dist))
+                        if ("homo" in line) and not ("dist" in line) and not ("trust" in line):
+                            print('****')
+                            print(line)
+                            homo = float(line.split(",")[1])
+                            ANN_results.update({'homo':float(line.split(",")[1])})
+                            print('ANN_homo is ' +"{0:.2f}".format(homo))
+                        if ("homo" in line) and ("dist" in line):
+                            print('****')
+                            print(line)
+                            homo_dist = float(line.split(",")[1])
+                            ANN_results.update({'homo_dist':float(line.split(",")[1])})
+                            print('ANN_homo_distance is ' +"{0:.2f}".format(homo_dist))
+                        if ("gap" in line) and not ("dist" in line) and not ("trust" in line):
+                            print('****')
+                            print(line)
+                            gap = float(line.split(",")[1])
+                            ANN_results.update({'gap':float(line.split(",")[1])})
+                            print('ANN_gap is ' +"{0:.2f}".format(gap))
+                        if ("gap" in line) and ("dist" in line):
+                            print('****')
+                            print(line)
+                            gap_dist = float(line.split(",")[1])
+                            ANN_results.update({'gap_dist':float(line.split(",")[1])})
+                            print('ANN_gap_distance is ' +"{0:.2f}".format(gap_dist))
+                        if ("oxo" in line) and not ("dist" in line) and not ("trust" in line):
+                            print('****')
+                            print(line)
+                            oxo = float(line.split(",")[1])
+                            ANN_results.update({'oxo':float(line.split(",")[1])})
+                            print('ANN_oxo is ' +"{0:.2f}".format(oxo))
+                        if ("oxo" in line) and ("dist" in line):
+                            print('****')
+                            print(line)
+                            oxo_dist = float(line.split(",")[1])
+                            ANN_results.update({'oxo_dist':float(line.split(",")[1])})
+                            print('ANN_oxo_distance is ' +"{0:.2f}".format(oxo_dist))
+                        if ("hat" in line) and not ("dist" in line) and not ("trust" in line):
+                            print('****')
+                            print(line)
+                            hat = float(line.split(",")[1])
+                            ANN_results.update({'hat':float(line.split(",")[1])})
+                            print('ANN_hat is ' +"{0:.2f}".format(hat))
+                        if ("hat" in line) and ("dist" in line):
+                            print('****')
+                            print(line)
+                            hat_dist = float(line.split(",")[1])
+                            ANN_results.update({'hat_dist':float(line.split(",")[1])})
+                            print('ANN_hat_distance is ' +"{0:.2f}".format(hat_dist))
+                    if len(list(set(property_list).difference(ANN_results.keys())))>0 and not isKeyword('DFT'):
+                        for i in property_list:
+                            if i not in ANN_results.keys():
+                                ANN_results.update({i:float(10000)}) #Chosen to be arbitrarily large to reduce the fitness value to 0.
+                                print(str(i)+ ' set to 10000 in ANN_results, chosen so that the fitness goes to 0. The key was not present.')
+                            else:
+                                print(str(i)+ ' set to '+str(ANN_results[i])+' since the key was present')
+
+
+                if isKeyword('oxocatalysis') and 'oxo' in liglist and isKeyword('DFT'): #Subbing in 1.65 as Oxo BL
+                    print('Modifying initial oxo geom file '+ mol_name + '.xyz to have oxo BL 1.65')
+                    geo_ref_file = open(path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz','r')
+                    lines = geo_ref_file.readlines()
+                    geo_ref_file.close()
+                    geo_replacement = open(path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz','w')
+                    adjusted_lines = lines[:-1]+[lines[-1][:-9]+'1.650000\n']
+                    geo_replacement.writelines(adjusted_lines)
+                    geo_replacement.close()
+
+                shutil.move(rundirpath + 'temp' +'/' + mol_name + '.report', path_dictionary["ms_reps"] +'/'+ mol_name + '.report')
+
+                ## write the job file
+                with open(jobpath,'w') as newf:
+                    with open(rundirpath + 'temp/' + mol_name + '.in','r') as oldf:
+                        for line in oldf:
+                            if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line):
+                                newf.writelines(line)
+                    newf.writelines("scrdir " +scrpath + "\n")
+                os.remove(rundirpath + 'temp/' + mol_name + '.in')
+
+
+                ### check if ligands in old optimizer list
+                old_optimizer_list = get_old_optimizer_ligand_list()
+                # use_old_optimizer = False
+                for ligs in (self.eq_ligands+self.ax_ligands):
+                    if ligs in old_optimizer_list:
+                        use_old_optimizer = True
+                ### make an infile!
+                create_generic_infile(jobpath,restart=False,use_old_optimizer=use_old_optimizer)
+                flag_oct, _, _ = self.inspect_initial_geo(geometry_path)
+                if flag_oct == 0:
+                    print('Bad initial geometry. Setting all of the fitness values to 0 so it is not used.')
+                    print('All ANN dictkeys set to 10000, chosen so that the fitness goes to 0.')
+                    ANN_results = {k:float(10000) for k in ANN_results}
+                    for i in property_list:
+                        ANN_results.update({i:float(10000)}) #Chosen to be arbitrarily large to reduce the fitness value to 0.
+                        print(str(i)+ ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.')
+        else:
+            flag_oct = 1
+        sorted_ANN_results = {}
+        if len(ANN_results.keys())>0:
+            for key in sorted(ANN_results.iterkeys()):
+                sorted_ANN_results[key] = ANN_results[key]
+        return jobpath,mol_name, sorted_ANN_results, flag_oct
+
+
+    def generate_geometry(self,prefix, ox, spin,path_dictionary,rundirpath,gen):
+        # get path info
+        ligloc_cont = True
+        # set metal properties:
+        this_metal = self.metals_list[self.core]
+
+        mol_name = prefix + jobname_from_parts(metal=self.core, ox=ox, lig_inds=self.inds, ahf=self.ahf, spin=spin)
+
+        smicat = False # holder for connection atoms calls for SMILES ligands
+        print(self.lig_occs)
+        purified_ligands = [self.ligands[i] for i in range(6) if self.lig_occs[i]>0]
+        print(purified_ligands)
+        
+        liglist, smicat = SMILES_converter(purified_ligands)
+        ligalign = 0
+        print(liglist,smicat)
+        if self.three_bidentate:
+            ligloc = 'false'
+        else:
+            ligloc = 1
+        ligalign = 0 
+
         ## disable force field opt
         ## if not DFT
         if isDFT():
