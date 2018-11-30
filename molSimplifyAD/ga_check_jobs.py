@@ -154,7 +154,7 @@ def check_all_current_convergence():
                         this_run.solvent_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'
 
                 if isKeyword('water'):
-                        this_run.water_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'               
+                        this_run.water_inpath = path_dictionary['water_in_path'] + base_name + '.in'               
                         this_run.water_outpath = (path_dictionary["water_out_path"] + base_name + ".out")
                 if isKeyword('TS'):
                         print('NOW ASSIGNING ALL OF THE PRFO PATHS!')
@@ -484,7 +484,7 @@ def check_all_current_convergence():
                                + " failure at job : " + str(jobs) + ' with status ' + str(this_run.status)
                                + ' after ' + str(number_of_subs) + ' subs, trying again... ')
 
-                        if int(number_of_subs) > get_maxresub():
+                        if int(number_of_subs) > 3:
                             print(' giving up on job ' + str(jobs) + ' after ' + str(number_of_subs))
                             logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                                    + " giving up on job : " + str(jobs) + ' with status ' + str(this_run.status)
