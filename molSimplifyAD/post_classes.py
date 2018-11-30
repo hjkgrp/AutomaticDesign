@@ -690,7 +690,7 @@ class DFTRun(object):
                                         f.write("method b3lyp\n")
                                     else:
                                         f.write(line)
-                            if os.path.exists(path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz') and int(converged_jobs[path_dictionary['job_path']+wfnrefhyd+'.in']) == 0:
+                            if os.path.exists(path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz') and int(converged_jobs[path_dictionary['job_path']+wfnrefhyd+'.in']) in [0, 1, 2]:
                                 f.write('coordinates ' + path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz' + ' \n')
                             else:
                                 f.write('coordinates ' + path_dictionary['initial_geo_path']+new_name_upper+'.xyz'+' \n')
@@ -698,59 +698,7 @@ class DFTRun(object):
                             f.write('end\n')
                             f.close()
                             ref.close()
-        if new_name_lower:
-            if int(refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
-                hydlist = new_name_lower.split('_')
-                hydrefval = hydrefdict[hydlist[-2]]
-                hydlist[-2] = hydrefval
-                wfnrefhyd = "_".join(hydlist)
-            if not os.path.exists(path_dictionary["initial_geo_path"]+new_name_lower+'.xyz'):
-                mymol.writexyz(path_dictionary["initial_geo_path"]+new_name_lower+'.xyz')
-            else:
-                print('Path already exists for '+new_name_lower+'.xyz')
-            if int(new_name_lower[-1]) == 1 and int(refHFX) != 20:
-                guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + wfnrefhyd + '/c0\n'
-            elif int(refHFX) != 20:
-                guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + wfnrefhyd + '/ca0' + ' ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + wfnrefhyd + '/cb0\n'
-            else:
-                guess_string = 'guess generate\n'
-            if not os.path.exists(path_dictionary['infiles']+new_name_lower+'.in'):
-                with open(self.inpath,'r') as sourcef:
-                    sourcelines = sourcef.readlines()
-                    with open(path_dictionary["job_path"]+new_name_lower+'.in','w') as newf:
-                        for line in sourcelines:
-                            if (not "end" in line) and not ("scr" in line) and not ("spinmult" in line):
-                                ## these lines should be common
-                                newf.write(line)
-                            elif "spinmult" in line:
-                                newf.write("spinmult "+new_name_lower.strip('.in').split('_')[-1]+'\n')
-                            elif "method" in line:
-                                if int(new_name_lower.strip('.in').split('_')[-1]) == 1:
-                                    newf.write("method b3lyp\n")
-                                else:
-                                    newf.write(line)
-                        newf.write('scrdir scr/geo/gen_0/'+new_name_lower.strip('.in')+'/\n')     
-                newf.close()
-                sourcef.close()           
-                returnval2 = path_dictionary['job_path'] + new_name_lower + '.in'
-                if int(refHFX) != 20:
-                    with open(path_dictionary['infiles'] + new_name_lower + '.in', 'w') as f:
-                        with open(path_dictionary["job_path"]+new_name_lower + '.in', 'r') as ref:
-                            for line in ref:
-                                if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
-                                    if (int(new_name_lower[-1]) == 1) and "method" in line: #restrict singlets
-                                        f.write("method b3lyp\n")
-                                    else:
-                                        f.write(line)
-                            if os.path.exists(path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz') and int(converged_jobs[path_dictionary['job_path']+wfnrefhyd+'.in']) == 0:
-                                f.write('coordinates ' + path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz' + ' \n')
-                            else:
-                                f.write('coordinates ' + path_dictionary['initial_geo_path']+new_name_lower+'.xyz'+' \n')
-                            f.write(guess_string)
-                            f.write('end\n')
-                            f.close()
-                            ref.close()
-        return returnval1, returnval2 
+        return returnval1 
     
     def write_HAT_and_Oxo_TS(self, empty):
         print('NOW WRITING TRANSITION STATE GEOMETRIES AND INFILES!')
