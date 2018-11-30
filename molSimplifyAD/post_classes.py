@@ -71,11 +71,16 @@ class DFTRun(object):
                                    'oxygen_alpha', 'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
         if isKeyword('TS'):
             print('---------------------------- ENTERED TS SECTION IN POST CLASSES ------------------------------')
-            list_of_init_props += ['terachem_version_HAT_TS','terachem_detailed_version_HAT_TS','basis_HAT_TS','tspin_HAT_TS','charge_HAT_TS','alpha_level_shift_HAT_TS',
-                                   'beta_level_shift_HAT_TS','energy_HAT_TS','time_HAT_TS','terachem_version_Oxo_TS','terachem_detailed_version_Oxo_TS','basis_Oxo_TS',
-                                    'tspin_Oxo_TS','charge_Oxo_TS','alpha_level_shift_Oxo_TS','beta_level_shift_Oxo_TS','energy_Oxo_TS','time_Oxo_TS']
-            list_of_init_zero += ['ss_act_HAT_TS','ss_target_HAT_TS','eigenvalue_HAT_TS','ss_act_Oxo_TS','ss_target_Oxo_TS','eigenvalue_Oxo_TS']
-            list_of_init_false += ['init_energy_HAT_TS','init_energy_Oxo_TS','converged_HAT_TS','converged_Oxo_TS','attempted_HAT_TS','attempted_Oxo_TS']
+            list_of_init_props += ['terachem_version_HAT_TS', 'terachem_detailed_version_HAT_TS', 'basis_HAT_TS',
+                                   'tspin_HAT_TS', 'charge_HAT_TS', 'alpha_level_shift_HAT_TS',
+                                   'beta_level_shift_HAT_TS', 'energy_HAT_TS', 'time_HAT_TS', 'terachem_version_Oxo_TS',
+                                   'terachem_detailed_version_Oxo_TS', 'basis_Oxo_TS',
+                                   'tspin_Oxo_TS', 'charge_Oxo_TS', 'alpha_level_shift_Oxo_TS',
+                                   'beta_level_shift_Oxo_TS', 'energy_Oxo_TS', 'time_Oxo_TS']
+            list_of_init_zero += ['ss_act_HAT_TS', 'ss_target_HAT_TS', 'eigenvalue_HAT_TS', 'ss_act_Oxo_TS',
+                                  'ss_target_Oxo_TS', 'eigenvalue_Oxo_TS']
+            list_of_init_false += ['init_energy_HAT_TS', 'init_energy_Oxo_TS', 'converged_HAT_TS', 'converged_Oxo_TS',
+                                   'attempted_HAT_TS', 'attempted_Oxo_TS']
         for this_attribute in list_of_init_props:
             setattr(self, this_attribute, 'undef')
         for this_attribute in list_of_init_empty:
@@ -171,21 +176,24 @@ class DFTRun(object):
         if os.path.exists(self.init_geopath):
             self.obtain_init_mol3d()
             if self.octahedral:
-                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsOct(self.init_mol,
-                                                                              dict_check=globs.geo_check_dictionary()[
-                                                                                  "dict_oct_check_loose"],
-                                                                              debug=debug)
+                _, _, dict_oct_info, flag_oct_loose, flag_list = self.progmol.Oct_inspection(self.init_mol,
+                                                                                             dict_check=
+                                                                                             globs.geo_check_dictionary()[
+                                                                                                 "dict_oct_check_loose"],
+                                                                                             debug=debug)
             else:
-                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsStructure(self.init_mol,
-                                                                                    dict_check=
-                                                                                    globs.geo_check_dictionary()[
-                                                                                        "dict_oneempty_check_loose"],
-                                                                                    debug=debug)
+                _, _, dict_oct_info, flag_oct_loose, flag_list = self.progmol.Structure_inspection(self.init_mol,
+                                                                                                   dict_check=
+                                                                                                   globs.geo_check_dictionary()[
+                                                                                                       "dict_oneempty_check_loose"],
+                                                                                                   debug=debug)
             self.flag_oct_loose = flag_oct_loose
             self.flag_list_loose = flag_list
             self.dict_geo_check_prog = dict_oct_info
             self.write_prog_geo_dict()
         else:
+            print(" This should not happen as we should have initial geometry for our calculations. please check.")
+            print("Using old loose check....")
             if self.octahedral:
                 flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsOct(
                     dict_check=globs.geo_check_dictionary()["dict_oct_check_loose"],
@@ -206,13 +214,13 @@ class DFTRun(object):
 
     def extract_geo(self):
         self.geostatus = extract_file_check(self.scrpath, self.geopath)
-    
+
     def extract_TS_geo(self, type):
         if type.lower() == 'hat':
             self.geostatus_HAT_TS = extract_file_check(self.PRFO_HAT_scrpath, self.PRFO_HAT_geopath)
         if type.lower() == 'oxo':
             self.geostatus_Oxo_TS = extract_file_check(self.PRFO_Oxo_scrpath, self.PRFO_Oxo_geopath)
-    
+
     def obtain_rsmd(self):
         self.rmsd = self.mol.rmsd(self.init_mol)
 
@@ -291,7 +299,7 @@ class DFTRun(object):
     def estimate_if_job_live(self):
         modtime = os.stat(self.outpath).st_mtime
         #        print('opttest modifed on '+ str(modtime))
-#        print('age is ' + str((time.time() - modtime)))
+        #        print('age is ' + str((time.time() - modtime)))
         if (time.time() - modtime) >= 1000:
             return (False)
         else:
@@ -607,16 +615,18 @@ class DFTRun(object):
             f_emptysp.close()
 
         return (self.empty_sp_inpath)
-    
+
     def write_hydroxyl_inputs(self, refHFX):
         returnval1 = False
         returnval2 = False
         hydrefdict = {"25": "20", "30": "25", "15": "20", "10": "15", "05": "10", "00": "05"}
-        gene, gen, _, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, _, ahf, basename,_ = translate_job_name(self.job)
+        gene, gen, _, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, _, ahf, basename, _ = translate_job_name(
+            self.job)
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)
         new_name_upper, new_name_lower, reference_name = renameOxoHydroxyl(self.job)
-        print('NEW UPPER HYD REF is THIS:', new_name_upper, 'NEW LOWER HYD REF IS THIS:',new_name_lower, 'Referenced THIS:', reference_name)
+        print('NEW UPPER HYD REF is THIS:', new_name_upper, 'NEW LOWER HYD REF IS THIS:', new_name_lower,
+              'Referenced THIS:', reference_name)
         if new_name_upper:
             new_name_upper = new_name_upper.strip('.in')
         if new_name_lower:
@@ -632,179 +642,200 @@ class DFTRun(object):
         metal_coord = mymol.getAtom(metalval[0]).coords()
         bond1_coord = mymol.getAtom(bondedatoms[0]).coords()
         bond2_coord = mymol.getAtom(bondedatoms[1]).coords()
-        oxo, dxyz = setPdistance(oxo, oxo_coord, metal_coord,1.84)
-        metaloxo = np.array(oxo_coord)-np.array(metal_coord)
+        oxo, dxyz = setPdistance(oxo, oxo_coord, metal_coord, 1.84)
+        metaloxo = np.array(oxo_coord) - np.array(metal_coord)
         extra = getPointu(oxo_coord, 1.2, metaloxo)
-        moveup = np.array(extra)-metal_coord
-        val = midpt(bond1_coord,bond2_coord)
-        movevect = np.array(normalize(np.array(val)+moveup-np.array(oxo_coord)))+oxo_coord
+        moveup = np.array(extra) - metal_coord
+        val = midpt(bond1_coord, bond2_coord)
+        movevect = np.array(normalize(np.array(val) + moveup - np.array(oxo_coord))) + oxo_coord
         p = list(movevect)
         newH = atom3D('H', p)
         mymol.addAtom(newH)
         hydrogen = mymol.getAtom(-1)
-        hydrogen, dxyz = setPdistance(hydrogen, hydrogen.coords(), oxo.coords(),1)
+        hydrogen, dxyz = setPdistance(hydrogen, hydrogen.coords(), oxo.coords(), 1)
         converged_jobs = find_converged_job_dictionary()
         if new_name_upper:
-            if int(refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
-                print('ref',refHFX)
+            if int(
+                    refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
+                print('ref', refHFX)
                 print(new_name_upper)
                 hydlist = new_name_upper.split('_')
                 hydrefval = hydrefdict[hydlist[-2]]
                 hydlist[-2] = hydrefval
                 wfnrefhyd = "_".join(hydlist)
-            if not os.path.exists(path_dictionary["initial_geo_path"]+new_name_upper+'.xyz'):
-                mymol.writexyz(path_dictionary["initial_geo_path"]+new_name_upper+'.xyz')
+            if not os.path.exists(path_dictionary["initial_geo_path"] + new_name_upper + '.xyz'):
+                mymol.writexyz(path_dictionary["initial_geo_path"] + new_name_upper + '.xyz')
             else:
-                print('Path already exists for '+new_name_upper+'.xyz')
+                print('Path already exists for ' + new_name_upper + '.xyz')
             if int(new_name_upper[-1]) == 1 and int(refHFX) != 20:
-                guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + wfnrefhyd + '/c0\n'
+                guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
+                    self.gen) + '/' + wfnrefhyd + '/c0\n'
             elif int(refHFX) != 20:
-                guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + wfnrefhyd + '/ca0' + ' ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + wfnrefhyd + '/cb0\n'
+                guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
+                    self.gen) + '/' + wfnrefhyd + '/ca0' + ' ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
+                    self.gen) + '/' + wfnrefhyd + '/cb0\n'
             else:
                 guess_string = 'guess generate\n'
-            if not os.path.exists(path_dictionary['infiles']+new_name_upper+'.in'):
-                with open(self.inpath,'r') as sourcef:
+            if not os.path.exists(path_dictionary['infiles'] + new_name_upper + '.in'):
+                with open(self.inpath, 'r') as sourcef:
                     sourcelines = sourcef.readlines()
-                    with open(path_dictionary["job_path"]+new_name_upper+'.in','w') as newf:
+                    with open(path_dictionary["job_path"] + new_name_upper + '.in', 'w') as newf:
                         for line in sourcelines:
                             if (not "end" in line) and not ("scr" in line) and not ("spinmult" in line):
                                 ## these lines should be common
                                 newf.write(line)
                             elif "spinmult" in line:
-                                newf.write("spinmult "+new_name_upper.strip('.in').split('_')[-1]+'\n')
+                                newf.write("spinmult " + new_name_upper.strip('.in').split('_')[-1] + '\n')
                             elif "method" in line:
                                 if int(new_name_upper.strip('.in').split('_')[-1]) == 1:
                                     newf.write("method b3lyp\n")
                                 else:
                                     newf.write(line)
-                        newf.write('scrdir scr/geo/gen_0/'+new_name_upper.strip('.in')+'/\n')     
+                        newf.write('scrdir scr/geo/gen_0/' + new_name_upper.strip('.in') + '/\n')
                 newf.close()
                 sourcef.close()
                 returnval1 = path_dictionary['job_path'] + new_name_upper + '.in'
                 if int(refHFX) != 20:
                     with open(path_dictionary['infiles'] + new_name_upper + '.in', 'w') as f:
-                        with open(path_dictionary["job_path"]+new_name_upper+'.in', 'r') as ref:
+                        with open(path_dictionary["job_path"] + new_name_upper + '.in', 'r') as ref:
                             for line in ref:
                                 if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
-                                    if (int(new_name_upper[-1]) == 1) and "method" in line: #restrict singlets
+                                    if (int(new_name_upper[-1]) == 1) and "method" in line:  # restrict singlets
                                         f.write("method b3lyp\n")
                                     else:
                                         f.write(line)
-                            if os.path.exists(path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz') and int(converged_jobs[path_dictionary['job_path']+wfnrefhyd+'.in']) == 0:
-                                f.write('coordinates ' + path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz' + ' \n')
+                            if os.path.exists(path_dictionary['optimial_geo_path'] + wfnrefhyd + '.xyz') and int(
+                                    converged_jobs[path_dictionary['job_path'] + wfnrefhyd + '.in']) == 0:
+                                f.write(
+                                    'coordinates ' + path_dictionary['optimial_geo_path'] + wfnrefhyd + '.xyz' + ' \n')
                             else:
-                                f.write('coordinates ' + path_dictionary['initial_geo_path']+new_name_upper+'.xyz'+' \n')
+                                f.write('coordinates ' + path_dictionary[
+                                    'initial_geo_path'] + new_name_upper + '.xyz' + ' \n')
                             f.write(guess_string)
                             f.write('end\n')
                             f.close()
                             ref.close()
         if new_name_lower:
-            if int(refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
+            if int(
+                    refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
                 hydlist = new_name_lower.split('_')
                 hydrefval = hydrefdict[hydlist[-2]]
                 hydlist[-2] = hydrefval
                 wfnrefhyd = "_".join(hydlist)
-            if not os.path.exists(path_dictionary["initial_geo_path"]+new_name_lower+'.xyz'):
-                mymol.writexyz(path_dictionary["initial_geo_path"]+new_name_lower+'.xyz')
+            if not os.path.exists(path_dictionary["initial_geo_path"] + new_name_lower + '.xyz'):
+                mymol.writexyz(path_dictionary["initial_geo_path"] + new_name_lower + '.xyz')
             else:
-                print('Path already exists for '+new_name_lower+'.xyz')
+                print('Path already exists for ' + new_name_lower + '.xyz')
             if int(new_name_lower[-1]) == 1 and int(refHFX) != 20:
-                guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + wfnrefhyd + '/c0\n'
+                guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
+                    self.gen) + '/' + wfnrefhyd + '/c0\n'
             elif int(refHFX) != 20:
-                guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + wfnrefhyd + '/ca0' + ' ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + wfnrefhyd + '/cb0\n'
+                guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
+                    self.gen) + '/' + wfnrefhyd + '/ca0' + ' ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
+                    self.gen) + '/' + wfnrefhyd + '/cb0\n'
             else:
                 guess_string = 'guess generate\n'
-            if not os.path.exists(path_dictionary['infiles']+new_name_lower+'.in'):
-                with open(self.inpath,'r') as sourcef:
+            if not os.path.exists(path_dictionary['infiles'] + new_name_lower + '.in'):
+                with open(self.inpath, 'r') as sourcef:
                     sourcelines = sourcef.readlines()
-                    with open(path_dictionary["job_path"]+new_name_lower+'.in','w') as newf:
+                    with open(path_dictionary["job_path"] + new_name_lower + '.in', 'w') as newf:
                         for line in sourcelines:
                             if (not "end" in line) and not ("scr" in line) and not ("spinmult" in line):
                                 ## these lines should be common
                                 newf.write(line)
                             elif "spinmult" in line:
-                                newf.write("spinmult "+new_name_lower.strip('.in').split('_')[-1]+'\n')
+                                newf.write("spinmult " + new_name_lower.strip('.in').split('_')[-1] + '\n')
                             elif "method" in line:
                                 if int(new_name_lower.strip('.in').split('_')[-1]) == 1:
                                     newf.write("method b3lyp\n")
                                 else:
                                     newf.write(line)
-                        newf.write('scrdir scr/geo/gen_0/'+new_name_lower.strip('.in')+'/\n')     
+                        newf.write('scrdir scr/geo/gen_0/' + new_name_lower.strip('.in') + '/\n')
                 newf.close()
-                sourcef.close()           
+                sourcef.close()
                 returnval2 = path_dictionary['job_path'] + new_name_lower + '.in'
                 if int(refHFX) != 20:
                     with open(path_dictionary['infiles'] + new_name_lower + '.in', 'w') as f:
-                        with open(path_dictionary["job_path"]+new_name_lower + '.in', 'r') as ref:
+                        with open(path_dictionary["job_path"] + new_name_lower + '.in', 'r') as ref:
                             for line in ref:
                                 if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
-                                    if (int(new_name_lower[-1]) == 1) and "method" in line: #restrict singlets
+                                    if (int(new_name_lower[-1]) == 1) and "method" in line:  # restrict singlets
                                         f.write("method b3lyp\n")
                                     else:
                                         f.write(line)
-                            if os.path.exists(path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz') and int(converged_jobs[path_dictionary['job_path']+wfnrefhyd+'.in']) == 0:
-                                f.write('coordinates ' + path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz' + ' \n')
+                            if os.path.exists(path_dictionary['optimial_geo_path'] + wfnrefhyd + '.xyz') and int(
+                                    converged_jobs[path_dictionary['job_path'] + wfnrefhyd + '.in']) == 0:
+                                f.write(
+                                    'coordinates ' + path_dictionary['optimial_geo_path'] + wfnrefhyd + '.xyz' + ' \n')
                             else:
-                                f.write('coordinates ' + path_dictionary['initial_geo_path']+new_name_lower+'.xyz'+' \n')
+                                f.write('coordinates ' + path_dictionary[
+                                    'initial_geo_path'] + new_name_lower + '.xyz' + ' \n')
                             f.write(guess_string)
                             f.write('end\n')
                             f.close()
                             ref.close()
-        return returnval1, returnval2 
-    
+        return returnval1, returnval2
+
     def write_HAT_and_Oxo_TS(self, empty):
         print('NOW WRITING TRANSITION STATE GEOMETRIES AND INFILES!')
         empty = os.path.basename(empty)
         empty = empty.strip('.in')
         empty = empty.strip('.xyz')
         empty = empty.strip('.out')
-        empty = empty+'.xyz'
+        empty = empty + '.xyz'
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)
         localrundir = isKeyword('rundir')
-        ms_dump_path = path_dictionary["molsimplify_inps"] +  'ms_output.txt'
-        ms_error_path = path_dictionary["molsimplify_inps"] +  'ms_errors.txt'
+        ms_dump_path = path_dictionary["molsimplify_inps"] + 'ms_output.txt'
+        ms_error_path = path_dictionary["molsimplify_inps"] + 'ms_errors.txt'
         HAT_inpath = path_dictionary["PRFO_in_path_HAT"] + self.name + '.in'
         HAT_geopath = path_dictionary["PRFO_initial_geo_HAT"] + self.name + '.xyz'
-        
+
         HAT_exists = os.path.isfile(HAT_geopath)
         if not HAT_exists:
-            print('Generating HAT TS structure for '+self.name)
+            print('Generating HAT TS structure for ' + self.name)
             if True:
                 print('here1')
                 with open(ms_dump_path, 'a') as ms_pipe:
                     print('here2')
-                    with open(ms_error_path,'a') as ms_error_pipe:
+                    with open(ms_error_path, 'a') as ms_error_pipe:
                         print('here3')
-                        call = " ".join(["molsimplify",'-core ' + str(path_dictionary['initial_geo_path']+empty),'-lig ' +'oxo',
-                                            '-ligocc 1','-tsgen -substrate methane -subcatoms 4 -mlig oxo -mligcatoms 0',
-                                            '-rundir ' +"'"+ localrundir.rstrip("/")+"'",'-jobdir','temp','-calccharge yes',
-                                            '-name '+"'"+self.name+"'", '-spin '+str(self.spin),'-oxstate '+ str(self.ox),
-                                            '-exchange '+str(self.alpha),'-qccode TeraChem','-runtyp minimize','-qoption min_method, prfo',
-                                            '-qoption convthre, 1e-5 -qoption min_tolerance, 4.5e-3','-qoption min_tolerance_e, 1e-5', 
-                                            '-qoption new_minimizer, no -qoption min_init_hess, two-point',
-                                            '-qoption precision, double -qoption min_coordinates, cartesian -qoption dftd, d3'])
+                        call = " ".join(["molsimplify", '-core ' + str(path_dictionary['initial_geo_path'] + empty),
+                                         '-lig ' + 'oxo',
+                                         '-ligocc 1', '-tsgen -substrate methane -subcatoms 4 -mlig oxo -mligcatoms 0',
+                                         '-rundir ' + "'" + localrundir.rstrip("/") + "'", '-jobdir', 'temp',
+                                         '-calccharge yes',
+                                         '-name ' + "'" + self.name + "'", '-spin ' + str(self.spin),
+                                         '-oxstate ' + str(self.ox),
+                                         '-exchange ' + str(self.alpha), '-qccode TeraChem', '-runtyp minimize',
+                                         '-qoption min_method, prfo',
+                                         '-qoption convthre, 1e-5 -qoption min_tolerance, 4.5e-3',
+                                         '-qoption min_tolerance_e, 1e-5',
+                                         '-qoption new_minimizer, no -qoption min_init_hess, two-point',
+                                         '-qoption precision, double -qoption min_coordinates, cartesian -qoption dftd, d3'])
                         print(call)
-                        p2 = subprocess.Popen(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
+                        p2 = subprocess.Popen(call, stdout=ms_pipe, stderr=ms_error_pipe, shell=True)
                         p2.wait()
-                assert(os.path.isfile(localrundir+ 'temp'+'/' + self.name + '.molinp'))
-                shutil.move(localrundir+'temp'+'/'+self.name+'.molinp',path_dictionary["molsimplify_inps"]+'/'+self.name+'_HAT.molinp')
-                shutil.move(localrundir+'temp'+'/' + self.name + '.xyz', HAT_geopath)
-            #except:
+                assert (os.path.isfile(localrundir + 'temp' + '/' + self.name + '.molinp'))
+                shutil.move(localrundir + 'temp' + '/' + self.name + '.molinp',
+                            path_dictionary["molsimplify_inps"] + '/' + self.name + '_HAT.molinp')
+                shutil.move(localrundir + 'temp' + '/' + self.name + '.xyz', HAT_geopath)
+            # except:
             #    print('Error: molSimplify failure in generating HAT TS')
             #    print(call)
             #    sys.exit()
             with open(HAT_inpath, 'w') as newf:
-                with open(localrundir + 'temp/' + self.name + '.in','r') as oldf:
+                with open(localrundir + 'temp/' + self.name + '.in', 'r') as oldf:
                     for line in oldf:
-                        if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not ("levelshift" in line):
+                        if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
+                                "levelshift" in line):
                             newf.writelines(line)
                         if "levelshiftvala" in line:
                             newf.writelines("levelshiftvala 0.25\n")
                         if "levelshiftvalb" in line:
                             newf.writelines("levelshiftvalb 0.25\n")
-                    newf.writelines("scrdir scr/prfo/hat/gen_0/" +self.name + "/\n")
-                    newf.writelines("coordinates "+ path_dictionary["PRFO_initial_geo_HAT"] + self.name + '.xyz\n')
+                    newf.writelines("scrdir scr/prfo/hat/gen_0/" + self.name + "/\n")
+                    newf.writelines("coordinates " + path_dictionary["PRFO_initial_geo_HAT"] + self.name + '.xyz\n')
                     newf.writelines('end')
                 os.remove(localrundir + 'temp/' + self.name + '.in')
                 oldf.close()
@@ -812,56 +843,60 @@ class DFTRun(object):
 
         Oxo_inpath = path_dictionary["PRFO_in_path_Oxo"] + self.name + '.in'
         Oxo_geopath = path_dictionary["PRFO_initial_geo_Oxo"] + self.name + '.xyz'
-        
-        Oxo_exists = os.path.isfile(Oxo_geopath)        
+
+        Oxo_exists = os.path.isfile(Oxo_geopath)
         if not Oxo_exists:
-            print('Generating Oxo TS structure for '+self.name)
+            print('Generating Oxo TS structure for ' + self.name)
             try:
                 with open(ms_dump_path, 'a') as ms_pipe:
-                    with open(ms_error_path,'a') as ms_error_pipe:
-                        call = " ".join(["molsimplify " ,'-core ' + path_dictionary['initial_geo_path']+empty,'-lig ' +'oxo',
-                                     '-ligocc 1','-tsgen -substrate N2 -subcatoms 0 -mlig oxo -mligcatoms 0',
-                                     '-rundir ' +"'"+ localrundir.rstrip("/")+"'",'-jobdir','temp',
-                                     '-calccharge yes','-name '+"'"+self.name+"'", '-spin '+str(self.spin),'-oxstate '+ str(self.ox), 
-                                     '-exchange '+str(self.alpha),'-qccode TeraChem','-runtyp minimize',
-                                     '-qoption min_method, prfo -qoption convthre, 1e-5 -qoption min_tolerance, 4.5e-3',
-                                     '-qoption min_tolerance_e, 1e-5 -qoption new_minimizer, no -qoption min_init_hess, two-point', 
-                                     '-qoption precision, double -qoption min_coordinates, cartesian -qoption dftd, d3'])
+                    with open(ms_error_path, 'a') as ms_error_pipe:
+                        call = " ".join(
+                            ["molsimplify ", '-core ' + path_dictionary['initial_geo_path'] + empty, '-lig ' + 'oxo',
+                             '-ligocc 1', '-tsgen -substrate N2 -subcatoms 0 -mlig oxo -mligcatoms 0',
+                             '-rundir ' + "'" + localrundir.rstrip("/") + "'", '-jobdir', 'temp',
+                             '-calccharge yes', '-name ' + "'" + self.name + "'", '-spin ' + str(self.spin),
+                             '-oxstate ' + str(self.ox),
+                             '-exchange ' + str(self.alpha), '-qccode TeraChem', '-runtyp minimize',
+                             '-qoption min_method, prfo -qoption convthre, 1e-5 -qoption min_tolerance, 4.5e-3',
+                             '-qoption min_tolerance_e, 1e-5 -qoption new_minimizer, no -qoption min_init_hess, two-point',
+                             '-qoption precision, double -qoption min_coordinates, cartesian -qoption dftd, d3'])
                         print(call)
-                        p2 = subprocess.Popen(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
+                        p2 = subprocess.Popen(call, stdout=ms_pipe, stderr=ms_error_pipe, shell=True)
                         p2.wait()
-                assert(os.path.isfile(localrundir+ 'temp'+'/' + self.name + '.molinp'))
-                shutil.move(localrundir+'temp'+'/'+self.name+'.molinp',path_dictionary["molsimplify_inps"]+'/'+self.name+'_Oxo.molinp')
-                shutil.move(localrundir+'temp'+'/' + self.name + '.xyz', Oxo_geopath)
+                assert (os.path.isfile(localrundir + 'temp' + '/' + self.name + '.molinp'))
+                shutil.move(localrundir + 'temp' + '/' + self.name + '.molinp',
+                            path_dictionary["molsimplify_inps"] + '/' + self.name + '_Oxo.molinp')
+                shutil.move(localrundir + 'temp' + '/' + self.name + '.xyz', Oxo_geopath)
             except:
                 print('Error: molSimplify failure in generating Oxo TS')
                 print(call)
                 sys.exit()
             with open(Oxo_inpath, 'w') as newf:
-                with open(localrundir + 'temp/' + self.name + '.in','r') as oldf:
+                with open(localrundir + 'temp/' + self.name + '.in', 'r') as oldf:
                     for line in oldf:
-                        if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not ("levelshift" in line):
+                        if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
+                                "levelshift" in line):
                             newf.writelines(line)
                         if "levelshiftvala" in line:
                             newf.writelines("levelshiftvala 0.25\n")
                         if "levelshiftvalb" in line:
                             newf.writelines("levelshiftvalb 0.25\n")
-                    newf.writelines("scrdir scr/prfo/oxo/gen_0/"+self.name + "/\n")
-                    newf.writelines("coordinates "+ path_dictionary["PRFO_initial_geo_Oxo"] + self.name + '.xyz\n')
+                    newf.writelines("scrdir scr/prfo/oxo/gen_0/" + self.name + "/\n")
+                    newf.writelines("coordinates " + path_dictionary["PRFO_initial_geo_Oxo"] + self.name + '.xyz\n')
                     newf.writelines('end')
                 os.remove(localrundir + 'temp/' + self.name + '.in')
                 oldf.close()
                 newf.close()
         self.PRFO_HAT_inpath = HAT_inpath
         self.PRFO_HAT_initialgeo = HAT_geopath
-        self.PRFO_HAT_scrpath = path_dictionary["PRFO_scr_path_HAT"]+self.name + "/optim.xyz"
+        self.PRFO_HAT_scrpath = path_dictionary["PRFO_scr_path_HAT"] + self.name + "/optim.xyz"
         self.PRFO_HAT_geopath = path_dictionary["PRFO_optimized_geo_HAT"] + self.name + '.xyz'
-        self.PRFO_HAT_outpath = path_dictionary["PRFO_out_path_HAT"]+self.name+'.out'
+        self.PRFO_HAT_outpath = path_dictionary["PRFO_out_path_HAT"] + self.name + '.out'
         self.PRFO_Oxo_inpath = Oxo_inpath
         self.PRFO_Oxo_initialgeo = Oxo_geopath
-        self.PRFO_Oxo_scrpath = path_dictionary["PRFO_scr_path_Oxo"]+self.name + "/optim.xyz"
+        self.PRFO_Oxo_scrpath = path_dictionary["PRFO_scr_path_Oxo"] + self.name + "/optim.xyz"
         self.PRFO_Oxo_geopath = path_dictionary["PRFO_optimized_geo_Oxo"] + self.name + '.xyz'
-        self.PRFO_Oxo_outpath = path_dictionary["PRFO_out_path_Oxo"]+self.name+'.out'
+        self.PRFO_Oxo_outpath = path_dictionary["PRFO_out_path_Oxo"] + self.name + '.out'
         return HAT_inpath, Oxo_inpath
 
     def write_DLPNO_inputs(self):
@@ -1178,13 +1213,19 @@ class Comp(object):
                     this_attribute = "_".join(['ox', ox, sc, props])
                     setattr(self, this_attribute, False)
         if isKeyword('oxocatalysis'):
-            list_of_init_props += ['metal_alpha','metal_beta','net_metal_spin','metal_mulliken_charge','oxygen_alpha','oxygen_beta','net_oxygen_spin','oxygen_mulliken_charge']
+            list_of_init_props += ['metal_alpha', 'metal_beta', 'net_metal_spin', 'metal_mulliken_charge',
+                                   'oxygen_alpha', 'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
             if isKeyword('TS'):
-                list_of_init_props += ['terachem_version_HAT_TS','terachem_detailed_version_HAT_TS','basis_HAT_TS','tspin_HAT_TS','charge_HAT_TS','alpha_level_shift_HAT_TS',
-                                    'beta_level_shift_HAT_TS','energy_HAT_TS','time_HAT_TS','terachem_version_Oxo_TS','terachem_detailed_version_Oxo_TS','basis_Oxo_TS',
-                                    'tspin_Oxo_TS','charge_Oxo_TS','alpha_level_shift_Oxo_TS','beta_level_shift_Oxo_TS','energy_Oxo_TS','time_Oxo_TS','ss_act_HAT_TS',
-                                    'ss_target_HAT_TS','eigenvalue_HAT_TS','ss_act_Oxo_TS','ss_target_Oxo_TS','eigenvalue_Oxo_TS']
-                list_of_init_falses += ['init_energy_HAT_TS','init_energy_Oxo_TS','converged_HAT_TS','converged_Oxo_TS','attempted_HAT_TS','attempted_Oxo_TS']
+                list_of_init_props += ['terachem_version_HAT_TS', 'terachem_detailed_version_HAT_TS', 'basis_HAT_TS',
+                                       'tspin_HAT_TS', 'charge_HAT_TS', 'alpha_level_shift_HAT_TS',
+                                       'beta_level_shift_HAT_TS', 'energy_HAT_TS', 'time_HAT_TS',
+                                       'terachem_version_Oxo_TS', 'terachem_detailed_version_Oxo_TS', 'basis_Oxo_TS',
+                                       'tspin_Oxo_TS', 'charge_Oxo_TS', 'alpha_level_shift_Oxo_TS',
+                                       'beta_level_shift_Oxo_TS', 'energy_Oxo_TS', 'time_Oxo_TS', 'ss_act_HAT_TS',
+                                       'ss_target_HAT_TS', 'eigenvalue_HAT_TS', 'ss_act_Oxo_TS', 'ss_target_Oxo_TS',
+                                       'eigenvalue_Oxo_TS']
+                list_of_init_falses += ['init_energy_HAT_TS', 'init_energy_Oxo_TS', 'converged_HAT_TS',
+                                        'converged_Oxo_TS', 'attempted_HAT_TS', 'attempted_Oxo_TS']
             for props in list_of_init_props:
                 for spin_cat in ['LS', 'IS', 'HS']:
                     for catax in ['x', 'oxo', 'hydroxyl']:
