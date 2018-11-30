@@ -342,19 +342,13 @@ def check_all_current_convergence():
                                     logger(base_path_dictionary['state_path'], str(
                                         datetime.datetime.now()) + ' converting from oxo structure to empty structure (SP) for '+base_name)
                                     add_to_outstanding_jobs(empty_sp)
-                                hydroxyl_upper, hydroxyl_lower = this_run.write_hydroxyl_inputs(refHFX)
+                                hydroxyl_upper = this_run.write_hydroxyl_inputs(refHFX)
                                 if hydroxyl_upper:
                                     if (hydroxyl_upper not in joblist) and (hydroxyl_upper not in outstanding_jobs) and (hydroxyl_upper not in converged_jobs.keys()):
                                         print('note: converting from oxo structure to upper spin hydroxyl structure')
                                         logger(base_path_dictionary['state_path'], str(
                                             datetime.datetime.now()) + ' converting from oxo structure to upper spin hydroxyl structure for '+base_name)
                                         add_to_outstanding_jobs(hydroxyl_upper)
-                                if hydroxyl_lower:
-                                    if (hydroxyl_lower not in joblist) and (hydroxyl_lower not in outstanding_jobs) and (hydroxyl_lower not in converged_jobs.keys()):
-                                        print('note: converting from oxo structure to lower spin hydroxyl structure')
-                                        logger(base_path_dictionary['state_path'], str(
-                                            datetime.datetime.now()) + ' converting from oxo structure to lower spin hydroxyl structure for '+base_name)
-                                        add_to_outstanding_jobs(hydroxyl_lower)
                             if (isKeyword('TS') and isKeyword('oxocatalysis') and int(ahf)==20 and (axlig2 == 'oxo' or '[O--]' in axlig2[0] or '[O--]' in axlig2)):
                                 print('preparing PRFO calculations for HAT and Oxo since axlig2 is '+str(axlig2)+' and ahf = 20')
                                 empty_sp = this_run.write_empty_inputs(refHFX)
@@ -372,19 +366,13 @@ def check_all_current_convergence():
                             logger(base_path_dictionary['state_path'], str(
                                 datetime.datetime.now()) + ' converting from oxo structure to empty structure (SP) for '+base_name)
                             add_to_outstanding_jobs(empty_sp)
-                        hydroxyl_upper, hydroxyl_lower = this_run.write_hydroxyl_inputs('00')
+                        hydroxyl_upper = this_run.write_hydroxyl_inputs('00')
                         if hydroxyl_upper:
                             if (hydroxyl_upper not in joblist) and (hydroxyl_upper not in outstanding_jobs) and (hydroxyl_upper not in converged_jobs.keys()):
                                 print('note: converting from oxo structure to upper spin hydroxyl structure')
                                 logger(base_path_dictionary['state_path'], str(
                                     datetime.datetime.now()) + ' converting from oxo structure to upper spin hydroxyl structure for '+base_name)
                                 add_to_outstanding_jobs(hydroxyl_upper)
-                        if hydroxyl_lower:
-                            if (hydroxyl_lower not in joblist) and (hydroxyl_lower not in outstanding_jobs) and (hydroxyl_lower not in converged_jobs.keys()):
-                                print('note: converting from oxo structure to lower spin hydroxyl structure')
-                                logger(base_path_dictionary['state_path'], str(
-                                    datetime.datetime.now()) + ' converting from oxo structure to lower spin hydroxyl structure for '+base_name)
-                                add_to_outstanding_jobs(hydroxyl_lower)
                 if not this_run.converged and not this_run.islive:
                     print(' job  ' + str(this_run.outpath) + ' not converged')
                     logger(base_path_dictionary['state_path'],
