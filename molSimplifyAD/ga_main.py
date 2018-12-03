@@ -246,8 +246,8 @@ class GA_generation:
 
     def assess_fitness(self):
         print('***********')
-        print(self.genes)
-        print(self.gene_compound_dictionary.keys())
+        #print(self.genes)
+        #print(self.gene_compound_dictionary.keys())
         # print('now printing what the gene-compound dictionary knows:')
         # for keys in self.gene_compound_dictionary.keys():
         #        print('key: ' + str(keys) + ' val is  ' +  str(self.gene_compound_dictionary[keys]))
@@ -294,8 +294,8 @@ class GA_generation:
         # sardines
         if os.path.exists('bad_initgeo_log.txt'):
             with open('bad_initgeo_log.txt', 'r') as fin:
-                print('!!!!!!!These are jobs with bad initial geometry generated from molSimplify!!!!!')
-                print('!!!!!!!please check what happens!!!!!')
+                print('These are jobs with bad initial geometry generated from molSimplify')
+                print('Please check them carefully:')
                 for line in fin:
                     print(line)
         else:
