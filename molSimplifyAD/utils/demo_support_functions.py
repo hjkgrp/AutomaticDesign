@@ -125,7 +125,23 @@ def get_info_from_ga(mad_path):
     new_tree.read_state()
     os.chdir(current_wd)
     return(new_tree)
+def translate_gene_names_into_chemistry(mad_path,genes):
 
+    ## function to load object from a specified mad path
+    current_wd = os.getcwd()
+    os.chdir(mad_path)
+    
+    for g in genes:
+        print('translating gene into words : ' + g)
+        
+        
+    GA_run = GA_run_defintion()
+    GA_run.deserialize(os.getcwd() + '/.madconfig')
+    new_tree = GA_generation('current_gen')
+    ## read in info
+    new_tree.read_state()
+    os.chdir(current_wd)
+    return(new_tree)
 def get_live_genes_sorted(new_tree):
     ## find genes that still live and have fitnessess 
     live_genes = dict()
@@ -149,7 +165,7 @@ def visualize_best_genes(new_tree,mad_path,live_genes):
         lgs = live_genes[0:3]
     ## loop over live geners
     for i, lg in enumerate(lgs):
-        temp_path = os.getcwd()+ 'temp_' + str(i)+'_'
+        temp_path = os.getcwd()+ '/temp_' + str(i)+'_'
         orig_path = find_gene_geo(new_tree=new_tree,mad_path=mad_path,target_gene=lg[0])
         
         # make pictures
@@ -173,7 +189,7 @@ def update_data(new_tree,data,live_genes):
     live_db_inds = mod_dat.index[mod_dat["gene"].isin(live_genes_to_match)]
     all_inds = mod_dat.index[mod_dat["gene"].isin(new_tree.gene_fitness_dictionary.keys())]
     return(mod_dat,live_db_inds,all_inds)
-def  get_run_info(mad_path):
+def get_run_info(mad_path):
     gens = []
     mfs = []
     divs = []
@@ -258,3 +274,78 @@ def draw_double_plot(Xr,mod_dat,live_db_inds,all_inds,hull,gens,mfs,divs):
     plt.rc('font', **font)
 
     plt.show()
+def save_double_plot(impath, Xr,mod_dat,live_db_inds,all_inds,hull,gens,mfs,divs):
+    font = {'weight' : 'bold',
+            'size'   : 12}
+
+    plt.rc('font', **font)
+    #fig, axs = plt.subplots(nrows=1,ncols=2,figsize = (18,9))
+    fig = figure(figsize=(16,8))
+    gs = gridspec.GridSpec(1, 2, width_ratios=[1.75, 1]) 
+    ax1 =  plt.subplot(gs[0])
+    ax2 =  plt.subplot(gs[1])
+    font = {'weight' : 'bold',
+            'size'   : 12}
+
+    plt.rc('font', **font)
+    #colors = [(0.3, 0.3, 0.3),(0.95,0.3,1)]  
+    cmstr = 'winter'
+    #cm = LinearSegmentedColormap.from_list(
+    #    'atoms', colors,N=10)
+    points  = Xr[:,0:2]
+    for simplex in hull.simplices:
+        ax1.plot(points[simplex, 0], Xr[simplex, 1], 'k-')
+
+    o1 = ax1.tricontourf(Xr[all_inds,0], Xr[all_inds,1],mod_dat.loc[all_inds,'fitness'],
+                   5,alpha=0.1,cmap=cmstr,linestyles='dashed', vmin=0, vmax=1)
+    for c in o1.collections:
+        c.set_edgecolor("face")
+
+    o2 = ax1.scatter(Xr[all_inds,0], Xr[all_inds,1], c=mod_dat.loc[all_inds,"fitness"],
+            cmap=cmstr,s=100,
+                alpha=1, lw=1,marker=".",label='previous', vmin=0, vmax=1)
+    o3 = ax1.scatter(Xr[live_db_inds,0], Xr[live_db_inds,1], c=mod_dat.loc[live_db_inds,"fitness"],
+            cmap=cmstr,s=125,
+                alpha=1.0, lw=3,marker="s",label='current', vmin=0, vmax=1,
+                    edgecolor='black', linewidth=2)
+    cbar = fig.colorbar(o1,ax=ax1)
+    cbar.ax.set_ylabel('fitness',fontweight='bold')
+    #cbar.add_lines(o1)
+    ax1.set_xlabel('PC1',fontweight='bold')
+    ax1.set_ylabel('PC2',fontweight='bold')
+    ax1.legend()
+    ax1.set_xlim(-19,21)
+    ax1.set_ylim(-17,27)
+    ax1.set_yticklabels([])
+    ax1.set_xticklabels([])
+
+    
+
+    ## second plot
+    ax3 = ax2.twinx()
+    ax2.plot(gens, mfs, 'go',markersize=6)
+    ax3.plot(gens, divs, 'bs',markersize=6)
+
+    if len(mfs) > 3:
+        xnew = np.linspace(0,max(gens),500)
+        mfs_spl = UnivariateSpline(gens, mfs,s=100)
+        divs_spl = UnivariateSpline(gens, divs,s=100)
+        ax2.plot(xnew, mfs_spl(xnew), 'g--',lw=2.5)
+        ax3.plot(xnew, divs_spl(xnew), 'b--',lw=2.5)
+
+
+    ax2.set_xlabel('generation',fontweight='bold')
+    ax2.set_ylabel('mean fitness', color='g',fontweight='bold')
+    ax3.set_ylabel('diversity', color='b',fontweight='bold')
+    plt.setp(ax2.get_yticklabels(), color="g")
+    plt.setp(ax3.get_yticklabels(), color="b")
+    ax2.yaxis.set_tick_params(color='b')
+
+    font = {'weight' : 'bold',
+            'size'   : 12}
+
+    plt.rc('font', **font)
+    
+   
+    fig.set_size_inches(16, 8)
+    fig.savefig(impath+'-plot.png', dpi=600)
