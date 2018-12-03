@@ -156,7 +156,7 @@ def submit_outstanding_jobs():
                         if not "thermo" in jobs and not "solvent" in jobs:
                             gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename,basegene=translate_job_name(jobs)
                             if ahf == float(isKeyword('exchange')): # if this is the target HFX frac
-                                update_current_gf_dictionary(gene,0) # zero out fitness
+                                update_current_gf_dictionary(basegene,0) # zero out fitness
             else:
                 print('job is live or empty or queue is full')
     write_dictionary(submitted_job_dictionary, path_dictionary["job_path"] + "/submitted_jobs.csv")
