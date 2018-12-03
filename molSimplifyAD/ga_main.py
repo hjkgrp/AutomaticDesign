@@ -117,8 +117,8 @@ class GA_generation:
             print(metal)
             print('Error: requested metal not available in list, aborting')
             exit()
-        eq_ind = [ligands_list_inds.index(ligs[0][0])]
-        ax_ind = [ligands_list_inds.index(ligs[1][0]), ligands_list_inds.index(ligs[1][1])]
+        eq_ind = [ligands_list_inds.index(this_eq)]
+        ax_ind = [ligands_list_inds.index(this_ax1), ligands_list_inds.index(this_ax2)]
         metal_ind = metal_list_inds.index(metal)
         this_complex = octahedral_complex(self.ligands_list)
         this_complex.random_gen()
