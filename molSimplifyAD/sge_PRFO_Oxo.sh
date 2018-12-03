@@ -5,7 +5,6 @@
 #$ -l gpus=1            #
 #$ -pe smp 1 		#number parrallel jobs
 #$ -cwd
-module load cuda
 module load terachem/alpha-autoupdate
 
 

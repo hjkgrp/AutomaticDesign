@@ -1069,12 +1069,15 @@ class DFTRun(object):
                        octahedral=self.octahedral)
 
     def obtain_metal_translation(self):
-        self.obtain_init_mol3d()
-        self.obtain_mol3d()
-        init_posi = self.init_mol.getAtomCoords(self.init_mol.findMetal()[0])
-        final_posi = self.mol.getAtomCoords(self.mol.findMetal()[0])
-        print('!!!', init_posi, final_posi)
-        self.metal_translation = numpy.linalg.norm(numpy.array(final_posi) - numpy.array(init_posi))
+        if self.alpha == 20 or self.alpha == "20":
+            self.obtain_init_mol3d()
+            self.obtain_mol3d()
+            init_posi = self.init_mol.getAtomCoords(self.init_mol.findMetal()[0])
+            final_posi = self.mol.getAtomCoords(self.mol.findMetal()[0])
+            print('!!!', init_posi, final_posi)
+            self.metal_translation = numpy.linalg.norm(numpy.array(final_posi) - numpy.array(init_posi))
+        else:
+            self.metal_translation = -1
 
 
 class Comp(object):
