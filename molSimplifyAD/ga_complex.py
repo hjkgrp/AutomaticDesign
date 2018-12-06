@@ -221,6 +221,7 @@ class octahedral_complex:
                         print('Found eqlig: ', self.ligands_list[ind])
                         self.ligands += 4*[self.ligands_list[ind][0]]
                         self.inds += 4*[ind]
+                        eqdent = lig_dent 
                 elif lig_dent == 1:
                     if symclass == 'weak':
                         self.ligands.append(self.ligands_list[ind][0])
@@ -228,6 +229,9 @@ class octahedral_complex:
                     elif symclass == 'strong':
                         self.ligands += 2*[self.ligands_list[ind][0]]
                         self.inds += 2*[ind]
+                elif lig_dent == 2 and eqdent ==2: #Triple bidentate handling, may change later
+                    self.ligands += 2*[self.ligands_list[ind][0]]
+                    self.inds += 2*[ind]
             if len(self.ligands) == 6:
                 self.ready_for_assembly = True
 
@@ -597,7 +601,7 @@ class octahedral_complex:
             ligalign = 0
         ## disable force field opt
         ## if not DFT
-        if isDFT():
+        if isKeyword('DFT'):
             ff_opt = 'A'
         else: # optional denticity based FF control
             if max([self.ax_dent,self.eq_dent]) ==1:
@@ -803,7 +807,7 @@ class octahedral_complex:
         liglist, smicat = SMILES_converter(purified_ligands)
         ligalign = 0
         print(liglist,smicat)
-        if self.three_bidentate:
+        if self.lig_occs == [1, 0, 1, 0, 1, 0]:
             ligloc = 'false'
         else:
             ligloc = 1
@@ -813,13 +817,10 @@ class octahedral_complex:
         ## if not DFT
         if isDFT():
             ff_opt = 'A'
-        else: # optional denticity based FF control
-            if max([self.ax_dent,self.eq_dent]) ==1:
-                ff_opt = 'A'
-            else:
-                ff_opt = 'A'
+        else:
+            ff_opt = 'no'
         if smicat:
-                ff_opt = 'no'
+            ff_opt = 'no'
         ## get custom exchange fraction
         #this_GA = get_current_GA()
         use_old_optimizer = isKeyword('old_optimizer')
@@ -853,15 +854,15 @@ class octahedral_complex:
         ANN_results = {}
         property_list = ['split', 'split_dist','homo', 'homo_dist','gap', 'gap_dist','oxo','oxo_dist']
         if not (geo_exists):
-                print('generating '+ str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and'  + str(self.ax_ligands))
+                print('generating '+ str(mol_name) + ' with ligands ' + str(liglist))
                 try:
                 #if True:
                     with open(ms_dump_path,'a') as ms_pipe:
                         with open(ms_error_path,'a') as ms_error_pipe:
-                            call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +str(liglist),'-ligocc 1,1,1,1,1,1',
+                            call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +str(liglist),'-ligocc '+','.join([str(i) for i in self.lig_occs if i>0]),
                                      '-rundir ' +"'"+ rundirpath.rstrip("/")+"'",'-keepHs yes,yes,yes,yes,yes,yes','-jobdir','temp',
                                      '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
-                                     '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ str(self.ox), '-exchange '+str(exchange),
+                                     '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ str(ox), '-exchange '+str(exchange),
                                      '-qccode TeraChem','-runtyp '+rty,"-ffoption "+ff_opt,' -ff UFF'])
                             if smicat:
                                 call += ' -smicat ' + smicat
@@ -979,7 +980,7 @@ class octahedral_complex:
                 ### check if ligands in old optimizer list
                 old_optimizer_list = get_old_optimizer_ligand_list()
                 # use_old_optimizer = False
-                for ligs in (self.eq_ligands+self.ax_ligands):
+                for ligs in (liglist):
                     if ligs in old_optimizer_list:
                         use_old_optimizer = True
                 ### make an infile!
