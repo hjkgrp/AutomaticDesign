@@ -263,7 +263,7 @@ class GA_generation:
                + str(self.status_dictionary['gen'])
                + " is code ready to advance? " + str(self.status_dictionary["ready_to_advance"]))
         self.ready_to_advance = False
-        self.outstanding_jobs = dict()
+        self.outstanding_genes = dict()
         for genekeys in self.genes.keys():
             print('gene is ' + self.genes[genekeys])
             genes = self.genes[genekeys]
@@ -274,13 +274,13 @@ class GA_generation:
                     genes) + ' present with fitness ' + "{0:.2f}".format(float(fitness_values[genes])))
             else:
                 ## add to outstanding jobs
-                self.outstanding_jobs.update({genekeys: self.gene_compound_dictionary[genekeys]})
+                self.outstanding_genes.update({genekeys: self.gene_compound_dictionary[genekeys]})
                 print('genekey is ' + str(genekeys) + ' gene ' + str(genes) + ' fitness  not known')
         logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen "
                + str(self.status_dictionary['gen'])
-               + " with " + str(len(self.outstanding_jobs.keys())) + " calculations to be completed")
-        print('length of outstanding jobskeys', len(self.outstanding_jobs.keys()))
-        if (len(self.outstanding_jobs.keys()) == 0):
+               + " with " + str(len(self.outstanding_genes.keys())) + " calculations to be completed")
+        print('length of outstanding jobskeys', len(self.outstanding_genes.keys()))
+        if (len(self.outstanding_genes.keys()) == 0):
             logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now())
                    + ": Gen " + str(self.status_dictionary['gen'])
                    + " all jobs completed, ranking ")
@@ -380,54 +380,59 @@ class GA_generation:
         current_outstanding = get_outstanding_jobs()
         converged_jobs = find_converged_job_dictionary()
         gene_template = get_gene_template()
-        for keys in self.outstanding_jobs.keys():
-
-            jobs = self.outstanding_jobs[keys]
-            # print('!!!!!jobs::::', jobs)
-            spins_dict = spin_dictionary()
-            metal = jobs.metals_list[jobs.core]
-            # print('metal is '+str(metal))
-            # print('ox is ' +str(jobs.ox))
-            spin_list = spins_dict[metal][jobs.ox]
+        spins_dict = spin_dictionary()
+        for keys in self.outstanding_genes.keys():
+            job_prefix = "gen_" + str(self.status_dictionary["gen"]) + "_slot_" + str(keys) + "_"
+            genes = self.outstanding_genes[keys]
+            metal = genes.metals_list[genes.core]
             job_dict = []
-            flag_oct_spin = True
-            for idx, spins in enumerate(spin_list):
-                # print('!!!!spin_list!!!!:', spin_list)
-                job_prefix = "gen_" + str(self.status_dictionary["gen"]) + "_slot_" + str(keys) + "_"
-                ## generate HS/LS
-                ## convert the gene into a job file and geometery
-                if gene_template['legacy']:
-                    jobpath, mol_name, ANN_results, flag_oct = jobs.generate_geometry_legacy(prefix=job_prefix,
-                                                                                       spin=spins,
-                                                                                       path_dictionary=self.current_path_dictionary,
-                                                                                       rundirpath=isKeyword('rundir'),
-                                                                                       gen=self.status_dictionary['gen'])
+            ## If ox in gene_template, then use the ox provided, else loop over possible ox.
+            if gene_template['ox']:
+                ox_list = [genes.ox]
+            else: 
+                ox_list = get_ox_states()
+            for ox in ox_list:
+                ## Same for spin
+                if gene_template['spin']:
+                    spin_list = [genes.spin]
                 else:
-                    jobpath, mol_name, ANN_results, flag_oct = jobs.generate_geometry(prefix=job_prefix,
-                                                                                       ox = jobs.ox,
-                                                                                       spin=spins,
-                                                                                       path_dictionary=self.current_path_dictionary,
-                                                                                       rundirpath=isKeyword('rundir'),
-                                                                                       gen=self.status_dictionary['gen'])
-                if flag_oct:
-                    if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
-                        msg, ANN_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
-                        if not mol_name in ANN_dict.keys():
-                            print('saving result in ANN dict: ' + mol_name)
-                            ANN_results_dict.update({mol_name: ANN_results})
-                        jobpaths.append(jobpath)
-                        logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen "
-                               + str(self.status_dictionary['gen'])
-                               + " missing information for gene number  " + str(keys) + ' with  name ' + str(jobs.name))
-                else:
-                    if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
-                        msg, ANN_dict = read_ANN_results_dictionary(
-                            self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
-                        if not mol_name in ANN_dict.keys():
-                            print('saving result in ANN dict: ' + mol_name)
-                            ANN_results_dict.update({mol_name: ANN_results})
-                    log_bad_initial(jobpath)
-                    update_converged_job_dictionary(jobpath, 3)
+                    spin_list = spins_dict[metal][ox]
+                flag_oct_spin = True
+                for spin in spin_list:
+                    ## generate HS/LS
+                    ## convert the gene into a job file and geometery
+                    if gene_template['legacy']:
+                        jobpath, mol_name, ANN_results, flag_oct = genes.generate_geometry_legacy(prefix=job_prefix,
+                                                                                           spin=spin,
+                                                                                           path_dictionary=self.current_path_dictionary,
+                                                                                           rundirpath=isKeyword('rundir'),
+                                                                                           gen=self.status_dictionary['gen'])
+                    else:
+                        jobpath, mol_name, ANN_results, flag_oct = genes.generate_geometry(prefix=job_prefix,
+                                                                                           ox = ox,
+                                                                                           spin=spin,
+                                                                                           path_dictionary=self.current_path_dictionary,
+                                                                                           rundirpath=isKeyword('rundir'),
+                                                                                           gen=self.status_dictionary['gen'])
+                    if flag_oct:
+                        if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
+                            msg, ANN_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
+                            if not mol_name in ANN_dict.keys():
+                                print('saving result in ANN dict: ' + mol_name)
+                                ANN_results_dict.update({mol_name: ANN_results})
+                            jobpaths.append(jobpath)
+                            logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen "
+                                   + str(self.status_dictionary['gen'])
+                                   + " missing information for gene number  " + str(keys) + ' with  name ' + str(genes.name))
+                    else:
+                        if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
+                            msg, ANN_dict = read_ANN_results_dictionary(
+                                self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
+                            if not mol_name in ANN_dict.keys():
+                                print('saving result in ANN dict: ' + mol_name)
+                                ANN_results_dict.update({mol_name: ANN_results})
+                        log_bad_initial(jobpath)
+                        update_converged_job_dictionary(jobpath, 3)
             write_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv',ANN_results_dict)
         set_outstanding_jobs(current_outstanding + jobpaths)
 
