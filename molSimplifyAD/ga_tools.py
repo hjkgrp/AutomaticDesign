@@ -509,6 +509,7 @@ def isOptimize():
 
 ########################
 def translate_job_name(job):
+    gene_template = get_gene_template()
     base = os.path.basename(job)
     base = base.strip("\n")
     basename = base.strip(".in")
@@ -520,9 +521,12 @@ def translate_job_name(job):
     slot = ll[3]
     metal = int(ll[4])
     ox = int(ll[5])
-    eqlig_ind = int(ll[6])
-    axlig1_ind = int(ll[7])
-    axlig2_ind = int(ll[8])
+    if gene_template['legacy']:
+        eqlig_ind = int(ll[6])
+        axlig1_ind = int(ll[7])
+        axlig2_ind = int(ll[8])
+    else:
+        lig_ind_list = [int(i) for i in ll[6:-2]]
     ligands_dict = get_ligands()
     if hasattr(ligands_dict[int(eqlig_ind)][0], '__iter__'):  # SMILEs string
         # eqlig = 'smi' + str(eqlig_ind)
