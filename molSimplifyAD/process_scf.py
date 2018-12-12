@@ -36,7 +36,20 @@ def test_terachem_sp_convergence(job):
     #  @return this_run populated run class
     ### get paths
     path_dictionary = setup_paths()
-    gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename,basegene = translate_job_name(job)
+    # gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename,basegene = translate_job_name(job)
+    translate_dict = translate_job_name(job)
+    gene = translate_dict['gene']
+    gen = translate_dict['gen']
+    slot = translate_dict['slot']
+    metal = translate_dict['metal']
+    ox = translate_dict['ox']
+    liglist = translate_dict['liglist']
+    indlist = translate_dict['indlist']
+    spin = translate_dict['spin']
+    spin_cat = translate_dict['spin_cat']
+    ahf = translate_dict['ahf']
+    base_name = translate_dict['basename']
+    base_gene = translate_dict['basegene']
     #this_GA = get_current_GA()
     exchange = ahf
     alpha=float(exchange)
@@ -56,7 +69,7 @@ def test_terachem_sp_convergence(job):
         this_run.outpath = (path_dictionary["out_path" ] + "/gen_" + str(gen) +"/"
                            + basename + ".out")
     ## load details into run
-    this_run.configure(metal,ox,eqlig,axlig1,axlig2,spin,alpha,spin_cat)
+    this_run.configure(metal,ox,liglist,spin,alpha,spin_cat)
     this_run.gene =  basegene
     if os.path.exists(this_run.outpath):
         ### file is found,d check if converged
@@ -154,26 +167,41 @@ def process_runs_geo(all_runs,local_spin_dictionary,local_metal_list=False):
 
 
         ## special catch of SMILEs ligands:
-        if hasattr(this_run.eqlig,'__iter__'): # SMILEs string
-            eliq_name = 'smi' + str(this_run.eqlig_ind)
+        if hasattr(this_run.lig1,'__iter__'): # SMILEs string
+            lig1_name = 'smi' + str(this_run.lig1_ind)
             #eqlig_name = this_run.eqlig
             #print('!!!!!!eqlig_name', eqlig_name)
             #sardines
         else:
-            eqlig_name = this_run.eqlig
+            lig1_name = this_run.lig1
 
-        if hasattr(this_run.axlig1 ,'__iter__'): # SMILEs string
-            axlig1_name = 'smi' + str(this_run.axlig1_ind)
+        if hasattr(this_run.lig2 ,'__iter__'): # SMILEs string
+            lig2_name = 'smi' + str(this_run.lig2_ind)
         else:
-            axlig1_name = this_run.axlig1
+            lig2_name = this_run.lig2
         
-        if hasattr(this_run.axlig2 ,'__iter__'): # SMILEs string
-            axlig2_name = 'smi' + str(this_run.axlig2_ind)
+        if hasattr(this_run.lig3 ,'__iter__'): # SMILEs string
+            lig3_name = 'smi' + str(this_run.lig3_ind)
         else:
-            axlig2_name = this_run.axlig2
+            lig3_name = this_run.lig3
+
+        if hasattr(this_run.lig4 ,'__iter__'): # SMILEs string
+            lig4_name = 'smi' + str(this_run.lig4_ind)
+        else:
+            lig4_name = this_run.lig4
+
+        if hasattr(this_run.lig5 ,'__iter__'): # SMILEs string
+            lig5_name = 'smi' + str(this_run.lig5_ind)
+        else:
+            lig5_name = this_run.lig5
+
+        if hasattr(this_run.lig6 ,'__iter__'): # SMILEs string
+            lig6_name = 'smi' + str(this_run.lig6_ind)
+        else:
+            lig6_name = this_run.lig6
             
-                
-        this_name = "_".join([this_metal,'eq',str(eqlig_name),'ax1',str(axlig1_name),'ax2',str(axlig2_name),'ahf',str(int(this_run.alpha)).zfill(2)])
+        this_name = "_".join([str(metal), str(ox), 'eq', str(lig1_name),str(lig2_name),str(lig3_name),str(lig4_name), 'ax1', str(lig5_name), 'ax2', str(lig6_name), 'ahf', str(int(alpha)).zfill(2), str(spin)])
+        # this_name = "_".join([this_metal,'eq',str(eqlig_name),'ax1',str(axlig1_name),'ax2',str(axlig2_name),'ahf',str(int(this_run.alpha)).zfill(2)])
         print('** name is ' + str(this_name))
                 ### add alpha value to list owned by this_comp:
                 
@@ -193,11 +221,12 @@ def process_runs_geo(all_runs,local_spin_dictionary,local_metal_list=False):
         if this_run.spin not in metal_spins:
            print('ERROR! not in metal spins : ' +  str(this_run) + ' not in ' +  str(metal_spins))
         else:
-            spin_ind = metal_spins.index(this_run.spin)
-            if spin_ind == 0:
-                 spin_cat = 'LS'
-            else:
+            if this_run.spin == metal_spins[0]:  # First element of list
+                spin_cat = 'LS'
+            elif this_run.spin == metal_spins[-1]:  # Last element of list
                 spin_cat = 'HS'
+            else:
+                spin_cat = 'IS'  # Intermediate Spin
         print('spin ind is found to be ' + str(this_run.spin) + ' interpretted as ' + str(spin_cat))
         ## check if this a duplicate:
         this_attribute = "_".join(['ox',str(this_ox),spin_cat,'converged'])
@@ -295,25 +324,42 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
             this_metal = local_metal_list[int(this_run.metal)]
 
 
-        ## special catch of SMILEs ligands:
-        if hasattr(this_run.eqlig,'__iter__'): # SMILEs string
-            eliq_name = 'smi' + str(this_run.eqlig_ind)
+         if hasattr(this_run.lig1,'__iter__'): # SMILEs string
+            lig1_name = 'smi' + str(this_run.lig1_ind)
+            #eqlig_name = this_run.eqlig
+            #print('!!!!!!eqlig_name', eqlig_name)
+            #sardines
         else:
-            eqlig_name = this_run.eqlig
+            lig1_name = this_run.lig1
 
-        if hasattr(this_run.axlig1 ,'__iter__'): # SMILEs string
-            axlig1_name = 'smi' + str(this_run.axlig1_ind)
+        if hasattr(this_run.lig2 ,'__iter__'): # SMILEs string
+            lig2_name = 'smi' + str(this_run.lig2_ind)
         else:
-            axlig1_name = this_run.axlig1
+            lig2_name = this_run.lig2
         
-        if hasattr(this_run.axlig2 ,'__iter__'): # SMILEs string
-            axlig2_name = 'smi' + str(this_run.axlig2_ind)
+        if hasattr(this_run.lig3 ,'__iter__'): # SMILEs string
+            lig3_name = 'smi' + str(this_run.lig3_ind)
         else:
-            axlig2_name = this_run.axlig2
-        if axlig2_name == '[O--]':
-            axlig2_name = 'oxo'    
+            lig3_name = this_run.lig3
+
+        if hasattr(this_run.lig4 ,'__iter__'): # SMILEs string
+            lig4_name = 'smi' + str(this_run.lig4_ind)
+        else:
+            lig4_name = this_run.lig4
+
+        if hasattr(this_run.lig5 ,'__iter__'): # SMILEs string
+            lig5_name = 'smi' + str(this_run.lig5_ind)
+        else:
+            lig5_name = this_run.lig5
+
+        if hasattr(this_run.lig6 ,'__iter__'): # SMILEs string
+            lig6_name = 'smi' + str(this_run.lig6_ind)
+        else:
+            lig6_name = this_run.lig6
+        if lig6_name == '[O--]':
+            lig6_name = 'oxo'
                 
-        this_name = "_".join([this_metal,'eq',str(eqlig_name),'ax1',str(axlig1_name),'ahf',str(this_run.alpha).zfill(2)])
+        this_name = "_".join([str(metal), str(ox), 'eq', str(lig1_name),str(lig2_name),str(lig3_name),str(lig4_name), 'ax1', str(lig5_name), 'ax2', str(lig6_name), 'ahf', str(int(alpha)).zfill(2), str(spin)])
                 ### add alpha value to list owned by this_comp:
         print('** name is ' + str(this_name))
 
@@ -344,7 +390,7 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
         ## get basic details
         ## assuming no duplicates:
         if True:
-            this_comp.gene = "_".join([this_metal,str(eqlig_name),str(axlig1_name)])
+            this_comp.gene = "_".join([this_metal, str(lig1_name),str(lig2_name),str(lig3_name),str(lig4_name),str(lig5_name)])
             this_comp.job_gene = this_run.gene
             print('----gene:----', this_comp.gene, this_comp.job_gene)
             if this_run.converged and this_run.flag_oct==1:
@@ -353,8 +399,11 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
                 if not os.path.isdir('used_geos/'):
                     os.mkdir('used_geos/')
                 this_run.mol.writexyz('used_geos/'+this_name+'.xyz')
-                this_comp.axlig1 = this_run.axlig1
-                this_comp.eqlig = this_run.eqlig
+                this_comp.lig1 = this_run.lig1
+                this_comp.lig2 = this_run.lig2
+                this_comp.lig3 = this_run.lig3
+                this_comp.lig4 = this_run.lig4
+                this_comp.lig5 = this_run.lig5
                 this_comp.set_rep_mol(this_run)
                 this_comp.get_descriptor_vector(loud=False,name=this_name)
             for props in output_properties(comp=False,oxocatalysis=True):
