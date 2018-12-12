@@ -324,7 +324,7 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
             this_metal = local_metal_list[int(this_run.metal)]
 
 
-         if hasattr(this_run.lig1,'__iter__'): # SMILEs string
+        if hasattr(this_run.lig1,'__iter__'): # SMILEs string
             lig1_name = 'smi' + str(this_run.lig1_ind)
             #eqlig_name = this_run.eqlig
             #print('!!!!!!eqlig_name', eqlig_name)
