@@ -1,7 +1,7 @@
 import glob, math, numpy, subprocess, os, random, shutil
 import sys, shlex,time 
 
-from ga_tools import *
+from molSimplifyAD.ga_tools import *
 from molSimplify.Classes.mol3D import *
 
 class octahedral_complex:
