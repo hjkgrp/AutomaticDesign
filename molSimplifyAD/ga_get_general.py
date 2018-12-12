@@ -135,12 +135,16 @@ def _get_freq_fitness(lastgen, npool):
             ANN_dir = isKeyword('rundir') + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
             emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
             for keys in ANN_dict.keys():
-                _, _, _, metal, _, _, _, _, _, _, _, spin, spin_cat, _, _, _ = translate_job_name(keys)
-                this_gene = "_".join(keys.split("_")[4:10])
-                if runtype == "redox":
-                    this_gene = "_".join(keys.split("_")[4:9])
-                elif runtype in ['oxo','hat']:
-                    this_gene = "_".join(keys.split("_")[4:10])
+                translate_dict = translate_job_name(jobs)
+                this_gene = translate_dict['gene']
+                metal = translate_dict['metal']
+                spin = translate_dict['spin']
+                spin_cat = translate_dict['spin_cat']
+                # this_gene = "_".join(keys.split("_")[4:10])
+                # if runtype == "redox":
+                #     this_gene = "_".join(keys.split("_")[4:9])
+                # elif runtype in ['oxo','hat']:
+                #     this_gene = "_".join(keys.split("_")[4:10])
                 split_energy = ANN_dict[keys]['split']
                 if runtype in ['oxo','hat']:
                     if not (this_gene in ANN_prop_dict.keys()):
