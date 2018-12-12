@@ -33,29 +33,24 @@ def get_infile_from_job(job):
     ## using progress geometry if available
     ## else intital only
     ## process job name
-    _, gen, _, _, _, _, _, _, _, _, _, _, _, _, base_name, _ = translate_job_name(job)
+    # Below is the old way to do this...
+    # _, gen, _, _, _, _, _, _, _, _, _, _, _, _, base_name, _ = translate_job_name(job)
+    translate_dict = translate_job_name(job)
     ## create paths
+    gen = translate_dict['gen']
+    base_name = translate_dict['basename']
+
     path_dictionary = setup_paths()
     path_dictionary = advance_paths(path_dictionary, gen)
     scr_path = path_dictionary["scr_path"] + base_name + '/'
     target_inpath = path_dictionary["infiles"] + base_name + '.in'
-    path_dictionary = setup_paths()
-    GA_run = get_current_GA()
     use_old_optimizer = get_optimizer()
-    ll = os.path.split(job)
-    base_name = ll[1]
-    ll = os.path.split(ll[0])
-    generation_folder = ll[1]
-    target_inpath = path_dictionary["infiles"] + generation_folder + '/' + base_name
     if os.path.isfile(target_inpath):
         infile = target_inpath
     else:
         print('no infile found for job ' + job + ' , creating a new one ')
         create_generic_infile(job, use_old_optimizer=use_old_optimizer, restart=True)
-    if 'track_elec_prop' in get_current_GA().config.keys():
-        track_elec_prop = get_current_GA().config['track_elec_prop']
-    else:
-        track_elec_prop = False
+    track_elec_prop = isKeyword('track_elec_prop')
     if track_elec_prop and (not check_txt_infile(target_inpath, 'ml_prop yes')):
         add_ml_prop_infiles(target_inpath)
     if (not check_txt_infile(target_inpath, 'scrdir')):
@@ -99,7 +94,11 @@ def add_scrdir_infiles(filepath, scr_path):
 def get_initial_geo_path_from_job(job):
     ## given a job (file under jobs/gen_x/
     ## this returns the path to the initial geo file
-    _, gen, _, _, _, _, _, _, _, _, _, _, _, _, base_name, _ = translate_job_name(job)
+    # Below is old:
+    #_, gen, _, _, _, _, _, _, _, _, _, _, _, _, base_name, _ = translate_job_name(job)
+    translate_dict = translate_job_name(job)
+    gen = translate_dict['gen']
+    base_name = translate_dict['basename']
     ## create paths
     path_dictionary = setup_paths()
     path_dictionary = advance_paths(path_dictionary, gen)
@@ -112,7 +111,13 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
     ## custom_geo_guess is ANOTHER JOB NAME, from which the geom and wavefunction guess
     ## will attempt to be extracted
     ## process job name
-    _, gen, _, _, _, _, _, _, _, _, _, this_spin, _, _, base_name, _ = translate_job_name(job)
+    # old:
+    #_, gen, _, _, _, _, _, _, _, _, _, this_spin, _, _, base_name, _ = translate_job_name(job)
+
+    translate_dict = translate_job_name(job)
+    gen = translate_dict['gen']
+    base_name = translate_dict['basename']
+    this_spin = translate_dict['spin']
     ## create paths
     path_dictionary = setup_paths()
     path_dictionary = advance_paths(path_dictionary, gen)
@@ -130,7 +135,11 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
             geometry_path = initial_geo_path
             guess_string = "guess generate \n"
     elif custom_geo_guess:
-        _, guess_gen, _, _, _, _, _, _, _, _, _, _, _, _, guess_base_name, _ = translate_job_name(custom_geo_guess)
+        #old:
+        #_, guess_gen, _, _, _, _, _, _, _, _, _, _, _, _, guess_base_name, _ = translate_job_name(custom_geo_guess)
+        translate_dict = translate_job_name(custom_geo_guess)
+        guess_gen = translate_dict['gen']
+        guess_base_name = translate_dict['basename']
         guess_path_dictionary = setup_paths()
         guess_path_dictionary = advance_paths(guess_path_dictionary, guess_gen)
         guess_geo_path = path_dictionary["optimial_geo_path"] + guess_base_name + '.xyz'
@@ -359,87 +368,6 @@ def spin_dictionary():
 
 
 ########################
-def isDFT():
-    try:
-        GA_run = get_current_GA()
-        if GA_run.config["DFT"]:
-                return True
-        else:
-                return False
-    except:
-        return False
-
-
-########################
-def isSASA():
-    
-    try:
-        GA_run = get_current_GA()
-        if GA_run.config["SASA"]:
-            return True
-        else:
-            return False
-    except:
-        return False
-
-
-########################
-def isSolvent():
-    try:
-        GA_run = get_current_GA()
-        if GA_run.config["solvent"]:
-            return True
-        else:
-            return False
-    except:
-        return False
-########################
-def isWater():
-    try:
-        GA_run = get_current_GA()
-        if GA_run.config["water"]:
-            return True
-        else:
-            return False
-    except:
-        return False
-
-########################
-def isThermo():   
-    try:
-        GA_run = get_current_GA()
-        if GA_run.config["thermo"]:
-            return True
-        else:
-            return False
-    except:
-        return False
-
-
-########################
-def isSinglePoint():
-    try:
-        GA_run = get_current_GA()
-        if GA_run.config["single_point"]:
-            return True
-        else:
-            return False
-    except:
-        return False
-
-
-########################
-def isOxocatalysis():
-    try:
-        GA_run = get_current_GA()
-        if GA_run.config["oxocatalysis"]:
-            return True
-        else:
-            return False
-    except:
-        return False
-
-########################
 def isKeyword(keyword):
     ##################################################################################
     # if the passed in object is a list, will make a list to return with the values  #
@@ -474,17 +402,6 @@ def isall_post():
     else:
         return False
 
-
-########################
-def get_maxresub():
-    GA_run = get_current_GA()
-    if unicode('max_resubmit', 'utf-8') in GA_run.config.keys():
-        return int(GA_run.config["max_resubmit"])
-    else:
-        print('max_resubmit not set, using default of 3')
-        return 3
-
-
 ########################
 def get_optimizer():
     GA_run = get_current_GA()
@@ -496,19 +413,8 @@ def get_optimizer():
 
 
 ########################
-def isOptimize():
-    GA_run = get_current_GA()
-    try:
-        if GA_run.config["optimize"]:
-            return True
-        else:
-            return False
-    except:
-        return False
-
-
-########################
 def translate_job_name(job):
+    translate_dict = {}
     gene_template = get_gene_template()
     base = os.path.basename(job)
     base = base.strip("\n")
@@ -516,36 +422,14 @@ def translate_job_name(job):
     basename = basename.strip(".xyz")
     basename = basename.strip(".out")
     ll = (str(basename)).split("_")
+    ligands_dict = get_ligands()
     # print(ll)
     gen = ll[1]
     slot = ll[3]
     metal = int(ll[4])
     ox = int(ll[5])
-    if gene_template['legacy']:
-        eqlig_ind = int(ll[6])
-        axlig1_ind = int(ll[7])
-        axlig2_ind = int(ll[8])
-    else:
-        lig_ind_list = [int(i) for i in ll[6:-2]]
-    ligands_dict = get_ligands()
-    if hasattr(ligands_dict[int(eqlig_ind)][0], '__iter__'):  # SMILEs string
-        # eqlig = 'smi' + str(eqlig_ind)
-        eqlig = ligands_dict[int(eqlig_ind)][0][0]
-    else:
-        eqlig = ligands_dict[int(eqlig_ind)][0]
-    if hasattr(ligands_dict[int(axlig1_ind)][0], '__iter__'):  # SMILEs string
-        # axlig1 = 'smi' + str(axlig1_ind)
-        axlig1 = ligands_dict[int(axlig1_ind)][0][0]
-    else:
-        axlig1 = ligands_dict[int(axlig1_ind)][0]
-
-    if hasattr(ligands_dict[int(axlig2_ind)][0], '__iter__'):  # SMILEs string
-        # axlig2 = 'smi' + str(axlig2_ind)
-        axlig2 = ligands_dict[int(axlig2_ind)][0][0]
-    else:
-        axlig2 = ligands_dict[int(axlig2_ind)][0]
-    ahf = int(ll[9])
-    spin = int(ll[10])
+    ahf = int(ll[-2])
+    spin = int(ll[-1])
     metal_list = get_metals()
     metal_key = metal_list[metal]
     metal_spin_dictionary = spin_dictionary()
@@ -555,12 +439,52 @@ def translate_job_name(job):
     elif spin == these_states[-1]:  # Last element of list
         spin_cat = 'HS'
     else:
-        # print('spin assigned as ll[9]  = ' + str(spin) + ' on  ' +str(ll))
-        # print('critical erorr, unknown spin: '+ str(spin))
         spin_cat = 'IS'  # Intermediate Spin
-    gene = "_".join([str(metal), str(ox), str(eqlig_ind), str(axlig1_ind), str(axlig2_ind), str(ahf).zfill(2)])
-    basegene = "_".join([str(metal), str(eqlig_ind), str(axlig1_ind), str(axlig2_ind)])
-    return gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, basename, basegene
+    if gene_template['legacy']:
+        eqlig_ind = int(ll[6])
+        axlig1_ind = int(ll[7])
+        axlig2_ind = int(ll[8])
+        if hasattr(ligands_dict[int(eqlig_ind)][0], '__iter__'):  # SMILEs string
+            eqlig = ligands_dict[int(eqlig_ind)][0][0]
+        else:
+            eqlig = ligands_dict[int(eqlig_ind)][0]
+        if hasattr(ligands_dict[int(axlig1_ind)][0], '__iter__'):  # SMILEs string
+            axlig1 = ligands_dict[int(axlig1_ind)][0][0]
+        else:
+            axlig1 = ligands_dict[int(axlig1_ind)][0]
+        if hasattr(ligands_dict[int(axlig2_ind)][0], '__iter__'):  # SMILEs string
+            axlig2 = ligands_dict[int(axlig2_ind)][0][0]
+        else:
+            axlig2 = ligands_dict[int(axlig2_ind)][0]
+        liglist = [eqlig, axlig1, axlig2]
+        indlist = [eqlig_ind, axlig1_ind, axlig2_ind]
+        gene = "_".join([str(metal), str(ox), str(eqlig_ind), str(axlig1_ind), str(axlig2_ind), str(ahf).zfill(2)])
+        basegene = "_".join([str(metal), str(eqlig_ind), str(axlig1_ind), str(axlig2_ind)])
+        #### liglist and indlist ordering is eqlig, axlig1, axlig2
+    else:
+        indlist = [int(i) for i in ll[6:-2]]
+        liglist = []
+        for ind in indlist:
+            if hasattr(ligands_dict[int(ind)][0], '__iter__'):
+                liglist.append(ligands_dict[int(ind)][0][0])
+            else:
+                liglist.append(ligands_dict[int(ind)][0])
+        namelist = [str(metal)]
+        if gene_template['ox']:
+            namelist.append(str(ox))
+        if gene_template['spin']:
+            namelist.append(str(spin))
+        for i in indlist:
+            namelist.append(str(i))
+        namelist.append(str(ahf).zfill(2))
+        gene = "_".join(namelist)
+        basegene = "_".join([str(metal)]+[str(ind) for ind in indlist])
+    dict_avars = ['gene', 'gen', 'slot', 'metal', 'ox', 'liglist', 'indlist', 'spin', 'spin_cat', 'ahf', 'basename', 'basegene']
+    for var in dict_avars:
+        translate_dict.update({var: locals()[var]}) 
+    # previously returning list below:
+    # gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, basename, basegene 
+    return translate_dict
 
 ########################
 def construct_job_name(complex_name, HFX=20):
@@ -653,7 +577,18 @@ def renameOxoEmpty(job):
 
 #######################
 def renameOxoHydroxyl(job):
-    _, _, _, metal, ox, _, _, axlig2, _, _, _, spin, _, _, basename, _ = translate_job_name(job)
+    # old:
+    #_, _, _, metal, ox, _, _, axlig2, _, _, _, spin, _, _, basename, _ = translate_job_name(job)
+    translate_dict = translate_job_name(job)
+    metal = translate_dict['metal']
+    ox = translate_dict['ox']
+    spin = translate_dict['spin']
+    basename = translate_dict['basename']
+    gene_template = get_gene_template()
+    if gene_template['legacy']:
+        axlig2 = translate_dict['liglist'][2]
+    else:
+        axlig2 = translate_dict['liglist'][5] #assuming that the last element of the list is the oxo
     # renames Oxo job to empty job
     ll = (str(basename)).split("_")
     ligs = get_ligands()
@@ -663,23 +598,16 @@ def renameOxoHydroxyl(job):
     ## replace metal oxidation with 1 less
     hydox = int(ox) - 1
     ll[5] = str(hydox)
-    upperll = ll[:]
-    lowerll = ll[:]
     upperspin = int(spin) + 1
-    lowerspin = int(spin) - 1
-    upperll[-1] = str(upperspin)
-    lowerll[-1] = str(lowerspin)
+    ll[-1] = str(upperspin)
     metal_spin_dictionary = spin_dictionary()
     metal_list = get_metals()
     metal_key = metal_list[metal]
     these_states = metal_spin_dictionary[metal_key][hydox]
     new_name_upper = False
-    new_name_lower = False
     if upperspin in these_states:
-        new_name_upper = "_".join(upperll)
-    if lowerspin in these_states:    
-        new_name_lower = "_".join(lowerll)
-    return new_name_upper, new_name_lower, basename
+        new_name_upper = "_".join(ll)
+    return new_name_upper, basename
 #######################
 def to_decimal_string(inp):
     # nusiance function to convert
@@ -694,8 +622,7 @@ def HFXordering():
     # represent the just finshed calculation
     # and the values are:
     # [next job to run, guess for next job]
-    GA_run = get_current_GA()
-    if not GA_run.config['HFXsample']:
+    if not isKeyword('HFXsample'):
         HFXdictionary = dict()
     else:
         HFXdictionary = {"20": ["25", "20"],
@@ -726,7 +653,7 @@ def get_sql_path():
 
 
 def setup_paths():
-    working_dir = get_run_dir()
+    working_dir = isKeyword('rundir')
     path_dictionary = {
         "geo_out_path": working_dir + "geo_outfiles/",
         "sp_out_path": working_dir + "sp_outfiles/",
