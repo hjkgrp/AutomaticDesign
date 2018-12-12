@@ -81,34 +81,51 @@ class GA_generation:
         metal_list_inds = get_metals()
 
         ## check if ligs are known
-        print('!!!!set:', [ligs[0][0], ligs[1][0], ligs[1][1]])
-        print('!!!!!ind:', ligands_list_inds[0:7])
-        print(ligs[0][0])
-        print('asking about :')
-        print(ligs[0][0])
         print('has type ' + str(type(ligs[0][0])))
         print(isinstance(ligs[0][0], basestring))
         if isinstance(ligs[0][0], basestring):
             print('dictionary  lig: ' + str(ligs[0][0]))
-            this_eq = ligs[0][0]
+            lig1 = ligs[0][0]
         else:
             print('smiles lig: ' + str(ligs[0][0]))
-            this_eq = ligs[0][0][0]
+            lig1 = ligs[0][0][0]
+
+        if isinstance(ligs[0][1], basestring):
+            print('dictionary  lig: ' + str(ligs[0][1]))
+            lig2 = ligs[0][1]
+        else:
+            print('smiles lig: ' + str(ligs[0][1]))
+            lig2 = ligs[0][1][0]
+
+        if isinstance(ligs[0][2], basestring):
+            print('dictionary  lig: ' + str(ligs[0][2]))
+            lig3 = ligs[0][2]
+        else:
+            print('smiles lig: ' + str(ligs[0][2]))
+            lig3 = ligs[0][2][0]
+
+        if isinstance(ligs[0][3], basestring):
+            print('dictionary  lig: ' + str(ligs[0][3]))
+            lig4 = ligs[0][3]
+        else:
+            print('smiles lig: ' + str(ligs[0][3]))
+            lig4 = ligs[0][3][0]
+
         if isinstance(ligs[1][0], basestring):
             print('dictionary  lig: ' + str(ligs[1][0]))
-            this_ax1 = ligs[1][0]
+            lig5 = ligs[1][0]
         else:
             print('smiles lig: ' + str(ligs[1][0]))
-            this_ax1 = ligs[1][0][0]
+            lig5 = ligs[1][0][0]
+        
         if isinstance(ligs[1][1], basestring):
             print('dictionary  lig: ' + str(ligs[1][1]))
-
-            this_ax2 = ligs[1][1]
+            lig6 = ligs[1][1]
         else:
             print('smiles lig: ' + str(ligs[1][1]))
-            this_ax2 = ligs[1][1][0]
+            lig6 = ligs[1][1][0]
         try:
-            if not set([this_eq, this_ax1, this_ax2]).issubset(ligands_list_inds):
+            if not set([lig1, lig2, lig3, lig4, lig5, lig6]).issubset(ligands_list_inds):
                 print('Error: requested ligs not available in list, aborting')
                 exit()
         except:
@@ -117,8 +134,13 @@ class GA_generation:
             print(metal)
             print('Error: requested metal not available in list, aborting')
             exit()
-        eq_ind = [ligands_list_inds.index(ligs[0][0])]
-        ax_ind = [ligands_list_inds.index(ligs[1][0]), ligands_list_inds.index(ligs[1][1])]
+        lig1_ind = [ligands_list_inds.index(ligs[0][0])]
+        lig2_ind = [ligands_list_inds.index(ligs[0][1])]
+        lig3_ind = [ligands_list_inds.index(ligs[0][2])]
+        lig4_ind = [ligands_list_inds.index(ligs[0][3])]
+        lig5_ind = [ligands_list_inds.index(ligs[1][0])]
+        lig6_ind = [ligands_list_inds.index(ligs[1][1])]
+        inds = [lig1_ind, lig2_ind, lig3_ind, lig4_ind, lig5_ind, lig6_ind]
         metal_ind = metal_list_inds.index(metal)
         this_complex = octahedral_complex(self.ligands_list)
         this_complex.random_gen()
@@ -126,9 +148,7 @@ class GA_generation:
         try:
             this_complex.replace_metal(metal_ind)
             this_complex.replace_ox(ox)
-            this_complex.replace_equitorial(eq_ind)
-            ## support for  ax1/ax2 asymmetry
-            this_complex.replace_axial(sorted(ax_ind))
+            replace_ligands(inds)
             this_gene = this_complex.name
             print('this this_unique_name ', this_gene)
             # this_gene = this_complex.name
@@ -313,10 +333,24 @@ class GA_generation:
 
     def ANN_fitness(self):
         msg, ANN_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
+        print(ANN_dict)
         #GA_run = get_current_GA()
         runtype = isKeyword("runtype")
         for keys in ANN_dict.keys():
-            gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, basename, basegene = translate_job_name(keys)
+            #gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, basename, basegene = translate_job_name(keys)
+            translate_dict = translate_job_name(keys)
+            gene = translate_dict['gene']
+            gen = translate_dict['gen']
+            slot = translate_dict['slot']
+            metal = translate_dict['metal']
+            ox = translate_dict['ox']
+            liglist = translate_dict['liglist']
+            indlist = translate_dict['indlist']
+            spin = translate_dict['spin']
+            spin_cat = translate_dict['spin_cat']
+            ahf = translate_dict['ahf']
+            base_name = translate_dict['basename']
+            base_gene = translate_dict['basegene']
             set_fitness = False
             this_prop = float(ANN_dict[keys][runtype])
             this_dist = float(ANN_dict[keys][runtype + '_dist'])
@@ -445,8 +479,14 @@ class GA_generation:
             ANN_dir = isKeyword('rundir') + "ANN_ouput/gen_" + str(gen) + "/ANN_results.csv"
             emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
             for keys in ANN_dict.keys():
-                _, _, _, metal, ox, eqlig, axlig1, axlig2, _, _, _, spin, spin_cat, ahf, _, _ = translate_job_name(keys)
-                this_gene = "_".join(keys.split("_")[4:10])
+                #_, _, _, metal, ox, eqlig, axlig1, axlig2, _, _, _, spin, spin_cat, ahf, _, _ = translate_job_name(keys)
+                translate_dict = translate_job_name(keys)
+                metal = translate_dict['metal']
+                ox = translate_dict['ox']
+                spin = translate_dict['spin']
+                spin_cat = translate_dict['spin_cat']
+                # this_gene = "_".join(keys.split("_")[4:10]) #### now switch to gene from translate job?
+                this_gene = translate_dict['gene']
                 set_fitness = False
                 # if runtype in ['oxo', 'hat']:
                 #     this_gene = this_gene + '_'+str(spin)
