@@ -21,7 +21,20 @@ def _find_distances():
         ANN_dir = isKeyword('rundir') + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
         emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
         for keys in ANN_dict.keys():
-            gene, _, _, metal, ox, eqlig, axlig1, axlig2, _, _, _, spin, spin_cat, ahf, _, _ = translate_job_name(keys)
+            #gene, _, _, metal, ox, eqlig, axlig1, axlig2, _, _, _, spin, spin_cat, ahf, _, _ = translate_job_name(keys)
+            translate_dict = translate_job_name(keys)
+            gene = translate_dict['gene']
+            gen = translate_dict['gen']
+            slot = translate_dict['slot']
+            metal = translate_dict['metal']
+            ox = translate_dict['ox']
+            liglist = translate_dict['liglist']
+            indlist = translate_dict['indlist']
+            spin = translate_dict['spin']
+            spin_cat = translate_dict['spin_cat']
+            ahf = translate_dict['ahf']
+            base_name = translate_dict['basename']
+            base_gene = translate_dict['basegene']
             split_energy = float(ANN_dict[keys]['split'])
             if runtype in ['homo','gap']:
                 if (split_energy > 0 and int(spin)<=3) or (split_energy < 0 and int(spin)>3):
