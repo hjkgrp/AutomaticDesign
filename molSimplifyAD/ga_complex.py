@@ -307,7 +307,7 @@ class octahedral_complex:
         while ind < 6:
             ligand_properties  = self.ligands_list[self.inds[ind]][1]
             lig_dent = ligand_properties[0]
-            print(ligand_properties)
+            #print(ligand_properties)
             self.lig_occs[ind] = 1
             ind += lig_dent
 
@@ -332,14 +332,14 @@ class octahedral_complex:
             self.ahf=ll[5]
         else:
             inds = []
-            print(ll)
+            #print(ll)
             current_index = 1
             if self.gene_template['ox']:
                 self.replace_ox(ll.pop(current_index))
             if self.gene_template['spin']:
                 self.replace_spin(ll.pop(current_index))
             while len(ll)>2:
-                print(ll)
+                #print(ll)
                 inds.append(ll.pop(current_index))
             self.ahf = ll.pop(current_index) 
             print('This is inds', inds)
@@ -368,6 +368,7 @@ class octahedral_complex:
             self.inds.append(ind)
         self.ready_for_assembly = True
         self.ligand_sort()
+        self._name_self()
 
     def replace_equitorial(self,new_eq_ind):
         #print('in repcoding, setting eq to ' + str(new_eq_ind))
