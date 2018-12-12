@@ -16,7 +16,7 @@ class octahedral_complex:
         self.metals_list= get_metals()
         self.ox_list = get_ox_states()
         self.core  = 'U'
-        
+        self.symclass = isKeyword("symclass")
         if self.gene_template['legacy']:
             self.ox = 'U'
             self.ax_dent =  False
@@ -104,6 +104,14 @@ class octahedral_complex:
     def _get_random_ox(self):
         possible_ox_states = get_ox_states()
         self.ox = numpy.random.choice(possible_ox_states)
+
+    def _get_random_spin(self):
+        spin_dictionary = spin_dictionary()
+        metal_list = get_metals()
+        metal_key = metal_list[self.metal]
+        these_states = spin_dictionary[metal_key][self.ox]
+        self.spin = numpy.random.choice(these_states)
+
     def _get_random_equitorial(self):
         ### choose the equitorial ligand
         n = len(self.ligands_list)
@@ -229,7 +237,7 @@ class octahedral_complex:
                     elif symclass == 'strong':
                         self.ligands += 2*[self.ligands_list[ind][0]]
                         self.inds += 2*[ind]
-                elif lig_dent == 2 and eqdent ==2: #Triple bidentate handling, may change later
+                elif lig_dent == 2 and eqdent ==2 and len(self.ligands) == 4 and False: #Triple bidentate handling, may change later
                     self.ligands += 2*[self.ligands_list[ind][0]]
                     self.inds += 2*[ind]
             if len(self.ligands) == 6:
@@ -237,6 +245,53 @@ class octahedral_complex:
 
         self.ligand_sort()
 
+    def enforce_consistency(self, fixed_inds):
+        used_dent = 0
+        dent_valid = False
+        if self.symclass in ['weak','strong']:
+            if not len(set(self.inds[0:4])) == 1:
+                print('Fails weak symclass check.')
+                for f_ind in fixed_inds: ## Loop over the positions that must be fixed
+                    if f_ind < 4:
+                        self.inds[0:4] = 4*[self.inds[f_ind]]
+                        self.ligands[0:4] = 4*[self.ligands_list[self.inds[f_ind]][0]]
+                        new_eq_dent = self.ligands_list[self.inds[f_ind]][1][0]
+                        other_ax_dent = self.ligands_list[self.inds[[i for i in range(4,5) if i not in fixed_inds]]][1][0]
+                        if max(other_ax_dent) == 2 and not new_eq_dent == 2:
+                            while max(other_ax_dent) == 2:
+                                ax_ind = numpy.random.randint(low = 0,high = n)
+                                ax_ligand_properties  = self.ligands_list[ax_ind][1]
+                            other_ax_dent = ax_ligand_properties[0]  
+                        ##### THIS SECTION IS UNFINISHED
+                    elif f_ind >= 4:
+                        this_ax_dent  = self.ligands_list[self.inds[f_ind]][1][0]
+                        if this_ax_dent == 2:
+                            self.inds[4:6] = 2*[self.inds[f_ind]]
+                            self.ligands[4:6] = 2*[self.ligands_list[self.inds[f_ind]][0]]
+                            eq_dent  = self.ligands_list[self.inds[0]][1][0]
+                            while eq_dent != 2:
+                                eq_ind = numpy.random.randint(low = 0,high = n)
+                                eq_ligand_properties  = self.ligands_list[eq_ind][1]
+                                eq_dent = eq_ligand_properties[0]  
+                            self.inds[0:4] = 4*[eq_ind]
+                            self.ligands[0:4] = 4*[self.ligands_list[eq_ind][0]]
+                        else:
+                            other_ax_dent = self.ligands_list[self.inds[[i for i in range(4,5) if i not in fixed_inds]]][1][0]
+                            while other_ax_dent != 1:
+                                ax_ind = numpy.random.randint(low = 0,high = n)
+                                ax_ligand_properties  = self.ligands_list[ax_ind][1]
+                                other_ax_dent = ax_ligand_properties[0]  
+                            self.inds[[i for i in range(4,5) if i not in fixed_inds]] = ax_ind
+                            self.ligands[[i for i in range(4,5) if i not in fixed_inds]] = self.ligands_list[ax_ind][0]
+
+            if self.symclass == 'strong':
+                if (not len(set(self.inds[4:6])) == 1):
+                    print('Fails strong symclass check.')
+                    for f_ind in fixed_inds: ## Loop over the positions that must be fixed
+                        if f_ind >= 4:
+                            self.inds[4:6] = 2*[self.inds[f_ind]]
+                            self.ligands[4:6] = 2*[self.ligands_list[self.inds[f_ind]][0]]
+        self.ligand_sort()
 
     def ligand_sort(self):
         self.inds[4:6].sort(reverse=True)
@@ -255,8 +310,6 @@ class octahedral_complex:
             print(ligand_properties)
             self.lig_occs[ind] = 1
             ind += lig_dent
-        import time
-        time.sleep(3)
 
     def examine(self):
         print("name is " + self.name)
@@ -416,86 +469,119 @@ class octahedral_complex:
         ## mutates either the axial
         ## or equitorial ligand a random
         #GA_run = get_current_GA()
-        lig_to_mutate = random.randint(0,3) #SWITCHED TO DISALLOW METAL MUT
         child = octahedral_complex(self.ligands_list)
         child.copy(self) # copies this parent
         n = len(self.ligands_list)
         self.examine()
-        print('I think this is 3x bidentate: ',self.three_bidentate,self.ax_dent)
-        print('in mutate')
-        print('lig to mutate is ' + str(lig_to_mutate))
-        if (lig_to_mutate == 0):
-            print("mutating equitorial ligand")
-            rand_ind = numpy.random.randint(low = 0,high = n)
-            smiles = False
-            if hasattr(self.ligands_list[rand_ind][0],'__iter__'):
-                smiles = True
-            if isKeyword('oxocatalysis'):
-                while (self.ligands_list[rand_ind][0] in ['x','hydroxyl','oxo']) or (smiles and self.ligands_list[rand_ind][0][0] in ['[O--]','[OH-]']):
-                    rand_ind = numpy.random.randint(low = 0,high = n)
-                    if self.ligands_list[rand_ind][0] not in ['x','hydroxyl','oxo'] or (smiles and self.ligands_list[rand_ind][0][0] not in ['[O--]','[OH-]']):
-                        break
-                print('MUTATED EQUATIORIAL IS ', self.ligands_list[rand_ind][0])
-            child.replace_equitorial([rand_ind])
-        elif (lig_to_mutate == 1) or (lig_to_mutate == 2):
-            print('mutating axial ligand')
-            if isKeyword('oxocatalysis'):
-                lig_to_mutate = 1 #Always keep lig_to_mutate = 1 since do not want to mutate axial moiety
-            ready_flag = False
-            while not ready_flag:
-                new_ax_list = list()
+        fixed_inds = []
+        if self.gene_template['legacy']:
+            lig_to_mutate = random.randint(0,4) #Metal mutation allowed
+            print('I think this is 3x bidentate: ',self.three_bidentate,self.ax_dent)
+            print('in mutate')
+            print('lig to mutate is ' + str(lig_to_mutate))
+            if (lig_to_mutate == 0):
+                print("mutating equitorial ligand")
                 rand_ind = numpy.random.randint(low = 0,high = n)
+                smiles = False
+                if hasattr(self.ligands_list[rand_ind][0],'__iter__'):
+                    smiles = True
                 if isKeyword('oxocatalysis'):
-                    smiles = False
-                    if hasattr(self.ligands_list[rand_ind][0],'__iter__'):
-                        smiles = True
-                    while (self.ligands_list[rand_ind][0] in ['x','hydroxyl','oxo']) or (smiles and self.ligands_list[rand_ind][0][0] in ['[O--]','[OH-]']) or \
-                        (self.ligands_list[rand_ind][1][0] > 1): #No bidentate axials
+                    while (self.ligands_list[rand_ind][0] in ['x','hydroxyl','oxo']) or (smiles and self.ligands_list[rand_ind][0][0] in ['[O--]','[OH-]']):
                         rand_ind = numpy.random.randint(low = 0,high = n)
-                        if ((self.ligands_list[rand_ind][0] not in ['x','hydroxyl','oxo']) or (smiles and self.ligands_list[rand_ind][0][0] not in ['[O--]','[OH-]'])) and self.ligands_list[rand_ind][1][0] == 1:
+                        if self.ligands_list[rand_ind][0] not in ['x','hydroxyl','oxo'] or (smiles and self.ligands_list[rand_ind][0][0] not in ['[O--]','[OH-]']):
                             break
-                ax_ligand_properties  = self.ligands_list[rand_ind][1]
-                ax_dent = ax_ligand_properties[0]
-                if (ax_dent == self.ax_dent):
-                    if (lig_to_mutate == 1):
-                        print("mutating axial 1 ")
-                        if isKeyword('symclass') =="strong" and not isKeyword('oxocatalysis'):
-                            new_ax_list = [rand_ind,rand_ind]
-                        else:
-                            new_ax_list = [rand_ind,self.ax_inds[1]]
-                            if not isKeyword('oxocatalysis'):
-                                new_ax_list.sort(reverse=True)
-                    elif (lig_to_mutate == 2):
-                        print("mutating axial 2 ")
-                        if isKeyword('symclass') =="strong":
-                            new_ax_list = [rand_ind,rand_ind]
-                        else:
-                            if not isKeyword('oxocatalysis'):
-                                new_ax_list = [self.ax_inds[0],rand_ind]
-                                new_ax_list.sort(reverse=True)
+                    print('MUTATED EQUATIORIAL IS ', self.ligands_list[rand_ind][0])
+                child.replace_equitorial([rand_ind])
+            elif (lig_to_mutate == 1) or (lig_to_mutate == 2):
+                print('mutating axial ligand')
+                if isKeyword('oxocatalysis'):
+                    lig_to_mutate = 1 #Always keep lig_to_mutate = 1 since do not want to mutate axial moiety
+                ready_flag = False
+                while not ready_flag:
+                    new_ax_list = list()
+                    rand_ind = numpy.random.randint(low = 0,high = n)
+                    if isKeyword('oxocatalysis'):
+                        smiles = False
+                        if hasattr(self.ligands_list[rand_ind][0],'__iter__'):
+                            smiles = True
+                        while (self.ligands_list[rand_ind][0] in ['x','hydroxyl','oxo']) or (smiles and self.ligands_list[rand_ind][0][0] in ['[O--]','[OH-]']) or \
+                            (self.ligands_list[rand_ind][1][0] > 1): #No bidentate axials
+                            rand_ind = numpy.random.randint(low = 0,high = n)
+                            if ((self.ligands_list[rand_ind][0] not in ['x','hydroxyl','oxo']) or (smiles and self.ligands_list[rand_ind][0][0] not in ['[O--]','[OH-]'])) and self.ligands_list[rand_ind][1][0] == 1:
+                                break
+                    ax_ligand_properties  = self.ligands_list[rand_ind][1]
+                    ax_dent = ax_ligand_properties[0]
+                    if (ax_dent == self.ax_dent):
+                        if (lig_to_mutate == 1):
+                            print("mutating axial 1 ")
+                            if isKeyword('symclass') =="strong" and not isKeyword('oxocatalysis'):
+                                new_ax_list = [rand_ind,rand_ind]
                             else:
-                                new_ax_list = [self.ax_inds[0],rand_ind]
+                                new_ax_list = [rand_ind,self.ax_inds[1]]
+                                if not isKeyword('oxocatalysis'):
+                                    new_ax_list.sort(reverse=True)
+                        elif (lig_to_mutate == 2):
+                            print("mutating axial 2 ")
+                            if isKeyword('symclass') =="strong":
+                                new_ax_list = [rand_ind,rand_ind]
+                            else:
+                                if not isKeyword('oxocatalysis'):
+                                    new_ax_list = [self.ax_inds[0],rand_ind]
+                                    new_ax_list.sort(reverse=True)
+                                else:
+                                    new_ax_list = [self.ax_inds[0],rand_ind]
 
-                    child.ax_dent = 1
-                    child.three_bidentate = False
-                    ready_flag = True
-                elif (ax_dent  == 2) and (self.ax_dent == 1):
-                    ## here, we want to add a bidentate but
-                    ## need to swap the second ligand too
-                    print("swapping both axial ")
-                    new_ax_list = [rand_ind,rand_ind]
-                    child.ax_dent = 2
-                    child.three_bidentate = True
-                    ready_flag =  True
-            print("trying to add " + str(new_ax_list))
-            child.replace_axial(new_ax_list)
-        elif (lig_to_mutate == 3): ## metal mutation
-            print('mutating metal')
-            child._get_random_metal()
-            print('mutating ox')
-            child._get_random_ox()
-        child._name_self()
-        child.examine()
+                        child.ax_dent = 1
+                        child.three_bidentate = False
+                        ready_flag = True
+                    elif (ax_dent  == 2) and (self.ax_dent == 1):
+                        ## here, we want to add a bidentate but
+                        ## need to swap the second ligand too
+                        print("swapping both axial ")
+                        new_ax_list = [rand_ind,rand_ind]
+                        child.ax_dent = 2
+                        child.three_bidentate = True
+                        ready_flag =  True
+                print("trying to add " + str(new_ax_list))
+                child.replace_axial(new_ax_list)
+            elif (lig_to_mutate == 3): ## metal mutation
+                print('mutating metal')
+                child._get_random_metal()
+                print('mutating ox')
+                child._get_random_ox()
+            child._name_self()
+            child.examine()
+        else:
+            pos_to_mutate = np.random.choice([i for i in range(0,7) if not i in fixed_inds])
+            if pos_to_mutate < 6:
+                ready_for_assembly = False
+                while not ready_for_assembly:
+                    new_lig = np.random.randint(0,n)
+                    new_dent = self.ligands_list[new_lig][1][0]
+                    print(new_lig, new_dent)
+                    if pos_to_mutate >= 4:
+                        if new_dent >= 2:
+                            ready_for_assembly = False
+                        elif isKeyword('oxocatalysis') and new_dent != 1:
+                            ready_for_assembly = False
+                        else:
+                            print('entered here!')
+                            ready_for_assembly = True
+                    else:
+                        ready_for_assembly = True
+                child.inds[pos_to_mutate] = new_lig
+                fixed_inds += [pos_to_mutate]
+                child.enforce_consistency(fixed_inds)
+            else:
+                child._get_random_metal()
+                if self.gene_template['ox']:
+                    child._get_random_ox()
+                if self.gene_template['spin']:
+                    child._get_random_spin()
+                ####MUTATE OX???
+                logger(setup_paths()['state_path'], str(datetime.datetime.now()) + '   ' + str('entered metal section...'))
+            child._name_self()
+            child.examine()
         return child
 
     def generate_geometry_legacy(self,prefix,spin,path_dictionary,rundirpath,gen):
@@ -815,7 +901,7 @@ class octahedral_complex:
 
         ## disable force field opt
         ## if not DFT
-        if isDFT():
+        if isKeyword('DFT'):
             ff_opt = 'A'
         else:
             ff_opt = 'no'
