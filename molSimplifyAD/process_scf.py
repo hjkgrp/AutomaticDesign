@@ -322,8 +322,9 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
             this_metal = this_run.metal
         else:
             this_metal = local_metal_list[int(this_run.metal)]
-
-
+        this_ox = int(this_run.ox)
+        alpha = this_run.alpha        
+        spin = this_run.spin
         if hasattr(this_run.lig1,'__iter__'): # SMILEs string
             lig1_name = 'smi' + str(this_run.lig1_ind)
             #eqlig_name = this_run.eqlig
@@ -359,11 +360,10 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
         if lig6_name == '[O--]':
             lig6_name = 'oxo'
                 
-        this_name = "_".join([str(metal), str(ox), 'eq', str(lig1_name),str(lig2_name),str(lig3_name),str(lig4_name), 'ax1', str(lig5_name), 'ax2', str(lig6_name), 'ahf', str(int(alpha)).zfill(2), str(spin)])
+        this_name = "_".join([str(this_metal), str(this_ox), 'eq', str(lig1_name),str(lig2_name),str(lig3_name),str(lig4_name), 'ax1', str(lig5_name), 'ax2', str(lig6_name), 'ahf', str(int(alpha)).zfill(2), str(spin)])
                 ### add alpha value to list owned by this_comp:
         print('** name is ' + str(this_name))
 
-        this_ox = int(this_run.ox)
        
         metal_spins  = local_spin_dictionary[this_metal][this_ox]
         
@@ -407,12 +407,12 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
                 this_comp.set_rep_mol(this_run)
                 this_comp.get_descriptor_vector(loud=False,name=this_name)
             for props in output_properties(comp=False,oxocatalysis=True):
-                this_attribute = "_".join(['ox',str(this_ox),spin_cat,str(axlig2_name),props])
+                this_attribute = "_".join(['ox',str(this_ox),spin_cat,str(lig6_name),props])
                 print('looking for '+str(props)+' as '+this_attribute + ' from run class')
                 if hasattr(this_run, props):
                     print('found, '+str(getattr(this_run,props)))
                     setattr(this_comp, this_attribute, getattr(this_run,props))
-            this_attribute = "_".join(['ox',str(this_ox),spin_cat,str(axlig2_name),"DFT_RUN"])
+            this_attribute = "_".join(['ox',str(this_ox),spin_cat,str(lig6_name),"DFT_RUN"])
 	        #print('attribute: ',this_attribute)
 		    #print('assigned: ',getattr(this_run,props))
             #setattr(this_comp,this_attribute,getattr(this_comp,props))
