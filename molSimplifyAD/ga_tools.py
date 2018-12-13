@@ -186,10 +186,13 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
     list_of_props.append('gene')
     list_of_props.append('metal')
     list_of_props.append('alpha')
-    list_of_props.append('axlig1')
+    list_of_props.append('lig1')
+    list_of_props.append('lig2')
+    list_of_props.append('lig3')
+    list_of_props.append('lig4')
+    list_of_props.append('lig5')
     if (not oxocatalysis):
-        list_of_props.append('axlig2')
-    list_of_props.append('eqlig')
+        list_of_props.append('lig6')
     list_of_prop_names = ['chem_name', 'converged', 'status', 'time', 'charge', 'spin',
                           'energy', 'init_energy',
                           'ss_act', 'ss_target',
@@ -541,8 +544,18 @@ def renameHFX(job, newHFX):
     basename = base.strip(".out")
     ll = (str(basename)).split("_")
     ## replace alpha
-    ll[9] = newHFX
-    new_name = "_".join(ll)
+    translate_dict = translate_job_name(job)
+    gen = translate_dict['gen']
+    slot = translate_dict['slot']
+    metal = translate_dict['metal']
+    ox = translate_dict['ox']
+    spin = translate_dict['spin']
+    basename = translate_dict['basename']
+    liglist = translate_dict['liglist']
+    liginds = translate_dict['indlist']
+    ahf = translate_dict['ahf']
+    new_name = jobname_from_parts(metal, ox, spin, liginds,str(newHFX))
+    new_name = '_'.join(['gen',gen,'slot',slot])+'_'+new_name
     return new_name
 
 
@@ -559,20 +572,26 @@ def stripName(job):
 
 #######################
 def renameOxoEmpty(job):
-    # renames Oxo job to empty job
-    base = os.path.basename(job)
-    base = base.strip("\n")
-    basename = base.strip(".in")
-    basename = basename.strip(".xyz")
-    basename = basename.strip(".out")
-    ll = (str(basename)).split("_")
-    ligs = get_ligands()
+    translate_dict = translate_job_name(job)
+    gen = translate_dict['gen']
+    slot = translate_dict['slot']
+    metal = translate_dict['metal']
+    ox = translate_dict['ox']
+    spin = translate_dict['spin']
+    basename = translate_dict['basename']
+    liglist = translate_dict['liglist']
+    liginds = translate_dict['indlist']
+    ahf = translate_dict['ahf']
+    gene_template = get_gene_template()
     value = str(find_ligand_idx('x'))
-    ## replace ax2 with x index
-    ll[8] = value
-    ## replace metal oxidation with 2 less
-    ll[5] = str(int(ll[5]) - 2)
-    new_name = "_".join(ll)
+    if gene_template['legacy']:
+        liginds[2] = value
+    else:
+        liginds[5] = value #assuming that the last element of the list is the oxo
+    ## replace metal oxidation with 1 less
+    empox = str(int(ox) - 2)
+    new_name = jobname_from_parts(metal, empox, spin, liginds,ahf)
+    new_name = '_'.join(['gen',gen,'slot',slot])+'_'+new_name
     return new_name, basename
 
 #######################
@@ -580,33 +599,32 @@ def renameOxoHydroxyl(job):
     # old:
     #_, _, _, metal, ox, _, _, axlig2, _, _, _, spin, _, _, basename, _ = translate_job_name(job)
     translate_dict = translate_job_name(job)
+    gen = translate_dict['gen']
+    slot = translate_dict['slot']
     metal = translate_dict['metal']
     ox = translate_dict['ox']
     spin = translate_dict['spin']
     basename = translate_dict['basename']
+    liglist = translate_dict['liglist']
+    liginds = translate_dict['indlist']
+    ahf = translate_dict['ahf']
     gene_template = get_gene_template()
-    if gene_template['legacy']:
-        axlig2 = translate_dict['liglist'][2]
-    else:
-        axlig2 = translate_dict['liglist'][5] #assuming that the last element of the list is the oxo
-    # renames Oxo job to empty job
-    ll = (str(basename)).split("_")
-    ligs = get_ligands()
     value = str(find_ligand_idx('hydroxyl'))
-    ## replace ax2 with hydroxyl index
-    ll[8] = value
+    if gene_template['legacy']:
+        liginds[2] = value
+    else:
+        liginds[5] = value #assuming that the last element of the list is the oxo
     ## replace metal oxidation with 1 less
-    hydox = int(ox) - 1
-    ll[5] = str(hydox)
+    hydox = str(int(ox) - 1)
     upperspin = int(spin) + 1
-    ll[-1] = str(upperspin)
     metal_spin_dictionary = spin_dictionary()
     metal_list = get_metals()
     metal_key = metal_list[metal]
-    these_states = metal_spin_dictionary[metal_key][hydox]
+    these_states = metal_spin_dictionary[metal_key][int(hydox)]
     new_name_upper = False
     if upperspin in these_states:
-        new_name_upper = "_".join(ll)
+        new_name_upper = jobname_from_parts(metal, hydox, upperspin, liginds,ahf)
+        new_name_upper = '_'.join(['gen',gen,'slot',slot])+'_'+new_name_upper
     return new_name_upper, basename
 #######################
 def to_decimal_string(inp):
