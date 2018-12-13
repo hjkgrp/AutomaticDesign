@@ -8,7 +8,7 @@ from molSimplifyAD.process_scf import *
 def launch_job(job,sub_num):
     ## code to submit to queue
     print('lauching ' + job + ' sub number: '+ str(sub_num))
-    base_name = os.path.basename(job).strip('in')
+    basename = os.path.basename(job).strip('.in')
     if sub_num > 1:
         print(' start rescue')
         ## run rescue and analysis
