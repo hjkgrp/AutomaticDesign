@@ -226,7 +226,7 @@ class octahedral_complex:
             if symclass in ['weak', 'strong']: #Switch this to be consistent with SMU 
                 if len(self.ligands) == 0:    
                     if lig_dent in [1, 2, 4]:
-                        print('Found eqlig: ', self.ligands_list[ind])
+                        #print('Found eqlig: ', self.ligands_list[ind])
                         self.ligands += 4*[self.ligands_list[ind][0]]
                         self.inds += 4*[ind]
                         eqdent = lig_dent 
@@ -342,7 +342,7 @@ class octahedral_complex:
                 #print(ll)
                 inds.append(ll.pop(current_index))
             self.ahf = ll.pop(current_index) 
-            print('This is inds', inds)
+            #print('This is inds', inds)
             self.replace_ligands(inds)
         self._name_self()
 
@@ -887,13 +887,13 @@ class octahedral_complex:
         mol_name = prefix + jobname_from_parts(metal=self.core, ox=ox, lig_inds=self.inds, ahf=self.ahf, spin=spin)
 
         smicat = False # holder for connection atoms calls for SMILES ligands
-        print(self.lig_occs)
+        #print(self.lig_occs)
         purified_ligands = [self.ligands[i] for i in range(6) if self.lig_occs[i]>0]
-        print(purified_ligands)
+        #print(purified_ligands)
         
         liglist, smicat = SMILES_converter(purified_ligands)
         ligalign = 0
-        print(liglist,smicat)
+        #print(liglist,smicat)
         if self.lig_occs == [1, 0, 1, 0, 1, 0]:
             ligloc = 'false'
         else:
