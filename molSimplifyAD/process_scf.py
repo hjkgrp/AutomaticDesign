@@ -48,8 +48,8 @@ def test_terachem_sp_convergence(job):
     spin = translate_dict['spin']
     spin_cat = translate_dict['spin_cat']
     ahf = translate_dict['ahf']
-    base_name = translate_dict['basename']
-    base_gene = translate_dict['basegene']
+    basename = translate_dict['basename']
+    basegene = translate_dict['basegene']
     #this_GA = get_current_GA()
     exchange = ahf
     alpha=float(exchange)
@@ -200,7 +200,7 @@ def process_runs_geo(all_runs,local_spin_dictionary,local_metal_list=False):
         else:
             lig6_name = this_run.lig6
             
-        this_name = "_".join([str(metal), str(ox), 'eq', str(lig1_name),str(lig2_name),str(lig3_name),str(lig4_name), 'ax1', str(lig5_name), 'ax2', str(lig6_name), 'ahf', str(int(alpha)).zfill(2), str(spin)])
+        this_name = "_".join([str(this_metal), str(this_run.ox), 'eq', str(lig1_name),str(lig2_name),str(lig3_name),str(lig4_name), 'ax1', str(lig5_name), 'ax2', str(lig6_name), 'ahf', str(int(this_run.alpha)).zfill(2), str(this_run.spin)])
         # this_name = "_".join([this_metal,'eq',str(eqlig_name),'ax1',str(axlig1_name),'ax2',str(axlig2_name),'ahf',str(int(this_run.alpha)).zfill(2)])
         print('** name is ' + str(this_name))
                 ### add alpha value to list owned by this_comp:
@@ -257,7 +257,7 @@ def process_runs_geo(all_runs,local_spin_dictionary,local_metal_list=False):
                  this_comp.ox2RN = max(this_run.number,this_comp.ox2RN)
             else:
                  this_comp.ox3RN = max(this_run.number,this_comp.ox3RN)
-            this_comp.gene = "_".join([this_metal,str(eqlig_name),str(axlig1_name),str(axlig2_name)])
+            this_comp.gene = "_".join([this_metal,str(lig1_name),str(lig2_name),str(lig3_name),str(lig4_name),str(lig5_name),str(lig6_name)])
             this_comp.job_gene = this_run.gene
             print('----gene:---', this_comp.gene, this_comp.job_gene)
             if this_run.converged and this_run.coord == 6:
@@ -267,9 +267,14 @@ def process_runs_geo(all_runs,local_spin_dictionary,local_metal_list=False):
                     if not os.path.isdir('used_geos/'):
                         os.mkdir('used_geos/')
                     this_run.mol.writexyz('used_geos/'+this_name+'.xyz')
-                    this_comp.axlig1 = this_run.axlig1
-                    this_comp.axlig2 = this_run.axlig2
-                    this_comp.eqlig = this_run.eqlig
+                    #this_comp.axlig1 = this_run.axlig1
+                    #this_comp.axlig2 = this_run.axlig2
+                    this_comp.lig1 = this_run.lig1
+                    this_comp.lig2 = this_run.lig2
+                    this_comp.lig3 = this_run.lig3
+                    this_comp.lig4 = this_run.lig4
+                    this_comp.lig5 = this_run.lig5
+                    this_comp.lig6 = this_run.lig6
                     this_comp.set_rep_mol(this_run)
                     this_comp.get_descriptor_vector(loud=False,name=this_name)
 #                except:
@@ -649,6 +654,34 @@ def check_sp_file(this_run):
             this_run.sp_status =  True
     return this_run
 
+def check_empty_sp_file(this_run):
+    ## function to test an empty site single point convergence
+    ##  for terachem files
+    #  @param this_run a run class
+    #  @return this_run populated run class
+    found_data = False
+    if os.path.exists(this_run.empty_sp_outpath):
+        with open(this_run.empty_sp_outpath) as f:
+            data=f.readlines()
+            found_conv =False
+            found_data =False
+            found_time = False
+            for i,lines in enumerate(data):
+                if str(lines).find('FINAL ENERGY') != -1:
+                    print("found single point line")
+                    print(lines)
+                    energy =str(lines.split()[2])
+                    found_data = True
+                if str(lines).find('SPIN S-SQUARED') != -1:
+                    this_str=(lines.split())
+                    this_run.empty_ss_act =float( this_str[2])
+                    this_run.empty_ss_target = float(this_str[4].strip('()'))
+        if (found_data == True):
+            this_run.empty_sp_energy = energy
+            this_run.empty_sp_status =  True
+    return this_run
+
+
 def check_init_sp(this_run):
     ## function to test initial single point convergence
     ##  for terachem files
@@ -918,35 +951,40 @@ def read_molden_file(this_run):
     LUMOalpha = False
     LUMObeta = False
     scrpath = this_run.scrpath.strip('optim.xyz')
-    moldenFile = glob.glob(scrpath + "*.molden")[0]
+    #print(scrpath)
+    moldenFile = glob.glob(scrpath + "*.molden")
+    if len(moldenFile) >= 1:
+        moldenFile = moldenFile[0]
+    else:
+        return
+    #print(moldenFile)
     safe = False 
     print(moldenFile)
     print('\n checking '+moldenFile)
     if os.path.exists(moldenFile):
         print('Moldenpath exists')
     ### file is found, check if converged
-    with open(moldenFile) as f:            
-        for lines in f.readlines():
-            try:
-                if not lines.find('Ene')== -1:
-                    this_energy = float(lines.split()[1].strip())
-                if not lines.find('Spin')== -1:
-                    cat = lines.split()[1].strip()
-                if not lines.find('Occup')==-1:
-                    occup = float(lines.split()[1].strip())
-
-                    if occup >= 1 and cat == 'Alpha':
-                        HOMOalpha = this_energy
-                    elif not LUMOalpha and occup == 0 and cat == 'Alpha':
-                        LUMOalpha = this_energy
-                        
-                    if occup >= 1 and cat =='Beta':
-                        HOMObeta = this_energy
-                        
-                    elif not LUMObeta and occup == 0 and cat =='Beta':
-                        LUMObeta = this_energy
-            except:
-                print('Could not parse molden correctly')
+        with open(moldenFile) as f:            
+            for lines in f.readlines():
+                try:
+                    if not lines.find('Ene')== -1:
+                        this_energy = float(lines.split()[1].strip())
+                    if not lines.find('Spin')== -1:
+                        cat = lines.split()[1].strip()
+                    if not lines.find('Occup')==-1:
+                        occup = float(lines.split()[1].strip())
+                        if occup >= 1 and cat == 'Alpha':
+                            HOMOalpha = this_energy
+                        elif not LUMOalpha and occup == 0 and cat == 'Alpha':
+                            LUMOalpha = this_energy
+                            
+                        if occup >= 1 and cat =='Beta':
+                            HOMObeta = this_energy
+                            
+                        elif not LUMObeta and occup == 0 and cat =='Beta':
+                            LUMObeta = this_energy
+                except:
+                    print('Could not parse molden correctly')
     if  not LUMOalpha:
         LUMOalpha = float('NaN')
     if  not LUMObeta:
