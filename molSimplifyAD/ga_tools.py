@@ -212,7 +212,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
                           'water_cont',
                           'terachem_version', 'terachem_detailed_version',
                           'basis', 'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
-                          'mop_coord', 'sp_energy', 'tot_time', 'tot_step', 'metal_translation']
+                          'mop_coord', 'sp_energy','empty_sp_energy', 'tot_time', 'tot_step', 'metal_translation']
     if SASA:
         list_of_prop_names.append("area")
     if TS:
@@ -369,6 +369,15 @@ def spin_dictionary():
                                      'mn': {2: [2, 6], 3: [3, 5]}}
     return metal_spin_dictionary
 
+########################
+def get_ligand_charge_dictionary():
+    ligand_charge_dictionary = {'acac':-1,'acetonitrile':0,'ammonia':0,'bifuran':0,'bipy':0,'bipyrrole':0,'bromide':-1,'carbonyl':0,'chloride':-1,'cyanide':-1,'cyanopyridine': 0,'dmf':0,'en':0,'fluoride':-1,'formate':-1,'furan':0,'hydroxyl':-1,'isothiocyanate':-1,'methanol':0,'misc':0,'nme3':0,'ome2':0,'ox':-2,'oxo':-2,'phen':0,'phosphine':0,'pisc':0,'pme3':0,'porphyrin':-2,'pph3':0,'pyridine':0,'pyrrole':-1,'tbisc':0,'tbuc':-2,'thiocyanate':-1,'thiol':-1,'thiopyridine':0,'uthiol':0,'uthiolme2':0,'water':0}
+    return ligand_charge_dictionary
+
+########################
+def get_ligand_size_dictionary():
+    ligand_size_dictionary = {'acac':14,'acetonitrile':6,'ammonia':4,'bifuran':16,'bipy':20,'bipyrrole':18,'bromide':1,'carbonyl':2,'chloride':1,'cyanide':2,'cyanopyridine': 12,'dmf':12,'en':12,'fluoride':1,'formate':4,'furan':9,'hydroxyl':2,'isothiocyanate':3,'methanol':6,'misc':6,'nme3':13,'ome2':9,'ox':6,'oxo':1,'phen':22,'phosphine':4,'pisc':25,'pme3':13,'porphyrin':36,'pph3':34,'pyridine':11,'pyrrole':9,'tbisc':15,'tbuc':24,'thiocyanate':3,'thiol':2,'thiopyridine':11,'uthiol':3,'uthiolme2':9,'water':3}
+    return ligand_size_dictionary
 
 ########################
 def isKeyword(keyword):
@@ -581,7 +590,7 @@ def renameOxoEmpty(job):
     basename = translate_dict['basename']
     liglist = translate_dict['liglist']
     liginds = translate_dict['indlist']
-    ahf = translate_dict['ahf']
+    ahf = str(int(translate_dict['ahf'])).zfill(2)
     gene_template = get_gene_template()
     value = str(find_ligand_idx('x'))
     if gene_template['legacy']:
@@ -591,6 +600,28 @@ def renameOxoEmpty(job):
     ## replace metal oxidation with 1 less
     empox = str(int(ox) - 2)
     new_name = jobname_from_parts(metal, empox, spin, liginds,ahf)
+    new_name = '_'.join(['gen',gen,'slot',slot])+'_'+new_name
+    return new_name, basename
+
+#######################
+def rename_ligand_dissoc(job):
+    translate_dict = translate_job_name(job)
+    gen = translate_dict['gen']
+    slot = translate_dict['slot']
+    metal = translate_dict['metal']
+    ox = translate_dict['ox']
+    spin = translate_dict['spin']
+    basename = translate_dict['basename']
+    liglist = translate_dict['liglist']
+    liginds = translate_dict['indlist']
+    ahf = str(int(translate_dict['ahf'])).zfill(2)
+    gene_template = get_gene_template()
+    value = str(find_ligand_idx('x'))
+    if gene_template['legacy']:
+        liginds[2] = value
+    else:
+        liginds[5] = value
+    new_name = jobname_from_parts(metal, ox, spin, liginds,ahf)
     new_name = '_'.join(['gen',gen,'slot',slot])+'_'+new_name
     return new_name, basename
 
@@ -607,7 +638,7 @@ def renameOxoHydroxyl(job):
     basename = translate_dict['basename']
     liglist = translate_dict['liglist']
     liginds = translate_dict['indlist']
-    ahf = translate_dict['ahf']
+    ahf = str(int(translate_dict['ahf'])).zfill(2)    
     gene_template = get_gene_template()
     value = str(find_ligand_idx('hydroxyl'))
     if gene_template['legacy']:
