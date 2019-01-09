@@ -134,21 +134,22 @@ class GA_generation:
             print(metal)
             print('Error: requested metal not available in list, aborting')
             exit()
-        lig1_ind = [ligands_list_inds.index(ligs[0][0])]
-        lig2_ind = [ligands_list_inds.index(ligs[0][1])]
-        lig3_ind = [ligands_list_inds.index(ligs[0][2])]
-        lig4_ind = [ligands_list_inds.index(ligs[0][3])]
-        lig5_ind = [ligands_list_inds.index(ligs[1][0])]
-        lig6_ind = [ligands_list_inds.index(ligs[1][1])]
+        lig1_ind = ligands_list_inds.index(ligs[0][0])
+        lig2_ind = ligands_list_inds.index(ligs[0][1])
+        lig3_ind = ligands_list_inds.index(ligs[0][2])
+        lig4_ind = ligands_list_inds.index(ligs[0][3])
+        lig5_ind = ligands_list_inds.index(ligs[1][0])
+        lig6_ind = ligands_list_inds.index(ligs[1][1])
         inds = [lig1_ind, lig2_ind, lig3_ind, lig4_ind, lig5_ind, lig6_ind]
+        #print('this is inds', inds)
         metal_ind = metal_list_inds.index(metal)
         this_complex = octahedral_complex(self.ligands_list)
         this_complex.random_gen()
         counter = self.total_counter
-        try:
+        if True:#try:
             this_complex.replace_metal(metal_ind)
             this_complex.replace_ox(ox)
-            replace_ligands(inds)
+            this_complex.replace_ligands(inds)
             this_gene = this_complex.name
             print('this this_unique_name ', this_gene)
             # this_gene = this_complex.name
@@ -160,10 +161,12 @@ class GA_generation:
                 self.total_counter = self.total_counter + 1
                 print('adding eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) + ' + ' + str(ligs[1][1]))
             else:
+                sardines
                 print(' this gene is a duplicate and is not added')
-        except:
+        else:#except:
+            sardines
             print('cannot make eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) + ' + ' + str(ligs[1][1]))
-
+    
     def write_state(self):
         ## first write genes to path
         state_path = self.current_path_dictionary["state_path"] + "current_genes.csv"
@@ -193,7 +196,8 @@ class GA_generation:
         emsg = write_dictionary(self.status_dictionary, state_path)
         if emsg:
             print(emsg)
-
+        print('!!!!!!!!--------------------!!!!!!!!!!!!--------------------!!!!!!!!!!!!!!')
+        print(self.genes)
         ## third,  write gene-fitness info to path
         state_path = self.current_path_dictionary["state_path"] + "/gene_fitness.csv"
         if not os.path.isfile(state_path):
@@ -227,6 +231,7 @@ class GA_generation:
         emsg, gene_dict = read_dictionary(state_path)
         if emsg:
             print(emsg)
+        print(gene_dict)
         for keys in gene_dict.keys():
             self.genes[int(keys)] = gene_dict[keys]
         for keys in self.genes.keys():
