@@ -27,7 +27,10 @@ def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary):
             if isKeyword('post_all'):
                 postProc = True
             elif job in converged_jobs_dictionary.keys():
-                this_outcome = int(converged_jobs_dictionary[job])
+                try:
+                    this_outcome = int(converged_jobs_dictionary[job])
+                except:
+                    this_outcome = 3
                 if this_outcome in [0, 1, 3, 6, 8]:  # dead jobs
                     postProc = False
                 else:
@@ -86,6 +89,7 @@ def check_all_current_convergence():
         ## 16 -> job requests HAT and Oxo PRFO jobs
         ## 17 -> job requests HAT PRFO job
         ## 18 -> job requests Oxo PRFO job
+        ## 19 -> job requests axial ligand dissociation energy
         ## sort to get consistent transversal order
         joblist.sort()
         
@@ -172,6 +176,12 @@ def check_all_current_convergence():
                 if isKeyword('water'):
                         this_run.water_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'               
                         this_run.water_outpath = (path_dictionary["water_out_path"] + base_name + ".out")
+ 
+                if isKeyword('ax_lig_dissoc'):
+                        new_name, reference_name = rename_ligand_dissoc(jobs)
+                        this_run.empty_sp_inpath = path_dictionary['sp_in_path'] + new_name + '.in'
+                        this_run.empty_sp_outpath = (path_dictionary["sp_out_path"] + new_name + ".out")
+
                 if isKeyword('TS'):
                         print('NOW ASSIGNING ALL OF THE PRFO PATHS!')
                         this_run.PRFO_HAT_inpath = path_dictionary["PRFO_in_path_HAT"] + base_name + '.in'
@@ -199,9 +209,9 @@ def check_all_current_convergence():
                     else:
                         print(' cannot find scr:   ' +this_run.scrpath)
                     ### Merge scr files and output files
-                    this_run.merge_scr_files()
-                    this_run.merge_geo_outfiles()
-                    this_run.obtain_metal_translation()
+                    #this_run.merge_scr_files()
+                    #this_run.merge_geo_outfiles()
+                    #this_run.obtain_metal_translation()
 
                 ## check if outpath exists
                 if os.path.isfile(this_run.outpath):
@@ -235,7 +245,7 @@ def check_all_current_convergence():
                         run_success = True
 
                     # check run is complete?
-                    if this_run.alpha == 20:  
+                    if this_run.alpha == 20 or isKeyword('ax_lig_dissoc'):  
                         if isKeyword('SASA'): ## if we want SASA
                             print('getting area for ' +this_run.name )
                             this_run.obtain_area()
@@ -278,6 +288,15 @@ def check_all_current_convergence():
                             elif run_success:
                                 this_run.status = 15
                                 run_success = False
+
+                        if isKeyword('ax_lig_dissoc'):
+                            this_run = check_sp_file(this_run)
+                            if this_run.empty_sp_status and run_success:
+                                remove_outstanding_jobs(this_run.empty_sp_inpath)
+                            elif run_success:
+                                this_run.status = 19
+                                run_success = False
+
                         if (isKeyword('TS') and isKeyword('oxocatalysis') and (liglist[-1] == 'oxo' or '[O--]' in liglist[-1][0] or '[O--]' in liglist[-1])):
                             print('TS on')
                             this_run = test_terachem_TS_convergence(this_run)
@@ -309,7 +328,7 @@ def check_all_current_convergence():
                             else:
                                 print('Both HAT and Oxo TSs still need to be run')
                                 this_run.status = 16
-                        if run_success and not this_run.status in [12,13,14,15,16,17,18]:
+                        if run_success and not this_run.status in [12,13,14,15,16,17,18,19]:
                             this_run.status = 0  # all done
                         ## mark as compelete
                     else:  # not B3LYP, check coord only:
@@ -448,7 +467,7 @@ def check_all_current_convergence():
                 logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                        + ' added ' + this_run.name + ' to all_runs with status ' + str(this_run.status))
 
-                if this_run.status in [0, 1, 12, 13, 14, 15, 16, 17, 18]:  ##  convergence is successful!
+                if this_run.status in [0, 1, 12, 13, 14, 15, 16, 17, 18, 19]:  ##  convergence is successful!
                     print('removing job from OSL due to status  ' + str(this_run.status))
                     jobs_complete += 1
                     remove_outstanding_jobs(jobs)  # take out of queue
@@ -471,7 +490,20 @@ def check_all_current_convergence():
                             print('addding water based on ' + str(jobs))
                             this_run.write_water_input()
                             add_to_outstanding_jobs(this_run.water_inpath)
-
+                    if isKeyword('ax_lig_dissoc'):
+                        if this_run.status == 19: ## need empty site calc
+                            print('adding empty site structure based on ' + str(jobs))
+                            ligand_charge_dict = get_ligand_charge_dictionary()
+                            ligand_size_dict = get_ligand_size_dictionary()
+                            if gene_template['legacy']:
+                                lines_to_remove = ligand_size_dict[str(liglist[2])]
+                                ligand_charge = ligand_charge_dict[str(liglist[2])]
+                            else:
+                                lines_to_remove = ligand_size_dict[str(liglist[5])]
+                                ligand_charge = ligand_charge_dict[str(liglist[5])]
+                            alpha_val = str(int(ahf)).zfill(2)
+                            this_run.write_empty_inputs(alpha_val, lines_to_remove, ligand_charge)
+                            add_to_outstanding_jobs(this_run.empty_sp_inpath)
                     if isKeyword('oxocatalysis'): #Scrape spin and partial charge info from molden
                         print('Now scraping the molden file for charge and spin info.')
                         current_folder = path_dictionary["scr_path"]+base_name+"/"
@@ -489,15 +521,17 @@ def check_all_current_convergence():
                             this_run.oxygen_mulliken_charge = oxocharge
                         else:
                             print("No molden path found for this run ("+str(jobs)+")")
-                if this_run.status in [3, 5, 6, 8]:  ##  convergence is not successful!
+                if this_run.status in [3, 5, 6, 8,"undef"]:  ##  convergence is not successful!
                     number_of_subs = submitted_job_dictionary[jobs]
-                    if this_run.status in [3, 5, 6]:  ## unknown error, allow retry
+                    if this_run.status == "undef":
+                        this_run.status = 3
+                    if this_run.status in [3, 5, 6,"undef"]:  ## unknown error, allow retry
                         print(' no result found for job ' + str(jobs) + ' after ' + str(number_of_subs))
                         logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                                + " failure at job : " + str(jobs) + ' with status ' + str(this_run.status)
                                + ' after ' + str(number_of_subs) + ' subs, trying again... ')
 
-                        if int(number_of_subs) > get_maxresub():
+                        if int(number_of_subs) > isKeyword('max_resubmit'):
                             print(' giving up on job ' + str(jobs) + ' after ' + str(number_of_subs))
                             logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                                    + " giving up on job : " + str(jobs) + ' with status ' + str(this_run.status)
@@ -546,8 +580,8 @@ def check_all_current_convergence():
                     this_run.sp_outpath = (path_dictionary["sp_out_path"] + '/' + base_name + ".out")
                     #this_run.scrpath = path_dictionary["scr_path"] + base_name
                     #this_run.scrlogpath = path_dictionary["scr_path"] + base_name + "/oplog.xls"
-                    this_run.scrpath = path_dictionary["scr_path"][:-3]+'sp/' + base_name
-                    this_run.scrlogpath = path_dictionary["scr_path"][:-3]+'sp/' + base_name + "/oplog.xls"
+                    this_run.scrpath = path_dictionary["scr_path"].replace('geo','sp') + base_name +'/'
+                    this_run.scrlogpath = path_dictionary["scr_path"].replace('geo','sp') + base_name + "/oplog.xls"
                     this_run.inpath = path_dictionary["job_path"] + base_name + ".in"
                     this_run.comppath = path_dictionary["done_path"] + base_name + ".in"
                     this_run.moppath = path_dictionary["mopac_path"] + base_name + ".out"
@@ -564,6 +598,7 @@ def check_all_current_convergence():
                     print("Did this SP run converge?  " + str(this_run.converged) + ' with status  ' + str(
                         this_run.status))
                     if this_run.status == 0:  ##  convergence is successful!
+                        read_molden_file(this_run)
                         print('removing job from OSL due to status 0 ')
                         jobs_complete += 1
                         remove_outstanding_jobs(jobs)  # take out of queue
@@ -620,7 +655,7 @@ def check_all_current_convergence():
         # print('-------')
         # print(final_results)
         if isKeyword('post_all'):
-            write_run_reports(all_runs)
+            #write_run_reports(all_runs)
             write_run_pickle(final_results)
             try:
                 process_run_post(run_output_path, run_descriptor_path)
