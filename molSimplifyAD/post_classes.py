@@ -8,7 +8,7 @@ import random
 import string
 import numpy
 import subprocess
-from ga_tools import *
+from molSimplifyAD.ga_tools import *
 from molSimplify.Classes.mol3D import mol3D
 from molSimplify.Classes import *
 from optgeo_extract import *
@@ -59,13 +59,13 @@ class DFTRun(object):
                               'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max', 'area',
                               'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
-                              'mop_energy', 'chem_name', 'sp_energy', 'tot_time', 'tot_step', 'metal_translation']
+                              'mop_energy', 'chem_name', 'sp_energy','empty_sp_energy', 'tot_time', 'tot_step', 'metal_translation']
         list_of_init_empty = ['descriptor_names', 'descriptors']
         list_of_init_false = ['solvent_cont', 'water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
-                              'islive', 'set_desc', 'sp_status']
-        list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord']
+                              'islive', 'set_desc', 'sp_status','empty_sp_status']
+        list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord','empty_ss_target','empty_ss_act']
         if isKeyword('oxocatalysis'):
             list_of_init_props += ['metal_alpha', 'metal_beta', 'net_metal_spin', 'metal_mulliken_charge',
                                    'oxygen_alpha', 'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
@@ -560,7 +560,7 @@ class DFTRun(object):
 
         return (self.HFX_job)
 
-    def write_empty_inputs(self, refHFX):
+    def write_empty_inputs(self, refHFX, lines_to_remove=1, ligand_charge=0):
         ## set file paths for empty structure gen
         ## the fixed ordering is 
         ## HFX20 Oxo --> HFX20 Empty SP + HFX20 Empty Geo --> HFX25 Oxo --> HFX25 Empty SP + HFX25 Empty Geo... etc.
@@ -570,16 +570,19 @@ class DFTRun(object):
         emptyrefdict = {"25": "20", "30": "25", "15": "20", "10": "15", "05": "10", "00": "05"}
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
-        new_name, reference_name = renameOxoEmpty(self.job)
+        if not isKeyword('oxocatalysis'):
+            new_name, reference_name = rename_ligand_dissoc(self.job)
+        else:
+            new_name, reference_name = renameOxoEmpty(self.job)
         new_name = new_name.strip('.in')
         reference_name = reference_name.strip('.in')
         geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
         geo_ref_file = open(geo_ref)
         lines = geo_ref_file.readlines()
-        lines[0] = str(int(lines[0].split()[0]) - 1) + '\n'
+        lines[0] = str(int(lines[0].split()[0]) - lines_to_remove) + '\n' #This is the number at the top of the xyz
         new_ref = path_dictionary["initial_geo_path"] + new_name + '.xyz'
         new_ref_file = open(new_ref, 'w')
-        new_ref_file.writelines([item for item in lines[:-1]])
+        new_ref_file.writelines([item for item in lines[:-lines_to_remove]]) #Removing the top axial ligand where oxo is
         new_ref_file.close()
         geo_ref_file.close()
         print('NEW REF is THIS:', new_ref, 'Referenced THIS:', geo_ref)
@@ -595,8 +598,14 @@ class DFTRun(object):
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
                             "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not (
-                            "method" in line):
+                            "method" in line) and not ("charge" in line):
                         ## these lines should be common
+                        f_emptysp.write(line)
+                    if not isKeyword('oxocatalysis') and "charge" in line:
+                        old_charge = int(line.strip('\n').split(' ')[1])
+                        new_charge = int(old_charge) - int(ligand_charge) #Adjust the charge for heterolytic cleavage. If ligand -1 charge, other fragment must be +1.
+                        f_emptysp.write('charge '+str(new_charge)+'\n')
+                    elif isKeyword('oxocatalysis') and "charge" in line:
                         f_emptysp.write(line)
             if int(refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
                 splist = new_name.split('_')
@@ -1104,7 +1113,7 @@ class Comp(object):
 
         ## run class dependent props:
         list_of_init_props = ['chem_name', 'spin', 'charge', 'attempted', 'converged',
-                              'mop_converged', 'time', 'energy', 'sp_energy',
+                              'mop_converged', 'time', 'energy', 'sp_energy','empty_sp_energy',
                               'flag_oct', 'flag_list',
                               'num_coord_metal', 'rmsd_max', 'atom_dist_max',
                               'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
@@ -1132,14 +1141,19 @@ class Comp(object):
         list_of_init_falses = ['attempted', 'converged',
                                'mop_converged',
                                "DFT_RUN"]
+        if isKeyword('ax_lig_dissoc'):
+            list_of_init_props += ['empty_ss_act','empty_ss_target']
+        spinloop = ['LS','HS']
+        if isKeyword('all_spins'):
+            spinloop = ['LS','IS','HS']
         for props in list_of_init_props:
             for ox in ["2", "3"]:
-                for sc in ["LS", "HS"]:
+                for sc in spinloop:
                     this_attribute = "_".join(['ox', ox, sc, props])
                     setattr(self, this_attribute, 'undef')
         for props in list_of_init_falses:
             for ox in ["2", "3"]:
-                for sc in ["LS", "HS"]:
+                for sc in spinloop:
                     this_attribute = "_".join(['ox', ox, sc, props])
                     setattr(self, this_attribute, False)
         if isKeyword('oxocatalysis'):
