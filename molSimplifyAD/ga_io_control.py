@@ -40,6 +40,7 @@ class GA_run_defintion:
                       old_optimizer = False,
                       TS = False,
                       TSsoftware = 'TeraChem',
+                      ax_lig_dissoc = False,
                       **KWARGS):
             ## first time start-up function
 #                print('configuring status dictionaty')
@@ -78,6 +79,7 @@ class GA_run_defintion:
                               'old_optimizer': old_optimizer,
                               'TS': TS,
                               'TSsoftware':TSsoftware,
+                              'ax_lig_dissoc':ax_lig_dissoc,
                                }
         def serialize(self):
             ## serialize run info
