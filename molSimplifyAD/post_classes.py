@@ -704,8 +704,10 @@ class DFTRun(object):
                                         f.write("method b3lyp\n")
                                     else:
                                         f.write(line)
-                            if os.path.exists(path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz') and int(converged_jobs[path_dictionary['job_path']+wfnrefhyd+'.in']) in [0, 1, 2]:
-                                f.write('coordinates ' + path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz' + ' \n')
+                            if os.path.exists(path_dictionary['optimial_geo_path'] + wfnrefhyd + '.xyz') and int(
+                                    converged_jobs[path_dictionary['job_path'] + wfnrefhyd + '.in']) in [0, 1, 2]:
+                                f.write(
+                                    'coordinates ' + path_dictionary['optimial_geo_path'] + wfnrefhyd + '.xyz' + ' \n')
                             else:
                                 f.write('coordinates ' + path_dictionary[
                                     'initial_geo_path'] + new_name_upper + '.xyz' + ' \n')
@@ -713,8 +715,8 @@ class DFTRun(object):
                             f.write('end\n')
                             f.close()
                             ref.close()
-        return returnval1 
-    
+        return returnval1
+
     def write_HAT_and_Oxo_TS(self, empty):
         print('NOW WRITING TRANSITION STATE GEOMETRIES AND INFILES!')
         empty = os.path.basename(empty)
@@ -1070,14 +1072,17 @@ class DFTRun(object):
 
     def obtain_metal_translation(self):
         if self.alpha == 20 or self.alpha == "20":
-            self.obtain_init_mol3d()
-            self.obtain_mol3d()
-            init_posi = self.init_mol.getAtomCoords(self.init_mol.findMetal()[0])
-            final_posi = self.mol.getAtomCoords(self.mol.findMetal()[0])
-            print('!!!', init_posi, final_posi)
-            self.metal_translation = numpy.linalg.norm(numpy.array(final_posi) - numpy.array(init_posi))
+            try:
+                self.obtain_init_mol3d()
+                self.obtain_mol3d()
+                init_posi = self.init_mol.getAtomCoords(self.init_mol.findMetal()[0])
+                final_posi = self.mol.getAtomCoords(self.mol.findMetal()[0])
+                print('!!!', init_posi, final_posi)
+                self.metal_translation = numpy.linalg.norm(numpy.array(final_posi) - numpy.array(init_posi))
+            except:
+                self.metal_translation = -1
         else:
-            self.metal_translation = -1
+            self.metal_translation = -2
 
 
 class Comp(object):
