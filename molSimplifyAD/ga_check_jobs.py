@@ -290,7 +290,7 @@ def check_all_current_convergence():
                                 run_success = False
 
                         if isKeyword('ax_lig_dissoc'):
-                            this_run = check_sp_file(this_run)
+                            this_run = check_empty_sp_file(this_run)
                             if this_run.empty_sp_status and run_success:
                                 remove_outstanding_jobs(this_run.empty_sp_inpath)
                             elif run_success:
