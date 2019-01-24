@@ -1017,13 +1017,13 @@ class DFTRun(object):
         ox_modifier = {self.metal: self.ox}
         print(ox_modifier)
         if self.converged and self.flag_oct:
-            self.mol.update_graph_check()
+            # self.mol.update_graph_check()
             descriptor_names, descriptors = get_descriptor_vector(this_complex=self.mol,
                                                                   custom_ligand_dict=False,
                                                                   ox_modifier=ox_modifier)
         else:
             try:
-                self.init_mol.update_graph_check()
+                # self.init_mol.update_graph_check()
                 descriptor_names, descriptors = get_descriptor_vector(this_complex=self.init_mol,
                                                                       custom_ligand_dict=False,
                                                                       ox_modifier=ox_modifier)
