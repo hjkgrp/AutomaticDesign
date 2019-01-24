@@ -400,6 +400,59 @@ class DFTRun(object):
             f_solvent.write('end')
             f_solvent.close()
 
+    def write_thermo_input(self):
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
+        if not (self.spin == 1):
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
+                           '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
+                self.gen) + '/' + self.name + '/cb0 \n'
+        else:
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n'
+        self.thermo_inpath = path_dictionary['thermo_infiles'] + self.name + '.in'
+        ### check thermo
+        if not os.path.exists(self.thermo_inpath):
+            f_thermo = open(self.thermo_inpath, 'w')
+            f_thermo.write('run frequencies \n')
+            f_thermo.write('coordinates ' + self.geopath + ' \n')
+            f_thermo.write('scrdir scr/thermo/  \n')
+            f_thermo.write(guess_string)
+            with open(self.inpath, 'r') as ref:
+                for line in ref:
+                    if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
+                        ## these lines should be common
+                        f_thermo.write(line)
+            f_thermo.write('end')
+            f_thermo.close()
+
+    def write_init_sp_input(self):
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
+        if not (self.spin == 1):
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
+                           '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
+                self.gen) + '/' + self.name + '/cb0 \n'
+        else:
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n'
+        self.init_sp_inpath = path_dictionary['sp_in_path'] + self.name + '.in'
+        ### check init SP
+        if not os.path.exists(self.init_sp_inpath):
+            f_insp = open(self.init_sp_inpath, 'w')
+            ## write solvent
+            f_insp.write('run energy \n')
+            f_insp.write('scrdir scr/init_sp/  \n')
+            f_insp.write('coordinates ' + self.geopath + ' \n')
+            f_insp.write(guess_string)
+            with open(self.inpath, 'r') as ref:
+                for line in ref:
+                    if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
+                        ## these lines should be common
+                        f_insp.write(line)
+            f_insp.write('end')
+            f_insp.close()
+
     def write_solvent_input(self, dielectric=10.3):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths

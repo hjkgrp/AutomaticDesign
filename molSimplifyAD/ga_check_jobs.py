@@ -448,6 +448,7 @@ def check_all_current_convergence():
                     if isKeyword('thermo'):
                         if this_run.status == 12:  ## needs thermo:
                             print('addding thermo based on ' + str(jobs))
+                            this_run.write_thermo_input()
                             add_to_outstanding_jobs(this_run.thermo_inpath)
                     if isKeyword('single_point'):
                         if this_run.status == 14:  ## needs sp:
