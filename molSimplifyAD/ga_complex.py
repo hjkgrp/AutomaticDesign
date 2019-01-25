@@ -472,7 +472,7 @@ class octahedral_complex:
             else:
                 ff_opt = 'A'
         if smicat:
-                ff_opt = 'no'
+                ff_opt = 'BA'
         ## get custom exchange fraction
         #this_GA = get_current_GA()
         use_old_optimizer = isKeyword('old_optimizer')

@@ -409,7 +409,7 @@ class DFTRun(object):
                 self.gen) + '/' + self.name + '/cb0 \n'
         else:
             guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n'
-        self.thermo_inpath = path_dictionary['thermo_infiles'] + self.name + '.in'
+        #self.thermo_inpath = path_dictionary['thermo_infiles'] + self.name + '.in'
         ### check thermo
         if not os.path.exists(self.thermo_inpath):
             f_thermo = open(self.thermo_inpath, 'w')
@@ -435,7 +435,7 @@ class DFTRun(object):
                 self.gen) + '/' + self.name + '/cb0 \n'
         else:
             guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n'
-        self.init_sp_inpath = path_dictionary['sp_in_path'] + self.name + '.in'
+        #self.init_sp_inpath = path_dictionary['sp_in_path'] + self.name + '.in'
         ### check init SP
         if not os.path.exists(self.init_sp_inpath):
             f_insp = open(self.init_sp_inpath, 'w')
