@@ -458,7 +458,7 @@ def check_thermo_file(this_run):
 	        			this_run.thermo_time = str(lines.split()[3])
         if (found_vib_correction == True) and (found_grad_error == False):
         	this_run.thermo_cont = vib_correction
-        if (found_vib_correction == True) and (found_grad_error == True):
+        if found_grad_error == True:
             this_run.thermo_cont = "grad_error"
             this_run.comment +="grad_error\n"
     return this_run

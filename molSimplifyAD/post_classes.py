@@ -171,44 +171,46 @@ class DFTRun(object):
         self.write_geo_dict()
         # print('!!!!!!linear:', self.devi_linear_avrg)
         return flag_oct, flag_list, dict_oct_info
-    def get_metal_spin_from_molden(self,mwfpath='/home/jp/Multiwfn/Multiwfn'):
-       ## call molden
-       print(mwfpath + ' ' +self.moldenpath)
-       proc = subprocess.Popen(mwfpath + ' ' +self.moldenpath,stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-       commands = ['7','5','1','y','n']
-       newline = os.linesep
-       output = proc.communicate(newline.join(commands))
-       lines = output[0].split('\n')
-       read_on = False
-       nats = self.mol.natoms
-       print('nats is ' + str(nats))
-       print('metal is  '+ str(self.metal))
-       lc = 0
-       this_spin = 'UNK'
-       print('Mulliken analyzer for unrestricted molden file.')
 
-       for num, line in enumerate(lines):
+    def get_metal_spin_from_molden(self, mwfpath='/home/jp/Multiwfn/Multiwfn'):
+        ## call molden
+        print(mwfpath + ' ' + self.moldenpath)
+        proc = subprocess.Popen(mwfpath + ' ' + self.moldenpath, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                shell=True)
+        commands = ['7', '5', '1', 'y', 'n']
+        newline = os.linesep
+        output = proc.communicate(newline.join(commands))
+        lines = output[0].split('\n')
+        read_on = False
+        nats = self.mol.natoms
+        print('nats is ' + str(nats))
+        print('metal is  ' + str(self.metal))
+        lc = 0
+        this_spin = 'UNK'
+        print('Mulliken analyzer for unrestricted molden file.')
 
-#           print(line)
-           if "Population of atoms" in line:
-               read_on = True
+        for num, line in enumerate(lines):
 
-           if read_on:
+            #           print(line)
+            if "Population of atoms" in line:
+                read_on = True
 
- #              print(line)
-               if lc  > 0:
-                   this_atom =  str(line.strip().split()[0])
-                   this_atom = "".join([x for x in this_atom if not x.isdigit()])
-                   this_atom = this_atom.strip('()').lower()
-                   if this_atom == self.metal:
-                       this_spin_pop = str(line.strip().split()[3])
-                       print('Yay, found the metal: '+ this_atom + ' with spin '+ str(this_spin_pop) + ' expect ' + str(self.spin-1))
-                       this_spin  = this_spin_pop
-               lc += 1
-           if lc > nats + 1:
-                   read_on = False
-       return(this_spin)
+            if read_on:
 
+                #              print(line)
+                if lc > 0:
+                    this_atom = str(line.strip().split()[0])
+                    this_atom = "".join([x for x in this_atom if not x.isdigit()])
+                    this_atom = this_atom.strip('()').lower()
+                    if this_atom == self.metal:
+                        this_spin_pop = str(line.strip().split()[3])
+                        print('Yay, found the metal: ' + this_atom + ' with spin ' + str(
+                            this_spin_pop) + ' expect ' + str(self.spin - 1))
+                        this_spin = this_spin_pop
+                lc += 1
+            if lc > nats + 1:
+                read_on = False
+        return (this_spin)
 
     def check_oct_on_prog(self, debug=False):
         globs = globalvars()
@@ -448,7 +450,7 @@ class DFTRun(object):
                 self.gen) + '/' + self.name + '/cb0 \n'
         else:
             guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n'
-        #self.thermo_inpath = path_dictionary['thermo_infiles'] + self.name + '.in'
+        # self.thermo_inpath = path_dictionary['thermo_infiles'] + self.name + '.in'
         ### check thermo
         if not os.path.exists(self.thermo_inpath):
             f_thermo = open(self.thermo_inpath, 'w')
@@ -474,7 +476,7 @@ class DFTRun(object):
                 self.gen) + '/' + self.name + '/cb0 \n'
         else:
             guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n'
-        #self.init_sp_inpath = path_dictionary['sp_in_path'] + self.name + '.in'
+        # self.init_sp_inpath = path_dictionary['sp_in_path'] + self.name + '.in'
         ### check init SP
         if not os.path.exists(self.init_sp_inpath):
             f_insp = open(self.init_sp_inpath, 'w')
@@ -598,6 +600,19 @@ class DFTRun(object):
                         f_insp.write(line)
             f_insp.write('end')
             f_insp.close()
+
+    def tighten_threshold(self):
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)
+        jobinput = path_dictionary["job_path"] + self.job + ".in"
+        with open(jobinput, 'r') as fin:
+            txtlist = fin.readlines()
+        if not "min_converge_gmax " in "".join(txtlist):
+            newthresholds = "min_converge_gmax 4.5*10^-5\nmin_converge_grms 3.0*10^-5\n"
+            newthresholds += "min_converge_dmax 1.8*10^-4\nmin_converge_drms 1.2*10^-4\nmin_converge_e 10^-7\n"
+            txtlist.insert(1, newthresholds)
+        with open(jobinput, 'w') as fo:
+            fo.write("".join(txtlist))
 
     def write_HFX_inputs(self, newHFX, refHFX):
         ## set file paths for HFX resampling
