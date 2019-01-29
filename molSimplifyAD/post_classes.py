@@ -604,13 +604,17 @@ class DFTRun(object):
     def tighten_threshold(self):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)
-        jobinput = path_dictionary["job_path"] + self.job + ".in"
+        jobinput = path_dictionary["job_path"] + self.name + ".in"
         with open(jobinput, 'r') as fin:
             txtlist = fin.readlines()
         if not "min_converge_gmax " in "".join(txtlist):
-            newthresholds = "min_converge_gmax 4.5*10^-5\nmin_converge_grms 3.0*10^-5\n"
-            newthresholds += "min_converge_dmax 1.8*10^-4\nmin_converge_drms 1.2*10^-4\nmin_converge_e 10^-7\n"
+            newthresholds = "min_converge_gmax 2.25*10^-4\nmin_converge_grms 1.5*10^-4\n"
+            newthresholds += "min_converge_dmax 0.9*10^-3\nmin_converge_drms 0.6*10^-3\nmin_converge_e 0.5*10^-6\nconvthre 1.5*10^-5\n"
             txtlist.insert(1, newthresholds)
+	else: 
+	    for index,line in enumerate(txtlist):
+		if 'conv' in line:
+			txtlist[index]= '*0.5*10'.join(line.split('*10'))
         with open(jobinput, 'w') as fo:
             fo.write("".join(txtlist))
 
