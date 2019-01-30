@@ -441,26 +441,27 @@ def check_thermo_file(this_run):
         with open(this_run.thermo_outpath) as f:
             thermo_data=f.readlines()
             for i,lines in enumerate(thermo_data):
-				if str(lines).find('Total Vibrational Energy Correction') != -1:
-					vib_correction =str(lines.split()[5])
-					found_vib_correction = True
-				        print('found vib correction ' + this_run.name)
-			        if str(lines).find('imaginary frequencies') != -1:
-				        this_run.imag =str(lines.split()[0])
-		        		print('found imag ' + this_run.name)
-			        	print(lines)
-        			if str(lines).find('Maximum component of gradient is too large') != -1:
-	        			this_run.thermo_status ="GRAD_TOO_LARGE"
-		        		found_grad_error = True
-			        	print('found GRAD error ' + this_run.name)
-				        print(lines)
-        			if str(lines).find('Total processing time') != -1:
-	        			this_run.thermo_time = str(lines.split()[3])
+                if str(lines).find('Thermal vibrational free energy') != -1:
+		    vib_correction =str(lines.split()[-2])
+		    found_vib_correction = True
+		    print('found vib correction ' + this_run.name)
+		if str(lines).find('imaginary frequencies') != -1:
+                    this_run.imag =str(lines.split()[0])
+		    print('found imag ' + this_run.name)
+                    print(lines)
+        	if str(lines).find('Maximum component of gradient is too large') != -1:
+	            this_run.thermo_status ="GRAD_TOO_LARGE"
+		    found_grad_error = True
+	            print('found GRAD error ' + this_run.name)
+                    print(lines)
+        	if str(lines).find('Total processing time') != -1:
+	            this_run.thermo_time = str(lines.split()[3])
         if (found_vib_correction == True) and (found_grad_error == False):
-        	this_run.thermo_cont = vib_correction
+            this_run.thermo_cont = vib_correction
         if found_grad_error == True:
             this_run.thermo_cont = "grad_error"
             this_run.comment +="grad_error\n"
+    #print('thermo_cont: ', this_run.thermo_cont,'found_grad_error: ', found_grad_error )
     return this_run
 
 def read_terachem_PRFO_output(this_run):

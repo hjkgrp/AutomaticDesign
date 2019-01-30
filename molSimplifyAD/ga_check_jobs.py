@@ -91,7 +91,7 @@ def check_all_current_convergence():
         print('testing if  post-all is on: ', isKeyword('post_all'))
         
         for jobs in joblist:
-
+            print('\n\n'+jobs+'\n\n')
             if postprocessJob(job=jobs, live_job_dictionary=live_job_dictionary,
                                  converged_jobs_dictionary=converged_jobs):
             #if True: 
@@ -214,6 +214,7 @@ def check_all_current_convergence():
                 print('metal is ' + str(metal))
                 print('base_name', this_run.name)
                 print('chem_name', this_run.chem_name)
+                print('job status: ', this_run.status)
                 these_states = metal_spin_dictionary[metal][ox]
                 if this_run.status == 0:
                     # get HOMO/LUMO for successful run
@@ -233,6 +234,9 @@ def check_all_current_convergence():
                         # B3LYP, also check HFX sample
                         if isKeyword('thermo'):
                             this_run = check_thermo_file(this_run)
+                            #print('thermo_cont: ', this_run.thermo_cont)
+                            #print('run_success: ', run_success)
+                            #sardines
                             if this_run.thermo_cont and run_success:
                                 print('thermo_cont avail for ' + this_run.name + ' ' + str(this_run.thermo_cont))
                                 if this_run.thermo_cont == "grad_error":
