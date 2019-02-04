@@ -456,12 +456,17 @@ class DFTRun(object):
             f_thermo = open(self.thermo_inpath, 'w')
             f_thermo.write('run frequencies \n')
             f_thermo.write('coordinates ' + self.geopath + ' \n')
-            f_thermo.write('scrdir scr/thermo/  \n')
+            f_thermo.write('scrdir scr/thermo/gen_%s/%s/  \n'%(self.gen, self.name))
             f_thermo.write(guess_string)
+            this_spin= self.spin
+            if int(this_spin) == 1:
+                f_thermo.write('method b3lyp\n')
+            else:
+                f_thermo.write('method ub3lyp\n')
             with open(self.inpath, 'r') as ref:
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
-                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not ("method" in line):
                         ## these lines should be common
                         f_thermo.write(line)
             f_thermo.write('end')
@@ -518,10 +523,15 @@ class DFTRun(object):
             f_solvent.write('scrdir scr/solvent/  \n')
             f_solvent.write('coordinates ' + self.geopath + ' \n')
             f_solvent.write(guess_string)
+            this_spin= self.spin
+            if int(this_spin) == 1:
+                f_thermo.write('method b3lyp\n')
+            else:
+                f_thermo.write('method ub3lyp\n')
             with open(self.inpath, 'r') as ref:
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
-                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not ("method" in line):
                         ## these lines should be common
                         f_solvent.write(line)
             f_solvent.write('end')
@@ -535,6 +545,9 @@ class DFTRun(object):
         dielectric = 78.39
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
+        this_spin= self.spin
+        this_gen= self.gen
+        this_name= self.name
         if not (self.spin == 1):
             guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
                            '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
@@ -553,13 +566,17 @@ class DFTRun(object):
             f_solvent.write('pcm_radii read \n')
             f_solvent.write('print_ms yes \n')
             f_solvent.write('pcm_radii_file /home/jp/pcm_radii \n')
-            f_solvent.write('scrdir scr/water/  \n')
+            f_solvent.write('scrdir scr/water/gen_%s/%s/  \n'%(this_gen,this_name))
             f_solvent.write('coordinates ' + self.geopath + ' \n')
             f_solvent.write(guess_string)
+            if int(this_spin) == 1:
+                f_solvent.write('method b3lyp\n')
+            else:
+                f_solvent.write('method ub3lyp\n')
             with open(self.inpath, 'r') as ref:
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
-                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not ("method" in line):
                         ## these lines should be common
                         f_solvent.write(line)
             f_solvent.write('end')
