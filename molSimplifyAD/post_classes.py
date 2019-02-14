@@ -625,13 +625,16 @@ class DFTRun(object):
         with open(jobinput, 'r') as fin:
             txtlist = fin.readlines()
         if not "min_converge_gmax " in "".join(txtlist):
-            newthresholds = "min_converge_gmax 2.25*10^-4\nmin_converge_grms 1.5*10^-4\n"
-            newthresholds += "min_converge_dmax 0.9*10^-3\nmin_converge_drms 0.6*10^-3\nmin_converge_e 0.5*10^-6\nconvthre 1.5*10^-5\n"
+            newthresholds = "min_converge_gmax 2.25e-04\nmin_converge_grms 1.5e-04\n"
+            newthresholds += "min_converge_dmax 0.9e-03\nmin_converge_drms 0.6e-03\nmin_converge_e 0.5e-06\nconvthre 1.5e-05\n"
             txtlist.insert(1, newthresholds)
-	else: 
-	    for index,line in enumerate(txtlist):
-		if 'conv' in line:
-			txtlist[index]= '*0.5*10'.join(line.split('*10'))
+        else: 
+            for index,line in enumerate(txtlist):
+                if 'conv' in line:
+                    num= float(line.split(' ')[1])
+                    num= num/2
+                    numstr= '%.2e' % num
+                    txtlist[index]= line.split(' ')[0] + ' ' + numstr + '\n'
         with open(jobinput, 'w') as fo:
             fo.write("".join(txtlist))
 

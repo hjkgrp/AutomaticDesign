@@ -140,6 +140,7 @@ def check_all_current_convergence():
 
                 ## main energy calculation paths
                 this_run.inpath = path_dictionary["job_path"] + base_name + ".in"
+                this_run.geoinpath = path_dictionary["infiles"]+ base_name + ".in"
                 this_run.outpath = (path_dictionary["geo_out_path"] + base_name + ".out")
                 this_run.comppath = path_dictionary["done_path"] + base_name + ".in"
 
@@ -234,13 +235,18 @@ def check_all_current_convergence():
                         # B3LYP, also check HFX sample
                         if isKeyword('thermo'):
                             this_run = check_thermo_file(this_run)
-                            #print('thermo_cont: ', this_run.thermo_cont)
-                            #print('run_success: ', run_success)
-                            #sardines
+                            # print('thermo_cont: ', this_run.thermo_cont)
+                            # print('run_success: ', run_success)
+                            # print('type:', this_run.thermo_cont and run_success)
+                            # sardines
                             if this_run.thermo_cont and run_success:
                                 print('thermo_cont avail for ' + this_run.name + ' ' + str(this_run.thermo_cont))
                                 if this_run.thermo_cont == "grad_error":
+                                    # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n')
+                                    # sardines
                                     this_run.tighten_threshold()
+                                    if os.path.isfile(this_run.geoinpath):
+                                        os.remove(this_run.geoinpath)
                                     create_generic_infile(jobs, use_old_optimizer=use_old_optimizer, restart=True)
                                     this_run.status = 2
                                     shutil.copy(this_run.geopath, this_run.progpath)
@@ -249,7 +255,10 @@ def check_all_current_convergence():
                                                                       'tighten the threshold for geometry optimization')
                                     add_to_outstanding_jobs(this_run.inpath)
                                     run_success = False
-                                    remove_outstanding_jobs(this_run.thermo_inpath)
+                                    if os.path.isfile(this_run.thermo_inpath):
+                                        remove_outstanding_jobs(this_run.thermo_inpath)
+                                    if os.path.isfile(this_run.thermo_outpath):
+                                        os.remove(this_run.thermo_outpath)
                                 else:
                                     run_success = True  # mark true here
                                     remove_outstanding_jobs(this_run.thermo_inpath)
@@ -592,7 +601,6 @@ def check_all_current_convergence():
                     print(str(jobs) + ' is live\n')
                 print('END OF SP JOB \n *******************\n')
         print('matching DFT runs ... \n')
-
         if isKeyword('oxocatalysis'):
             final_results = process_runs_oxocatalysis(all_runs, spin_dictionary())
         else:
