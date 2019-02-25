@@ -256,7 +256,7 @@ def find_live_jobs():
 
 ########################
 def get_metals():
-    metals_list = ['cr', 'mn', 'fe', 'co']
+    metals_list = ['cr', 'mn', 'fe', 'co', 'mo', 'tc', 'ru' , 'rh']
     return metals_list
 
 
