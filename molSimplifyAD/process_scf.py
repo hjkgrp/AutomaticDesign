@@ -200,7 +200,7 @@ def process_runs_geo(all_runs,local_spin_dictionary,local_metal_list=False):
         else:
             lig6_name = this_run.lig6
             
-        this_name = "_".join([str(this_metal), str(this_run.ox), 'eq', str(lig1_name),str(lig2_name),str(lig3_name),str(lig4_name), 'ax1', str(lig5_name), 'ax2', str(lig6_name), 'ahf', str(int(this_run.alpha)).zfill(2)])
+        this_name = "_".join([str(this_metal), 'eq', str(lig1_name),str(lig2_name),str(lig3_name),str(lig4_name), 'ax1', str(lig5_name), 'ax2', str(lig6_name), 'ahf', str(int(this_run.alpha)).zfill(2)])
         # this_name = "_".join([this_metal,'eq',str(eqlig_name),'ax1',str(axlig1_name),'ax2',str(axlig2_name),'ahf',str(int(this_run.alpha)).zfill(2)])
         print('** name is ' + str(this_name))
                 ### add alpha value to list owned by this_comp:
@@ -365,7 +365,7 @@ def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=Fa
         if lig6_name == '[O--]':
             lig6_name = 'oxo'
                 
-        this_name = "_".join([str(this_metal), str(this_ox), 'eq', str(lig1_name),str(lig2_name),str(lig3_name),str(lig4_name), 'ax1', str(lig5_name),'ahf', str(int(alpha)).zfill(2)])
+        this_name = "_".join([str(this_metal), 'eq', str(lig1_name),str(lig2_name),str(lig3_name),str(lig4_name), 'ax1', str(lig5_name),'ahf', str(int(alpha)).zfill(2)])
                 ### add alpha value to list owned by this_comp:
         print('** name is ' + str(this_name))
 
