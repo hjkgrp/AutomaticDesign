@@ -816,7 +816,7 @@ def find_prop_fitness(prop_energy, prop_parameter):
 
 ########################
 
-def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=1, lower_bound=None, upper_bound=None):
+def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=2.5, lower_bound=None, upper_bound=None):
     ############################################################################################################
     # This fitness function contains two hinge loss terms, so that a range of values can be chosen for design. #
     #         This fitness is different from the JPCL fitness because it will care about the used sign.        #
@@ -824,18 +824,37 @@ def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=1, lower_bo
     #             (range_value) of the property parameter (which would maintain a fitness of 1)                #
     ############################################################################################################
     print('-------------------------USING PROP HINGE FITNESS!!!!!!!!--------------------------')
-    if lower_bound == None and upper_bound == None:
-        lower_bound = float(prop_parameter) - float(range_value)
-        upper_bound = float(prop_parameter) + float(range_value)
-    elif lower_bound == None and upper_bound != None:
-        lower_bound = float(prop_parameter) - float(range_value)
-    elif lower_bound != None and upper_bound == None:
-        upper_bound = float(prop_parameter) + float(range_value)
-    # print('USED RANGE VALUE:',range_value)
-    upper_hinge = float(max(0.0, prop_energy - upper_bound))
-    lower_hinge = float(max(0.0, lower_bound - prop_energy))
-    ####### This set of two hinges will penalize values that are not within a certain range
-    en = -1 * (upper_hinge + lower_hinge)
+    if type(prop_energy) == list: #For cases where 2 properties used for fitness
+        upper_hinge_list = []
+        lower_hinge_list = []
+        for i, prop in enumerate(prop_parameter):
+            if type(prop) == list:
+                lower_bound = float(min(prop))
+                upper_bound = float(max(prop))
+            else:
+                lower_bound = float(prop)-float(range_value)
+                upper_bound = float(prop)+float(range_value)
+            upper_hinge = float(max(0.0, prop_energy[i] - upper_bound))
+            lower_hinge = float(max(0.0, lower_bound - prop_energy[i]))
+            upper_hinge_list.append(upper_hinge)
+            lower_hinge_list.append(lower_hinge)
+        en_hinge = 0
+        for j, hinge in enumerate(upper_hinge_list):
+            en_hinge += hinge+lower_hinge_list[j] #Loop over all of the hinges
+        en = -1* (en_hinge)
+    else:
+        if lower_bound == None and upper_bound == None:
+            lower_bound = float(prop_parameter) - float(range_value)
+            upper_bound = float(prop_parameter) + float(range_value)
+        elif lower_bound == None and upper_bound != None:
+            lower_bound = float(prop_parameter) - float(range_value)
+        elif lower_bound != None and upper_bound == None:
+            upper_bound = float(prop_parameter) + float(range_value)
+        # print('USED RANGE VALUE:',range_value)
+        upper_hinge = float(max(0.0, prop_energy - upper_bound))
+        lower_hinge = float(max(0.0, lower_bound - prop_energy))
+        ####### This set of two hinges will penalize values that are not within a certain range
+        en = -1 * (upper_hinge + lower_hinge)
     fitness = np.exp(en)
     return fitness
 
@@ -862,20 +881,42 @@ def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance
     #    If upper and lower bounds are not provided by the user, then they are designed to be +/- 1.           #
     #                of 1/3 of the property parameter (which would maintain a fitness of 1)                    #
     ############################################################################################################
+    
     print('-------------------------USING PROP HINGE DIST FITNESS!!!!!!!!--------------------------')
-    if lower_bound == None and upper_bound == None:
-        lower_bound = float(prop_parameter) - float(range_value)
-        upper_bound = float(prop_parameter) + float(range_value)
-    elif lower_bound == None and upper_bound != None:
-        lower_bound = float(prop_parameter) - float(range_value)
-    elif lower_bound != None and upper_bound == None:
-        upper_bound = float(prop_parameter) + float(range_value)
-    # print('USED RANGE VALUE:',range_value)
+    if type(prop_energy) == list: #For cases where 2 properties used for fitness
+        upper_hinge_list = []
+        lower_hinge_list = []
+        for i, prop in enumerate(prop_parameter):
+            if type(prop) == list:
+                lower_bound = float(min(prop))
+                upper_bound = float(max(prop))
+            else:
+                lower_bound = float(prop)-float(range_value)
+                upper_bound = float(prop)+float(range_value)
+            upper_hinge = float(max(0.0, prop_energy[i] - upper_bound))
+            lower_hinge = float(max(0.0, lower_bound - prop_energy[i]))
+            upper_hinge_list.append(upper_hinge)
+            lower_hinge_list.append(lower_hinge)
+        en_hinge = 0
+        dist_total = 0
+        for j, hinge in enumerate(upper_hinge_list):
+            en_hinge += hinge+lower_hinge_list[j] #Loop over all of the hinges
+            dist_total += np.power((float(distance[j]) / distance_parameter[j]), 2.0)
+        en = -1* (en_hinge + dist_total)
+    else:
+        if lower_bound == None and upper_bound == None:
+            lower_bound = float(prop_parameter) - float(range_value)
+            upper_bound = float(prop_parameter) + float(range_value)
+        elif lower_bound == None and upper_bound != None:
+            lower_bound = float(prop_parameter) - float(range_value)
+        elif lower_bound != None and upper_bound == None:
+            upper_bound = float(prop_parameter) + float(range_value)
+        # print('USED RANGE VALUE:',range_value)
 
-    upper_hinge = float(max(0.0, prop_energy - upper_bound))
-    lower_hinge = float(max(0.0, lower_bound - prop_energy))
-    ####### This set of two hinges will penalize values that are not within a certain range
-    en = -1 * ((upper_hinge + lower_hinge) + np.power((float(distance) / distance_parameter), 2.0))
+        upper_hinge = float(max(0.0, prop_energy - upper_bound))
+        lower_hinge = float(max(0.0, lower_bound - prop_energy))
+        ####### This set of two hinges will penalize values that are not within a certain range
+        en = -1 * ((upper_hinge + lower_hinge) + np.power((float(distance) / distance_parameter), 2.0))
     fitness = np.exp(en)
     return fitness
 
