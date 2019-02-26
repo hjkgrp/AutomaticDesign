@@ -215,6 +215,8 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
                           'mop_coord', 'sp_energy','empty_sp_energy', 'tot_time', 'tot_step', 'metal_translation']
     if SASA:
         list_of_prop_names.append("area")
+    if isKeyword('ax_lig_dissoc'):
+        list_of_prop_names += ['empty_ss_act','empty_ss_target']
     if TS:
         list_of_prop_names += ['terachem_version_HAT_TS','terachem_detailed_version_HAT_TS','basis_HAT_TS','tspin_HAT_TS','charge_HAT_TS','alpha_level_shift_HAT_TS','beta_level_shift_HAT_TS','energy_HAT_TS','time_HAT_TS','terachem_version_Oxo_TS','terachem_detailed_version_Oxo_TS','basis_Oxo_TS','tspin_Oxo_TS','charge_Oxo_TS','alpha_level_shift_Oxo_TS','beta_level_shift_Oxo_TS','energy_Oxo_TS','time_Oxo_TS','ss_act_HAT_TS','ss_target_HAT_TS','eigenvalue_HAT_TS','ss_act_Oxo_TS','ss_target_Oxo_TS','eigenvalue_Oxo_TS','init_energy_HAT_TS','init_energy_Oxo_TS','converged_HAT_TS','converged_Oxo_TS','attempted_HAT_TS','attempted_Oxo_TS']
     if oxocatalysis:
@@ -238,12 +240,15 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
         else:
             list_of_props += list_of_prop_names
     else:
+        spin_loop = ['LS', 'HS']
+        if isKeyword('all_spins'):
+            spin_loop = ['LS','IS','HS']
         if comp:
             list_of_props.insert(1, 'ox2RN')
             list_of_props.insert(2, 'ox3RN')
             list_of_props.insert(3, 'job_gene')
             for props in list_of_prop_names:
-                for spin_cat in ['LS', 'HS']:
+                for spin_cat in spin_loop:
                     for ox in ['2', '3']:
                         list_of_props.append("_".join(['ox', str(ox), spin_cat, props]))
             list_of_props.append('attempted')
