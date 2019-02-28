@@ -100,7 +100,7 @@ def check_all_current_convergence():
              ## create run
                 this_run = DFTRun(base_name)
                 print('Here!')
-                print(isKeyword('single_point'))
+                # print(isKeyword('single_point'))
                 ## regenerate opt geo
                 this_run.scrpath = path_dictionary["scr_path" ]  + base_name +"/optim.xyz"
                 if isKeyword('oxocatalysis'):
@@ -273,11 +273,11 @@ def check_all_current_convergence():
                             elif run_success:
                                 this_run.status = 13
                                 run_success = False
-
+                        
                         if isKeyword('single_point'):
                             this_run = check_sp_file(this_run)
                             if this_run.sp_status and run_success:
-                                remove_outstanding_jobs(this_run.solvent_inpath)
+                                remove_outstanding_jobs(this_run.sp_inpath)
                             elif run_success:
                                 this_run.status = 14
                                 run_success = False
@@ -476,7 +476,7 @@ def check_all_current_convergence():
                             add_to_outstanding_jobs(this_run.thermo_inpath)
                     if isKeyword('single_point'):
                         if this_run.status == 14:  ## needs sp:
-                            print('addding single point based on ' + str(jobs))
+                            print('adding single point based on ' + str(jobs))
                             this_run.write_bigbasis_input()
                             add_to_outstanding_jobs(this_run.sp_inpath)
                     if isKeyword('water'):
