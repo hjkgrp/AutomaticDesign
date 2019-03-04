@@ -244,6 +244,9 @@ def check_all_current_convergence():
                                 if this_run.thermo_cont == "grad_error":
                                     # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n')
                                     # sardines
+                                    ##archive geo and thermo outfiles
+                                    sub_number = submitted_job_dictionary[jobs]
+                                    this_run.archive(sub_number)
                                     this_run.tighten_threshold()
                                     if os.path.isfile(this_run.geoinpath):
                                         os.remove(this_run.geoinpath)
