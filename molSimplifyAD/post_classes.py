@@ -911,7 +911,12 @@ class DFTRun(object):
                 shutil.copy(self.outpath, archive_path + self.name + '.out')
             else:
                 print('archiving did NOT find  ' + self.outpath)
-
+        if isKeyword('thermo'):
+            if os.path.isfile(self.thermo_outpath):
+                print('archiving  ' + self.thermo_outpath)
+                shutil.copy(self.thermo_outpath, archive_path + self.name + '_thermo.out')
+            else:
+                print('archiving did NOT find  ' + self.thermo_outpath)
     def combine_scr_results(self):
         archive_list = []
         path_dictionary = setup_paths()
