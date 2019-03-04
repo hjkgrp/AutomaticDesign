@@ -1,12 +1,19 @@
 #$ -S bin/bash		#shell
 #$ -l h_rt=24:00:00	#runtime max
 #$ -l h_rss=8G		#memory req
-#$ -q gpus	        #gpus
+#$ -q gpus|gpusnew	        #gpus
 #$ -l gpus=1            #
 #$ -pe smp 1 		#number parrallel jobs
-
-module load cuda
-module load terachem/tip
+#$ -cwd
+module load cuda/8.0
+module load intel/16.0.109
+module load OpenMM/7.1.1
+module load mpich2/1.4.1p1
+export LD_LIBRARY_PATH=/opt/terachem/120318-cuda8-intel16/lib:$LD_LIBRARY_PATH
+export TeraChem=/opt/terachem/120318-cuda8-intel16
+export NBOEXE=/opt/terachem/120318-cuda8-intel16/nbo6/bin/nbo6.i4.exe
+export PATH=/opt/terachem/120318-cuda8-intel16:$PATH
+export PATH=/opt/terachem/120318-cuda8-intel16/bin:$PATH
 
 
 fullpath="$1"

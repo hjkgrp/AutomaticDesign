@@ -112,6 +112,7 @@ class DFTRun(object):
         elif os.path.exists(self.progpath):
             this_mol.readfromxyz(self.progpath)
             print('looking for mol at ' + self.progpath)
+
         self.mol = this_mol
 
     def obtain_init_mol3d(self):
@@ -170,6 +171,46 @@ class DFTRun(object):
         self.write_geo_dict()
         # print('!!!!!!linear:', self.devi_linear_avrg)
         return flag_oct, flag_list, dict_oct_info
+
+    def get_metal_spin_from_molden(self, mwfpath='/home/jp/Multiwfn/Multiwfn'):
+        ## call molden
+        print(mwfpath + ' ' + self.moldenpath)
+        proc = subprocess.Popen(mwfpath + ' ' + self.moldenpath, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                shell=True)
+        commands = ['7', '5', '1', 'y', 'n']
+        newline = os.linesep
+        output = proc.communicate(newline.join(commands))
+        lines = output[0].split('\n')
+        read_on = False
+        nats = self.mol.natoms
+        print('nats is ' + str(nats))
+        print('metal is  ' + str(self.metal))
+        lc = 0
+        this_spin = 'UNK'
+        print('Mulliken analyzer for unrestricted molden file.')
+
+        for num, line in enumerate(lines):
+
+            #           print(line)
+            if "Population of atoms" in line:
+                read_on = True
+
+            if read_on:
+
+                #              print(line)
+                if lc > 0:
+                    this_atom = str(line.strip().split()[0])
+                    this_atom = "".join([x for x in this_atom if not x.isdigit()])
+                    this_atom = this_atom.strip('()').lower()
+                    if this_atom == self.metal:
+                        this_spin_pop = str(line.strip().split()[3])
+                        print('Yay, found the metal: ' + this_atom + ' with spin ' + str(
+                            this_spin_pop) + ' expect ' + str(self.spin - 1))
+                        this_spin = this_spin_pop
+                lc += 1
+            if lc > nats + 1:
+                read_on = False
+        return (this_spin)
 
     def check_oct_on_prog(self, debug=False):
         globs = globalvars()
@@ -400,6 +441,64 @@ class DFTRun(object):
             f_solvent.write('end')
             f_solvent.close()
 
+    def write_thermo_input(self):
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
+        if not (self.spin == 1):
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
+                           '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
+                self.gen) + '/' + self.name + '/cb0 \n'
+        else:
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n'
+        # self.thermo_inpath = path_dictionary['thermo_infiles'] + self.name + '.in'
+        ### check thermo
+        if not os.path.exists(self.thermo_inpath):
+            f_thermo = open(self.thermo_inpath, 'w')
+            f_thermo.write('run frequencies \n')
+            f_thermo.write('coordinates ' + self.geopath + ' \n')
+            f_thermo.write('scrdir scr/thermo/gen_%s/%s/  \n'%(self.gen, self.name))
+            f_thermo.write(guess_string)
+            this_spin= self.spin
+            if int(this_spin) == 1:
+                f_thermo.write('method b3lyp\n')
+            else:
+                f_thermo.write('method ub3lyp\n')
+            with open(self.inpath, 'r') as ref:
+                for line in ref:
+                    if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not ("method" in line):
+                        ## these lines should be common
+                        f_thermo.write(line)
+            f_thermo.write('end')
+            f_thermo.close()
+
+    def write_init_sp_input(self):
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
+        if not (self.spin == 1):
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
+                           '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
+                self.gen) + '/' + self.name + '/cb0 \n'
+        else:
+            guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/c0\n'
+        # self.init_sp_inpath = path_dictionary['sp_in_path'] + self.name + '.in'
+        ### check init SP
+        if not os.path.exists(self.init_sp_inpath):
+            f_insp = open(self.init_sp_inpath, 'w')
+            ## write solvent
+            f_insp.write('run energy \n')
+            f_insp.write('scrdir scr/init_sp/  \n')
+            f_insp.write('coordinates ' + self.geopath + ' \n')
+            f_insp.write(guess_string)
+            with open(self.inpath, 'r') as ref:
+                for line in ref:
+                    if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
+                        ## these lines should be common
+                        f_insp.write(line)
+            f_insp.write('end')
+            f_insp.close()
+
     def write_solvent_input(self, dielectric=10.3):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
@@ -424,10 +523,15 @@ class DFTRun(object):
             f_solvent.write('scrdir scr/solvent/  \n')
             f_solvent.write('coordinates ' + self.geopath + ' \n')
             f_solvent.write(guess_string)
+            this_spin= self.spin
+            if int(this_spin) == 1:
+                f_thermo.write('method b3lyp\n')
+            else:
+                f_thermo.write('method ub3lyp\n')
             with open(self.inpath, 'r') as ref:
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
-                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not ("method" in line):
                         ## these lines should be common
                         f_solvent.write(line)
             f_solvent.write('end')
@@ -441,6 +545,9 @@ class DFTRun(object):
         dielectric = 78.39
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
+        this_spin= self.spin
+        this_gen= self.gen
+        this_name= self.name
         if not (self.spin == 1):
             guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
                            '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
@@ -459,13 +566,17 @@ class DFTRun(object):
             f_solvent.write('pcm_radii read \n')
             f_solvent.write('print_ms yes \n')
             f_solvent.write('pcm_radii_file /home/jp/pcm_radii \n')
-            f_solvent.write('scrdir scr/water/  \n')
+            f_solvent.write('scrdir scr/water/gen_%s/%s/  \n'%(this_gen,this_name))
             f_solvent.write('coordinates ' + self.geopath + ' \n')
             f_solvent.write(guess_string)
+            if int(this_spin) == 1:
+                f_solvent.write('method b3lyp\n')
+            else:
+                f_solvent.write('method ub3lyp\n')
             with open(self.inpath, 'r') as ref:
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
-                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line):
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not ("method" in line):
                         ## these lines should be common
                         f_solvent.write(line)
             f_solvent.write('end')
@@ -506,6 +617,26 @@ class DFTRun(object):
                         f_insp.write(line)
             f_insp.write('end')
             f_insp.close()
+
+    def tighten_threshold(self):
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)
+        jobinput = path_dictionary["job_path"] + self.name + ".in"
+        with open(jobinput, 'r') as fin:
+            txtlist = fin.readlines()
+        if not "min_converge_gmax " in "".join(txtlist):
+            newthresholds = "min_converge_gmax 2.25e-04\nmin_converge_grms 1.5e-04\n"
+            newthresholds += "min_converge_dmax 0.9e-03\nmin_converge_drms 0.6e-03\nmin_converge_e 0.5e-06\nconvthre 1.5e-05\n"
+            txtlist.insert(1, newthresholds)
+        else: 
+            for index,line in enumerate(txtlist):
+                if 'conv' in line:
+                    num= float(line.split(' ')[1])
+                    num= num/2
+                    numstr= '%.2e' % num
+                    txtlist[index]= line.split(' ')[0] + ' ' + numstr + '\n'
+        with open(jobinput, 'w') as fo:
+            fo.write("".join(txtlist))
 
     def write_HFX_inputs(self, newHFX, refHFX):
         ## set file paths for HFX resampling
@@ -704,8 +835,10 @@ class DFTRun(object):
                                         f.write("method b3lyp\n")
                                     else:
                                         f.write(line)
-                            if os.path.exists(path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz') and int(converged_jobs[path_dictionary['job_path']+wfnrefhyd+'.in']) in [0, 1, 2]:
-                                f.write('coordinates ' + path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz' + ' \n')
+                            if os.path.exists(path_dictionary['optimial_geo_path'] + wfnrefhyd + '.xyz') and int(
+                                    converged_jobs[path_dictionary['job_path'] + wfnrefhyd + '.in']) in [0, 1, 2]:
+                                f.write(
+                                    'coordinates ' + path_dictionary['optimial_geo_path'] + wfnrefhyd + '.xyz' + ' \n')
                             else:
                                 f.write('coordinates ' + path_dictionary[
                                     'initial_geo_path'] + new_name_upper + '.xyz' + ' \n')
@@ -713,8 +846,8 @@ class DFTRun(object):
                             f.write('end\n')
                             f.close()
                             ref.close()
-        return returnval1 
-    
+        return returnval1
+
     def write_HAT_and_Oxo_TS(self, empty):
         print('NOW WRITING TRANSITION STATE GEOMETRIES AND INFILES!')
         empty = os.path.basename(empty)
@@ -1020,13 +1153,13 @@ class DFTRun(object):
         ox_modifier = {self.metal: self.ox}
         print(ox_modifier)
         if self.converged and self.flag_oct:
-            self.mol.update_graph_check()
+            # self.mol.update_graph_check()
             descriptor_names, descriptors = get_descriptor_vector(this_complex=self.mol,
                                                                   custom_ligand_dict=False,
                                                                   ox_modifier=ox_modifier)
         else:
             try:
-                self.init_mol.update_graph_check()
+                # self.init_mol.update_graph_check()
                 descriptor_names, descriptors = get_descriptor_vector(this_complex=self.init_mol,
                                                                       custom_ligand_dict=False,
                                                                       ox_modifier=ox_modifier)
@@ -1074,12 +1207,18 @@ class DFTRun(object):
                        octahedral=self.octahedral)
 
     def obtain_metal_translation(self):
-        self.obtain_init_mol3d()
-        self.obtain_mol3d()
-        init_posi = self.init_mol.getAtomCoords(self.init_mol.findMetal()[0])
-        final_posi = self.mol.getAtomCoords(self.mol.findMetal()[0])
-        print('!!!', init_posi, final_posi)
-        self.metal_translation = numpy.linalg.norm(numpy.array(final_posi) - numpy.array(init_posi))
+        if self.alpha == 20 or self.alpha == "20":
+            try:
+                self.obtain_init_mol3d()
+                self.obtain_mol3d()
+                init_posi = self.init_mol.getAtomCoords(self.init_mol.findMetal()[0])
+                final_posi = self.mol.getAtomCoords(self.mol.findMetal()[0])
+                print('!!!', init_posi, final_posi)
+                self.metal_translation = numpy.linalg.norm(numpy.array(final_posi) - numpy.array(init_posi))
+            except:
+                self.metal_translation = -1
+        else:
+            self.metal_translation = -2
 
 
 class Comp(object):
@@ -1224,7 +1363,6 @@ class Comp(object):
         self.init_mol = this_run.init_mol
 
     def get_descriptor_vector(self, loud=False, name=False):
-        self.mol.update_graph_check()
         descriptor_names, descriptors = get_descriptor_vector(this_complex=self.mol,
                                                               custom_ligand_dict=False,
                                                               ox_modifier=False)

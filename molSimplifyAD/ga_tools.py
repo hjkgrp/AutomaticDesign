@@ -743,6 +743,7 @@ def setup_paths():
         path_dictionary.update({"water_in_path": working_dir + "water_infiles/"})
     if isKeyword('thermo'):
         path_dictionary.update({"thermo_out_path": working_dir + "thermo_outfiles/"})
+        path_dictionary.update({"thermo_in_path": working_dir + "thermo_infiles/"})
     GA_run = get_current_GA()
     #if "DLPNO" in GA_run.config.keys():
     #    if GA_run.config["DLPNO"]:
@@ -1258,3 +1259,13 @@ def process_run_post(filepost, filedescriptors):
         df_unconv.to_csv('%s_unconverged.csv' % file_prefix)
         df_noprog = df_unconv[df_unconv['status'] == 3]
         df_noprog.to_csv('%s_noprogress.csv' % file_prefix)
+
+########################
+def protect_lig_bash(liglist):
+    ligtmp = ""
+    for x in liglist:
+        if x != "(" and x != ")":
+            ligtmp += x
+        else:
+            ligtmp += "\%s"%x
+    return ligtmp
