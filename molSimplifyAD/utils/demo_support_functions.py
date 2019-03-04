@@ -2,12 +2,13 @@ import numpy as np
 import scipy as sp
 import pandas as pd
 import sklearn as sk
+import os
 from sklearn import decomposition
 from matplotlib.pyplot import figure, imshow, axis
 from matplotlib.image import imread
 from molSimplifyAD.utils.report_tool.prepare_report import *
 from molSimplifyAD.ga_init import *
-from IPython.display import Image
+#from IPython.display import Image
 from pymol.cgo import *
 from pymol import cmd
 from pymol import preset
@@ -15,7 +16,7 @@ from pymol import util
 import matplotlib.tri as tri
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
-from IPython import display
+#from IPython import display
 from scipy.spatial import ConvexHull
 from scipy.interpolate import UnivariateSpline
 from matplotlib import gridspec
