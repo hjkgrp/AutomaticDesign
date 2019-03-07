@@ -422,9 +422,8 @@ def check_all_current_convergence():
                         if this_run.progstatus == 0:
                             sub_number = submitted_job_dictionary[jobs]
                             this_run.archive(sub_number)
-                            if this_run.alpha == 20:
-                                create_generic_infile(jobs, use_old_optimizer=use_old_optimizer, restart=True)
-                                this_run.status = 2  ## prog geo is good
+                            create_generic_infile(jobs, use_old_optimizer=use_old_optimizer, restart=True)
+                            this_run.status = 2  ## prog geo is good
                             logger(base_path_dictionary['state_path'],
                                    str(datetime.datetime.now()) + ' job allowed to restart since good prog geo found ')
                         else:
