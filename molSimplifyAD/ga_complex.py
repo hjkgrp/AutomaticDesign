@@ -507,8 +507,8 @@ class octahedral_complex:
         property_list = ['split', 'split_dist','homo', 'homo_dist','gap', 'gap_dist','oxo','oxo_dist']
         if not (geo_exists):
                 print('generating '+ str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and'  + str(self.ax_ligands))
-                try:
-                #if True:
+                #try:
+                if True:
                     ### Add protection for brackets "()" in bash commands.
                     liglist = protect_lig_bash(liglist)
                     with open(ms_dump_path,'a') as ms_pipe:
@@ -531,7 +531,8 @@ class octahedral_complex:
                     assert(os.path.isfile(rundirpath + 'temp'+'/' + mol_name + '.molinp'))
                     shutil.move(rundirpath + 'temp'+'/' + mol_name + '.molinp', path_dictionary["molsimplify_inps"]+'/' + mol_name + '.molinp')
                     shutil.move(rundirpath + 'temp'+'/' + mol_name + '.xyz', geometry_path)
-                except:
+                #except:
+                else:
                         print('Error: molSimplify failure when calling ')
                         print(call)
                         sys.exit()

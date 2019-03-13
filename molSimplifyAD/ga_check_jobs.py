@@ -617,7 +617,8 @@ def check_all_current_convergence():
         # print('-------')
         # print(final_results)
         if isKeyword('post_all'):
-            write_run_reports(all_runs)
+            if isKeyword('reports'):
+                write_run_reports(all_runs)
             write_run_pickle(final_results)
             try:
                 process_run_post(run_output_path, run_descriptor_path)
