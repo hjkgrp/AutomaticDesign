@@ -1,2 +1,4 @@
 thiocyanate
 isothiocyanate
+scn
+ncs
