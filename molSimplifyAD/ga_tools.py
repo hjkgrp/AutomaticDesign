@@ -158,7 +158,12 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
                         newf.write('method b3lyp\n')
                     else:
                         newf.write(line)
-
+    ## The global 'use_old_optimizer' variable is set entirely by the mad_config file
+    ## The next 4 lines introduce behaviour to determine if the old optimizer should be used for this specific job
+    _, _, _, _, _, eqlig, axlig1, axlig2, _, _, _, _, _, _, _, _ = translate_job_name(job)
+    old_optimizer_list = get_old_optimizer_ligand_list()
+    if eqlig in old_optimizer_list or axlig1 in old_optimizer_list or axlig2 in old_optimizer_list:
+        use_old_optimizer = True
     ## append geo
     with open(target_inpath, 'a') as newf:
         newf.write('coordinates ' + geometry_path + '\n')
@@ -1093,6 +1098,54 @@ def purge_submitted_jobs(job):
     else:
         print(str(job) + ' not removed since it is not in subm keys')
 
+########################
+#Function to move the outfile, infile, and scr directiory of a specific job to a new folder so that the job can be restarted
+#job should be a string of the same format as in files/outstading_jobs.txt
+#if the script will run somewhere otehr than the mad_home_directory, then the directory needs to be specified
+########################
+def purge_job_files(job,mad_home_dir = os.getcwd()):
+    job = job.split('/')[-1]
+    if job.endswith('.in'):
+        job = job[:-3]
+    cwd = os.getcwd()
+    os.chdir(mad_home_dir)
+    if not os.path.isdir('purged_job_files'):
+        os.mkdir('purged_job_files')
+    outfile_loc = os.path.join(os.getcwd(),'geo_outfiles','gen_0')
+    if os.path.isfile(os.path.join(outfile_loc,job+'.out')):
+        os.rename(os.path.join(outfile_loc,job+'.out'),os.path.join(mad_home_dir,'purged_job_files',job+'.out'))
+        print 'purging outfile: ' + job + '.out'
+        print 'from: '+outfile_loc+ ' to: '+os.path.join(mad_home_dir,'purged_job_files')
+    infile_loc = os.path.join(os.getcwd(),'infiles','gen_0')
+    if os.path.isfile(os.path.join(infile_loc,job+'.in')):
+        os.rename(os.path.join(infile_loc,job+'.in'),os.path.join(mad_home_dir,'purged_job_files',job+'.out'))
+        print 'purging infile: ' + job + '.in'
+        print 'from: '+infile_loc+ ' to: '+os.path.join(mad_home_dir,'purged_job_files')
+    scr_loc = os.path.join(os.getcwd(),'scr','geo','gen_0')
+    if os.path.isdir(os.path.join(scr_loc,job)):
+        os.rename(os.path.join(scr_loc,job),os.path.join(mad_home_dir,'purged_job_files',job))
+        print 'purging scr: ' + job
+        print 'from: '+scr_loc+ ' to: '+os.path.join(mad_home_dir,'purged_job_files')
+    os.chdir(cwd)
+
+#######################
+#WARNING, this operation is permanent
+#given a specific compound (as a string in the same format as found in jobs/outstanding_jobs.txt)
+#this function will trick mad into starting it over from the beginning
+#all outfiles and scr directors will be saved in a 'purged jobs' directory within the mad home directory
+#######################
+def hard_reset_job(full_name,alpha = 'undef'):
+    tools.purge_submitted_jobs(full_name)
+    tools.purge_converged_jobs(full_name)
+    tools.remove_outstanding_jobs(full_name)
+    purge_job_files(full_name)
+    #if alpha not specified, attempt to get it in this sketchy way
+    if alpha == 'undef':
+        alpha = int(full_name.split('_')[-1])
+    if alpha == 20:
+        tools.add_to_outstanding_jobs(full_name)
+        tools.create_generic_infile(full_name)
+        print full_name + 'added to outstanding job list and new infile created'
 
 ########################
 def writeprops(extrct_props, newfile):
