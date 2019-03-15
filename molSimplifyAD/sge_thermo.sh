@@ -43,15 +43,11 @@ echo "base name is  $namebase "
 sourcepath=$fullpath
 inpath=$generalpath/thermo_infiles/$gennumpath/$namebase.in
 outpath=$generalpath/thermo_outfiles/$gennumpath/$namebase.out
-scrpath=$generalpath/scr/solvent/$gennumpath/$namebase
+scrpath=$generalpath/scr/thermo/$gennumpath/
 echo "scr will be copied to  $scrpath"
 echo "paths set"
 ## set local, workdir related paths and copy files
 localoutpath=$namebase.out
-localinpath=$namebase.in
-mkdir -p scr
-mkdir -p scr/solvent/$gennumpath/
-spacer='_'
 echo "begining"
 echo "file is  $namebase"
 echo "this current home: $HOME"
@@ -59,13 +55,21 @@ echo "this current SGE_JOB_SPOOL_DIR: $SGE_JOB_SPOOL_DIR"
 echo "this SGE WORKDIR: $SGE_O_WORKDIR"
 echo "this SGE_O_PATH: $SGE_O_PATH"
 echo "this SGE shell current DIR: $PWD"
-wf_guess_flag=0
 
-##begin sp calculation
-cp $inpath $localinpath
-echo "Launching SP calc: $namebase"
-terachem $localinpath >  $localoutpath
+cd $SGE_O_WORKDIR
+echo "moved to"
+pwd
+mkdir -p scr
+mkdir -p scr/thermo/$gennumpath
+spacer='_'
+
+##begin geo-optimization
+
+echo "Launching thermo calc: $namebase"
+terachem $inpath >  $outpath
 echo "Complete"
 ## copy back complete cases 
-mv $localoutpath $outpath
-mv scr/solvent $scrpath
+#mv $localoutpath $outpath
+#mv scr/geo/$gennumpath/$namebase $scrpath
+
+
