@@ -1,5 +1,5 @@
 import glob, math, numpy, subprocess, os, random, shutil
-import sys, shlex,time 
+import sys, shlex,time, datetime
 
 from molSimplifyAD.ga_tools import *
 from molSimplify.Classes.mol3D import *
@@ -124,7 +124,7 @@ class octahedral_complex:
                 eq_ind = numpy.random.randint(low = 0,high = n)
                 if (self.ligands_list[eq_ind][0] not in ['x','hydroxyl','oxo']) or (smiles and self.ligands_list[eq_ind][0][0] in ['[O--]','[OH-]']):
                     break
-            print('CHOSEN RANDOM EQLIG: ',self.ligands_list[eq_ind])
+            # print('CHOSEN RANDOM EQLIG: ',self.ligands_list[eq_ind])
         #print('choosing '+str(eq_ind) + ' from '+str(n))
         # now we test if it is a SMILEs or molsimplify ligand    
         #print('name  is ' +str(self.ligands_list[eq_ind][0]))
@@ -153,7 +153,7 @@ class octahedral_complex:
                     ax_ind = numpy.random.randint(low = 0,high = n)
                     if (ax_ind !=  int(oxo)):
                         break
-                print('CHOSEN RANDOM AXLIG: ',self.ligands_list[ax_ind])
+                # print('CHOSEN RANDOM AXLIG: ',self.ligands_list[ax_ind])
             ax_ligand_properties  = self.ligands_list[ax_ind][1]
             ax_dent = ax_ligand_properties[0]
             if ax_dent > 1 and not isKeyword('oxocatalysis'):
@@ -186,7 +186,7 @@ class octahedral_complex:
                         self.ax_dent = 1
                         self.ax_oc = [1,1]
                         self.ready_for_assembly = True
-                    print('AXLIGS ARE ', self.ax_ligands)
+                    # print('AXLIGS ARE ', self.ax_ligands)
                 else:
 #                    This section is intended to allow for vacant axial sites
 #                    It is not currently implemented
@@ -221,6 +221,13 @@ class octahedral_complex:
         while not self.ready_for_assembly:
             ## get lig
             ind = numpy.random.randint(low = 0,high = n)
+            if isKeyword('oxocatalysis'):
+                hyd = find_ligand_idx('hydroxyl')
+                oxo = find_ligand_idx('oxo')
+                x = find_ligand_idx('x')
+                while ind in [x, hyd, oxo]:
+                    ind = numpy.random.randint(low = 0,high = n)
+
             ligand_properties  = self.ligands_list[ind][1]
             lig_dent = ligand_properties[0]
             if symclass in ['weak', 'strong']: #Switch this to be consistent with SMU 
@@ -234,10 +241,13 @@ class octahedral_complex:
                     if symclass == 'weak':
                         self.ligands.append(self.ligands_list[ind][0])
                         self.inds.append(ind)
+                        if isKeyword('oxocatalysis'):
+                            self.ligands.append(self.ligands_list[oxo][0])
+                            self.inds.append(oxo)
                     elif symclass == 'strong':
                         self.ligands += 2*[self.ligands_list[ind][0]]
                         self.inds += 2*[ind]
-                elif lig_dent == 2 and eqdent ==2 and len(self.ligands) == 4 and False: #Triple bidentate handling, may change later
+                elif lig_dent == 2 and eqdent ==2 and len(self.ligands) == 4 and False and not isKeyword('oxocatalysis'): #Triple bidentate handling, may change later
                     self.ligands += 2*[self.ligands_list[ind][0]]
                     self.inds += 2*[ind]
             if len(self.ligands) == 6:
@@ -246,23 +256,36 @@ class octahedral_complex:
         self.ligand_sort()
 
     def enforce_consistency(self, fixed_inds):
+        # fixed inds is what we will hold constant, other spots will be randomized to enforce fixed inds
         used_dent = 0
         dent_valid = False
         if self.symclass in ['weak','strong']:
             if not len(set(self.inds[0:4])) == 1:
                 print('Fails weak symclass check.')
+                # print(len(set(self.inds[0:4])))
+                # print(self.inds)
                 for f_ind in fixed_inds: ## Loop over the positions that must be fixed
                     if f_ind < 4:
                         self.inds[0:4] = 4*[self.inds[f_ind]]
                         self.ligands[0:4] = 4*[self.ligands_list[self.inds[f_ind]][0]]
                         new_eq_dent = self.ligands_list[self.inds[f_ind]][1][0]
-                        other_ax_dent = self.ligands_list[self.inds[[i for i in range(4,5) if i not in fixed_inds]]][1][0]
-                        if max(other_ax_dent) == 2 and not new_eq_dent == 2:
-                            while max(other_ax_dent) == 2:
-                                ax_ind = numpy.random.randint(low = 0,high = n)
-                                ax_ligand_properties  = self.ligands_list[ax_ind][1]
-                            other_ax_dent = ax_ligand_properties[0]  
-                        ##### THIS SECTION IS UNFINISHED
+                        
+                        ## we want to check that the axial ligands are compatible with
+                        ## the fixed equ index f_ind. Therefore, we will get the denticity
+                        ## of the non-fixed axial ligands
+                        axial_indices_that_can_be_changed = [i for i in range(4,6) if i not in fixed_inds]
+                        axial_ligands_that_can_be_changed= [self.inds[i] for i in axial_indices_that_can_be_changed]
+                        all_ax_dent = [self.ligands_list[i][1][0] for i in axial_ligands_that_can_be_changed]
+                        if max(all_ax_dent) == 2 and not new_eq_dent == 2:
+                            while max(all_ax_dent) == 2:
+                                if self.symclass == 'strong':
+                                    ax_inds = numpy.random.randint(low = 0,high = n,size=1)
+                                    ax_inds = [ax_inds,ax_inds]
+                                else:
+                                    ax_inds = numpy.random.randint(low = 0,high = n,size=2)
+                                all_ax_dent = [self.ligands_list[i][1][0] for  i in ax_inds]
+                            self.inds[4:6] = ax_inds
+                            self.ligands[4:6] = [self.ligands_list[i][0] for i in ax_inds]
                     elif f_ind >= 4:
                         this_ax_dent  = self.ligands_list[self.inds[f_ind]][1][0]
                         if this_ax_dent == 2:
@@ -276,7 +299,8 @@ class octahedral_complex:
                             self.inds[0:4] = 4*[eq_ind]
                             self.ligands[0:4] = 4*[self.ligands_list[eq_ind][0]]
                         else:
-                            other_ax_dent = self.ligands_list[self.inds[[i for i in range(4,5) if i not in fixed_inds]]][1][0]
+                            # print(self.inds[[i for i in range(4,5) if i not in fixed_inds]])
+                            other_ax_dent = self.ligands_list[self.inds[[i for i in range(4,6) if i not in fixed_inds]][0]][1][0]
                             while other_ax_dent != 1:
                                 ax_ind = numpy.random.randint(low = 0,high = n)
                                 ax_ligand_properties  = self.ligands_list[ax_ind][1]
@@ -438,12 +462,24 @@ class octahedral_complex:
 
         print("swapping from",partner.name," to ",self.name)
         self.examine()
-        if eq_swap:
-            print("swapping equitorial " + str(child.eq_inds) + ' -> ' + str(partner.eq_inds))
-            child.replace_equitorial(partner.eq_inds)
+        if self.gene_template['legacy']:
+            if eq_swap:
+                print("swapping equitorial " + str(child.eq_inds) + ' -> ' + str(partner.eq_inds))
+                child.replace_equitorial(partner.eq_inds)
+            else:
+                print("swapping axial"+ str(child.ax_inds) + ' -> ' + str(partner.ax_inds))
+                child.replace_axial(partner.ax_inds)
         else:
-            print("swapping axial"+ str(child.ax_inds) + ' -> ' + str(partner.ax_inds))
-            child.replace_axial(partner.ax_inds)
+            if eq_swap:
+                print("swapping equitorial " + str(child.inds[0:4]) + ' -> ' + str(partner.inds[0:4]))
+                child.replace_ligands(partner.inds[0:4]+child.inds[4:6])
+                child.enforce_consistency(range(0,4))
+            else:
+                print("swapping axial"+ str(child.inds[4:6]) + ' -> ' + str(partner.inds[4:6]))
+                child.replace_ligands(child.inds[0:4]+partner.inds[4:6])
+                child.enforce_consistency(range(4,6))
+                # range(4, 6) says that the axial should be swapped and held constant.
+
         child.examine()
         child._name_self()
         return child
@@ -553,7 +589,9 @@ class octahedral_complex:
             child._name_self()
             child.examine()
         else:
+            message = 'old ligands '+'/'.join([str(i) for i in child.ligands])
             pos_to_mutate = np.random.choice([i for i in range(0,7) if not i in fixed_inds])
+            print(pos_to_mutate)
             if pos_to_mutate < 6:
                 ready_for_assembly = False
                 while not ready_for_assembly:
@@ -573,14 +611,24 @@ class octahedral_complex:
                 child.inds[pos_to_mutate] = new_lig
                 fixed_inds += [pos_to_mutate]
                 child.enforce_consistency(fixed_inds)
+                newmessage = 'new ligands '+'/'.join([str(i) for i in child.ligands])
+                logger(setup_paths()['state_path'], str(datetime.datetime.now()) + '   ' + str('ligand mutation performed at site ')+str(pos_to_mutate))
             else:
+                message = 'old metal/ox/spin ' + "/".join([str(child.core)])
                 child._get_random_metal()
+                newmessage = 'new metal/ox/spin ' + "/".join([str(child.core)])
                 if self.gene_template['ox']:
+                    message += '/'+str(child.ox)
                     child._get_random_ox()
+                    newmessage +=  '/'+str(child.ox)
                 if self.gene_template['spin']:
+                    message += '/'+str(child.spin)
                     child._get_random_spin()
+                    newmessage += '/'+str(child.spin)
                 ####MUTATE OX???
                 logger(setup_paths()['state_path'], str(datetime.datetime.now()) + '   ' + str('entered metal section...'))
+            logger(setup_paths()['state_path'], str(datetime.datetime.now()) + '   ' + message + ' --> '+newmessage)
+            child.ligand_sort()
             child._name_self()
             child.examine()
         return child
@@ -759,69 +807,18 @@ class octahedral_complex:
                         sys.exit()
 
                 #if this_GA.config['symclass']=="strong":
-
+                properties = ['split','split_dist' 'homo','homo_dist','gap','gap_dist','oxo','oxo_dist',
+                                'hat','hat_dist','oxo20','oxo20_dist','homo_empty','homo_empty_dist']
                 with open(rundirpath + 'temp' +'/' + mol_name + '.report') as report_f:
                     for line in report_f:
-                        if ("split" in line) and not ("dist" in line) and not ("trust" in line):
-                            print('****')
-                            print(line)
-                            split = float(line.split(",")[1])
-                            ANN_results.update({'split':float(line.split(",")[1])})
-                            print('ANN_split is ' +"{0:.2f}".format(split))
-                        if ("split" in line) and ("dist" in line):
-                            print('****')
-                            print(line)
-                            split_dist = float(line.split(",")[1])
-                            ANN_results.update({'split_dist':float(line.split(",")[1])})
-                            print('ANN_split_distance is ' +"{0:.2f}".format(split_dist))
-                        if ("homo" in line) and not ("dist" in line) and not ("trust" in line):
-                            print('****')
-                            print(line)
-                            homo = float(line.split(",")[1])
-                            ANN_results.update({'homo':float(line.split(",")[1])})
-                            print('ANN_homo is ' +"{0:.2f}".format(homo))
-                        if ("homo" in line) and ("dist" in line):
-                            print('****')
-                            print(line)
-                            homo_dist = float(line.split(",")[1])
-                            ANN_results.update({'homo_dist':float(line.split(",")[1])})
-                            print('ANN_homo_distance is ' +"{0:.2f}".format(homo_dist))
-                        if ("gap" in line) and not ("dist" in line) and not ("trust" in line):
-                            print('****')
-                            print(line)
-                            gap = float(line.split(",")[1])
-                            ANN_results.update({'gap':float(line.split(",")[1])})
-                            print('ANN_gap is ' +"{0:.2f}".format(gap))
-                        if ("gap" in line) and ("dist" in line):
-                            print('****')
-                            print(line)
-                            gap_dist = float(line.split(",")[1])
-                            ANN_results.update({'gap_dist':float(line.split(",")[1])})
-                            print('ANN_gap_distance is ' +"{0:.2f}".format(gap_dist))
-                        if ("oxo" in line) and not ("dist" in line) and not ("trust" in line):
-                            print('****')
-                            print(line)
-                            oxo = float(line.split(",")[1])
-                            ANN_results.update({'oxo':float(line.split(",")[1])})
-                            print('ANN_oxo is ' +"{0:.2f}".format(oxo))
-                        if ("oxo" in line) and ("dist" in line):
-                            print('****')
-                            print(line)
-                            oxo_dist = float(line.split(",")[1])
-                            ANN_results.update({'oxo_dist':float(line.split(",")[1])})
-                            print('ANN_oxo_distance is ' +"{0:.2f}".format(oxo_dist))
-                        if ("hat" in line) and not ("dist" in line) and not ("trust" in line):
-                            print('****')
-                            print(line)
-                            hat = float(line.split(",")[1])
-                            ANN_results.update({'hat':float(line.split(",")[1])})
-                            print('ANN_hat is ' +"{0:.2f}".format(hat))
-                        if ("hat" in line) and ("dist" in line):
-                            print('****')
-                            print(line)
-                            hat_dist = float(line.split(",")[1])
-                            ANN_results.update({'hat_dist':float(line.split(",")[1])})
-                            print('ANN_hat_distance is ' +"{0:.2f}".format(hat_dist))
+                        for prop in properties:
+                            current_prop = line.split(',')[0]
+                            if current_prop == prop:
+                                print('****')
+                                print(line)
+                                prop_val = float(line.split(",")[1])
+                                ANN_results.update({prop:float(line.split(",")[1])})
+                                print('ANN_'+prop+' is ' +"{0:.2f}".format(prop_val))
                     if len(list(set(property_list).difference(ANN_results.keys())))>0 and not isKeyword('DFT'):
                         for i in property_list:
                             if i not in ANN_results.keys():
@@ -939,7 +936,7 @@ class octahedral_complex:
 
         #Initialize ANN results dictionary
         ANN_results = {}
-        property_list = ['split', 'split_dist','homo', 'homo_dist','gap', 'gap_dist','oxo','oxo_dist']
+        property_list = ['split', 'split_dist','homo', 'homo_dist','gap', 'gap_dist','oxo','oxo_dist','oxo20','oxo20_dist','homo_empty','homo_empty_dist']
         if not (geo_exists):
                 print('generating '+ str(mol_name) + ' with ligands ' + str(liglist))
                 try:
@@ -971,68 +968,18 @@ class octahedral_complex:
 
                 #if this_GA.config['symclass']=="strong":
 
-                with open(rundirpath + 'temp' +'/' + mol_name + '.report') as report_f:
+                with open(rundirpath + 'temp' +'/' + mol_name + '.report','r') as report_f:
                     for line in report_f:
-                        if ("split" in line) and not ("dist" in line) and not ("trust" in line):
-                            print('****')
-                            print(line)
-                            split = float(line.split(",")[1])
-                            ANN_results.update({'split':float(line.split(",")[1])})
-                            print('ANN_split is ' +"{0:.2f}".format(split))
-                        if ("split" in line) and ("dist" in line):
-                            print('****')
-                            print(line)
-                            split_dist = float(line.split(",")[1])
-                            ANN_results.update({'split_dist':float(line.split(",")[1])})
-                            print('ANN_split_distance is ' +"{0:.2f}".format(split_dist))
-                        if ("homo" in line) and not ("dist" in line) and not ("trust" in line):
-                            print('****')
-                            print(line)
-                            homo = float(line.split(",")[1])
-                            ANN_results.update({'homo':float(line.split(",")[1])})
-                            print('ANN_homo is ' +"{0:.2f}".format(homo))
-                        if ("homo" in line) and ("dist" in line):
-                            print('****')
-                            print(line)
-                            homo_dist = float(line.split(",")[1])
-                            ANN_results.update({'homo_dist':float(line.split(",")[1])})
-                            print('ANN_homo_distance is ' +"{0:.2f}".format(homo_dist))
-                        if ("gap" in line) and not ("dist" in line) and not ("trust" in line):
-                            print('****')
-                            print(line)
-                            gap = float(line.split(",")[1])
-                            ANN_results.update({'gap':float(line.split(",")[1])})
-                            print('ANN_gap is ' +"{0:.2f}".format(gap))
-                        if ("gap" in line) and ("dist" in line):
-                            print('****')
-                            print(line)
-                            gap_dist = float(line.split(",")[1])
-                            ANN_results.update({'gap_dist':float(line.split(",")[1])})
-                            print('ANN_gap_distance is ' +"{0:.2f}".format(gap_dist))
-                        if ("oxo" in line) and not ("dist" in line) and not ("trust" in line):
-                            print('****')
-                            print(line)
-                            oxo = float(line.split(",")[1])
-                            ANN_results.update({'oxo':float(line.split(",")[1])})
-                            print('ANN_oxo is ' +"{0:.2f}".format(oxo))
-                        if ("oxo" in line) and ("dist" in line):
-                            print('****')
-                            print(line)
-                            oxo_dist = float(line.split(",")[1])
-                            ANN_results.update({'oxo_dist':float(line.split(",")[1])})
-                            print('ANN_oxo_distance is ' +"{0:.2f}".format(oxo_dist))
-                        if ("hat" in line) and not ("dist" in line) and not ("trust" in line):
-                            print('****')
-                            print(line)
-                            hat = float(line.split(",")[1])
-                            ANN_results.update({'hat':float(line.split(",")[1])})
-                            print('ANN_hat is ' +"{0:.2f}".format(hat))
-                        if ("hat" in line) and ("dist" in line):
-                            print('****')
-                            print(line)
-                            hat_dist = float(line.split(",")[1])
-                            ANN_results.update({'hat_dist':float(line.split(",")[1])})
-                            print('ANN_hat_distance is ' +"{0:.2f}".format(hat_dist))
+                        print(line)
+                        for prop in property_list:
+                            current_prop = line.split(',')[0]
+                            dist_var = prop+'_dist'
+                            if current_prop == prop:
+                                print('****')
+                                print(line)
+                                prop_val = float(line.split(",")[1])
+                                ANN_results.update({prop:float(line.split(",")[1])})
+                                print('ANN_'+prop+' is ' +"{0:.2f}".format(prop_val))
                     if len(list(set(property_list).difference(ANN_results.keys())))>0 and not isKeyword('DFT'):
                         for i in property_list:
                             if i not in ANN_results.keys():
