@@ -29,6 +29,11 @@ def _find_distances():
             metal = translate_dict['metal']
             ox = translate_dict['ox']
             liglist = translate_dict['liglist']
+            gene_template = get_gene_template()
+            if gene_template['legacy']:
+                eqlig = liglist[0]
+                axlig1 = liglist[1]
+                axlig2 = liglist[2]
             indlist = translate_dict['indlist']
             spin = translate_dict['spin']
             spin_cat = translate_dict['spin_cat']
@@ -51,7 +56,7 @@ def _find_distances():
                         gene_name_dict.update({geneName: chem_name})
             elif runtype in ['oxo','hat']:
                 # if (spin_cat == 'HS' or (get_metals()[metal] == 'cr' and int(spin) == 2)):
-                if (spin_cat == 'LS'):
+                if (spin_cat == isKeyword('spin_constraint')):
                     # print('Entered into HAT and OXO statement because HIGH SPIN')
                     print('Entered into HAT and OXO statement because LOW SPIN')
                     this_prop = float(ANN_dict[keys][runtype])
@@ -69,6 +74,13 @@ def _find_distances():
                         gene_dist_dict.update({geneName: this_dist})
                         gene_prop_dict.update({geneName: this_prop})
                         gene_name_dict.update({geneName: chem_name})
+                elif (isKeyword('spin_constraint') == 'HS') and get_metals()[metal].lower() == 'cr' and ox == 5:
+                    print('Cr(V) does not exist in HS')
+                    metal = get_metals()[metal]
+                    chem_name = '_'.join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), str(ahf),str(spin)])
+                    gene_dist_dict.update({geneName: 10000})
+                    gene_prop_dict.update({geneName: 10000})
+                    gene_name_dict.update({geneName: chem_name})
             elif runtype == 'split':
                 this_prop = float(ANN_dict[keys][runtype])
                 this_dist = float(ANN_dict[keys][runtype + '_dist'])
@@ -82,6 +94,35 @@ def _find_distances():
                     gene_dist_dict.update({geneName: this_dist})
                     gene_prop_dict.update({geneName: this_prop})
                     gene_name_dict.update({geneName: chem_name})
+            elif type(runtype) == list: #Currently only supports spin dependent properties with a spin constraint
+                this_prop = []
+                this_dist = []
+                if spin_cat == isKeyword('spin_constraint'): #Constraining this to a single spin state.
+                    for run in runtype:
+                        this_prop.append(float(ANN_dict[keys][run]))
+                        this_dist.append(float(ANN_dict[keys][run + '_dist']))
+                    geneName = "_".join(keys.split('_')[4:10])
+                    metal = get_metals()[metal]
+                    chem_name = '_'.join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), str(ahf),str(spin)])
+                    if geneName in gene_dist_dict.keys():
+                        pass
+                    else:
+                        gene_dist_dict.update({geneName: this_dist})
+                        gene_prop_dict.update({geneName: this_prop})
+                        gene_name_dict.update({geneName: chem_name})
+                    print('Multiple factors in fitness (get distances)')
+                elif (isKeyword('spin_constraint') == 'HS') and get_metals()[metal].lower() == 'cr' and ox == 5:
+                    print('Cr(V) does not exist in HS')
+                    geneName = "_".join(keys.split('_')[4:10])
+                    metal = get_metals()[metal]
+                    chem_name = '_'.join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), str(ahf),str(spin)])
+                    if geneName in gene_dist_dict.keys():
+                        pass
+                    else:
+                        gene_dist_dict.update({geneName: [10000,10000]})
+                        gene_prop_dict.update({geneName: [10000,10000]})
+                        gene_name_dict.update({geneName: chem_name})
+                
 
     ## Writes genes and distances to a .csv file
     write_path = isKeyword('rundir') + "statespace/all_distances.csv"
@@ -101,6 +142,7 @@ def _mean_distances(gene_dist_dict):
     lastgen, npool = _get_gen_npool(isKeyword('rundir'))
     mean_dist_dict = dict()
     dist_dict = gene_dist_dict
+    print(dist_dict)
     dist_sum = 0
     curr_gen = 0
     read_path = isKeyword('rundir') + "statespace/all_results.csv"
@@ -115,7 +157,14 @@ def _mean_distances(gene_dist_dict):
                 mean_dist_dict.update({curr_gen: mean_dist})
                 curr_gen += 1
                 dist_sum = 0
-            dist_sum += float(dist_dict[gene]) * int(freq)
+            if type(dist_dict[gene]) == list:
+                if 10000 in dist_dict[gene]:
+                    npool -= 1 #subtract one, the 10000 does not count
+                    continue
+                else:
+                    dist_sum += np.mean(dist_dict[gene])*int(freq) #else average the two distance metrics
+            else:
+                dist_sum += float(dist_dict[gene]) * int(freq)
         mean_dist = dist_sum / npool
         mean_dist_dict.update({curr_gen: mean_dist})
     fi.close()
