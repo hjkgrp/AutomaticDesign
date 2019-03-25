@@ -96,6 +96,7 @@ def check_all_current_convergence():
         print('testing if  post-all is on: ', isKeyword('post_all'))
         
         for jobs in joblist:
+            print('\n\n'+jobs+'\n\n')
             if postprocessJob(job=jobs, live_job_dictionary=live_job_dictionary,
                               converged_jobs_dictionary=converged_jobs):
                 ##upack job name
@@ -117,7 +118,7 @@ def check_all_current_convergence():
                 ## create run
                 this_run = DFTRun(base_name)
                 print('Here!')
-                print(isKeyword('single_point'))
+                # print(isKeyword('single_point'))
                 ## regenerate opt geo
                 this_run.scrpath = path_dictionary["scr_path"]  + base_name +"/optim.xyz"
                 if isKeyword('oxocatalysis'):
@@ -149,32 +150,35 @@ def check_all_current_convergence():
                 ## set file paths
                 path_dictionary = setup_paths()
                 path_dictionary = advance_paths(path_dictionary, gen)  ## this adds the /gen_x/ to the paths
-                
-                ## geo location 
+
+                ## geo location
                 this_run.geopath = (path_dictionary["optimial_geo_path"] + base_name + ".xyz")
                 this_run.progpath = (path_dictionary["prog_geo_path"] + base_name + ".xyz")
                 this_run.init_geopath = (path_dictionary["initial_geo_path"] + base_name + ".xyz")
                 this_run.scrpath = path_dictionary["scr_path"] + base_name + "/optim.xyz"
-                
+
                 ## main energy calculation paths
                 this_run.inpath = path_dictionary["job_path"] + base_name + ".in"
+                this_run.geoinpath = path_dictionary["infiles"]+ base_name + ".in"
                 this_run.outpath = (path_dictionary["geo_out_path"] + base_name + ".out")
                 this_run.comppath = path_dictionary["done_path"] + base_name + ".in"
-                
-                ## thermo and solvent run information 
+
+                ## thermo and solvent run information
 
                 this_run.sp_inpath = path_dictionary["sp_in_path"]+base_name+".in"
                 this_run.sp_outpath = (path_dictionary["sp_out_path"] + '/' + base_name + ".out")
 
+
                 if isKeyword('thermo'):
                         this_run.thermo_outpath = (path_dictionary["thermo_out_path"] + base_name + ".out")
-                
+                        this_run.thermo_inpath = (path_dictionary["thermo_in_path"] + base_name + ".in")
+
                 if isKeyword('solvent'):
                         this_run.solvent_outpath = (path_dictionary["solvent_out_path"] + base_name + ".out")
                         this_run.solvent_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'
 
                 if isKeyword('water'):
-                        this_run.water_inpath = path_dictionary['solvent_in_path'] + base_name + '.in'               
+                        this_run.water_inpath = path_dictionary['water_in_path'] + base_name + '.in'
                         this_run.water_outpath = (path_dictionary["water_out_path"] + base_name + ".out")
  
                 if isKeyword('ax_lig_dissoc'):
@@ -200,7 +204,7 @@ def check_all_current_convergence():
                 ## MOP semiempirical (not used)
                 this_run.moppath = path_dictionary["mopac_path"] + base_name + ".out"
                 this_run.mop_geopath = path_dictionary["mopac_path"] + base_name + ".xyz"
-                
+
                 # extract geo and append results if post-all
                 if isKeyword('post_all'):
                     if os.path.exists(this_run.scrpath):
@@ -222,19 +226,22 @@ def check_all_current_convergence():
                     else:
                         # if NOT live, test convergance
                         test_terachem_go_convergence(this_run)
-                
 
-                ## get the initial mol 
+
+                ## get the initial mol
                 if os.path.isfile(this_run.init_geopath):
                     this_run.obtain_init_mol3d()
 
                 # store the status
                 metal_spin_dictionary = spin_dictionary()
-                
-                ## convert metal from index to str
-                print('chem_name', this_run.chem_name)
-                these_states = metal_spin_dictionary[metal][ox]
 
+                ## convert metal from index to str
+
+                print('metal is ' + str(metal))
+                print('base_name', this_run.name)
+                print('chem_name', this_run.chem_name)
+                print('job status: ', this_run.status)
+                these_states = metal_spin_dictionary[metal][ox]
                 if this_run.status == 0:
                     # get HOMO/LUMO for successful run
                     read_molden_file(this_run)
@@ -253,10 +260,33 @@ def check_all_current_convergence():
                         # B3LYP, also check HFX sample
                         if isKeyword('thermo'):
                             this_run = check_thermo_file(this_run)
+                            # print('thermo_cont: ', this_run.thermo_cont)
+                            # print('run_success: ', run_success)
+                            # print('type:', this_run.thermo_cont and run_success)
+                            # sardines
                             if this_run.thermo_cont and run_success:
                                 print('thermo_cont avail for ' + this_run.name + ' ' + str(this_run.thermo_cont))
                                 if this_run.thermo_cont == "grad_error":
-                                    this_run.status = -12
+                                    # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n')
+                                    # sardines
+                                    ##archive geo and thermo outfiles
+                                    sub_number = submitted_job_dictionary[jobs]
+                                    this_run.archive(sub_number)
+                                    this_run.tighten_threshold()
+                                    if os.path.isfile(this_run.geoinpath):
+                                        os.remove(this_run.geoinpath)
+                                    create_generic_infile(jobs, use_old_optimizer=use_old_optimizer, restart=True)
+                                    this_run.status = 2
+                                    shutil.copy(this_run.geopath, this_run.progpath)
+                                    logger(base_path_dictionary['state_path'],
+                                       str(datetime.datetime.now()) + 'thermo calculation encounters some problems, '+
+                                                                      'tighten the threshold for geometry optimization')
+                                    add_to_outstanding_jobs(this_run.inpath)
+                                    run_success = False
+                                    if os.path.isfile(this_run.thermo_inpath):
+                                        remove_outstanding_jobs(this_run.thermo_inpath)
+                                    if os.path.isfile(this_run.thermo_outpath):
+                                        os.remove(this_run.thermo_outpath)
                                 else:
                                     run_success = True  # mark true here
                                     remove_outstanding_jobs(this_run.thermo_inpath)
@@ -271,15 +301,15 @@ def check_all_current_convergence():
                             elif run_success:
                                 this_run.status = 13
                                 run_success = False
-
+                        
                         if isKeyword('single_point'):
                             this_run = check_sp_file(this_run)
                             if this_run.sp_status and run_success:
-                                remove_outstanding_jobs(this_run.solvent_inpath)
+                                remove_outstanding_jobs(this_run.sp_inpath)
                             elif run_success:
                                 this_run.status = 14
                                 run_success = False
-                         
+
                         if isKeyword('water'): # additional solvent SP with implict water
                             print('water on')
                             this_run = check_water_file(this_run)
@@ -311,11 +341,11 @@ def check_all_current_convergence():
                                     print('HAT TS converged, but not Oxo TS... still running')
                                     remove_outstanding_jobs(this_run.PRFO_HAT_inpath)
                                     this_run.status = 18
-                                elif (this_run.PRFO_Oxo_inpath not in live_job_dictionary.keys()) and (this_run.PRFO_HAT_inpath in live_job_dictionary.keys()): 
+                                elif (this_run.PRFO_Oxo_inpath not in live_job_dictionary.keys()) and (this_run.PRFO_HAT_inpath in live_job_dictionary.keys()):
                                     print('Oxo TS converged, but not HAT TS... still running')
                                     remove_outstanding_jobs(this_run.PRFO_Oxo_inpath)
                                     this_run.status = 17
-                                else:    
+                                else:
                                     print('TSs still running, not going to remove from outstanding jobs yet.')
                             elif this_run.converged_HAT_TS and run_success:
                                 print('HAT TS converged, but not Oxo TS')
@@ -426,9 +456,8 @@ def check_all_current_convergence():
                         if this_run.progstatus == 0:
                             sub_number = submitted_job_dictionary[jobs]
                             this_run.archive(sub_number)
-                            if this_run.alpha == 20:  
-                                create_generic_infile(jobs, use_old_optimizer=use_old_optimizer, restart=True)
-                                this_run.status = 2  ## prog geo is good
+                            create_generic_infile(jobs, use_old_optimizer=use_old_optimizer, restart=True)
+                            this_run.status = 2  ## prog geo is good
                             logger(base_path_dictionary['state_path'],
                                    str(datetime.datetime.now()) + ' job allowed to restart since good prog geo found ')
                         else:
@@ -479,10 +508,11 @@ def check_all_current_convergence():
                     if isKeyword('thermo'):
                         if this_run.status == 12:  ## needs thermo:
                             print('addding thermo based on ' + str(jobs))
+                            this_run.write_thermo_input()
                             add_to_outstanding_jobs(this_run.thermo_inpath)
                     if isKeyword('single_point'):
                         if this_run.status == 14:  ## needs sp:
-                            print('addding single point based on ' + str(jobs))
+                            print('adding single point based on ' + str(jobs))
                             this_run.write_bigbasis_input()
                             add_to_outstanding_jobs(this_run.sp_inpath)
                     if isKeyword('water'):
@@ -612,7 +642,7 @@ def check_all_current_convergence():
                                 for moldenfile in multiwfnpath:
                                     size = os.path.getsize(moldenfile)
                                     if size > temp:
-                                        analyzepath = moldenfile 
+                                        analyzepath = moldenfile
                                 #multiwfnpath = multiwfnpath[0]
                                 if analyzepath != None:
                                     metalalpha, metalbeta, metaldiff, metalcharge, oxoalpha, oxobeta, oxodiff, oxocharge = get_mulliken_oxocatalysis(analyzepath,liglist[-1],spin)
@@ -638,7 +668,6 @@ def check_all_current_convergence():
                     print(str(jobs) + ' is live\n')
                 print('END OF SP JOB \n *******************\n')
         print('matching DFT runs ... \n')
-
         if isKeyword('oxocatalysis'):
             final_results = process_runs_oxocatalysis(all_runs, spin_dictionary())
         else:
@@ -722,5 +751,4 @@ def check_all_current_convergence():
                 values = atrextract(final_results[reskeys], list_of_props)
                 writeprops(values, f)
         print('\n**** end of file inspection **** \n')
-
     return final_results, all_runs

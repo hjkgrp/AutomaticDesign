@@ -81,8 +81,9 @@ class GA_generation:
         metal_list_inds = get_metals()
 
         ## check if ligs are known
-        print('has type ' + str(type(ligs[0][0])))
-        print(isinstance(ligs[0][0], basestring))
+        print('ligands requested:', [ligs[0][0], ligs[1][0], ligs[1][1]])
+        print('indicies:', ligands_list_inds[0:7])
+
         if isinstance(ligs[0][0], basestring):
             print('dictionary  lig: ' + str(ligs[0][0]))
             lig1 = ligs[0][0]
@@ -166,7 +167,7 @@ class GA_generation:
         else:#except:
             sardines
             print('cannot make eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) + ' + ' + str(ligs[1][1]))
-    
+            
     def write_state(self):
         ## first write genes to path
         state_path = self.current_path_dictionary["state_path"] + "current_genes.csv"
@@ -283,8 +284,8 @@ class GA_generation:
 
     def assess_fitness(self):
         print('***********')
-        print(self.genes)
-        print(self.gene_compound_dictionary.keys())
+        #print(self.genes)
+        #print(self.gene_compound_dictionary.keys())
         # print('now printing what the gene-compound dictionary knows:')
         # for keys in self.gene_compound_dictionary.keys():
         #        print('key: ' + str(keys) + ' val is  ' +  str(self.gene_compound_dictionary[keys]))
@@ -331,8 +332,8 @@ class GA_generation:
         # sardines
         if os.path.exists('bad_initgeo_log.txt'):
             with open('bad_initgeo_log.txt', 'r') as fin:
-                print('!!!!!!!These are jobs with bad initial geometry generated from molSimplify!!!!!')
-                print('!!!!!!!please check what happens!!!!!')
+                print('These are jobs with bad initial geometry generated from molSimplify')
+                print('Please check them carefully:')
                 for line in fin:
                     print(line)
         else:

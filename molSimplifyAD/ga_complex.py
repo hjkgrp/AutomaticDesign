@@ -744,7 +744,7 @@ class octahedral_complex:
             else:
                 ff_opt = 'A'
         if smicat:
-                ff_opt = 'no'
+                ff_opt = 'BA'
         ## get custom exchange fraction
         #this_GA = get_current_GA()
         use_old_optimizer = isKeyword('old_optimizer')
@@ -781,6 +781,8 @@ class octahedral_complex:
                 print('generating '+ str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and'  + str(self.ax_ligands))
                 try:
                 #if True:
+                    ### Add protection for brackets "()" in bash commands.
+                    liglist = protect_lig_bash(liglist)
                     with open(ms_dump_path,'a') as ms_pipe:
                         with open(ms_error_path,'a') as ms_error_pipe:
                             call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +str(liglist),'-ligocc 1,1,1,1,1,1',

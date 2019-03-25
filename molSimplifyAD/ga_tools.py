@@ -130,7 +130,10 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
     if restart:
         if os.path.isfile(prog_geo_path):
             geometry_path = prog_geo_path
-            guess_string = "guess " + guess_path + 'ca0' + ' ' + guess_path + 'cb0\n'
+            if int(this_spin) == 1:
+                guess_string = "guess " + guess_path + 'c0' '\n'
+            else:   
+                guess_string = "guess " + guess_path + 'ca0' + ' ' + guess_path + 'cb0\n'
         else:
             geometry_path = initial_geo_path
             guess_string = "guess generate \n"
@@ -166,7 +169,12 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
                         newf.write('method b3lyp\n')
                     else:
                         newf.write(line)
-
+    ## The global 'use_old_optimizer' variable is set entirely by the mad_config file
+    ## The next 4 lines introduce behaviour to determine if the old optimizer should be used for this specific job
+    _, _, _, _, _, eqlig, axlig1, axlig2, _, _, _, _, _, _, _, _ = translate_job_name(job)
+    old_optimizer_list = get_old_optimizer_ligand_list()
+    if eqlig in old_optimizer_list or axlig1 in old_optimizer_list or axlig2 in old_optimizer_list:
+        use_old_optimizer = True
     ## append geo
     with open(target_inpath, 'a') as newf:
         newf.write('coordinates ' + geometry_path + '\n')
@@ -272,7 +280,7 @@ def find_live_jobs():
 
 ########################
 def get_metals():
-    metals_list = ['cr', 'mn', 'fe', 'co']
+    metals_list = ['cr', 'mn', 'fe', 'co', 'mo', 'tc', 'ru' , 'rh']
     return metals_list
 
 
@@ -355,12 +363,20 @@ def spin_dictionary():
             metal_spin_dictionary = {'co': {2: [2, 4], 3: [1, 3, 5], 4: [2, 4], 5: [1, 3, 5]},
                                      'cr': {2: [1, 3, 5], 3: [2, 4], 4: [1, 3], 5: [2]},
                                      'fe': {2: [1, 3, 5], 3: [2, 4, 6], 4: [1, 3, 5], 5: [2, 4]},
-                                     'mn': {2: [2, 4, 6], 3: [1, 3, 5], 4: [2, 4], 5: [1, 3]}}
+                                     'mn': {2: [2, 4, 6], 3: [1, 3, 5], 4: [2, 4], 5: [1, 3]},
+                                     'rh': {2: [2, 4], 3: [1, 3, 5], 4: [2, 4], 5: [1, 3, 5]},
+                                     'mo': {2: [1, 3, 5], 3: [2, 4], 4: [1, 3], 5: [2]},
+                                     'ru': {2: [1, 3, 5], 3: [2, 4, 6], 4: [1, 3, 5], 5: [2, 4]},
+                                     'tc': {2: [2, 4, 6], 3: [1, 3, 5], 4: [2, 4], 5: [1, 3]}}
         else:
             metal_spin_dictionary = {'co': {2: [2, 4], 3: [1, 5]},
                                      'cr': {2: [1, 5], 3: [2, 4]},
                                      'fe': {2: [1, 5], 3: [2, 6]},
-                                     'mn': {2: [2, 6], 3: [1, 5]}}
+                                     'mn': {2: [2, 6], 3: [1, 5]},
+                                     'rh': {2: [2, 4], 3: [1, 5]},
+                                     'mo': {2: [1, 5], 3: [2, 4]},
+                                     'ru': {2: [1, 5], 3: [2, 6]},
+                                     'tc': {2: [2, 6], 3: [1, 5]}}
     else:
         if GA_run.config["all_spins"]:
             metal_spin_dictionary = {'co': {2: [2, 4], 3: [1, 3, 5], 4: [2, 4], 5: [1, 3, 5]},
@@ -516,7 +532,7 @@ def construct_job_name(complex_name, HFX=20):
     eq_lig_idx = find_ligand_idx(str(complex_list[3]))
     ax1_lig_idx = find_ligand_idx(str(complex_list[5]))
     ax2_lig_idx = find_ligand_idx(str(complex_list[7]))
-    job_substring = "_".join([str(metal_idx),str(complex_list[1]),str(eq_lig_idx),str(ax1_lig_idx),str(ax2_lig_idx),str(int(HFX)),str(int(complex_list[9]))])
+    job_substring = "_".join([str(metal_idx),str(complex_list[1]),str(eq_lig_idx),str(ax1_lig_idx),str(ax2_lig_idx),str(HFX),str(int(complex_list[9]))])
     return job_substring
 
 ########################
@@ -745,6 +761,7 @@ def setup_paths():
         path_dictionary.update({"water_in_path": working_dir + "water_infiles/"})
     if isKeyword('thermo'):
         path_dictionary.update({"thermo_out_path": working_dir + "thermo_outfiles/"})
+        path_dictionary.update({"thermo_in_path": working_dir + "thermo_infiles/"})
     GA_run = get_current_GA()
     #if "DLPNO" in GA_run.config.keys():
     #    if GA_run.config["DLPNO"]:
@@ -1133,6 +1150,54 @@ def purge_submitted_jobs(job):
     else:
         print(str(job) + ' not removed since it is not in subm keys')
 
+########################
+#Function to move the outfile, infile, and scr directiory of a specific job to a new folder so that the job can be restarted
+#job should be a string of the same format as in files/outstading_jobs.txt
+#if the script will run somewhere otehr than the mad_home_directory, then the directory needs to be specified
+########################
+def purge_job_files(job,mad_home_dir = os.getcwd()):
+    job = job.split('/')[-1]
+    if job.endswith('.in'):
+        job = job[:-3]
+    cwd = os.getcwd()
+    os.chdir(mad_home_dir)
+    if not os.path.isdir('purged_job_files'):
+        os.mkdir('purged_job_files')
+    outfile_loc = os.path.join(os.getcwd(),'geo_outfiles','gen_0')
+    if os.path.isfile(os.path.join(outfile_loc,job+'.out')):
+        os.rename(os.path.join(outfile_loc,job+'.out'),os.path.join(mad_home_dir,'purged_job_files',job+'.out'))
+        print 'purging outfile: ' + job + '.out'
+        print 'from: '+outfile_loc+ ' to: '+os.path.join(mad_home_dir,'purged_job_files')
+    infile_loc = os.path.join(os.getcwd(),'infiles','gen_0')
+    if os.path.isfile(os.path.join(infile_loc,job+'.in')):
+        os.rename(os.path.join(infile_loc,job+'.in'),os.path.join(mad_home_dir,'purged_job_files',job+'.out'))
+        print 'purging infile: ' + job + '.in'
+        print 'from: '+infile_loc+ ' to: '+os.path.join(mad_home_dir,'purged_job_files')
+    scr_loc = os.path.join(os.getcwd(),'scr','geo','gen_0')
+    if os.path.isdir(os.path.join(scr_loc,job)):
+        os.rename(os.path.join(scr_loc,job),os.path.join(mad_home_dir,'purged_job_files',job))
+        print 'purging scr: ' + job
+        print 'from: '+scr_loc+ ' to: '+os.path.join(mad_home_dir,'purged_job_files')
+    os.chdir(cwd)
+
+#######################
+#WARNING, this operation is permanent
+#given a specific compound (as a string in the same format as found in jobs/outstanding_jobs.txt)
+#this function will trick mad into starting it over from the beginning
+#all outfiles and scr directors will be saved in a 'purged jobs' directory within the mad home directory
+#######################
+def hard_reset_job(full_name,alpha = 'undef'):
+    tools.purge_submitted_jobs(full_name)
+    tools.purge_converged_jobs(full_name)
+    tools.remove_outstanding_jobs(full_name)
+    purge_job_files(full_name)
+    #if alpha not specified, attempt to get it in this sketchy way
+    if alpha == 'undef':
+        alpha = int(full_name.split('_')[-1])
+    if alpha == 20:
+        tools.add_to_outstanding_jobs(full_name)
+        tools.create_generic_infile(full_name)
+        print full_name + 'added to outstanding job list and new infile created'
 
 ########################
 def writeprops(extrct_props, newfile):
@@ -1307,3 +1372,13 @@ def process_run_post(filepost, filedescriptors):
         df_unconv.to_csv('%s_unconverged.csv' % file_prefix)
         df_noprog = df_unconv[df_unconv['status'] == 3]
         df_noprog.to_csv('%s_noprogress.csv' % file_prefix)
+
+########################
+def protect_lig_bash(liglist):
+    ligtmp = ""
+    for x in liglist:
+        if x != "(" and x != ")":
+            ligtmp += x
+        else:
+            ligtmp += "\%s"%x
+    return ligtmp
