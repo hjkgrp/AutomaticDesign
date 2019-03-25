@@ -41,6 +41,7 @@ class GA_run_defintion:
                       TS = False,
                       TSsoftware = 'TeraChem',
                       ax_lig_dissoc = False,
+                      spin_constraint = False,
                       **KWARGS):
             ## first time start-up function
 #                print('configuring status dictionaty')
@@ -80,6 +81,7 @@ class GA_run_defintion:
                               'TS': TS,
                               'TSsoftware':TSsoftware,
                               'ax_lig_dissoc':ax_lig_dissoc,
+                              'spin_constraint': spin_constraint,
                                }
         def serialize(self):
             ## serialize run info
@@ -242,7 +244,6 @@ def process_new_run_input(path):
             for line in f:
                 if line.strip():
                     if len(line.split())==2:
-                        print(line)
                         (key, val) = line.split()
                         if val.isdigit():
                             val = int(val)
@@ -261,6 +262,29 @@ def process_new_run_input(path):
                                         val =  val + "/"
                                         print('Warning: modifying user path to ' + val)
                         configuration[key] = val
+                    elif ('runtype' in line or 'parameter' in line): #assuming that things with more than 2 splits are lists
+                        if "[" not in line and "]" not in line:
+                          print('Ignoring unknown input line with wrong length : ' + str(line)  )
+                        else:
+                          (key, val) = line.split(' ',1)
+                          num_brackets = int(val.count('['))
+                          if num_brackets > 1:
+                            sublist = val.strip().strip('[').strip(']').split('],')
+                            val = []
+                            for pair in sublist:
+                              templist = []
+                              for subpair in pair.split(','):
+                                templist.append(float(subpair.strip().strip('[').strip(']')))
+                              val.append(templist)
+                          else:
+                            val = val.strip().strip('[').strip(']').split(',')
+                            val = [x.strip() for x in val]
+                            if 'parameter' in line:
+                              val = [float(x) for x in val]
+                          if type(val) != list:
+                            print('Ignoring unknown input line with wrong length : ' + str(line)  )
+                          else:
+                            configuration[key] = val
                     else:
                         print('Ignoring unknown input line with wrong length : ' + str(line)  )
         except:
