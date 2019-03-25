@@ -53,7 +53,7 @@ class DFTRun(object):
                               'terachem_version', 'terachem_detailed_version', 'basis', 'alpha_level_shift',
                               'beta_level_shift', 'functional', 'rmsd', 'maxd', 'thermo_time', 'solvent_time',
                               'water_time', 'angletest', 'ligrsmd', 'flag_oct', 'flag_list', 'num_coord_metal',
-                              'rmsd_max',
+                              'rmsd_max', 'spin_cat',
                               'atom_dist_max', 'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
                               'devi_linear_avrg', 'devi_linear_max', 'flag_oct_loose', 'flag_list_loose',
                               'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max', 'area',
