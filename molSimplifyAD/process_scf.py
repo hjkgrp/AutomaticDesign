@@ -155,150 +155,176 @@ def process_runs_geo(all_runs,local_spin_dictionary,local_metal_list=False):
         local_metal_list = get_metals()
     matched = False
     number_of_matches  = 0
+    gene_template = get_gene_template()
     print('processing all converged runs')
     for runkeys in all_runs.keys():
-        skip = False
-        duplication = False
-        this_run = all_runs[runkeys]
-        if this_run.metal in local_metal_list:
-            this_metal = this_run.metal
-        else:
-            this_metal = local_metal_list[int(this_run.metal)]
+        if gene_template['legacy']:
+            skip = False
+            duplication = False
+            this_run = all_runs[runkeys]
+            if this_run.metal in local_metal_list:
+                this_metal = this_run.metal
+            else:
+                this_metal = local_metal_list[int(this_run.metal)]
 
 
-        ## special catch of SMILEs ligands:
-        if hasattr(this_run.lig1,'__iter__'): # SMILEs string
-            lig1_name = 'smi' + str(this_run.lig1_ind)
-            #eqlig_name = this_run.eqlig
-            #print('!!!!!!eqlig_name', eqlig_name)
-            #sardines
-        else:
-            lig1_name = this_run.lig1
+            ## special catch of SMILEs ligands:
+            if hasattr(this_run.lig1,'__iter__'): # SMILEs string
+                lig1_name = 'smi' + str(this_run.lig1_ind)
+                #eqlig_name = this_run.eqlig
+                #print('!!!!!!eqlig_name', eqlig_name)
+                #sardines
+            else:
+                lig1_name = this_run.lig1
 
-        if hasattr(this_run.lig2 ,'__iter__'): # SMILEs string
-            lig2_name = 'smi' + str(this_run.lig2_ind)
-        else:
-            lig2_name = this_run.lig2
-        
-        if hasattr(this_run.lig3 ,'__iter__'): # SMILEs string
-            lig3_name = 'smi' + str(this_run.lig3_ind)
-        else:
-            lig3_name = this_run.lig3
-
-        if hasattr(this_run.lig4 ,'__iter__'): # SMILEs string
-            lig4_name = 'smi' + str(this_run.lig4_ind)
-        else:
-            lig4_name = this_run.lig4
-
-        if hasattr(this_run.lig5 ,'__iter__'): # SMILEs string
-            lig5_name = 'smi' + str(this_run.lig5_ind)
-        else:
-            lig5_name = this_run.lig5
-
-        if hasattr(this_run.lig6 ,'__iter__'): # SMILEs string
-            lig6_name = 'smi' + str(this_run.lig6_ind)
-        else:
-            lig6_name = this_run.lig6
+            if hasattr(this_run.lig2 ,'__iter__'): # SMILEs string
+                lig2_name = 'smi' + str(this_run.lig2_ind)
+            else:
+                lig2_name = this_run.lig2
             
-        this_name = "_".join([str(this_metal), 'eq', str(lig1_name),str(lig2_name),str(lig3_name),str(lig4_name), 'ax1', str(lig5_name), 'ax2', str(lig6_name), 'ahf', str(int(this_run.alpha)).zfill(2)])
-        # this_name = "_".join([this_metal,'eq',str(eqlig_name),'ax1',str(axlig1_name),'ax2',str(axlig2_name),'ahf',str(int(this_run.alpha)).zfill(2)])
-        print('** name is ' + str(this_name))
-                ### add alpha value to list owned by this_comp:
+            if hasattr(this_run.lig3 ,'__iter__'): # SMILEs string
+                lig3_name = 'smi' + str(this_run.lig3_ind)
+            else:
+                lig3_name = this_run.lig3
+
+            if hasattr(this_run.lig4 ,'__iter__'): # SMILEs string
+                lig4_name = 'smi' + str(this_run.lig4_ind)
+            else:
+                lig4_name = this_run.lig4
+
+            if hasattr(this_run.lig5 ,'__iter__'): # SMILEs string
+                lig5_name = 'smi' + str(this_run.lig5_ind)
+            else:
+                lig5_name = this_run.lig5
+
+            if hasattr(this_run.lig6 ,'__iter__'): # SMILEs string
+                lig6_name = 'smi' + str(this_run.lig6_ind)
+            else:
+                lig6_name = this_run.lig6
                 
-        if this_name not in final_results.keys():
-            print('new name')
-            ## need to create a new holder to store this gene
-            this_comp = Comp(this_name)
-            this_comp.set_properties(this_run)
-            
-        else:
-            this_comp = final_results[this_name]
-        print(runkeys)
-        this_comp.attempted += 1 # advance number of attempts
-        ## get basic details
-        this_ox = int(this_run.ox)
-        metal_spins  = local_spin_dictionary[this_metal][this_ox]
-        if this_run.spin not in metal_spins:
-           print('ERROR! not in metal spins : ' +  str(this_run) + ' not in ' +  str(metal_spins))
-        else:
-            if this_run.spin == metal_spins[0]:  # First element of list
-                spin_cat = 'LS'
-            elif this_run.spin == metal_spins[-1]:  # Last element of list
-                spin_cat = 'HS'
+            this_name = "_".join([str(this_metal), 'eq', str(lig1_name),str(lig2_name),str(lig3_name),str(lig4_name), 'ax1', str(lig5_name), 'ax2', str(lig6_name), 'ahf', str(int(this_run.alpha)).zfill(2)])
+            # this_name = "_".join([this_metal,'eq',str(eqlig_name),'ax1',str(axlig1_name),'ax2',str(axlig2_name),'ahf',str(int(this_run.alpha)).zfill(2)])
+            print('** name is ' + str(this_name))
+                    ### add alpha value to list owned by this_comp:
+                    
+            if this_name not in final_results.keys():
+                print('new name')
+                ## need to create a new holder to store this gene
+                this_comp = Comp(this_name)
+                this_comp.set_properties(this_run)
+                
             else:
-                spin_cat = 'IS'  # Intermediate Spin
-        print('spin ind is found to be ' + str(this_run.spin) + ' interpretted as ' + str(spin_cat))
-        ## check if this a duplicate:
-        this_attribute = "_".join(['ox',str(this_ox),spin_cat,'converged'])
-        if getattr(this_comp,this_attribute):
-            duplication = True
-            print('run duplication at  ' +str(this_name))
-            if this_ox == 2:
-                this_ox2RN = this_run.number
-                old_ox2RN = this_comp.ox2RN
-                if this_ox2RN <= old_ox2RN:
-                    skip = True
-                    ## use this one, get rid of the old one 
+                this_comp = final_results[this_name]
+            print(runkeys)
+            this_comp.attempted += 1 # advance number of attempts
+            ## get basic details
+            this_ox = int(this_run.ox)
+            metal_spins  = local_spin_dictionary[this_metal][this_ox]
+            if this_run.spin not in metal_spins:
+               print('ERROR! not in metal spins : ' +  str(this_run) + ' not in ' +  str(metal_spins))
             else:
-                this_ox3RN = this_run.number
-                old_ox3RN = this_comp.ox3RN
-                if this_ox3RN <= old_ox3RN:
-                    skip = True
-        if not skip:
-            if duplication:
-                # set back conv counter
-                this_comp.convergence -= 1
-                if this_run.flag_oct == 1:
-                    ## replace the descriptor if set
-                    this_comp.set_desc = False
-            
-            ## find oxidation state:
-            if this_ox == 2:
-                 this_comp.ox2RN = max(this_run.number,this_comp.ox2RN)
-            else:
-                 this_comp.ox3RN = max(this_run.number,this_comp.ox3RN)
-            this_comp.gene = "_".join([this_metal,str(lig1_name),str(lig2_name),str(lig3_name),str(lig4_name),str(lig5_name),str(lig6_name)])
-            this_comp.job_gene = this_run.gene
-            print('----gene:---', this_comp.gene, this_comp.job_gene)
-            if this_run.converged and this_run.coord == 6:
-                this_comp.convergence += 1
-            if this_run.flag_oct == 1 and not this_comp.set_desc:
-#                try:
-                    if not os.path.isdir('used_geos/'):
-                        os.mkdir('used_geos/')
-                    this_run.mol.writexyz('used_geos/'+this_name+'.xyz')
-                    #this_comp.axlig1 = this_run.axlig1
-                    #this_comp.axlig2 = this_run.axlig2
-                    this_comp.lig1 = this_run.lig1
-                    this_comp.lig2 = this_run.lig2
-                    this_comp.lig3 = this_run.lig3
-                    this_comp.lig4 = this_run.lig4
-                    this_comp.lig5 = this_run.lig5
-                    this_comp.lig6 = this_run.lig6
-                    this_comp.set_rep_mol(this_run)
-                    this_comp.get_descriptor_vector(loud=False,name=this_name)
-#                except:
-#                    if not os.path.isdir('bad_geos/'):
-#                        os.mkdir('bad_geos/')
-#                    this_run.mol.writexyz('bad_geos/'+this_name+'.xyz')
-#                    this_comp.convergence -= 1
-#                    this_run.coord = 'error'
-#                    sadasdasdasda
-            
+                if this_run.spin == metal_spins[0]:  # First element of list
+                    spin_cat = 'LS'
+                elif this_run.spin == metal_spins[-1]:  # Last element of list
+                    spin_cat = 'HS'
+                else:
+                    spin_cat = 'IS'  # Intermediate Spin
+            print('spin ind is found to be ' + str(this_run.spin) + ' interpretted as ' + str(spin_cat))
+            ## check if this a duplicate:
+            this_attribute = "_".join(['ox',str(this_ox),spin_cat,'converged'])
+            if getattr(this_comp,this_attribute):
+                duplication = True
+                print('run duplication at  ' +str(this_name))
+                if this_ox == 2:
+                    this_ox2RN = this_run.number
+                    old_ox2RN = this_comp.ox2RN
+                    if this_ox2RN <= old_ox2RN:
+                        skip = True
+                        ## use this one, get rid of the old one 
+                else:
+                    this_ox3RN = this_run.number
+                    old_ox3RN = this_comp.ox3RN
+                    if this_ox3RN <= old_ox3RN:
+                        skip = True
+            if not skip:
+                if duplication:
+                    # set back conv counter
+                    this_comp.convergence -= 1
+                    if this_run.flag_oct == 1:
+                        ## replace the descriptor if set
+                        this_comp.set_desc = False
+                
+                ## find oxidation state:
+                if this_ox == 2:
+                     this_comp.ox2RN = max(this_run.number,this_comp.ox2RN)
+                else:
+                     this_comp.ox3RN = max(this_run.number,this_comp.ox3RN)
+                this_comp.gene = "_".join([this_metal,str(lig1_name),str(lig2_name),str(lig3_name),str(lig4_name),str(lig5_name),str(lig6_name)])
+                this_comp.job_gene = this_run.gene
+                print('----gene:---', this_comp.gene, this_comp.job_gene)
+                if this_run.converged and this_run.coord == 6:
+                    this_comp.convergence += 1
+                if this_run.flag_oct == 1 and not this_comp.set_desc:
+    #                try:
+                        if not os.path.isdir('used_geos/'):
+                            os.mkdir('used_geos/')
+                        this_run.mol.writexyz('used_geos/'+this_name+'.xyz')
+                        #this_comp.axlig1 = this_run.axlig1
+                        #this_comp.axlig2 = this_run.axlig2
+                        this_comp.lig1 = this_run.lig1
+                        this_comp.lig2 = this_run.lig2
+                        this_comp.lig3 = this_run.lig3
+                        this_comp.lig4 = this_run.lig4
+                        this_comp.lig5 = this_run.lig5
+                        this_comp.lig6 = this_run.lig6
+                        this_comp.set_rep_mol(this_run)
+                        this_comp.get_descriptor_vector(loud=False,name=this_name)
+    #                except:
+    #                    if not os.path.isdir('bad_geos/'):
+    #                        os.mkdir('bad_geos/')
+    #                    this_run.mol.writexyz('bad_geos/'+this_name+'.xyz')
+    #                    this_comp.convergence -= 1
+    #                    this_run.coord = 'error'
+    #                    sadasdasdasda
+                
 
+                for props in  output_properties(comp=False,oxocatalysis=False):
+                    this_attribute = "_".join(['ox',str(this_ox),spin_cat,props])
+                    print('looking for ' + str(props) + ' as '+ this_attribute + ' from run class')
+                    if hasattr(this_run,props):
+                        print('found, ' + str(getattr(this_run,props)))
+                        setattr(this_comp,this_attribute,getattr(this_run,props))
+                this_attribute = "_".join(['ox',str(this_ox),spin_cat,"DFT_RUN"])
+                setattr(this_comp,this_attribute,this_run)
+            ## the hack to get around expecting 
+            ## spins
+            this_comp.get_some_split()
+            ###
+            final_results.update({this_name:this_comp})
+        else:
+            this_run = all_runs[runkeys]
+            this_gene = this_run.gene
+            if this_gene in final_results.keys():
+                this_comp = final_results[this_gene]
+            else:
+                this_comp = Comp(this_gene)
+                this_comp.set_properties(this_run)
+                final_results.update({this_gene: this_comp})
             for props in  output_properties(comp=False,oxocatalysis=False):
-                this_attribute = "_".join(['ox',str(this_ox),spin_cat,props])
+                this_attribute = "_".join(['ox',str(this_run.ox),this_run.spin_cat,props])
                 print('looking for ' + str(props) + ' as '+ this_attribute + ' from run class')
                 if hasattr(this_run,props):
                     print('found, ' + str(getattr(this_run,props)))
                     setattr(this_comp,this_attribute,getattr(this_run,props))
-            this_attribute = "_".join(['ox',str(this_ox),spin_cat,"DFT_RUN"])
-            setattr(this_comp,this_attribute,this_run)
-        ## the hack to get around expecting 
-        ## spins
-        this_comp.get_some_split()
-        ###
-        final_results.update({this_name:this_comp})
+            if this_run.flag_oct == 1 and not this_comp.set_desc:
+    #                try:
+                if not os.path.isdir('used_geos/'):
+                    os.mkdir('used_geos/')
+                this_run.mol.writexyz('used_geos/'+this_gene+'.xyz')
+                #this_comp.axlig1 = this_run.axlig1
+                #this_comp.axlig2 = this_run.axlig2
+                this_comp.set_rep_mol(this_run)
+                this_comp.get_descriptor_vector(loud=False,name=this_gene)
     return final_results
 
 def process_runs_oxocatalysis(all_runs,local_spin_dictionary,local_metal_list=False):
