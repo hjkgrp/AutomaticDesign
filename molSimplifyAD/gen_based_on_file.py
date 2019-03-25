@@ -15,6 +15,7 @@ def read_ligand_list(filein):
 
 
 def find_ligand_in_list(lig, lig_list):
+    print(lig_list)
     return lig_list.index(lig)
 
 

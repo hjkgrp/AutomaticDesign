@@ -8,8 +8,7 @@ from molSimplifyAD.process_scf import *
 def launch_job(job,sub_num):
     ## code to submit to queue
     print('lauching ' + job + ' sub number: '+ str(sub_num))
-    gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename,basegene = translate_job_name(job)
-    base_name = os.path.basename(job).strip('in')
+    basename = os.path.basename(job).strip('.in')
     if sub_num > 1:
         print(' start rescue')
         ## run rescue and analysis
@@ -50,10 +49,7 @@ def launch_job(job,sub_num):
         opath = path_dictionary["queue_output"]+name+'_Oxo.o'
         epath = path_dictionary["queue_output"]+name+'_Oxo.e'
         infile = job
-    elif axlig2 == 'x' and "sp_infiles" in job:
-        cmd_script = "launch_script_sp.sh"
-        infile = job
-    elif "sp_infiles" in job and not isKeyword('oxocatalysis'):
+    elif "sp_infiles" in job:
         cmd_script = "launch_script_sp.sh"
         infile = job
     else:
@@ -140,7 +136,7 @@ def submit_outstanding_jobs():
                 else: # job is a resubmission 
                     number_of_attempts = submitted_job_dictionary[jobs]
                     print('number of attempts = '+ str(number_of_attempts))
-                    if (int(number_of_attempts) <= get_maxresub()):
+                    if (int(number_of_attempts) <= isKeyword('max_resubmit')):
                         ## relaunch  
                         submitted_job_dictionary.update({jobs: (int(number_of_attempts)+1)})
                         job_id = launch_job(jobs,int(number_of_attempts) + 1)
@@ -154,7 +150,10 @@ def submit_outstanding_jobs():
                            + " Giving up on job : " + str(jobs) + ' after '+ str(number_of_attempts) + ' attempts')
                         update_converged_job_dictionary(jobs,7) # mark job as abandoned 
                         if not "thermo" in jobs and not "solvent" in jobs:
-                            gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename,basegene=translate_job_name(jobs)
+                            #gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename,basegene=translate_job_name(jobs)
+                            translate_dict = translate_job_name(jobs)
+                            ahf = translate_dict['ahf']
+                            gene = translate_dict['gene']
                             if ahf == float(isKeyword('exchange')): # if this is the target HFX frac
                                 update_current_gf_dictionary(basegene,0) # zero out fitness
             else:
@@ -181,7 +180,6 @@ def check_queue_for_live_jobs():
     for jobs in live_job_dictionary.keys():
             this_job_id = live_job_dictionary[jobs]
             this_status = is_job_live(this_job_id)
-            gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eq_ind,ax1_ind,ax2_ind,spin,spin_cat,ahf,basename,basegene =  translate_job_name(jobs)
             if this_status:
                 counter += 1
                 print('recording as live:',jobs,this_job_id)

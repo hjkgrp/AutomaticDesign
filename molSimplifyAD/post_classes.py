@@ -8,7 +8,7 @@ import random
 import string
 import numpy
 import subprocess
-from ga_tools import *
+from molSimplifyAD.ga_tools import *
 from molSimplify.Classes.mol3D import mol3D
 from molSimplify.Classes import *
 from optgeo_extract import *
@@ -47,25 +47,25 @@ class DFTRun(object):
         self.comment = ''
         self.file_merge_list = ['optim.xyz', 'bond_order.list', 'charge_mull.xls', 'grad.xyz', 'mullpop', 'spin.xls']
         list_of_init_props = ['status', 'time', 'energy', 'alphaHOMO', 'alphaLUMO', 'betaHOMO', 'betaLUMO',
-                              'initial_energy', 'charge', 'idn', 'spin', 'metal', 'eqlig_ind', 'axlig1_ind',
-                              'axlig2_ind', 'eqlig', 'axlig1', 'axlig2', 'eq_MLB', 'ax1_MLB', 'ax2_MLB',
+                              'initial_energy', 'charge', 'idn', 'spin', 'metal', 'lig1_ind','lig2_ind','lig3_ind', 'lig4_ind',
+                              'lig5_ind','lig6_ind', 'lig1', 'lig2', 'lig3','lig4','lig5','lig6', 'eq_MLB', 'ax1_MLB', 'ax2_MLB',
                               'init_eq_MLB', 'init_ax1_MLB', 'init_ax2_MLB', 'outpath', 'geopath', 'init_geopath',
                               'terachem_version', 'terachem_detailed_version', 'basis', 'alpha_level_shift',
                               'beta_level_shift', 'functional', 'rmsd', 'maxd', 'thermo_time', 'solvent_time',
                               'water_time', 'angletest', 'ligrsmd', 'flag_oct', 'flag_list', 'num_coord_metal',
-                              'rmsd_max',
+                              'rmsd_max', 'spin_cat',
                               'atom_dist_max', 'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
                               'devi_linear_avrg', 'devi_linear_max', 'flag_oct_loose', 'flag_list_loose',
                               'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max', 'area',
                               'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
-                              'mop_energy', 'chem_name', 'sp_energy', 'tot_time', 'tot_step', 'metal_translation']
+                              'mop_energy', 'chem_name', 'sp_energy','empty_sp_energy', 'tot_time', 'tot_step', 'metal_translation']
         list_of_init_empty = ['descriptor_names', 'descriptors']
         list_of_init_false = ['solvent_cont', 'water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
-                              'islive', 'set_desc', 'sp_status']
-        list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord']
+                              'islive', 'set_desc', 'sp_status','empty_sp_status']
+        list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord','empty_ss_target','empty_ss_act']
         if isKeyword('oxocatalysis'):
             list_of_init_props += ['metal_alpha', 'metal_beta', 'net_metal_spin', 'metal_mulliken_charge',
                                    'oxygen_alpha', 'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
@@ -313,13 +313,24 @@ class DFTRun(object):
             self.init_ax1_MLB = 'error'
             self.init_ax2_MLB = 'error'
 
-    def configure(self, metal, ox, eqlig, axlig1, axlig2, spin, alpha, spin_cat):
+    def configure(self, metal, ox, liglist, spin, alpha, spin_cat):
         self.metal = metal
         self.ox = ox
         self.spin = spin
-        self.eqlig = eqlig
-        self.axlig1 = axlig1
-        self.axlig2 = axlig2
+        if len(liglist) == 3:
+            self.lig1 = liglist[0]
+            self.lig2 = liglist[0]
+            self.lig3 = liglist[0]
+            self.lig4 = liglist[0]
+            self.lig5 = liglist[1]
+            self.lig6 = liglist[2]
+        else:
+            self.lig1 = liglist[0]
+            self.lig2 = liglist[1]
+            self.lig3 = liglist[2]
+            self.lig4 = liglist[3]
+            self.lig5 = liglist[4]
+            self.lig6 = liglist[5]
         self.spin_cat = spin_cat
         self.alpha = alpha
 
@@ -688,24 +699,29 @@ class DFTRun(object):
 
         return (self.HFX_job)
 
-    def write_empty_inputs(self, refHFX):
+    def write_empty_inputs(self, refHFX, lines_to_remove=1, ligand_charge=0):
         ## set file paths for empty structure gen
         ## the fixed ordering is 
         ## HFX20 Oxo --> HFX20 Empty SP + HFX20 Empty Geo --> HFX25 Oxo --> HFX25 Empty SP + HFX25 Empty Geo... etc.
-        _, _, _, _, _, _, _, _, _, _, _, this_spin, _, _, _, _ = translate_job_name(self.job)
+        #_, _, _, _, _, _, _, _, _, _, _, this_spin, _, _, _, _ = translate_job_name(self.job)
+        translate_dict = translate_job_name(self.job)
+        this_spin = translate_dict['spin']
         emptyrefdict = {"25": "20", "30": "25", "15": "20", "10": "15", "05": "10", "00": "05"}
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
-        new_name, reference_name = renameOxoEmpty(self.job)
+        if not isKeyword('oxocatalysis'):
+            new_name, reference_name = rename_ligand_dissoc(self.job)
+        else:
+            new_name, reference_name = renameOxoEmpty(self.job)
         new_name = new_name.strip('.in')
         reference_name = reference_name.strip('.in')
         geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
         geo_ref_file = open(geo_ref)
         lines = geo_ref_file.readlines()
-        lines[0] = str(int(lines[0].split()[0]) - 1) + '\n'
+        lines[0] = str(int(lines[0].split()[0]) - lines_to_remove) + '\n' #This is the number at the top of the xyz
         new_ref = path_dictionary["initial_geo_path"] + new_name + '.xyz'
         new_ref_file = open(new_ref, 'w')
-        new_ref_file.writelines([item for item in lines[:-1]])
+        new_ref_file.writelines([item for item in lines[:-lines_to_remove]]) #Removing the top axial ligand where oxo is
         new_ref_file.close()
         geo_ref_file.close()
         print('NEW REF is THIS:', new_ref, 'Referenced THIS:', geo_ref)
@@ -721,11 +737,16 @@ class DFTRun(object):
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
                             "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not (
-                            "method" in line):
+                            "method" in line) and not ("charge" in line):
                         ## these lines should be common
                         f_emptysp.write(line)
-            if int(
-                    refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
+                    if not isKeyword('oxocatalysis') and "charge" in line:
+                        old_charge = int(line.strip('\n').split(' ')[1])
+                        new_charge = int(old_charge) - int(ligand_charge) #Adjust the charge for heterolytic cleavage. If ligand -1 charge, other fragment must be +1.
+                        f_emptysp.write('charge '+str(new_charge)+'\n')
+                    elif isKeyword('oxocatalysis') and "charge" in line:
+                        f_emptysp.write(line)
+            if int(refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
                 splist = new_name.split('_')
                 emptyrefval = emptyrefdict[splist[-2]]
                 splist[-2] = emptyrefval
@@ -751,17 +772,14 @@ class DFTRun(object):
         returnval1 = False
         returnval2 = False
         hydrefdict = {"25": "20", "30": "25", "15": "20", "10": "15", "05": "10", "00": "05"}
-        gene, gen, _, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, _, ahf, basename, _ = translate_job_name(
-            self.job)
+        #old:
+        #gene, gen, _, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, _, ahf, basename,_ = translate_job_name(self.job)
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)
-        new_name_upper, new_name_lower, reference_name = renameOxoHydroxyl(self.job)
-        print('NEW UPPER HYD REF is THIS:', new_name_upper, 'NEW LOWER HYD REF IS THIS:', new_name_lower,
-              'Referenced THIS:', reference_name)
+        new_name_upper, reference_name = renameOxoHydroxyl(self.job)
+        print('NEW UPPER HYD REF is THIS:', new_name_upper, 'Referenced THIS:', reference_name)
         if new_name_upper:
             new_name_upper = new_name_upper.strip('.in')
-        if new_name_lower:
-            new_name_lower = new_name_lower.strip('.in')
         reference_name = reference_name.strip('.in')
         geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
         mymol = mol3D()
@@ -828,26 +846,26 @@ class DFTRun(object):
                 returnval1 = path_dictionary['job_path'] + new_name_upper + '.in'
                 if int(refHFX) != 20:
                     with open(path_dictionary['infiles'] + new_name_upper + '.in', 'w') as f:
-                        with open(path_dictionary["job_path"] + new_name_upper + '.in', 'r') as ref:
+                        with open(path_dictionary["job_path"]+new_name_upper+'.in', 'r') as ref:
                             for line in ref:
                                 if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
-                                    if (int(new_name_upper[-1]) == 1) and "method" in line:  # restrict singlets
+                                    if (int(new_name_upper[-1]) == 1) and "method" in line: #restrict singlets
                                         f.write("method b3lyp\n")
                                     else:
                                         f.write(line)
-                            if os.path.exists(path_dictionary['optimial_geo_path'] + wfnrefhyd + '.xyz') and int(
-                                    converged_jobs[path_dictionary['job_path'] + wfnrefhyd + '.in']) in [0, 1, 2]:
-                                f.write(
-                                    'coordinates ' + path_dictionary['optimial_geo_path'] + wfnrefhyd + '.xyz' + ' \n')
+                            if os.path.exists(path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz') and int(converged_jobs[path_dictionary['job_path']+wfnrefhyd+'.in']) == 0:
+                                f.write('coordinates ' + path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz' + ' \n')
                             else:
-                                f.write('coordinates ' + path_dictionary[
-                                    'initial_geo_path'] + new_name_upper + '.xyz' + ' \n')
+                                f.write('coordinates ' + path_dictionary['initial_geo_path']+new_name_upper+'.xyz'+' \n')
                             f.write(guess_string)
                             f.write('end\n')
                             f.close()
                             ref.close()
-        return returnval1
-
+        return returnval1 
+    
+    def write_HAT_and_Oxo_TS(self, empty):
+        print('NOW WRITING TRANSITION STATE GEOMETRIES AND INFILES!')
+        empty = os.path.basename(empty)
     def write_HAT_and_Oxo_TS(self, empty):
         print('NOW WRITING TRANSITION STATE GEOMETRIES AND INFILES!')
         empty = os.path.basename(empty)
@@ -1187,7 +1205,7 @@ class DFTRun(object):
     def DFTRunToReport(self):
         customDict = {"NAME": self.name,
                       "METAL": "".join([e.upper() if i == 0 else e for i, e in enumerate(self.metal)]),
-                      "LIGS": "/".join([str(i) for i in [self.eqlig, self.axlig1, self.axlig2]]),
+                      "LIGS": "/".join([str(i) for i in [self.lig1, self.lig2, self.lig3, self.lig4, self.lig5, self.lig6]]),
                       "OX": str(self.ox),
                       "SPIN": str(self.spin),
                       "STATUS": str(self.status),
@@ -1230,13 +1248,19 @@ class Comp(object):
         self.alpha = 'undef'
         self.time = "undef"
         self.metal = 'undef'
-        self.axlig1 = 'undef'
+        self.lig1 = 'undef'
+        self.lig2 = 'undef'
+        self.lig3 = 'undef'
+        self.lig4 = 'undef'
+        self.lig5 = 'undef'
+        self.lig1_ind = 'undef'
+        self.lig2_ind = 'undef'
+        self.lig3_ind = 'undef'
+        self.lig4_ind = 'undef'
+        self.lig5_ind = 'undef'
         if not isKeyword('oxocatalysis'):
-            self.axlig2 = 'undef'
-            self.axlig2_ind = 'undef'
-        self.eqlig = 'undef'
-        self.axlig1_ind = 'undef'
-        self.eqlig_ind = 'undef'
+            self.lig6 = 'undef'
+            self.lig6_ind = 'undef'
         self.convergence = 0
         self.attempted = 0
         self.repmol = mol3D()
@@ -1257,7 +1281,7 @@ class Comp(object):
 
         ## run class dependent props:
         list_of_init_props = ['chem_name', 'spin', 'charge', 'attempted', 'converged',
-                              'mop_converged', 'time', 'energy', 'sp_energy',
+                              'mop_converged', 'time', 'energy', 'sp_energy','empty_sp_energy',
                               'flag_oct', 'flag_list',
                               'num_coord_metal', 'rmsd_max', 'atom_dist_max',
                               'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
@@ -1285,14 +1309,19 @@ class Comp(object):
         list_of_init_falses = ['attempted', 'converged',
                                'mop_converged',
                                "DFT_RUN"]
+        if isKeyword('ax_lig_dissoc'):
+            list_of_init_props += ['empty_ss_act','empty_ss_target']
+        spinloop = ['LS','HS']
+        if isKeyword('all_spins'):
+            spinloop = ['LS','IS','HS']
         for props in list_of_init_props:
             for ox in ["2", "3"]:
-                for sc in ["LS", "HS"]:
+                for sc in spinloop:
                     this_attribute = "_".join(['ox', ox, sc, props])
                     setattr(self, this_attribute, 'undef')
         for props in list_of_init_falses:
             for ox in ["2", "3"]:
-                for sc in ["LS", "HS"]:
+                for sc in spinloop:
                     this_attribute = "_".join(['ox', ox, sc, props])
                     setattr(self, this_attribute, False)
         if isKeyword('oxocatalysis'):
@@ -1350,12 +1379,18 @@ class Comp(object):
 
     def set_properties(self, this_run):
         self.metal = this_run.metal
-        self.axlig1 = this_run.axlig1
-        self.axlig2 = this_run.axlig2
-        self.eqlig = this_run.eqlig
-        self.axlig1_ind = this_run.axlig1_ind
-        self.axlig2_ind = this_run.axlig2_ind
-        self.eqlig_ind = this_run.eqlig_ind
+        self.lig1 = this_run.lig1
+        self.lig2 = this_run.lig2
+        self.lig3 = this_run.lig3
+        self.lig4 = this_run.lig4
+        self.lig5 = this_run.lig5
+        self.lig6 = this_run.lig6
+        self.lig1_ind = this_run.lig1_ind
+        self.lig2_ind = this_run.lig2_ind
+        self.lig3_ind = this_run.lig3_ind
+        self.lig4_ind = this_run.lig4_ind
+        self.lig5_ind = this_run.lig5_ind
+        self.lig6_ind = this_run.lig6_ind
         self.alpha = this_run.alpha
 
     def set_rep_mol(self, this_run):

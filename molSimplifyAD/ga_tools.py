@@ -25,7 +25,6 @@ def get_current_GA():
     GA_run.deserialize('.madconfig')
     return GA_run
 
-
 ########################
 def get_infile_from_job(job):
     ## given a job (file under jobs/gen_x/
@@ -34,29 +33,24 @@ def get_infile_from_job(job):
     ## using progress geometry if available
     ## else intital only
     ## process job name
-    _, gen, _, _, _, _, _, _, _, _, _, _, _, _, base_name, _ = translate_job_name(job)
+    # Below is the old way to do this...
+    # _, gen, _, _, _, _, _, _, _, _, _, _, _, _, base_name, _ = translate_job_name(job)
+    translate_dict = translate_job_name(job)
     ## create paths
+    gen = translate_dict['gen']
+    base_name = translate_dict['basename']
+
     path_dictionary = setup_paths()
     path_dictionary = advance_paths(path_dictionary, gen)
     scr_path = path_dictionary["scr_path"] + base_name + '/'
     target_inpath = path_dictionary["infiles"] + base_name + '.in'
-    path_dictionary = setup_paths()
-    GA_run = get_current_GA()
     use_old_optimizer = get_optimizer()
-    ll = os.path.split(job)
-    base_name = ll[1]
-    ll = os.path.split(ll[0])
-    generation_folder = ll[1]
-    target_inpath = path_dictionary["infiles"] + generation_folder + '/' + base_name
     if os.path.isfile(target_inpath):
         infile = target_inpath
     else:
         print('no infile found for job ' + job + ' , creating a new one ')
         create_generic_infile(job, use_old_optimizer=use_old_optimizer, restart=True)
-    if 'track_elec_prop' in get_current_GA().config.keys():
-        track_elec_prop = get_current_GA().config['track_elec_prop']
-    else:
-        track_elec_prop = False
+    track_elec_prop = isKeyword('track_elec_prop')
     if track_elec_prop and (not check_txt_infile(target_inpath, 'ml_prop yes')):
         add_ml_prop_infiles(target_inpath)
     if (not check_txt_infile(target_inpath, 'scrdir')):
@@ -100,7 +94,11 @@ def add_scrdir_infiles(filepath, scr_path):
 def get_initial_geo_path_from_job(job):
     ## given a job (file under jobs/gen_x/
     ## this returns the path to the initial geo file
-    _, gen, _, _, _, _, _, _, _, _, _, _, _, _, base_name, _ = translate_job_name(job)
+    # Below is old:
+    #_, gen, _, _, _, _, _, _, _, _, _, _, _, _, base_name, _ = translate_job_name(job)
+    translate_dict = translate_job_name(job)
+    gen = translate_dict['gen']
+    base_name = translate_dict['basename']
     ## create paths
     path_dictionary = setup_paths()
     path_dictionary = advance_paths(path_dictionary, gen)
@@ -113,7 +111,13 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
     ## custom_geo_guess is ANOTHER JOB NAME, from which the geom and wavefunction guess
     ## will attempt to be extracted
     ## process job name
-    _, gen, _, _, _, _, _, _, _, _, _, this_spin, _, _, base_name, _ = translate_job_name(job)
+    # old:
+    #_, gen, _, _, _, _, _, _, _, _, _, this_spin, _, _, base_name, _ = translate_job_name(job)
+
+    translate_dict = translate_job_name(job)
+    gen = translate_dict['gen']
+    base_name = translate_dict['basename']
+    this_spin = translate_dict['spin']
     ## create paths
     path_dictionary = setup_paths()
     path_dictionary = advance_paths(path_dictionary, gen)
@@ -134,7 +138,11 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
             geometry_path = initial_geo_path
             guess_string = "guess generate \n"
     elif custom_geo_guess:
-        _, guess_gen, _, _, _, _, _, _, _, _, _, _, _, _, guess_base_name, _ = translate_job_name(custom_geo_guess)
+        #old:
+        #_, guess_gen, _, _, _, _, _, _, _, _, _, _, _, _, guess_base_name, _ = translate_job_name(custom_geo_guess)
+        translate_dict = translate_job_name(custom_geo_guess)
+        guess_gen = translate_dict['gen']
+        guess_base_name = translate_dict['basename']
         guess_path_dictionary = setup_paths()
         guess_path_dictionary = advance_paths(guess_path_dictionary, guess_gen)
         guess_geo_path = path_dictionary["optimial_geo_path"] + guess_base_name + '.xyz'
@@ -186,10 +194,13 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
     list_of_props.append('gene')
     list_of_props.append('metal')
     list_of_props.append('alpha')
-    list_of_props.append('axlig1')
+    list_of_props.append('lig1')
+    list_of_props.append('lig2')
+    list_of_props.append('lig3')
+    list_of_props.append('lig4')
+    list_of_props.append('lig5')
     if (not oxocatalysis):
-        list_of_props.append('axlig2')
-    list_of_props.append('eqlig')
+        list_of_props.append('lig6')
     list_of_prop_names = ['chem_name', 'converged', 'status', 'time', 'charge', 'spin',
                           'energy', 'init_energy',
                           'ss_act', 'ss_target',
@@ -209,9 +220,11 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
                           'water_cont',
                           'terachem_version', 'terachem_detailed_version',
                           'basis', 'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
-                          'mop_coord', 'sp_energy', 'tot_time', 'tot_step', 'metal_translation']
+                          'mop_coord', 'sp_energy','empty_sp_energy', 'tot_time', 'tot_step', 'metal_translation']
     if SASA:
         list_of_prop_names.append("area")
+    if isKeyword('ax_lig_dissoc'):
+        list_of_prop_names += ['empty_ss_act','empty_ss_target']
     if TS:
         list_of_prop_names += ['terachem_version_HAT_TS','terachem_detailed_version_HAT_TS','basis_HAT_TS','tspin_HAT_TS','charge_HAT_TS','alpha_level_shift_HAT_TS','beta_level_shift_HAT_TS','energy_HAT_TS','time_HAT_TS','terachem_version_Oxo_TS','terachem_detailed_version_Oxo_TS','basis_Oxo_TS','tspin_Oxo_TS','charge_Oxo_TS','alpha_level_shift_Oxo_TS','beta_level_shift_Oxo_TS','energy_Oxo_TS','time_Oxo_TS','ss_act_HAT_TS','ss_target_HAT_TS','eigenvalue_HAT_TS','ss_act_Oxo_TS','ss_target_Oxo_TS','eigenvalue_Oxo_TS','init_energy_HAT_TS','init_energy_Oxo_TS','converged_HAT_TS','converged_Oxo_TS','attempted_HAT_TS','attempted_Oxo_TS']
     if oxocatalysis:
@@ -235,12 +248,15 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
         else:
             list_of_props += list_of_prop_names
     else:
+        spin_loop = ['LS', 'HS']
+        if isKeyword('all_spins'):
+            spin_loop = ['LS','IS','HS']
         if comp:
             list_of_props.insert(1, 'ox2RN')
             list_of_props.insert(2, 'ox3RN')
             list_of_props.insert(3, 'job_gene')
             for props in list_of_prop_names:
-                for spin_cat in ['LS', 'HS']:
+                for spin_cat in spin_loop:
                     for ox in ['2', '3']:
                         list_of_props.append("_".join(['ox', str(ox), spin_cat, props]))
             list_of_props.append('attempted')
@@ -374,87 +390,15 @@ def spin_dictionary():
                                      'mn': {2: [2, 6], 3: [3, 5]}}
     return metal_spin_dictionary
 
+########################
+def get_ligand_charge_dictionary():
+    ligand_charge_dictionary = {'acac':-1,'acetonitrile':0,'ammonia':0,'bifuran':0,'bipy':0,'bipyrrole':0,'bromide':-1,'carbonyl':0,'chloride':-1,'cyanide':-1,'cyanopyridine': 0,'dmf':0,'en':0,'fluoride':-1,'formate':-1,'furan':0,'hydroxyl':-1,'isothiocyanate':-1,'methanol':0,'misc':0,'nme3':0,'ome2':0,'ox':-2,'oxo':-2,'phen':0,'phosphine':0,'pisc':0,'pme3':0,'porphyrin':-2,'pph3':0,'pyridine':0,'pyrrole':-1,'tbisc':0,'tbuc':-2,'thiocyanate':-1,'thiol':-1,'thiopyridine':0,'uthiol':0,'uthiolme2':0,'water':0}
+    return ligand_charge_dictionary
 
 ########################
-def isDFT():
-    try:
-        GA_run = get_current_GA()
-        if GA_run.config["DFT"]:
-                return True
-        else:
-                return False
-    except:
-        return False
-
-
-########################
-def isSASA():
-    
-    try:
-        GA_run = get_current_GA()
-        if GA_run.config["SASA"]:
-            return True
-        else:
-            return False
-    except:
-        return False
-
-
-########################
-def isSolvent():
-    try:
-        GA_run = get_current_GA()
-        if GA_run.config["solvent"]:
-            return True
-        else:
-            return False
-    except:
-        return False
-########################
-def isWater():
-    try:
-        GA_run = get_current_GA()
-        if GA_run.config["water"]:
-            return True
-        else:
-            return False
-    except:
-        return False
-
-########################
-def isThermo():   
-    try:
-        GA_run = get_current_GA()
-        if GA_run.config["thermo"]:
-            return True
-        else:
-            return False
-    except:
-        return False
-
-
-########################
-def isSinglePoint():
-    try:
-        GA_run = get_current_GA()
-        if GA_run.config["single_point"]:
-            return True
-        else:
-            return False
-    except:
-        return False
-
-
-########################
-def isOxocatalysis():
-    try:
-        GA_run = get_current_GA()
-        if GA_run.config["oxocatalysis"]:
-            return True
-        else:
-            return False
-    except:
-        return False
+def get_ligand_size_dictionary():
+    ligand_size_dictionary = {'acac':14,'acetonitrile':6,'ammonia':4,'bifuran':16,'bipy':20,'bipyrrole':18,'bromide':1,'carbonyl':2,'chloride':1,'cyanide':2,'cyanopyridine': 12,'dmf':12,'en':12,'fluoride':1,'formate':4,'furan':9,'hydroxyl':2,'isothiocyanate':3,'methanol':6,'misc':6,'nme3':13,'ome2':9,'ox':6,'oxo':1,'phen':22,'phosphine':4,'pisc':25,'pme3':13,'porphyrin':36,'pph3':34,'pyridine':11,'pyrrole':9,'tbisc':15,'tbuc':24,'thiocyanate':3,'thiol':2,'thiopyridine':11,'uthiol':3,'uthiolme2':9,'water':3}
+    return ligand_size_dictionary
 
 ########################
 def isKeyword(keyword):
@@ -491,17 +435,6 @@ def isall_post():
     else:
         return False
 
-
-########################
-def get_maxresub():
-    GA_run = get_current_GA()
-    if unicode('max_resubmit', 'utf-8') in GA_run.config.keys():
-        return int(GA_run.config["max_resubmit"])
-    else:
-        print('max_resubmit not set, using default of 3')
-        return 3
-
-
 ########################
 def get_optimizer():
     GA_run = get_current_GA()
@@ -513,52 +446,23 @@ def get_optimizer():
 
 
 ########################
-def isOptimize():
-    GA_run = get_current_GA()
-    try:
-        if GA_run.config["optimize"]:
-            return True
-        else:
-            return False
-    except:
-        return False
-
-
-########################
 def translate_job_name(job):
+    translate_dict = {}
+    gene_template = get_gene_template()
     base = os.path.basename(job)
     base = base.strip("\n")
     basename = base.strip(".in")
     basename = basename.strip(".xyz")
     basename = basename.strip(".out")
     ll = (str(basename)).split("_")
+    ligands_dict = get_ligands()
     # print(ll)
     gen = ll[1]
     slot = ll[3]
     metal = int(ll[4])
     ox = int(ll[5])
-    eqlig_ind = int(ll[6])
-    axlig1_ind = int(ll[7])
-    axlig2_ind = int(ll[8])
-    ligands_dict = get_ligands()
-    if hasattr(ligands_dict[int(eqlig_ind)][0], '__iter__'):  # SMILEs string
-        # eqlig = 'smi' + str(eqlig_ind)
-        eqlig = ligands_dict[int(eqlig_ind)][0][0]
-    else:
-        eqlig = ligands_dict[int(eqlig_ind)][0]
-    if hasattr(ligands_dict[int(axlig1_ind)][0], '__iter__'):  # SMILEs string
-        # axlig1 = 'smi' + str(axlig1_ind)
-        axlig1 = ligands_dict[int(axlig1_ind)][0][0]
-    else:
-        axlig1 = ligands_dict[int(axlig1_ind)][0]
-
-    if hasattr(ligands_dict[int(axlig2_ind)][0], '__iter__'):  # SMILEs string
-        # axlig2 = 'smi' + str(axlig2_ind)
-        axlig2 = ligands_dict[int(axlig2_ind)][0][0]
-    else:
-        axlig2 = ligands_dict[int(axlig2_ind)][0]
-    ahf = int(ll[9])
-    spin = int(ll[10])
+    ahf = int(ll[-2])
+    spin = int(ll[-1])
     metal_list = get_metals()
     metal_key = metal_list[metal]
     metal_spin_dictionary = spin_dictionary()
@@ -568,12 +472,52 @@ def translate_job_name(job):
     elif spin == these_states[-1]:  # Last element of list
         spin_cat = 'HS'
     else:
-        # print('spin assigned as ll[9]  = ' + str(spin) + ' on  ' +str(ll))
-        # print('critical erorr, unknown spin: '+ str(spin))
         spin_cat = 'IS'  # Intermediate Spin
-    gene = "_".join([str(metal), str(ox), str(eqlig_ind), str(axlig1_ind), str(axlig2_ind), str(ahf).zfill(2)])
-    basegene = "_".join([str(metal), str(eqlig_ind), str(axlig1_ind), str(axlig2_ind)])
-    return gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, basename, basegene
+    if gene_template['legacy']:
+        eqlig_ind = int(ll[6])
+        axlig1_ind = int(ll[7])
+        axlig2_ind = int(ll[8])
+        if hasattr(ligands_dict[int(eqlig_ind)][0], '__iter__'):  # SMILEs string
+            eqlig = ligands_dict[int(eqlig_ind)][0][0]
+        else:
+            eqlig = ligands_dict[int(eqlig_ind)][0]
+        if hasattr(ligands_dict[int(axlig1_ind)][0], '__iter__'):  # SMILEs string
+            axlig1 = ligands_dict[int(axlig1_ind)][0][0]
+        else:
+            axlig1 = ligands_dict[int(axlig1_ind)][0]
+        if hasattr(ligands_dict[int(axlig2_ind)][0], '__iter__'):  # SMILEs string
+            axlig2 = ligands_dict[int(axlig2_ind)][0][0]
+        else:
+            axlig2 = ligands_dict[int(axlig2_ind)][0]
+        liglist = [eqlig, axlig1, axlig2]
+        indlist = [eqlig_ind, axlig1_ind, axlig2_ind]
+        gene = "_".join([str(metal), str(ox), str(eqlig_ind), str(axlig1_ind), str(axlig2_ind), str(ahf).zfill(2)])
+        basegene = "_".join([str(metal), str(eqlig_ind), str(axlig1_ind), str(axlig2_ind)])
+        #### liglist and indlist ordering is eqlig, axlig1, axlig2
+    else:
+        indlist = [int(i) for i in ll[6:-2]]
+        liglist = []
+        for ind in indlist:
+            if hasattr(ligands_dict[int(ind)][0], '__iter__'):
+                liglist.append(ligands_dict[int(ind)][0][0])
+            else:
+                liglist.append(ligands_dict[int(ind)][0])
+        namelist = [str(metal)]
+        if gene_template['ox']:
+            namelist.append(str(ox))
+        if gene_template['spin']:
+            namelist.append(str(spin))
+        for i in indlist:
+            namelist.append(str(i))
+        namelist.append(str(ahf).zfill(2))
+        gene = "_".join(namelist)
+        basegene = "_".join([str(metal)]+[str(ind) for ind in indlist])
+    dict_avars = ['gene', 'gen', 'slot', 'metal', 'ox', 'liglist', 'indlist', 'spin', 'spin_cat', 'ahf', 'basename', 'basegene']
+    for var in dict_avars:
+        translate_dict.update({var: locals()[var]}) 
+    # previously returning list below:
+    # gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, basename, basegene 
+    return translate_dict
 
 ########################
 def construct_job_name(complex_name, HFX=20):
@@ -592,6 +536,11 @@ def construct_job_name(complex_name, HFX=20):
     return job_substring
 
 ########################
+def jobname_from_parts(metal, ox, spin, lig_inds, ahf):
+    name = "_".join([str(metal),str(ox)]+[str(inds) for inds in lig_inds]+[str(ahf),str(spin)])
+    return name
+
+########################
 def SMILEs_to_liglist(smilesstr, denticity):
     this_mol = mol3D()
     this_mol.getOBMol(smilesstr, 'smistring')
@@ -600,7 +549,20 @@ def SMILEs_to_liglist(smilesstr, denticity):
     this_lig.mol = this_mol
     return (this_lig)
 
-
+#######################
+def SMILES_converter(ligands):
+    liglist = ''
+    smicat = ''
+    for lig in ligands:
+        if not hasattr(lig,'__iter__'): # test if SMILES:
+            liglist += " " + str(lig).strip("'[]'")
+        elif  hasattr(lig,'__iter__'): # this is the mark of SMILES strings:
+            liglist += " " +  "'"+str(lig[0])+ "'"
+            if not smicat: # false on first hit
+                smicat = " ["    + str(lig[1]).replace("'","") # cat list
+            else:
+                smicat += ",  " + str(lig[1]).replace("'","") # cat list
+    return liglist, smicat
 ########################
 
 def renameHFX(job, newHFX):
@@ -612,8 +574,18 @@ def renameHFX(job, newHFX):
     basename = base.strip(".out")
     ll = (str(basename)).split("_")
     ## replace alpha
-    ll[9] = newHFX
-    new_name = "_".join(ll)
+    translate_dict = translate_job_name(job)
+    gen = translate_dict['gen']
+    slot = translate_dict['slot']
+    metal = translate_dict['metal']
+    ox = translate_dict['ox']
+    spin = translate_dict['spin']
+    basename = translate_dict['basename']
+    liglist = translate_dict['liglist']
+    liginds = translate_dict['indlist']
+    ahf = translate_dict['ahf']
+    new_name = jobname_from_parts(metal, ox, spin, liginds,str(newHFX))
+    new_name = '_'.join(['gen',gen,'slot',slot])+'_'+new_name
     return new_name
 
 
@@ -630,51 +602,82 @@ def stripName(job):
 
 #######################
 def renameOxoEmpty(job):
-    # renames Oxo job to empty job
-    base = os.path.basename(job)
-    base = base.strip("\n")
-    basename = base.strip(".in")
-    basename = basename.strip(".xyz")
-    basename = basename.strip(".out")
-    ll = (str(basename)).split("_")
-    ligs = get_ligands()
+    translate_dict = translate_job_name(job)
+    gen = translate_dict['gen']
+    slot = translate_dict['slot']
+    metal = translate_dict['metal']
+    ox = translate_dict['ox']
+    spin = translate_dict['spin']
+    basename = translate_dict['basename']
+    liglist = translate_dict['liglist']
+    liginds = translate_dict['indlist']
+    ahf = str(int(translate_dict['ahf'])).zfill(2)
+    gene_template = get_gene_template()
     value = str(find_ligand_idx('x'))
-    ## replace ax2 with x index
-    ll[8] = value
-    ## replace metal oxidation with 2 less
-    ll[5] = str(int(ll[5]) - 2)
-    new_name = "_".join(ll)
+    if gene_template['legacy']:
+        liginds[2] = value
+    else:
+        liginds[5] = value #assuming that the last element of the list is the oxo
+    ## replace metal oxidation with 1 less
+    empox = str(int(ox) - 2)
+    new_name = jobname_from_parts(metal, empox, spin, liginds,ahf)
+    new_name = '_'.join(['gen',gen,'slot',slot])+'_'+new_name
+    return new_name, basename
+
+#######################
+def rename_ligand_dissoc(job):
+    translate_dict = translate_job_name(job)
+    gen = translate_dict['gen']
+    slot = translate_dict['slot']
+    metal = translate_dict['metal']
+    ox = translate_dict['ox']
+    spin = translate_dict['spin']
+    basename = translate_dict['basename']
+    liglist = translate_dict['liglist']
+    liginds = translate_dict['indlist']
+    ahf = str(int(translate_dict['ahf'])).zfill(2)
+    gene_template = get_gene_template()
+    value = str(find_ligand_idx('x'))
+    if gene_template['legacy']:
+        liginds[2] = value
+    else:
+        liginds[5] = value
+    new_name = jobname_from_parts(metal, ox, spin, liginds,ahf)
+    new_name = '_'.join(['gen',gen,'slot',slot])+'_'+new_name
     return new_name, basename
 
 #######################
 def renameOxoHydroxyl(job):
-    _, _, _, metal, ox, _, _, axlig2, _, _, _, spin, _, _, basename, _ = translate_job_name(job)
-    # renames Oxo job to empty job
-    ll = (str(basename)).split("_")
-    ligs = get_ligands()
+    # old:
+    #_, _, _, metal, ox, _, _, axlig2, _, _, _, spin, _, _, basename, _ = translate_job_name(job)
+    translate_dict = translate_job_name(job)
+    gen = translate_dict['gen']
+    slot = translate_dict['slot']
+    metal = translate_dict['metal']
+    ox = translate_dict['ox']
+    spin = translate_dict['spin']
+    basename = translate_dict['basename']
+    liglist = translate_dict['liglist']
+    liginds = translate_dict['indlist']
+    ahf = str(int(translate_dict['ahf'])).zfill(2)    
+    gene_template = get_gene_template()
     value = str(find_ligand_idx('hydroxyl'))
-    ## replace ax2 with hydroxyl index
-    ll[8] = value
+    if gene_template['legacy']:
+        liginds[2] = value
+    else:
+        liginds[5] = value #assuming that the last element of the list is the oxo
     ## replace metal oxidation with 1 less
-    hydox = int(ox) - 1
-    ll[5] = str(hydox)
-    upperll = ll[:]
-    lowerll = ll[:]
+    hydox = str(int(ox) - 1)
     upperspin = int(spin) + 1
-    lowerspin = int(spin) - 1
-    upperll[-1] = str(upperspin)
-    lowerll[-1] = str(lowerspin)
     metal_spin_dictionary = spin_dictionary()
     metal_list = get_metals()
     metal_key = metal_list[metal]
-    these_states = metal_spin_dictionary[metal_key][hydox]
+    these_states = metal_spin_dictionary[metal_key][int(hydox)]
     new_name_upper = False
-    new_name_lower = False
     if upperspin in these_states:
-        new_name_upper = "_".join(upperll)
-    if lowerspin in these_states:    
-        new_name_lower = "_".join(lowerll)
-    return new_name_upper, new_name_lower, basename
+        new_name_upper = jobname_from_parts(metal, hydox, upperspin, liginds,ahf)
+        new_name_upper = '_'.join(['gen',gen,'slot',slot])+'_'+new_name_upper
+    return new_name_upper, basename
 #######################
 def to_decimal_string(inp):
     # nusiance function to convert
@@ -689,8 +692,7 @@ def HFXordering():
     # represent the just finshed calculation
     # and the values are:
     # [next job to run, guess for next job]
-    GA_run = get_current_GA()
-    if not GA_run.config['HFXsample']:
+    if not isKeyword('HFXsample'):
         HFXdictionary = dict()
     else:
         HFXdictionary = {"20": ["25", "20"],
@@ -721,7 +723,7 @@ def get_sql_path():
 
 
 def setup_paths():
-    working_dir = get_run_dir()
+    working_dir = isKeyword('rundir')
     path_dictionary = {
         "geo_out_path": working_dir + "geo_outfiles/",
         "sp_out_path": working_dir + "sp_outfiles/",
@@ -802,6 +804,12 @@ def get_ligands():
     ligands_list = GA_run.config['liglist']
     return ligands_list
 
+########################
+def get_gene_template():
+    GA_run = GA_run_defintion()
+    GA_run.deserialize('.madconfig')
+    gene_template = GA_run.gene_template
+    return gene_template
 
 ########################
 
@@ -830,7 +838,7 @@ def find_prop_fitness(prop_energy, prop_parameter):
 
 ########################
 
-def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=1, lower_bound=None, upper_bound=None):
+def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=2.5, lower_bound=None, upper_bound=None):
     ############################################################################################################
     # This fitness function contains two hinge loss terms, so that a range of values can be chosen for design. #
     #         This fitness is different from the JPCL fitness because it will care about the used sign.        #
@@ -838,18 +846,37 @@ def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=1, lower_bo
     #             (range_value) of the property parameter (which would maintain a fitness of 1)                #
     ############################################################################################################
     print('-------------------------USING PROP HINGE FITNESS!!!!!!!!--------------------------')
-    if lower_bound == None and upper_bound == None:
-        lower_bound = float(prop_parameter) - float(range_value)
-        upper_bound = float(prop_parameter) + float(range_value)
-    elif lower_bound == None and upper_bound != None:
-        lower_bound = float(prop_parameter) - float(range_value)
-    elif lower_bound != None and upper_bound == None:
-        upper_bound = float(prop_parameter) + float(range_value)
-    # print('USED RANGE VALUE:',range_value)
-    upper_hinge = float(max(0.0, prop_energy - upper_bound))
-    lower_hinge = float(max(0.0, lower_bound - prop_energy))
-    ####### This set of two hinges will penalize values that are not within a certain range
-    en = -1 * (upper_hinge + lower_hinge)
+    if type(prop_energy) == list: #For cases where 2 properties used for fitness
+        upper_hinge_list = []
+        lower_hinge_list = []
+        for i, prop in enumerate(prop_parameter):
+            if type(prop) == list:
+                lower_bound = float(min(prop))
+                upper_bound = float(max(prop))
+            else:
+                lower_bound = float(prop)-float(range_value)
+                upper_bound = float(prop)+float(range_value)
+            upper_hinge = float(max(0.0, prop_energy[i] - upper_bound))
+            lower_hinge = float(max(0.0, lower_bound - prop_energy[i]))
+            upper_hinge_list.append(upper_hinge)
+            lower_hinge_list.append(lower_hinge)
+        en_hinge = 0
+        for j, hinge in enumerate(upper_hinge_list):
+            en_hinge += hinge+lower_hinge_list[j] #Loop over all of the hinges
+        en = -1* (en_hinge)
+    else:
+        if lower_bound == None and upper_bound == None:
+            lower_bound = float(prop_parameter) - float(range_value)
+            upper_bound = float(prop_parameter) + float(range_value)
+        elif lower_bound == None and upper_bound != None:
+            lower_bound = float(prop_parameter) - float(range_value)
+        elif lower_bound != None and upper_bound == None:
+            upper_bound = float(prop_parameter) + float(range_value)
+        # print('USED RANGE VALUE:',range_value)
+        upper_hinge = float(max(0.0, prop_energy - upper_bound))
+        lower_hinge = float(max(0.0, lower_bound - prop_energy))
+        ####### This set of two hinges will penalize values that are not within a certain range
+        en = -1 * (upper_hinge + lower_hinge)
     fitness = np.exp(en)
     return fitness
 
@@ -876,20 +903,42 @@ def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance
     #    If upper and lower bounds are not provided by the user, then they are designed to be +/- 1.           #
     #                of 1/3 of the property parameter (which would maintain a fitness of 1)                    #
     ############################################################################################################
+    
     print('-------------------------USING PROP HINGE DIST FITNESS!!!!!!!!--------------------------')
-    if lower_bound == None and upper_bound == None:
-        lower_bound = float(prop_parameter) - float(range_value)
-        upper_bound = float(prop_parameter) + float(range_value)
-    elif lower_bound == None and upper_bound != None:
-        lower_bound = float(prop_parameter) - float(range_value)
-    elif lower_bound != None and upper_bound == None:
-        upper_bound = float(prop_parameter) + float(range_value)
-    # print('USED RANGE VALUE:',range_value)
+    if type(prop_energy) == list: #For cases where 2 properties used for fitness
+        upper_hinge_list = []
+        lower_hinge_list = []
+        for i, prop in enumerate(prop_parameter):
+            if type(prop) == list:
+                lower_bound = float(min(prop))
+                upper_bound = float(max(prop))
+            else:
+                lower_bound = float(prop)-float(range_value)
+                upper_bound = float(prop)+float(range_value)
+            upper_hinge = float(max(0.0, prop_energy[i] - upper_bound))
+            lower_hinge = float(max(0.0, lower_bound - prop_energy[i]))
+            upper_hinge_list.append(upper_hinge)
+            lower_hinge_list.append(lower_hinge)
+        en_hinge = 0
+        dist_total = 0
+        for j, hinge in enumerate(upper_hinge_list):
+            en_hinge += hinge+lower_hinge_list[j] #Loop over all of the hinges
+            dist_total += np.power((float(distance[j]) / distance_parameter[j]), 2.0)
+        en = -1* (en_hinge + dist_total)
+    else:
+        if lower_bound == None and upper_bound == None:
+            lower_bound = float(prop_parameter) - float(range_value)
+            upper_bound = float(prop_parameter) + float(range_value)
+        elif lower_bound == None and upper_bound != None:
+            lower_bound = float(prop_parameter) - float(range_value)
+        elif lower_bound != None and upper_bound == None:
+            upper_bound = float(prop_parameter) + float(range_value)
+        # print('USED RANGE VALUE:',range_value)
 
-    upper_hinge = float(max(0.0, prop_energy - upper_bound))
-    lower_hinge = float(max(0.0, lower_bound - prop_energy))
-    ####### This set of two hinges will penalize values that are not within a certain range
-    en = -1 * ((upper_hinge + lower_hinge) + np.power((float(distance) / distance_parameter), 2.0))
+        upper_hinge = float(max(0.0, prop_energy - upper_bound))
+        lower_hinge = float(max(0.0, lower_bound - prop_energy))
+        ####### This set of two hinges will penalize values that are not within a certain range
+        en = -1 * ((upper_hinge + lower_hinge) + np.power((float(distance) / distance_parameter), 2.0))
     fitness = np.exp(en)
     return fitness
 

@@ -34,6 +34,12 @@ def create_new_run(args):
     else: 
         shutil.copy(configuration["liglist"],configuration["rundir"]+'ligands_list.txt')
         configuration["liglist"] = process_ligands_file(configuration["liglist"])
+    ## need gene decription dictionary, first copy to rundir
+    if not 'genetemplate' in configuration.keys():
+        print 'Using default ligands at' +  get_default_gene_template()
+        shutil.copy(get_default_gene_template(),configuration["rundir"]+'gene_template.json')
+    else:
+        shutil.copy(configuration["genetemplate"],configuration["rundir"]+'gene_template.json')
     if 'DFT' in configuration.keys(): 
         if configuration['DFT']:
             print 'Using DFT, copying over launch script'
