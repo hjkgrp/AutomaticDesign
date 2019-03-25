@@ -81,13 +81,9 @@ class GA_generation:
         metal_list_inds = get_metals()
 
         ## check if ligs are known
-        print('!!!!set:', [ligs[0][0], ligs[1][0], ligs[1][1]])
-        print('!!!!!ind:', ligands_list_inds[0:7])
-        print(ligs[0][0])
-        print('asking about :')
-        print(ligs[0][0])
-        print('has type ' + str(type(ligs[0][0])))
-        print(isinstance(ligs[0][0], basestring))
+        print('ligands requested:', [ligs[0][0], ligs[1][0], ligs[1][1]])
+        print('indicies:', ligands_list_inds[0:7])
+
         if isinstance(ligs[0][0], basestring):
             print('dictionary  lig: ' + str(ligs[0][0]))
             this_eq = ligs[0][0]
@@ -143,7 +139,7 @@ class GA_generation:
                 print(' this gene is a duplicate and is not added')
         except:
             print('cannot make eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) + ' + ' + str(ligs[1][1]))
-
+            
     def write_state(self):
         ## first write genes to path
         state_path = self.current_path_dictionary["state_path"] + "current_genes.csv"

@@ -126,7 +126,10 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
     if restart:
         if os.path.isfile(prog_geo_path):
             geometry_path = prog_geo_path
-            guess_string = "guess " + guess_path + 'ca0' + ' ' + guess_path + 'cb0\n'
+            if int(this_spin) == 1:
+                guess_string = "guess " + guess_path + 'c0' '\n'
+            else:   
+                guess_string = "guess " + guess_path + 'ca0' + ' ' + guess_path + 'cb0\n'
         else:
             geometry_path = initial_geo_path
             guess_string = "guess generate \n"
