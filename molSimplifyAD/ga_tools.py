@@ -171,10 +171,13 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
                         newf.write(line)
     ## The global 'use_old_optimizer' variable is set entirely by the mad_config file
     ## The next 4 lines introduce behaviour to determine if the old optimizer should be used for this specific job
-    _, _, _, _, _, eqlig, axlig1, axlig2, _, _, _, _, _, _, _, _ = translate_job_name(job)
+    #_, _, _, _, _, eqlig, axlig1, axlig2, _, _, _, _, _, _, _, _ = translate_job_name(job)
+    translate_dict = translate_job_name(job)
+    
     old_optimizer_list = get_old_optimizer_ligand_list()
-    if eqlig in old_optimizer_list or axlig1 in old_optimizer_list or axlig2 in old_optimizer_list:
-        use_old_optimizer = True
+    for l in translate_dict['liglist']:
+            if l in old_optimizer_list:
+                        use_old_optimizer = True
     ## append geo
     with open(target_inpath, 'a') as newf:
         newf.write('coordinates ' + geometry_path + '\n')
