@@ -94,12 +94,12 @@ class GA_run_defintion:
             with open(path,'r') as instream:
                 ob = json.load(instream)
             self.config = ob
-			if os.path.isfile(self.config['rundir']+'gene_template.json'):
-				with open(self.config['rundir']+'gene_template.json','r') as instream:
-					ob = json.load(instream)
-				self.gene_template = ob
-			else:
-				self.gene_template = {'legacy':True}
+	    if os.path.isfile(self.config['rundir']+'gene_template.json'):
+	        with open(self.config['rundir']+'gene_template.json','r') as instream:
+		        ob = json.load(instream)
+			self.gene_template = ob
+	    else:
+			self.gene_template = {'legacy':True}
 
 
 ########################
