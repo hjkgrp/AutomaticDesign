@@ -99,7 +99,7 @@ class GA_run_defintion:
 		        ob = json.load(instream)
 			self.gene_template = ob
 	    else:
-			self.gene_template = {'legacy':True}
+                    self.gene_template = {'legacy':True,'ox':True,'spin':False}
 
 
 ########################
