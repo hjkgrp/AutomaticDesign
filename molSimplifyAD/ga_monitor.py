@@ -155,7 +155,7 @@ def submit_outstanding_jobs():
                             ahf = translate_dict['ahf']
                             gene = translate_dict['gene']
                             if ahf == float(isKeyword('exchange')): # if this is the target HFX frac
-                                update_current_gf_dictionary(basegene,0) # zero out fitness
+                                update_current_gf_dictionary(gene,0) # zero out fitness
             else:
                 print('job is live or empty or queue is full')
     write_dictionary(submitted_job_dictionary, path_dictionary["job_path"] + "/submitted_jobs.csv")
