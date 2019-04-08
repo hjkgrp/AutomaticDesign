@@ -1143,7 +1143,10 @@ class DFTRun(object):
                             if flag:
                                 _time_tot += float(ll[-1])
                         if 'sec' in ll and '_time_tot' in dir() and not 'Total processing time:' in line:
-                            _time_tot += float(ll[ll.index('sec') - 1])
+                            try:
+                                _time_tot += float(ll[ll.index('sec') - 1])
+                            except:
+                                print '\n\n CHECK GEO OUTFILE FOR abnormal sec'
         else:
             print('!!combined output file not found!!')
         self.tot_time = tot_time
