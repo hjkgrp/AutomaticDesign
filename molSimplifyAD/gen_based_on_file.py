@@ -15,6 +15,7 @@ def read_ligand_list(filein):
 
 
 def find_ligand_in_list(lig, lig_list):
+    print(lig_list)
     return lig_list.index(lig)
 
 
@@ -38,22 +39,24 @@ def read_csv_to_complex_list(filein, lig_list):
 
 
 # ########
-rundir = '/Users/duanchenru/AutomaticDesign/Catalysis/mad_new/'
-lig_list = './lig_list.txt'
-csv_file = 'merged_basic_checked_regen_shrink.csv'
+rundir = './custom_mad_run'
+lig_list = './custom_lig_list.txt'
+csv_file = 'input_csd.csv'
 if not os.path.isdir(rundir):
     os.makedirs(rundir)
 shutil.copy(lig_list, rundir + lig_list)
 ll = process_ligands_file(rundir + lig_list)
-print('!!!ll:', ll)
+print('ligands are: ', ll)
 GA_run = GA_run_defintion()
-GA_run.configure(gen=0, runtype='split', optimize=True, DFT=True, rundir=rundir, liglist=ll, queue_type='SGE',
-                 symclass='weak', use_singlets=True, all_spins=False, queue_reference=False, npool=1, ncross=5,
+GA_run.configure(gen=0, runtype='split', optimize=True, DFT=True, 
+				rundir=rundir, liglist=ll, queue_type='SGE',
+                 symclass='weak', use_singlets=True,
+				 all_spins=False, queue_reference=False, npool=1, ncross=5,
                  pmut=0.15, maxgen=20, scoring_function='split', split_parameter=15.0, distance_parameter=1.0,
                  monitor_diversity=True, monitor_distance=True, max_jobs=100, HFXsample=False, track_elec_prop=True)
 GA_run.serialize()
 configuration = GA_run.config
-sp_file, geo_file, thermo_file, solvent_file = get_launch_script_file(configuration["queue_type"])
+sp_file, geo_file, thermo_file, solvent_file, water_file, _, _ = get_launch_script_file(configuration["queue_type"])
 shutil.copy(sp_file, GA_run.config["rundir"] + 'launch_script_sp.sh')
 if 'optimize' in configuration.keys():
     shutil.copy(geo_file, configuration["rundir"] + 'launch_script_geo.sh')
@@ -68,14 +71,14 @@ with switch_to_rundir(rundir):
     full_tree.configure_gen(**GA_run.config)
     full_tree.write_state()
     full_tree.read_state()
-    for complex in complex_list:
-        ax_lig1 = ll[complex['axidx1']][0]
-        ax_lig2 = ll[complex['axidx2']][0]
-        eq_lig = ll[complex['eqidx']][0]
+    for tmcomplex in complex_list:
+        ax_lig1 = ll[tmcomplex['axidx1']][0]
+        ax_lig2 = ll[tmcomplex['axidx2']][0]
+        eq_lig = ll[tmcomplex['eqidx']][0]
         print('eqlig:', eq_lig)
         print('axlig1:', ax_lig1)
         print('axlig2:', ax_lig2)
-        full_tree.populate_metal_ox_lig_combo(complex['metal'], complex['oxstate'],
+        full_tree.populate_metal_ox_lig_combo(tmcomplex['metal'], tmcomplex['oxstate'],
                                               [[eq_lig], [ax_lig1, ax_lig2]])
     full_tree.write_state()
     full_tree.assess_fitness()

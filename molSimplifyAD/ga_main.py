@@ -81,54 +81,51 @@ class GA_generation:
         metal_list_inds = get_metals()
 
         ## check if ligs are known
-        print('!!!!set:', [ligs[0][0], ligs[1][0], ligs[1][1]])
-        print('!!!!!ind:', ligands_list_inds[0:7])
-        print(ligs[0][0])
-        print('asking about :')
-        print(ligs[0][0])
-        print('has type ' + str(type(ligs[0][0])))
-        print(isinstance(ligs[0][0], basestring))
-        if isinstance(ligs[0][0], basestring):
-            print('dictionary  lig: ' + str(ligs[0][0]))
-            this_eq = ligs[0][0]
-        else:
-            print('smiles lig: ' + str(ligs[0][0]))
-            this_eq = ligs[0][0][0]
-        if isinstance(ligs[1][0], basestring):
-            print('dictionary  lig: ' + str(ligs[1][0]))
-            this_ax1 = ligs[1][0]
-        else:
-            print('smiles lig: ' + str(ligs[1][0]))
-            this_ax1 = ligs[1][0][0]
-        if isinstance(ligs[1][1], basestring):
-            print('dictionary  lig: ' + str(ligs[1][1]))
+        print('ligands requested:', [ligs[0][0], ligs[1][0], ligs[1][1]])
+        print('indicies:', ligands_list_inds[0:7])
+        print('ligs:',ligs)
 
-            this_ax2 = ligs[1][1]
+        ## now test if each lig is a SMILEs or
+        ## dictionary ligand
+        procd_ligs = []
+        proc_inds = []
+        found_smi = False
+
+        for l in ligs:
+                if isinstance(l[0], basestring):
+                    print('dictionary  lig: ' + str(l[0]))
+                    procd_ligs.append(l[0])
+                else:
+                    print('smiles lig: ' + str(l[0]))
+                    procd_ligs.append(l[0][0])
+                    found_smi = True
+
+
+
+
+
+        if found_smi:
+            print('Warning, we cannot check SMILES for ligand uniqueness for SMILEs strings')
         else:
-            print('smiles lig: ' + str(ligs[1][1]))
-            this_ax2 = ligs[1][1][0]
-        try:
-            if not set([this_eq, this_ax1, this_ax2]).issubset(ligands_list_inds):
+            print('checking for ligand availability')
+            if not set(procd_ligs).issubset(ligands_list_inds):
                 print('Error: requested ligs not available in list, aborting')
                 exit()
-        except:
-            print('Warning, we cannot check SMILES for ligand uniqueness for SMILEs strings')
+
         if not metal in metal_list_inds:
             print(metal)
             print('Error: requested metal not available in list, aborting')
             exit()
-        eq_ind = [ligands_list_inds.index(this_eq)]
-        ax_ind = [ligands_list_inds.index(this_ax1), ligands_list_inds.index(this_ax2)]
+
+        inds = [ligands_list_inds.index(i) for i in procd_ligs]
         metal_ind = metal_list_inds.index(metal)
         this_complex = octahedral_complex(self.ligands_list)
         this_complex.random_gen()
         counter = self.total_counter
-        try:
+        if True:#try:
             this_complex.replace_metal(metal_ind)
             this_complex.replace_ox(ox)
-            this_complex.replace_equitorial(eq_ind)
-            ## support for  ax1/ax2 asymmetry
-            this_complex.replace_axial(sorted(ax_ind))
+            this_complex.replace_ligands(inds)
             this_gene = this_complex.name
             print('this this_unique_name ', this_gene)
             # this_gene = this_complex.name
@@ -141,9 +138,10 @@ class GA_generation:
                 print('adding eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) + ' + ' + str(ligs[1][1]))
             else:
                 print(' this gene is a duplicate and is not added')
-        except:
+        else:#except:
             print('cannot make eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) + ' + ' + str(ligs[1][1]))
-
+            sardines
+            
     def write_state(self):
         ## first write genes to path
         state_path = self.current_path_dictionary["state_path"] + "current_genes.csv"
@@ -159,7 +157,7 @@ class GA_generation:
                         for idx, line in enumerate(fin):
                             if idx >= self.status_dictionary['npool']:
                                 ll = str(idx - self.status_dictionary['npool'])+','+line.split(',')[-1].strip('\n')+','+str(self.status_dictionary['distance_parameter'])+','+str(self.status_dictionary['scoring_function'])+'\n'
-                                print('this is the ll', ll)
+                                # print('this is the ll', ll)
                                 fo.write(ll)
                     else:
                         for line in fin:
@@ -173,7 +171,8 @@ class GA_generation:
         emsg = write_dictionary(self.status_dictionary, state_path)
         if emsg:
             print(emsg)
-
+        print('!!!!!!!!--------------------!!!!!!!!!!!!--------------------!!!!!!!!!!!!!!')
+        # print(self.genes)
         ## third,  write gene-fitness info to path
         state_path = self.current_path_dictionary["state_path"] + "/gene_fitness.csv"
         if not os.path.isfile(state_path):
@@ -186,6 +185,18 @@ class GA_generation:
         ## first read live info from base directory
         state_path = self.base_path_dictionary["state_path"] + "/current_status.csv"
         emsg, read_dict = read_dictionary(state_path)
+        property_parameter = read_dict['property_parameter']
+        distance_parameter = read_dict['distance_parameter']
+        if '[' in property_parameter:
+            import ast
+            property_parameter = ast.literal_eval(property_parameter)
+        else:
+            property_parameter = float(property_parameter)
+        if '[' in distance_parameter:
+            import ast
+            distance_parameter = ast.literal_eval(distance_parameter)
+        else:
+            distance_parameter = float(distance_parameter)
         if emsg:
             print(emsg)
         self.configure_gen(gen_num=int(read_dict["gen"]),
@@ -194,8 +205,8 @@ class GA_generation:
                            pmut=float(read_dict["pmut"]),
                            maxgen=int(read_dict["maxgen"]),
                            scoring_function=read_dict["scoring_function"],
-                           property_parameter=float(read_dict["property_parameter"]),
-                           distance_parameter=float(read_dict["distance_parameter"]),
+                           property_parameter=property_parameter,
+                           distance_parameter=distance_parameter,
                            RTA=bool((read_dict["ready_to_advance"] == 'True')),
                            mean_fitness=float(read_dict["mean_fitness"]),
                            DFT=bool((read_dict["DFT"] == 'True')),
@@ -207,6 +218,7 @@ class GA_generation:
         emsg, gene_dict = read_dictionary(state_path)
         if emsg:
             print(emsg)
+        print(gene_dict)
         for keys in gene_dict.keys():
             self.genes[int(keys)] = gene_dict[keys]
         for keys in self.genes.keys():
@@ -256,14 +268,14 @@ class GA_generation:
         fitkeys = self.gene_fitness_dictionary.keys()
         print('now printing what the gene-fitness dictionary knows:')
         for keys in fitkeys:
-            print('key: ' + str(keys) + ' val is  ' + str(self.gene_fitness_dictionary[keys]))
+            print('key: ' + str(keys) + ' val is  ' + str(self.gene_fitness_dictionary[keys])+'in assess_fitness')
         fitness_values = dict()
         print('is code ready to advance?: ' + str(self.status_dictionary["ready_to_advance"]))
         logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen "
                + str(self.status_dictionary['gen'])
                + " is code ready to advance? " + str(self.status_dictionary["ready_to_advance"]))
         self.ready_to_advance = False
-        self.outstanding_jobs = dict()
+        self.outstanding_genes = dict()
         for genekeys in self.genes.keys():
             print('gene is ' + self.genes[genekeys])
             genes = self.genes[genekeys]
@@ -274,13 +286,13 @@ class GA_generation:
                     genes) + ' present with fitness ' + "{0:.2f}".format(float(fitness_values[genes])))
             else:
                 ## add to outstanding jobs
-                self.outstanding_jobs.update({genekeys: self.gene_compound_dictionary[genekeys]})
+                self.outstanding_genes.update({genekeys: self.gene_compound_dictionary[genekeys]})
                 print('genekey is ' + str(genekeys) + ' gene ' + str(genes) + ' fitness  not known')
         logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen "
                + str(self.status_dictionary['gen'])
-               + " with " + str(len(self.outstanding_jobs.keys())) + " calculations to be completed")
-        print('length of outstanding jobskeys', len(self.outstanding_jobs.keys()))
-        if (len(self.outstanding_jobs.keys()) == 0):
+               + " with " + str(len(self.outstanding_genes.keys())) + " calculations to be completed")
+        print('length of outstanding jobskeys', len(self.outstanding_genes.keys()))
+        if (len(self.outstanding_genes.keys()) == 0):
             logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now())
                    + ": Gen " + str(self.status_dictionary['gen'])
                    + " all jobs completed, ranking ")
@@ -313,13 +325,28 @@ class GA_generation:
 
     def ANN_fitness(self):
         msg, ANN_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
+        print(ANN_dict)
         #GA_run = get_current_GA()
         runtype = isKeyword("runtype")
         for keys in ANN_dict.keys():
-            gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, basename, basegene = translate_job_name(keys)
+            #gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, basename, basegene = translate_job_name(keys)
+            translate_dict = translate_job_name(keys)
+            gene = translate_dict['gene']
+            gen = translate_dict['gen']
+            slot = translate_dict['slot']
+            metal = translate_dict['metal']
+            ox = translate_dict['ox']
+            liglist = translate_dict['liglist']
+            indlist = translate_dict['indlist']
+            spin = translate_dict['spin']
+            spin_cat = translate_dict['spin_cat']
+            ahf = translate_dict['ahf']
+            base_name = translate_dict['basename']
+            base_gene = translate_dict['basegene']
             set_fitness = False
-            this_prop = float(ANN_dict[keys][runtype])
-            this_dist = float(ANN_dict[keys][runtype + '_dist'])
+            if type(runtype) != list:
+                this_prop = float(ANN_dict[keys][runtype])
+                this_dist = float(ANN_dict[keys][runtype + '_dist'])
             if runtype == 'split':
                 set_fitness = True
             elif runtype == 'homo':
@@ -334,16 +361,35 @@ class GA_generation:
                 # gene = gene + '_'+ str(spin)
                 metals_list = get_metals()
                 # if spin_cat == 'HS' or (metal == 'cr' and int(spin) == 2): #This is temporary, only on the high spin cases...
-                if spin_cat == 'LS':
+                if spin_cat == isKeyword('spin_constraint'):
                     print('FITNESS SET OXO GA!')
                     print('THIS PROP',this_prop,'THIS DIST',this_dist)
                     print('SPINCAT:',spin_cat, spin)
                     print('METAL',metals_list[metal],'OX:', ox)
                     set_fitness = True
+                elif isKeyword('spin_constraint') and get_metals()[metal].lower() == 'cr' and ox == 5:
+                    print('Making exception for HS Cr(V) in ANN fitness')
+                    print(this_prop)
+                    this_prop = 10000
+                    set_fitness = True
+            elif type(runtype) == list:
+                this_prop = []
+                this_dist = []
+                for run in runtype:
+                    this_prop.append(float(ANN_dict[keys][run]))
+                    this_dist.append(float(ANN_dict[keys][run + '_dist']))
+                if spin_cat == isKeyword('spin_constraint'): #Constraining this to a single spin state.
+                    print('Multiple factors in fitness')
+                    set_fitness = True
+                elif (isKeyword('spin_constraint') == 'HS') and get_metals()[metal].lower() == 'cr' and ox == 5:
+                    print('Making exception for HS Cr(V) in ANN fitness')
+                    this_prop = [10000, 10000]
+                    set_fitness = True
             else:
                 print('-------------------RUNTYPE is invalid!--------------------')
 
             if set_fitness:
+                print('setting fitness~~~~~~~~~~~~~~~~~~~~~~~')
                 if self.status_dictionary['scoring_function'] == "prop+dist":
                     fitness = find_prop_dist_fitness(this_prop, self.status_dictionary['property_parameter'],
                                                      this_dist, self.status_dictionary['distance_parameter'])
@@ -351,19 +397,19 @@ class GA_generation:
                     # print('ENTERED THE CORRECT SCORING FUNCTION')
                     fitness = find_prop_hinge_dist_fitness(this_prop, self.status_dictionary['property_parameter'],
                                                            this_dist, self.status_dictionary['distance_parameter'], range_value = 1.0)
-                    print('gene:', gene)
-                    print('prop:', this_prop)
-                    print('dist:', this_dist)
+                    # print('gene:', gene)
+                    # print('prop:', this_prop)
+                    # print('dist:', this_dist)
                     print('fitness:', fitness)
-                    if runtype in ['gap', 'homo']:
+                    if runtype in ['gap', 'homo','oxo20','homo_empty']:
                         print('this_spin', this_spin)
                     print('-----------')
 
                 elif self.status_dictionary['scoring_function'] == "prop_hinge":
                     fitness = find_prop_hinge_fitness(this_prop, self.status_dictionary['property_parameter'],range_value = 1.0)
-                    print('gene:', gene)
-                    print('prop:', this_prop)
-                    print('dist:', this_dist)
+                    # print('gene:', gene)
+                    # print('prop:', this_prop)
+                    # print('dist:', this_dist)
                     print('fitness:', fitness)
                 else:
                     fitness = find_prop_fitness(this_prop, self.status_dictionary['property_parameter'])
@@ -372,54 +418,71 @@ class GA_generation:
                        + ":  Gen " + str(self.status_dictionary['gen'])
                        + " fitness from ANN  " + "{0:.2f}".format(fitness) + ' assigned to  gene ' + str(gene))
                 self.gene_fitness_dictionary.update({gene: fitness})
-                print('GFD: ',self.gene_fitness_dictionary)
+                # print('GFD: ',self.gene_fitness_dictionary)
 
     def job_dispatcher(self):
         jobpaths = list()
         emsg, ANN_results_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + '/ANN_results.csv')
         current_outstanding = get_outstanding_jobs()
         converged_jobs = find_converged_job_dictionary()
-
-        for keys in self.outstanding_jobs.keys():
-
-            jobs = self.outstanding_jobs[keys]
-            # print('!!!!!jobs::::', jobs)
-            spins_dict = spin_dictionary()
-            metal = jobs.metals_list[jobs.core]
-            # print('metal is '+str(metal))
-            # print('ox is ' +str(jobs.ox))
-            spin_list = spins_dict[metal][jobs.ox]
+        gene_template = get_gene_template()
+        spins_dict = spin_dictionary()
+        for keys in self.outstanding_genes.keys():
+            job_prefix = "gen_" + str(self.status_dictionary["gen"]) + "_slot_" + str(keys) + "_"
+            genes = self.outstanding_genes[keys]
+            metal = genes.metals_list[genes.core]
             job_dict = []
-            flag_oct_spin = True
-            for idx, spins in enumerate(spin_list):
-                # print('!!!!spin_list!!!!:', spin_list)
-                job_prefix = "gen_" + str(self.status_dictionary["gen"]) + "_slot_" + str(keys) + "_"
-                ## generate HS/LS
-                ## convert the gene into a job file and geometery
-                jobpath, mol_name, ANN_results, flag_oct = jobs.generate_geometery(prefix=job_prefix,
-                                                                                   spin=spins,
-                                                                                   path_dictionary=self.current_path_dictionary,
-                                                                                   rundirpath=isKeyword('rundir'),
-                                                                                   gen=self.status_dictionary['gen'])
-                if flag_oct:
-                    if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
-                        msg, ANN_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
-                        if not mol_name in ANN_dict.keys():
-                            print('saving result in ANN dict: ' + mol_name)
-                            ANN_results_dict.update({mol_name: ANN_results})
-                        jobpaths.append(jobpath)
-                        logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen "
-                               + str(self.status_dictionary['gen'])
-                               + " missing information for gene number  " + str(keys) + ' with  name ' + str(jobs.name))
+            ## If ox in gene_template, then use the ox provided, else loop over possible ox.
+            if gene_template['ox']:
+                ox_list = [genes.ox]
+            else: 
+                ox_list = get_ox_states()
+            for ox in ox_list:
+                ## Same for spin
+                if gene_template['spin']:
+                    spin_list = [genes.spin]
                 else:
-                    if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
-                        msg, ANN_dict = read_ANN_results_dictionary(
-                            self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
-                        if not mol_name in ANN_dict.keys():
+                    spin_list = spins_dict[metal][ox]
+                flag_oct_spin = True
+                for spin in spin_list:
+                    ## generate HS/LS
+                    ## convert the gene into a job file and geometery
+                    if gene_template['legacy']:
+                        jobpath, mol_name, ANN_results, flag_oct = genes.generate_geometry_legacy(prefix=job_prefix,
+                                                                                           spin=spin,
+                                                                                           path_dictionary=self.current_path_dictionary,
+                                                                                           rundirpath=isKeyword('rundir'),
+                                                                                           gen=self.status_dictionary['gen'])
+                    else:
+                        jobpath, mol_name, ANN_results, flag_oct = genes.generate_geometry(prefix=job_prefix,
+                                                                                           ox = ox,
+                                                                                           spin=spin,
+                                                                                           path_dictionary=self.current_path_dictionary,
+                                                                                           rundirpath=isKeyword('rundir'),
+                                                                                           gen=self.status_dictionary['gen'])
+                    
+                    if flag_oct:
+                        if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
+                            msg, ANN_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
                             print('saving result in ANN dict: ' + mol_name)
+
                             ANN_results_dict.update({mol_name: ANN_results})
-                    log_bad_initial(jobpath)
-                    update_converged_job_dictionary(jobpath, 3)
+                            jobpaths.append(jobpath)
+                            logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen "
+                                   + str(self.status_dictionary['gen'])
+                                   + " missing information for gene number  " + str(keys) + ' with  name ' + str(genes.name))
+                    else:
+                        logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen "
+                                   + str(self.status_dictionary['gen'])
+                                   + " flag_oct false for  " + str(keys) + ' with  name ' + str(genes.name))
+                        if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
+                            msg, ANN_dict = read_ANN_results_dictionary(
+                                self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
+                            if not mol_name in ANN_dict.keys():
+                                print('saving result in ANN dict: ' + mol_name)
+                                ANN_results_dict.update({mol_name: ANN_results})
+                        log_bad_initial(jobpath)
+                        update_converged_job_dictionary(jobpath, 3)
             write_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv',ANN_results_dict)
         set_outstanding_jobs(current_outstanding + jobpaths)
 
@@ -432,14 +495,21 @@ class GA_generation:
             ANN_dir = isKeyword('rundir') + "ANN_ouput/gen_" + str(gen) + "/ANN_results.csv"
             emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
             for keys in ANN_dict.keys():
-                _, _, _, metal, ox, eqlig, axlig1, axlig2, _, _, _, spin, spin_cat, ahf, _, _ = translate_job_name(keys)
-                this_gene = "_".join(keys.split("_")[4:10])
+                #_, _, _, metal, ox, eqlig, axlig1, axlig2, _, _, _, spin, spin_cat, ahf, _, _ = translate_job_name(keys)
+                translate_dict = translate_job_name(keys)
+                metal = translate_dict['metal']
+                ox = translate_dict['ox']
+                spin = translate_dict['spin']
+                spin_cat = translate_dict['spin_cat']
+                # this_gene = "_".join(keys.split("_")[4:10]) #### now switch to gene from translate job?
+                this_gene = translate_dict['gene']
                 set_fitness = False
                 # if runtype in ['oxo', 'hat']:
                 #     this_gene = this_gene + '_'+str(spin)
                 print('using ' + str(runtype) + ': ' + "_".join(keys.split("_")))
-                this_prop = float(ANN_dict[keys][runtype])
-                this_dist = float(ANN_dict[keys][runtype + '_dist'])
+                if type(runtype) != list:
+                    this_prop = float(ANN_dict[keys][runtype])
+                    this_dist = float(ANN_dict[keys][runtype + '_dist'])
                 if runtype == 'split':
                     set_fitness = True
                 elif runtype == 'homo':
@@ -454,11 +524,27 @@ class GA_generation:
                 # gene = gene + '_'+ str(spin)
                     metals_list = get_metals()
                     # if spin_cat == 'HS' or (metal == 'cr' and int(spin) == 2): #This is temporary, only on the high spin cases...
-                    if spin_cat == 'LS':
+                    if spin_cat == isKeyword('spin_constraint'):
                         print('FITNESS SET OXO GA!')
                         print('THIS PROP',this_prop,'THIS DIST',this_dist)
                         print('SPINCAT:',spin_cat, spin)
                         print('METAL',metals_list[metal],'OX:', ox)
+                        set_fitness = True
+                    elif isKeyword('spin_constraint') and get_metals()[metal].lower() == 'cr' and ox == 5:
+                        print('Making exception for HS Cr(V) in get full values')
+                        print(this_prop)
+                        set_fitness = True
+                elif type(runtype) == list:
+                    this_prop = []
+                    this_dist = []
+                    for run in runtype:
+                        this_prop.append(float(ANN_dict[keys][run]))
+                        this_dist.append(float(ANN_dict[keys][run + '_dist']))
+                    if spin_cat == isKeyword('spin_constraint'): #Constraining this to a single spin state.
+                        print('Multiple factors in fitness')
+                        set_fitness = True
+                    elif isKeyword('spin_constraint') and get_metals()[metal].lower() == 'cr' and ox == 5:
+                        print('Making Cr(V) exception in full_gene_info')
                         set_fitness = True
                 else:
                     print('-------------------RUNTYPE is invalid!--------------------')
@@ -470,11 +556,19 @@ class GA_generation:
         mean_dist = 0
         npool = int(self.status_dictionary['npool'])
         for i in range(0, npool):
-            if int(full_gene_info[genes_list[i]][1])==10000: #Do not count these in mean distance because they arent assigned.
-                npool -= 1
-                continue
+            print(full_gene_info[genes_list[i]][1])
+            if type(full_gene_info[genes_list[i]][1]) == list:
+                if int(full_gene_info[genes_list[i]][1][0])==10000 or int(full_gene_info[genes_list[i]][1][1])==10000:
+                    npool -= 1
+                    continue
+                else:
+                    mean_dist += float(np.mean([full_gene_info[genes_list[i]][1][0], full_gene_info[genes_list[i]][1][1]]))
             else:
-                mean_dist += float(full_gene_info[genes_list[i]][1])
+                if int(full_gene_info[genes_list[i]][1])==10000: #Do not count these in mean distance because they arent assigned.
+                    npool -= 1
+                    continue
+                else:
+                    mean_dist += float(full_gene_info[genes_list[i]][1])
         if npool == 0:
             npool += 1
         mean_dist = mean_dist / npool  # average distance
@@ -484,16 +578,20 @@ class GA_generation:
         # use self.gene_fitness_dictionary
         ## update gene-fitness
         for gene in self.gene_fitness_dictionary.keys():
-            this_prop = float(full_gene_info[gene][0])
-            this_dist = float(full_gene_info[gene][1])            
+            if type(full_gene_info[gene][0]) == list:
+                this_prop = full_gene_info[gene][0]
+                this_dist = full_gene_info[gene][1]
+            else:
+                this_prop = float(full_gene_info[gene][0])
+                this_dist = float(full_gene_info[gene][1])            
             if self.status_dictionary['scoring_function'] == "prop+dist":
                 fitness = find_prop_dist_fitness(this_prop, self.status_dictionary['property_parameter'],
                                                  this_dist, self.status_dictionary['distance_parameter'])
             elif self.status_dictionary['scoring_function'] == "prop_hinge+dist":
                 fitness = find_prop_hinge_dist_fitness(this_prop, self.status_dictionary['property_parameter'],
-                                                       this_dist, self.status_dictionary['distance_parameter'],range_value = 1.0)
+                                                       this_dist, self.status_dictionary['distance_parameter'],range_value = 2.5)
             elif self.status_dictionary['scoring_function'] == "prop_hinge":
-                fitness = find_prop_hinge_fitness(this_prop, self.status_dictionary['property_parameter'],range_value = 1.0)
+                fitness = find_prop_hinge_fitness(this_prop, self.status_dictionary['property_parameter'],range_value = 2.5)
             else:
                 fitness = find_prop_fitness(this_prop, self.status_dictionary['property_parameter'])
             self.gene_fitness_dictionary.update({gene: fitness})
@@ -518,7 +616,11 @@ class GA_generation:
         healthy = True
         ## read in scoring function info
         dist_score = ("dist" in self.status_dictionary['scoring_function'])
-        dist_param = float(self.status_dictionary['distance_parameter'])
+        print(self.status_dictionary['distance_parameter'])
+        if type(self.status_dictionary['distance_parameter']) == list:
+            dist_param = self.status_dictionary['distance_parameter']
+        else:
+            dist_param = float(self.status_dictionary['distance_parameter'])
 
         pmut = float(self.status_dictionary['pmut'])
 
@@ -566,23 +668,39 @@ class GA_generation:
         ## adjust scoring_function based on calculated mean_distance
         if (self.status_dictionary['monitor_distance']):
             print('ENTERED INTO DISTANCE')
-            if (mean_dist > 0.6):
+            if (mean_dist > 5):
                 healthy = False
-                if dist_score and (dist_param > 0.6):  # Decrease distance_parameter for tighter control
-                    dist_param = dist_param - 0.05
-                    symptom1 = ("Mean distance too high. Lowering distance_parameter to " + str(dist_param))
-                    diagnosis.append(symptom1)
-                elif dist_score and dist_param <= 0.5:  # distance_parameter too low
-                    symptom2 = ("Distance parameter low, but mean distance high. Try a few more generations.")
-                    diagnosis.append(symptom2)
-                else:  # Turn on split+dist
-                    dist_score = True
-                    dist_param = 0.75
-                    symptom3 = ("Mean distance high. Using prop_hinge+dist with dist_param = " + str(dist_param))
-                    diagnosis.append(symptom3)
+                if type(dist_param) == list:
+                    if dist_score and (max(dist_param) > 5):  # Decrease distance_parameter for tighter control
+                        dist_arg = np.argmax(dist_param)
+                        dist_param[dist_arg] = dist_param[dist_arg] - 0.5
+                        symptom1 = ("Mean distance too high. Lowering distance_parameter to " + str(dist_param))
+                        diagnosis.append(symptom1)
+                    elif dist_score and (max(dist_param) <= 3):  # distance_parameter too low
+                        symptom2 = ("Distance parameter low, but mean distance high. Try a few more generations.")
+                        diagnosis.append(symptom2)
+                    else:  # Turn on split+dist
+                        dist_score = True
+                        dist_arg = np.argmax(dist_param)
+                        dist_param[dist_arg] = dist_param[dist_arg] - 1
+                        symptom3 = ("Mean distance high. Using prop_hinge+dist with dist_param = " + str(dist_param))
+                        diagnosis.append(symptom3)
+                else:
+                    if dist_score and (dist_param > 5):  # Decrease distance_parameter for tighter control
+                        dist_param = dist_param - 0.5
+                        symptom1 = ("Mean distance too high. Lowering distance_parameter to " + str(dist_param))
+                        diagnosis.append(symptom1)
+                    elif dist_score and dist_param <= 3:  # distance_parameter too low
+                        symptom2 = ("Distance parameter low, but mean distance high. Try a few more generations.")
+                        diagnosis.append(symptom2)
+                    else:  # Turn on split+dist
+                        dist_score = True
+                        dist_param = dist_param - 1
+                        symptom3 = ("Mean distance high. Using prop_hinge+dist with dist_param = " + str(dist_param))
+                        diagnosis.append(symptom3)
             elif dist_score:  # loosen distance control
                 dist_score = False
-                treat1 = "Mean distance below 0.6: loosening distance control by using prop only."
+                treat1 = "Mean distance below 5: loosening distance control by using prop only."
                 diagnosis.append(treat1)
 
             ## update scoring function in status_dictionary
@@ -673,11 +791,21 @@ class GA_generation:
         number_selected = 0
         # counter = 0
         ## populate selected pool
+        whilecounter = 0
+        guarantee_mutation = []
         while number_selected < npool:
             # counter += 1
-            # if counter == 5000:
-                # print('Hit the 5000 mark on the while loop for selection')
-                # break
+            whilecounter += 1
+            if whilecounter % 10000000 == 0:
+                print('Been in while loop for '+str(whilecounter))
+            if whilecounter == 100000000:
+                print('Hit the 100,000,000 mark on the while loop for selection')
+                print('Guaranteeing mutation later.')
+                while number_selected < npool:
+                    selected_genes[number_selected + npool] = this_gene
+                    number_selected += 1
+                    guarantee_mutation.append(1)
+                break
             this_int = random.randint(0, npool - 1)
             this_barrier = random.uniform(0, 1)
             # print('THIS INT: ',this_int, 'THIS BARRIER: ',this_barrier)
@@ -687,6 +815,7 @@ class GA_generation:
                 print('GFD>This barrier. Selected.')
                 selected_genes[number_selected + npool] = this_gene
                 number_selected += 1
+                guarantee_mutation.append(0)
         ## populate compound list
         for keys in selected_genes.keys():
             genes = selected_genes[keys]
@@ -708,7 +837,7 @@ class GA_generation:
             # new_complex_1 = new_complex_1.exchange_ox(keep_equitorial)
             print('FINAL : 1st new gene from this cross ' + str(new_complex_1.name) + '\n')
 
-            new_complex_2 = keep_equitorial.exchange_ligands(keep_axial, False)
+            new_complex_2 = keep_equitorial.exchange_ligands(keep_axial, True)
             # new_complex_2 = new_complex_2.exchange_metal(keep_axial)
             # new_complex_2 = new_complex_2.exchange_ox(keep_axial)
             new_gene_1 = new_complex_1.name
@@ -728,8 +857,10 @@ class GA_generation:
             print('\n')
 
         ## mutate
-        for keys in selected_genes.keys():
+        for key_i, keys in enumerate(selected_genes.keys()):
             does_mutate = random.uniform(0, 1)
+            if guarantee_mutation[key_i]:
+                does_mutate = 0
             if does_mutate < pmut:
                 old_gene = selected_genes[keys]
                 mutant = selected_compound_dictionary[keys].mutate()
