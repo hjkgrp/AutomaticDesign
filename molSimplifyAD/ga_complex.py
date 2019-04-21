@@ -230,13 +230,13 @@ class octahedral_complex:
 
             ligand_properties  = self.ligands_list[ind][1]
             lig_dent = ligand_properties[0]
-            if symclass in ['weak', 'strong']: #Switch this to be consistent with SMU 
-                if len(self.ligands) == 0:    
+            if symclass in ['weak', 'strong']: #Switch this to be consistent with SMU
+                if len(self.ligands) == 0:
                     if lig_dent in [1, 2, 4]:
                         #print('Found eqlig: ', self.ligands_list[ind])
                         self.ligands += 4*[self.ligands_list[ind][0]]
                         self.inds += 4*[ind]
-                        eqdent = lig_dent 
+                        eqdent = lig_dent
                 elif lig_dent == 1:
                     if symclass == 'weak':
                         self.ligands.append(self.ligands_list[ind][0])
@@ -269,7 +269,7 @@ class octahedral_complex:
                         self.inds[0:4] = 4*[self.inds[f_ind]]
                         self.ligands[0:4] = 4*[self.ligands_list[self.inds[f_ind]][0]]
                         new_eq_dent = self.ligands_list[self.inds[f_ind]][1][0]
-                        
+
                         ## we want to check that the axial ligands are compatible with
                         ## the fixed equ index f_ind. Therefore, we will get the denticity
                         ## of the non-fixed axial ligands
@@ -295,7 +295,7 @@ class octahedral_complex:
                             while eq_dent != 2:
                                 eq_ind = numpy.random.randint(low = 0,high = n)
                                 eq_ligand_properties  = self.ligands_list[eq_ind][1]
-                                eq_dent = eq_ligand_properties[0]  
+                                eq_dent = eq_ligand_properties[0]
                             self.inds[0:4] = 4*[eq_ind]
                             self.ligands[0:4] = 4*[self.ligands_list[eq_ind][0]]
                         else:
@@ -304,7 +304,7 @@ class octahedral_complex:
                             while other_ax_dent != 1:
                                 ax_ind = numpy.random.randint(low = 0,high = n)
                                 ax_ligand_properties  = self.ligands_list[ax_ind][1]
-                                other_ax_dent = ax_ligand_properties[0]  
+                                other_ax_dent = ax_ligand_properties[0]
                             self.inds[[i for i in range(4,5) if i not in fixed_inds]] = ax_ind
                             self.ligands[[i for i in range(4,5) if i not in fixed_inds]] = self.ligands_list[ax_ind][0]
 
@@ -365,7 +365,7 @@ class octahedral_complex:
             while len(ll)>2:
                 #print(ll)
                 inds.append(ll.pop(current_index))
-            self.ahf = ll.pop(current_index) 
+            self.ahf = ll.pop(current_index)
             #print('This is inds', inds)
             self.replace_ligands(inds)
         self._name_self()
@@ -848,7 +848,10 @@ class octahedral_complex:
                         for line in oldf:
                             if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line):
                                 newf.writelines(line)
-                    newf.writelines("scrdir " +scrpath + "\n")
+                    if isKeyword("molscontrol"):
+                        newf.writelines("scrdir " + "./" + "\n")
+                    else:
+                        newf.writelines("scrdir " + scrpath + "\n")
                 os.remove(rundirpath + 'temp/' + mol_name + '.in')
 
 
@@ -889,7 +892,7 @@ class octahedral_complex:
         #print(self.lig_occs)
         purified_ligands = [self.ligands[i] for i in range(6) if self.lig_occs[i]>0]
         #print(purified_ligands)
-        
+
         liglist, smicat = SMILES_converter(purified_ligands)
         ligalign = 0
         #print(liglist,smicat)
@@ -897,7 +900,7 @@ class octahedral_complex:
             ligloc = 'false'
         else:
             ligloc = 1
-        ligalign = 0 
+        ligalign = 0
 
         ## disable force field opt
         ## if not DFT
@@ -1009,7 +1012,10 @@ class octahedral_complex:
                         for line in oldf:
                             if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line):
                                 newf.writelines(line)
-                    newf.writelines("scrdir " +scrpath + "\n")
+                    if isKeyword("molscontrol"):
+                        newf.writelines("scrdir " + "./" + "\n")
+                    else:
+                        newf.writelines("scrdir " + scrpath + "\n")
                 os.remove(rundirpath + 'temp/' + mol_name + '.in')
 
 
