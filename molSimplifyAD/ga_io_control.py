@@ -237,7 +237,7 @@ def get_default_ligand_file():
 ########################
 def get_launch_script_file(queue_type='SGE', molscontrol=False):
     ## returns default ligand input file
-    if queue_type.lower() != 'sge' or queue_type.lower() != 'slurm':
+    if queue_type.lower() not in ['sge', 'slurm']:
         print('Queue_type is not valid, user provided: ', queue_type)
     sp_file = resource_filename(Requirement.parse("molSimplifyAD"), "molSimplifyAD/" + queue_type.lower() + "_sp.sh")
     if not molscontrol:
