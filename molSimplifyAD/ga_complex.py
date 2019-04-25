@@ -392,7 +392,13 @@ class octahedral_complex:
             self.inds.append(ind)
         self.ready_for_assembly = True
         self.ligand_sort()
+        if self.gene_template['legacy']:
+            self.eq_inds = [self.inds[0]]
+            self.ax_inds = self.inds[4:6]
+            self.replace_equitorial(self.eq_inds)
+            self.replace_axial(self.ax_inds)
         self._name_self()
+
 
     def replace_equitorial(self,new_eq_ind):
         #print('in repcoding, setting eq to ' + str(new_eq_ind))
@@ -646,7 +652,6 @@ class octahedral_complex:
             # assemble SMILEs ligands
             liglist = "" #empty string
             for eq_lig in self.eq_ligands:
-                #print('processing ligand ' + str(eq_lig))
                 if not hasattr(eq_lig,'__iter__'): # test if SMILES:
                     #print('molSimplify ligand in eq position  '+ str(eq_lig))
                     liglist += " " + str(eq_lig).strip("'[]'")
