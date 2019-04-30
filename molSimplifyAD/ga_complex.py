@@ -106,10 +106,10 @@ class octahedral_complex:
         self.ox = numpy.random.choice(possible_ox_states)
 
     def _get_random_spin(self):
-        spin_dictionary = spin_dictionary()
+        local_spin_dictionary = spin_dictionary()
         metal_list = get_metals()
         metal_key = metal_list[self.metal]
-        these_states = spin_dictionary[metal_key][self.ox]
+        these_states = local_spin_dictionary[metal_key][self.ox]
         self.spin = numpy.random.choice(these_states)
 
     def _get_random_equitorial(self):
