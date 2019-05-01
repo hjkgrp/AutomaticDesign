@@ -408,11 +408,11 @@ def spin_dictionary():
 ########################
 def get_ligand_charge_dictionary():
     ligand_charge_dictionary = {'acac': -1, 'acetonitrile': 0, 'ammonia': 0, 'bifuran': 0, 'bipy': 0, 'bipyrrole': 0,
-                                'bromide': -1, 'carbonyl': 0, 'chloride': -1, 'cyanide': -1, 'cyanopyridine': 0,
+                                'bromide': -1, 'carbonyl': 0, 'co': 0, 'chloride': -1, 'cyanide': -1, 'cn': -1, 'cyanopyridine': 0,
                                 'dmf': 0, 'en': 0, 'fluoride': -1, 'formate': -1, 'furan': 0, 'hydroxyl': -1,
-                                'isothiocyanate': -1, 'methanol': 0, 'misc': 0, 'nme3': 0, 'ome2': 0, 'ox': -2,
+                                'isothiocyanate': -1, 'methanol': 0, 'misc': 0, 'ncs': -1, 'nme3': 0, 'ome2': 0, 'ox': -2,
                                 'oxo': -2, 'phen': 0, 'phosphine': 0, 'pisc': 0, 'pme3': 0, 'porphyrin': -2, 'pph3': 0,
-                                'pyridine': 0, 'pyrrole': -1, 'tbisc': 0, 'tbuc': -2, 'thiocyanate': -1, 'thiol': -1,
+                                'pyridine': 0, 'pyrrole': -1,'scn': -1, 'tbisc': 0, 'tbuc': -2, 'thiocyanate': -1, 'thiol': -1,
                                 'thiopyridine': 0, 'uthiol': 0, 'uthiolme2': 0, 'water': 0}
     return ligand_charge_dictionary
 
@@ -420,11 +420,11 @@ def get_ligand_charge_dictionary():
 ########################
 def get_ligand_size_dictionary():
     ligand_size_dictionary = {'acac': 14, 'acetonitrile': 6, 'ammonia': 4, 'bifuran': 16, 'bipy': 20, 'bipyrrole': 18,
-                              'bromide': 1, 'carbonyl': 2, 'chloride': 1, 'cyanide': 2, 'cyanopyridine': 12, 'dmf': 12,
+                              'bromide': 1, 'carbonyl': 2, 'co': 2, 'chloride': 1, 'cyanide': 2, 'cn': 2, 'cyanopyridine': 12, 'dmf': 12,
                               'en': 12, 'fluoride': 1, 'formate': 4, 'furan': 9, 'hydroxyl': 2, 'isothiocyanate': 3,
-                              'methanol': 6, 'misc': 6, 'nme3': 13, 'ome2': 9, 'ox': 6, 'oxo': 1, 'phen': 22,
+                              'methanol': 6, 'misc': 6, 'ncs': 3, 'nme3': 13, 'ome2': 9, 'ox': 6, 'oxo': 1, 'phen': 22,
                               'phosphine': 4, 'pisc': 25, 'pme3': 13, 'porphyrin': 36, 'pph3': 34, 'pyridine': 11,
-                              'pyrrole': 9, 'tbisc': 15, 'tbuc': 24, 'thiocyanate': 3, 'thiol': 2, 'thiopyridine': 11,
+                              'pyrrole': 9,'scn': 3, 'tbisc': 15, 'tbuc': 24, 'thiocyanate': 3, 'thiol': 2, 'thiopyridine': 11,
                               'uthiol': 3, 'uthiolme2': 9, 'water': 3}
     return ligand_size_dictionary
 
