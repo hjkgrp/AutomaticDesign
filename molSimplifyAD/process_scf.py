@@ -981,8 +981,20 @@ def read_molden_file(this_run):
     #print(scrpath)
     moldenFile = glob.glob(scrpath + "*.molden")
     if len(moldenFile) >= 1:
-        moldenFile = moldenFile[0]
+        sizelist = 0
+        ind = 0
+        for i, file_name in enumerate(moldenFile):
+            temp = os.path.getsize(file_name)
+            if temp > sizelist:
+                sizelist = temp
+                ind = i
+        moldenFile = moldenFile[ind]
     else:
+        this_run.alphaHOMO = float('NaN')
+        this_run.alphaLUMO = float('NaN')
+        this_run.betaHOMO = float('NaN')
+        this_run.betaLUMO = float('NaN')
+        print('--------------------molden not found...---------------------')
         return
     #print(moldenFile)
     safe = False 
