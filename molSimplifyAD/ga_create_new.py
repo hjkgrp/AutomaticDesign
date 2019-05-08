@@ -16,8 +16,8 @@ def create_new_run(args):
     if 'queue_type' not in configuration.keys():
         print 'Using default queue_type of SGE'
         configuration["queue_type"] = "SGE"
-    
-    ## ensure unique new rundir exists  
+
+    ## ensure unique new rundir exists
     counter = 0
     org_name =configuration["rundir"]
     while os.path.isdir(configuration["rundir"]):
@@ -25,13 +25,13 @@ def create_new_run(args):
         configuration["rundir"] =  org_name.rstrip('/') +'_'+ str(counter) + '/'
         counter+=1
     ensure_dir(configuration["rundir"])
-  
+
     ## need to load in lig_list, first copy to rundir
-    if not 'liglist' in configuration.keys(): 
+    if not 'liglist' in configuration.keys():
         print 'Using default ligands at' +  get_default_ligand_file()
         shutil.copy(get_default_ligand_file(),configuration["rundir"]+'ligands_list.txt')
         configuration["liglist"] = process_ligands_file(get_default_ligand_file())
-    else: 
+    else:
         shutil.copy(configuration["liglist"],configuration["rundir"]+'ligands_list.txt')
         configuration["liglist"] = process_ligands_file(configuration["liglist"])
     ## need gene decription dictionary, first copy to rundir
@@ -40,10 +40,15 @@ def create_new_run(args):
         shutil.copy(get_default_gene_template(),configuration["rundir"]+'gene_template.json')
     else:
         shutil.copy(configuration["genetemplate"],configuration["rundir"]+'gene_template.json')
-    if 'DFT' in configuration.keys(): 
+    if 'DFT' in configuration.keys():
         if configuration['DFT']:
             print 'Using DFT, copying over launch script'
-            sp_file,geo_file,thermo_file,solvent_file,water_file,PRFO_HAT,PRFO_Oxo = get_launch_script_file(configuration["queue_type"])
+            molscontrol = False
+            if 'molscontrol' in configuration.keys():
+                _m  = configuration['molscontrol']
+                molscontrol = True if str(_m).lower() == "true" else False
+            sp_file,geo_file,thermo_file,solvent_file,water_file,PRFO_HAT,PRFO_Oxo = get_launch_script_file(configuration["queue_type"],
+                                                                                                            molscontrol=molscontrol)
             shutil.copy(sp_file,configuration["rundir"]+'launch_script_sp.sh')
             if 'optimize' in configuration.keys():
                 shutil.copy(geo_file,configuration["rundir"]+'launch_script_geo.sh')
@@ -56,6 +61,9 @@ def create_new_run(args):
             if 'TS' in configuration.keys():
                 shutil.copy(PRFO_Oxo, configuration["rundir"]+'launch_script_PRFO_Oxo.sh')
                 shutil.copy(PRFO_HAT, configuration["rundir"]+'launch_script_PRFO_HAT.sh')
+            if molscontrol:
+                molscontrol_config_file = get_molscontrol_configure()
+                shutil.copy(molscontrol_config_file, configuration["rundir"]+'configure.json')
     if 'DFT' in configuration.keys() and 'runtype' in configuration.keys():
         if configuration['runtype'] == 'redox' and not configuration['DFT']:
             print('unable to run ANN based GA using redox at this time, changing to spin splitting')
@@ -64,11 +72,11 @@ def create_new_run(args):
     print(configuration['rundir'])
     GA_run = GA_run_defintion()
     GA_run.configure(**configuration)
-    GA_run.serialize() 
+    GA_run.serialize()
     print(os.getcwd())
     with switch_to_rundir(configuration['rundir']):
         print(os.getcwd())
         t1   = initialize_GA_calc()
 
-  
+
 

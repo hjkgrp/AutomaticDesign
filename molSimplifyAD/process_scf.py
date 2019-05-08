@@ -309,6 +309,8 @@ def process_runs_geo(all_runs,local_spin_dictionary,local_metal_list=False):
             else:
                 this_comp = Comp(this_gene)
                 this_comp.set_properties(this_run)
+                this_comp.gene = this_run.gene
+                this_comp.job_gene = this_run.gene
                 final_results.update({this_gene: this_comp})
             for props in  output_properties(comp=False,oxocatalysis=False):
                 this_attribute = "_".join(['ox',str(this_run.ox),this_run.spin_cat,props])

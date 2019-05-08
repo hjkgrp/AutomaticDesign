@@ -100,15 +100,10 @@ class GA_generation:
                 procd_ligs.append(l[0][0])
                 found_smi = True
 
-
-
-
-
         if found_smi:
             print('Warning, we cannot check SMILES for ligand uniqueness for SMILEs strings')
         else:
             print('checking for ligand availability')
-            print(type(procd_ligs))
             print(ligands_list_inds)
             if not set(procd_ligs).issubset(set(ligands_list_inds)):
                 print('Error: requested ligs not available in list, aborting')
@@ -120,6 +115,7 @@ class GA_generation:
             exit()
 
         inds = [ligands_list_inds.index(i) for i in procd_ligs]
+        print('final ligand inds are ' + str(inds))
         metal_ind = metal_list_inds.index(metal)
         this_complex = octahedral_complex(self.ligands_list)
         this_complex.random_gen()

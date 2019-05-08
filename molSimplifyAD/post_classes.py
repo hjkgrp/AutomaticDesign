@@ -47,8 +47,10 @@ class DFTRun(object):
         self.comment = ''
         self.file_merge_list = ['optim.xyz', 'bond_order.list', 'charge_mull.xls', 'grad.xyz', 'mullpop', 'spin.xls']
         list_of_init_props = ['status', 'time', 'energy', 'alphaHOMO', 'alphaLUMO', 'betaHOMO', 'betaLUMO',
-                              'initial_energy', 'charge', 'idn', 'spin', 'metal', 'lig1_ind','lig2_ind','lig3_ind', 'lig4_ind',
-                              'lig5_ind','lig6_ind', 'lig1', 'lig2', 'lig3','lig4','lig5','lig6', 'eq_MLB', 'ax1_MLB', 'ax2_MLB',
+                              'initial_energy', 'charge', 'idn', 'spin', 'metal', 'lig1_ind', 'lig2_ind', 'lig3_ind',
+                              'lig4_ind',
+                              'lig5_ind', 'lig6_ind', 'lig1', 'lig2', 'lig3', 'lig4', 'lig5', 'lig6', 'eq_MLB',
+                              'ax1_MLB', 'ax2_MLB',
                               'init_eq_MLB', 'init_ax1_MLB', 'init_ax2_MLB', 'outpath', 'geopath', 'init_geopath',
                               'terachem_version', 'terachem_detailed_version', 'basis', 'alpha_level_shift',
                               'beta_level_shift', 'functional', 'rmsd', 'maxd', 'thermo_time', 'solvent_time',
@@ -60,13 +62,15 @@ class DFTRun(object):
                               'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max', 'area',
                               'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
-                              'mop_energy', 'chem_name', 'sp_energy','empty_sp_energy', 'tot_time', 'tot_step', 'metal_translation']
+                              'mop_energy', 'chem_name', 'sp_energy', 'empty_sp_energy', 'tot_time', 'tot_step',
+                              'metal_translation']
         list_of_init_empty = ['descriptor_names', 'descriptors']
         list_of_init_false = ['solvent_cont', 'water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
-                              'islive', 'set_desc', 'sp_status','empty_sp_status']
-        list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord','empty_ss_target','empty_ss_act']
+                              'islive', 'set_desc', 'sp_status', 'empty_sp_status']
+        list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord', 'empty_ss_target',
+                             'empty_ss_act']
         if isKeyword('oxocatalysis'):
             list_of_init_props += ['metal_alpha', 'metal_beta', 'net_metal_spin', 'metal_mulliken_charge',
                                    'oxygen_alpha', 'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
@@ -468,9 +472,9 @@ class DFTRun(object):
             f_thermo = open(self.thermo_inpath, 'w')
             f_thermo.write('run frequencies \n')
             f_thermo.write('coordinates ' + self.geopath + ' \n')
-            f_thermo.write('scrdir scr/thermo/gen_%s/%s/  \n'%(self.gen, self.name))
+            f_thermo.write('scrdir scr/thermo/gen_%s/%s/  \n' % (self.gen, self.name))
             f_thermo.write(guess_string)
-            this_spin= self.spin
+            this_spin = self.spin
             if int(this_spin) == 1:
                 f_thermo.write('method b3lyp\n')
             else:
@@ -478,7 +482,8 @@ class DFTRun(object):
             with open(self.inpath, 'r') as ref:
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
-                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not ("method" in line):
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not (
+                            "method" in line):
                         ## these lines should be common
                         f_thermo.write(line)
             f_thermo.write('end')
@@ -535,7 +540,7 @@ class DFTRun(object):
             f_solvent.write('scrdir scr/solvent/  \n')
             f_solvent.write('coordinates ' + self.geopath + ' \n')
             f_solvent.write(guess_string)
-            this_spin= self.spin
+            this_spin = self.spin
             if int(this_spin) == 1:
                 f_thermo.write('method b3lyp\n')
             else:
@@ -543,7 +548,8 @@ class DFTRun(object):
             with open(self.inpath, 'r') as ref:
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
-                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not ("method" in line):
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not (
+                            "method" in line):
                         ## these lines should be common
                         f_solvent.write(line)
             f_solvent.write('end')
@@ -557,9 +563,9 @@ class DFTRun(object):
         dielectric = 78.39
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
-        this_spin= self.spin
-        this_gen= self.gen
-        this_name= self.name
+        this_spin = self.spin
+        this_gen = self.gen
+        this_name = self.name
         if not (self.spin == 1):
             guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(self.gen) + '/' + self.name + '/ca0' + \
                            '              ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
@@ -578,7 +584,7 @@ class DFTRun(object):
             f_solvent.write('pcm_radii read \n')
             f_solvent.write('print_ms yes \n')
             f_solvent.write('pcm_radii_file /home/jp/pcm_radii \n')
-            f_solvent.write('scrdir scr/water/gen_%s/%s/  \n'%(this_gen,this_name))
+            f_solvent.write('scrdir scr/water/gen_%s/%s/  \n' % (this_gen, this_name))
             f_solvent.write('coordinates ' + self.geopath + ' \n')
             f_solvent.write(guess_string)
             if int(this_spin) == 1:
@@ -588,7 +594,8 @@ class DFTRun(object):
             with open(self.inpath, 'r') as ref:
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
-                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not ("method" in line):
+                            "run" in line) and not ("maxit" in line) and not ("new_minimizer" in line) and not (
+                            "method" in line):
                         ## these lines should be common
                         f_solvent.write(line)
             f_solvent.write('end')
@@ -640,13 +647,13 @@ class DFTRun(object):
             newthresholds = "min_converge_gmax 2.25e-04\nmin_converge_grms 1.5e-04\n"
             newthresholds += "min_converge_dmax 0.9e-03\nmin_converge_drms 0.6e-03\nmin_converge_e 0.5e-06\nconvthre 1.5e-05\n"
             txtlist.insert(1, newthresholds)
-        else: 
-            for index,line in enumerate(txtlist):
+        else:
+            for index, line in enumerate(txtlist):
                 if 'conv' in line:
-                    num= float(line.split(' ')[1])
-                    num= num/2
-                    numstr= '%.2e' % num
-                    txtlist[index]= line.split(' ')[0] + ' ' + numstr + '\n'
+                    num = float(line.split(' ')[1])
+                    num = num / 2
+                    numstr = '%.2e' % num
+                    txtlist[index] = line.split(' ')[0] + ' ' + numstr + '\n'
         with open(jobinput, 'w') as fo:
             fo.write("".join(txtlist))
 
@@ -704,7 +711,7 @@ class DFTRun(object):
         ## set file paths for empty structure gen
         ## the fixed ordering is 
         ## HFX20 Oxo --> HFX20 Empty SP + HFX20 Empty Geo --> HFX25 Oxo --> HFX25 Empty SP + HFX25 Empty Geo... etc.
-        #_, _, _, _, _, _, _, _, _, _, _, this_spin, _, _, _, _ = translate_job_name(self.job)
+        # _, _, _, _, _, _, _, _, _, _, _, this_spin, _, _, _, _ = translate_job_name(self.job)
         translate_dict = translate_job_name(self.job)
         this_spin = translate_dict['spin']
         emptyrefdict = {"25": "20", "30": "25", "15": "20", "10": "15", "05": "10", "00": "05"}
@@ -719,10 +726,11 @@ class DFTRun(object):
         geo_ref = path_dictionary['optimial_geo_path'] + reference_name + '.xyz'
         geo_ref_file = open(geo_ref)
         lines = geo_ref_file.readlines()
-        lines[0] = str(int(lines[0].split()[0]) - lines_to_remove) + '\n' #This is the number at the top of the xyz
+        lines[0] = str(int(lines[0].split()[0]) - lines_to_remove) + '\n'  # This is the number at the top of the xyz
         new_ref = path_dictionary["initial_geo_path"] + new_name + '.xyz'
         new_ref_file = open(new_ref, 'w')
-        new_ref_file.writelines([item for item in lines[:-lines_to_remove]]) #Removing the top axial ligand where oxo is
+        new_ref_file.writelines(
+            [item for item in lines[:-lines_to_remove]])  # Removing the top axial ligand where oxo is
         new_ref_file.close()
         geo_ref_file.close()
         print('NEW REF is THIS:', new_ref, 'Referenced THIS:', geo_ref)
@@ -743,11 +751,13 @@ class DFTRun(object):
                         f_emptysp.write(line)
                     if not isKeyword('oxocatalysis') and "charge" in line:
                         old_charge = int(line.strip('\n').split(' ')[1])
-                        new_charge = int(old_charge) - int(ligand_charge) #Adjust the charge for heterolytic cleavage. If ligand -1 charge, other fragment must be +1.
-                        f_emptysp.write('charge '+str(new_charge)+'\n')
+                        new_charge = int(old_charge) - int(
+                            ligand_charge)  # Adjust the charge for heterolytic cleavage. If ligand -1 charge, other fragment must be +1.
+                        f_emptysp.write('charge ' + str(new_charge) + '\n')
                     elif isKeyword('oxocatalysis') and "charge" in line:
                         f_emptysp.write(line)
-            if int(refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
+            if int(
+                    refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
                 splist = new_name.split('_')
                 emptyrefval = emptyrefdict[splist[-2]]
                 splist[-2] = emptyrefval
@@ -773,8 +783,8 @@ class DFTRun(object):
         returnval1 = False
         returnval2 = False
         hydrefdict = {"25": "20", "30": "25", "15": "20", "10": "15", "05": "10", "00": "05"}
-        #old:
-        #gene, gen, _, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, _, ahf, basename,_ = translate_job_name(self.job)
+        # old:
+        # gene, gen, _, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, _, ahf, basename,_ = translate_job_name(self.job)
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)
         new_name_upper, reference_name = renameOxoHydroxyl(self.job)
@@ -847,26 +857,30 @@ class DFTRun(object):
                 returnval1 = path_dictionary['job_path'] + new_name_upper + '.in'
                 if int(refHFX) != 20:
                     with open(path_dictionary['infiles'] + new_name_upper + '.in', 'w') as f:
-                        with open(path_dictionary["job_path"]+new_name_upper+'.in', 'r') as ref:
+                        with open(path_dictionary["job_path"] + new_name_upper + '.in', 'r') as ref:
                             for line in ref:
                                 if not ("coordinates" in line) and (not "end" in line) and (not "guess" in line):
-                                    if (int(new_name_upper[-1]) == 1) and "method" in line: #restrict singlets
+                                    if (int(new_name_upper[-1]) == 1) and "method" in line:  # restrict singlets
                                         f.write("method b3lyp\n")
                                     else:
                                         f.write(line)
-                            if os.path.exists(path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz') and int(converged_jobs[path_dictionary['job_path']+wfnrefhyd+'.in']) == 0:
-                                f.write('coordinates ' + path_dictionary['optimial_geo_path']+wfnrefhyd+'.xyz' + ' \n')
+                            if os.path.exists(path_dictionary['optimial_geo_path'] + wfnrefhyd + '.xyz') and int(
+                                    converged_jobs[path_dictionary['job_path'] + wfnrefhyd + '.in']) == 0:
+                                f.write(
+                                    'coordinates ' + path_dictionary['optimial_geo_path'] + wfnrefhyd + '.xyz' + ' \n')
                             else:
-                                f.write('coordinates ' + path_dictionary['initial_geo_path']+new_name_upper+'.xyz'+' \n')
+                                f.write('coordinates ' + path_dictionary[
+                                    'initial_geo_path'] + new_name_upper + '.xyz' + ' \n')
                             f.write(guess_string)
                             f.write('end\n')
                             f.close()
                             ref.close()
-        return returnval1 
-    
+        return returnval1
+
     def write_HAT_and_Oxo_TS(self, empty):
         print('NOW WRITING TRANSITION STATE GEOMETRIES AND INFILES!')
         empty = os.path.basename(empty)
+
     def write_HAT_and_Oxo_TS(self, empty):
         print('NOW WRITING TRANSITION STATE GEOMETRIES AND INFILES!')
         empty = os.path.basename(empty)
@@ -959,7 +973,7 @@ class DFTRun(object):
                             path_dictionary["molsimplify_inps"] + '/' + self.name + '_Oxo.molinp')
                 shutil.move(localrundir + 'temp' + '/' + self.name + '.xyz', Oxo_geopath)
             except:
-                print('Error: molSimplify failure in generating Oxo TS')
+                print('Error: molSimplify failure in rating Oxo TS')
                 print(call)
                 sys.exit()
             with open(Oxo_inpath, 'w') as newf:
@@ -1069,6 +1083,7 @@ class DFTRun(object):
                 shutil.copy(self.thermo_outpath, archive_path + self.name + '_thermo.out')
             else:
                 print('archiving did NOT find  ' + self.thermo_outpath)
+
     def combine_scr_results(self):
         archive_list = []
         path_dictionary = setup_paths()
@@ -1162,7 +1177,10 @@ class DFTRun(object):
                             if flag:
                                 _time_tot += float(ll[-1])
                         if 'sec' in ll and '_time_tot' in dir() and not 'Total processing time:' in line:
-                            _time_tot += float(ll[ll.index('sec') - 1])
+                            try:
+                                _time_tot += float(ll[ll.index('sec') - 1])
+                            except:
+                                print '\n\n CHECK GEO OUTFILE FOR abnormal sec'
         else:
             print('!!combined output file not found!!')
         self.tot_time = tot_time
@@ -1206,7 +1224,8 @@ class DFTRun(object):
     def DFTRunToReport(self):
         customDict = {"NAME": self.name,
                       "METAL": "".join([e.upper() if i == 0 else e for i, e in enumerate(self.metal)]),
-                      "LIGS": "/".join([str(i) for i in [self.lig1, self.lig2, self.lig3, self.lig4, self.lig5, self.lig6]]),
+                      "LIGS": "/".join(
+                          [str(i) for i in [self.lig1, self.lig2, self.lig3, self.lig4, self.lig5, self.lig6]]),
                       "OX": str(self.ox),
                       "SPIN": str(self.spin),
                       "STATUS": str(self.status),
@@ -1238,6 +1257,15 @@ class DFTRun(object):
                 self.metal_translation = -1
         else:
             self.metal_translation = -2
+
+    def molscontrol_status(self):
+        killed = False
+        if os.path.isfile(self.logpath):
+            with open(self.molslogpath, "r") as fo:
+                for line in fo:
+                    if "job killed" in line:
+                        killed = True
+        return killed
 
 
 class Comp(object):
@@ -1282,7 +1310,7 @@ class Comp(object):
 
         ## run class dependent props:
         list_of_init_props = ['chem_name', 'spin', 'charge', 'attempted', 'converged',
-                              'mop_converged', 'time', 'energy', 'sp_energy','empty_sp_energy',
+                              'mop_converged', 'time', 'energy', 'sp_energy', 'empty_sp_energy',
                               'flag_oct', 'flag_list',
                               'num_coord_metal', 'rmsd_max', 'atom_dist_max',
                               'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
@@ -1312,10 +1340,10 @@ class Comp(object):
                                'mop_converged',
                                "DFT_RUN"]
         if isKeyword('ax_lig_dissoc'):
-            list_of_init_props += ['empty_ss_act','empty_ss_target']
-        spinloop = ['LS','HS']
+            list_of_init_props += ['empty_ss_act', 'empty_ss_target']
+        spinloop = ['LS', 'HS']
         if isKeyword('all_spins'):
-            spinloop = ['LS','IS','HS']
+            spinloop = ['LS', 'IS', 'HS']
         for props in list_of_init_props:
             for ox in ["2", "3"]:
                 for sc in spinloop:

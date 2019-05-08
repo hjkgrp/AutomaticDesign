@@ -25,6 +25,7 @@ def get_current_GA():
     GA_run.deserialize('.madconfig')
     return GA_run
 
+
 ########################
 def get_infile_from_job(job):
     ## given a job (file under jobs/gen_x/
@@ -96,7 +97,7 @@ def get_initial_geo_path_from_job(job):
     ## given a job (file under jobs/gen_x/
     ## this returns the path to the initial geo file
     # Below is old:
-    #_, gen, _, _, _, _, _, _, _, _, _, _, _, _, base_name, _ = translate_job_name(job)
+    # _, gen, _, _, _, _, _, _, _, _, _, _, _, _, base_name, _ = translate_job_name(job)
     translate_dict = translate_job_name(job)
     gen = translate_dict['gen']
     base_name = translate_dict['basename']
@@ -113,7 +114,7 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
     ## will attempt to be extracted
     ## process job name
     # old:
-    #_, gen, _, _, _, _, _, _, _, _, _, this_spin, _, _, base_name, _ = translate_job_name(job)
+    # _, gen, _, _, _, _, _, _, _, _, _, this_spin, _, _, base_name, _ = translate_job_name(job)
 
     translate_dict = translate_job_name(job)
     gen = translate_dict['gen']
@@ -133,14 +134,14 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
             geometry_path = prog_geo_path
             if int(this_spin) == 1:
                 guess_string = "guess " + guess_path + 'c0' '\n'
-            else:   
+            else:
                 guess_string = "guess " + guess_path + 'ca0' + ' ' + guess_path + 'cb0\n'
         else:
             geometry_path = initial_geo_path
             guess_string = "guess generate \n"
     elif custom_geo_guess:
-        #old:
-        #_, guess_gen, _, _, _, _, _, _, _, _, _, _, _, _, guess_base_name, _ = translate_job_name(custom_geo_guess)
+        # old:
+        # _, guess_gen, _, _, _, _, _, _, _, _, _, _, _, _, guess_base_name, _ = translate_job_name(custom_geo_guess)
         translate_dict = translate_job_name(custom_geo_guess)
         guess_gen = translate_dict['gen']
         guess_base_name = translate_dict['basename']
@@ -172,13 +173,13 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
                         newf.write(line)
     ## The global 'use_old_optimizer' variable is set entirely by the mad_config file
     ## The next 4 lines introduce behaviour to determine if the old optimizer should be used for this specific job
-    #_, _, _, _, _, eqlig, axlig1, axlig2, _, _, _, _, _, _, _, _ = translate_job_name(job)
-    #eqlig = translate_dict['eqlig']
-    #axlig1 = translate_dict['axlig1']
-    #axlig2 = translate_dict['axlig2']
-    #old_optimizer_list = get_old_optimizer_ligand_list()
-    #if eqlig in old_optimizer_list or axlig1 in old_optimizer_list or axlig2 in old_optimizer_list:
-    #    use_old_optimizer = True
+    # _, _, _, _, _, eqlig, axlig1, axlig2, _, _, _, _, _, _, _, _ = translate_job_name(job)
+    translate_dict = translate_job_name(job)
+
+    old_optimizer_list = get_old_optimizer_ligand_list()
+    for l in translate_dict['liglist']:
+        if l in old_optimizer_list:
+            use_old_optimizer = True
     ## append geo
     with open(target_inpath, 'a') as newf:
         newf.write('coordinates ' + geometry_path + '\n')
@@ -224,15 +225,23 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
                           'water_cont','sp_ss_act','sp_ss_target',
                           'terachem_version', 'terachem_detailed_version',
                           'basis', 'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
-                          'mop_coord', 'sp_energy','empty_sp_energy', 'tot_time', 'tot_step', 'metal_translation']
+                          'mop_coord', 'sp_energy', 'empty_sp_energy', 'tot_time', 'tot_step', 'metal_translation']
     if SASA:
         list_of_prop_names.append("area")
     if isKeyword('ax_lig_dissoc'):
-        list_of_prop_names += ['empty_ss_act','empty_ss_target']
+        list_of_prop_names += ['empty_ss_act', 'empty_ss_target']
     if TS:
-        list_of_prop_names += ['terachem_version_HAT_TS','terachem_detailed_version_HAT_TS','basis_HAT_TS','tspin_HAT_TS','charge_HAT_TS','alpha_level_shift_HAT_TS','beta_level_shift_HAT_TS','energy_HAT_TS','time_HAT_TS','terachem_version_Oxo_TS','terachem_detailed_version_Oxo_TS','basis_Oxo_TS','tspin_Oxo_TS','charge_Oxo_TS','alpha_level_shift_Oxo_TS','beta_level_shift_Oxo_TS','energy_Oxo_TS','time_Oxo_TS','ss_act_HAT_TS','ss_target_HAT_TS','eigenvalue_HAT_TS','ss_act_Oxo_TS','ss_target_Oxo_TS','eigenvalue_Oxo_TS','init_energy_HAT_TS','init_energy_Oxo_TS','converged_HAT_TS','converged_Oxo_TS','attempted_HAT_TS','attempted_Oxo_TS']
+        list_of_prop_names += ['terachem_version_HAT_TS', 'terachem_detailed_version_HAT_TS', 'basis_HAT_TS',
+                               'tspin_HAT_TS', 'charge_HAT_TS', 'alpha_level_shift_HAT_TS', 'beta_level_shift_HAT_TS',
+                               'energy_HAT_TS', 'time_HAT_TS', 'terachem_version_Oxo_TS',
+                               'terachem_detailed_version_Oxo_TS', 'basis_Oxo_TS', 'tspin_Oxo_TS', 'charge_Oxo_TS',
+                               'alpha_level_shift_Oxo_TS', 'beta_level_shift_Oxo_TS', 'energy_Oxo_TS', 'time_Oxo_TS',
+                               'ss_act_HAT_TS', 'ss_target_HAT_TS', 'eigenvalue_HAT_TS', 'ss_act_Oxo_TS',
+                               'ss_target_Oxo_TS', 'eigenvalue_Oxo_TS', 'init_energy_HAT_TS', 'init_energy_Oxo_TS',
+                               'converged_HAT_TS', 'converged_Oxo_TS', 'attempted_HAT_TS', 'attempted_Oxo_TS']
     if oxocatalysis:
-        list_of_prop_names += ['metal_alpha','metal_beta','net_metal_spin','metal_mulliken_charge','oxygen_alpha','oxygen_beta','net_oxygen_spin','oxygen_mulliken_charge']
+        list_of_prop_names += ['metal_alpha', 'metal_beta', 'net_metal_spin', 'metal_mulliken_charge', 'oxygen_alpha',
+                               'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
         if comp:
             list_of_props.insert(1, 'job_gene')
             list_of_props.append('convergence')
@@ -254,7 +263,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
     else:
         spin_loop = ['LS', 'HS']
         if isKeyword('all_spins'):
-            spin_loop = ['LS','IS','HS']
+            spin_loop = ['LS', 'IS', 'HS']
         if comp:
             list_of_props.insert(1, 'ox2RN')
             list_of_props.insert(2, 'ox3RN')
@@ -284,7 +293,7 @@ def find_live_jobs():
 
 ########################
 def get_metals():
-    metals_list = ['cr', 'mn', 'fe', 'co', 'mo', 'tc', 'ru' , 'rh']
+    metals_list = ['cr', 'mn', 'fe', 'co', 'mo', 'tc', 'ru', 'rh']
     return metals_list
 
 
@@ -306,39 +315,40 @@ def get_ox_states():  # could be made metal dependent like spin
         ox_list = [2, 3]
     return ox_list
 
+
 ########################
-def get_mulliken_oxocatalysis(moldenpath,catlig, spin):
+def get_mulliken_oxocatalysis(moldenpath, catlig, spin):
     subprocess.call("module load multiwfn/GUI", shell=True)
-    metalalpha, metalbeta, metaldiff, metalcharge = "undef","undef","undef","undef"
-    oxoalpha, oxobeta, oxodiff, oxocharge = "undef","undef","undef","undef"
-    proc = subprocess.Popen("multiwfn "+moldenpath,stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-    commands = ['7','5','1','y','n']
+    metalalpha, metalbeta, metaldiff, metalcharge = "undef", "undef", "undef", "undef"
+    oxoalpha, oxobeta, oxodiff, oxocharge = "undef", "undef", "undef", "undef"
+    proc = subprocess.Popen("multiwfn " + moldenpath, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    commands = ['7', '5', '1', 'y', 'n']
     newline = os.linesep
     output = proc.communicate(newline.join(commands))
     lines = output[0].split('\n')
     x_flag = False
     if str(catlig) == "x":
         x_flag = True
-    if str(catlig) in ["[O--]","oxo"]:
+    if str(catlig) in ["[O--]", "oxo"]:
         modifier = 1
-    if str(catlig) in ["[OH-]","hydroxyl"]:
+    if str(catlig) in ["[OH-]", "hydroxyl"]:
         modifier = 2
     try:
         if int(spin) == 1:
             for num, line in enumerate(lines):
                 if "Population of atoms" in line:
                     idx = 4
-                    if len(lines[num+1].split()) == 7:
+                    if len(lines[num + 1].split()) == 7:
                         idx -= 1
-                    metalalpha = np.divide(float(lines[num+1].split()[idx]),2)
-                    metalbeta = np.divide(float(lines[num+1].split()[idx]),2)
+                    metalalpha = np.divide(float(lines[num + 1].split()[idx]), 2)
+                    metalbeta = np.divide(float(lines[num + 1].split()[idx]), 2)
                     metaldiff = 0
-                    metalcharge = float(lines[num+1].split()[idx+3])
+                    metalcharge = float(lines[num + 1].split()[idx + 3])
                 if "Total net" in line and not x_flag:
-                    oxoalpha = np.divide(float(lines[num-modifier].split()[4]),2)
-                    oxobeta = np.divide(float(lines[num-modifier].split()[4]),2)
+                    oxoalpha = np.divide(float(lines[num - modifier].split()[4]), 2)
+                    oxobeta = np.divide(float(lines[num - modifier].split()[4]), 2)
                     oxodiff = 0
-                    oxocharge = float(float(lines[num-modifier].split()[7]))
+                    oxocharge = float(float(lines[num - modifier].split()[7]))
         else:
             print('Mulliken analyzer fed unrestricted molden file.')
             for num, line in enumerate(lines):
@@ -346,19 +356,20 @@ def get_mulliken_oxocatalysis(moldenpath,catlig, spin):
                     idx = 2
                     if len(lines[num+2].split()) == 5 and 'Atomic' not in lines[num+2]:
                         idx -= 1
-                    metalalpha = float(lines[num+2].split()[idx])
-                    metalbeta = float(lines[num+2].split()[idx+1])
-                    metaldiff = float(lines[num+2].split()[idx+2])
-                    metalcharge = float(lines[num+2].split()[idx+3])
+                    metalalpha = float(lines[num + 2].split()[idx])
+                    metalbeta = float(lines[num + 2].split()[idx + 1])
+                    metaldiff = float(lines[num + 2].split()[idx + 2])
+                    metalcharge = float(lines[num + 2].split()[idx + 3])
                 if "Total net" in line and not x_flag:
-                    oxoalpha = float(lines[num-modifier].split()[2]) 
-                    oxobeta = float(lines[num-modifier].split()[3])
-                    oxodiff = float(lines[num-modifier].split()[4])
-                    oxocharge = float(lines[num-modifier].split()[5])
+                    oxoalpha = float(lines[num - modifier].split()[2])
+                    oxobeta = float(lines[num - modifier].split()[3])
+                    oxodiff = float(lines[num - modifier].split()[4])
+                    oxocharge = float(lines[num - modifier].split()[5])
         return metalalpha, metalbeta, metaldiff, metalcharge, oxoalpha, oxobeta, oxodiff, oxocharge
     except:
         return metalalpha, metalbeta, metaldiff, metalcharge, oxoalpha, oxobeta, oxodiff, oxocharge
-    
+
+
 ########################
 def spin_dictionary():
     GA_run = get_current_GA()
@@ -394,15 +405,30 @@ def spin_dictionary():
                                      'mn': {2: [2, 6], 3: [3, 5]}}
     return metal_spin_dictionary
 
+
 ########################
 def get_ligand_charge_dictionary():
-    ligand_charge_dictionary = {'acac':-1,'acetonitrile':0,'ammonia':0,'bifuran':0,'bipy':0,'bipyrrole':0,'bromide':-1,'carbonyl':0,'chloride':-1,'cyanide':-1,'cyanopyridine': 0,'dmf':0,'en':0,'fluoride':-1,'formate':-1,'furan':0,'hydroxyl':-1,'isothiocyanate':-1,'methanol':0,'misc':0,'nme3':0,'ome2':0,'ox':-2,'oxo':-2,'phen':0,'phosphine':0,'pisc':0,'pme3':0,'porphyrin':-2,'pph3':0,'pyridine':0,'pyrrole':-1,'tbisc':0,'tbuc':-2,'thiocyanate':-1,'thiol':-1,'thiopyridine':0,'uthiol':0,'uthiolme2':0,'water':0}
+    ligand_charge_dictionary = {'acac': -1, 'acetonitrile': 0, 'ammonia': 0, 'bifuran': 0, 'bipy': 0, 'bipyrrole': 0,
+                                'bromide': -1, 'carbonyl': 0, 'co': 0, 'chloride': -1, 'cyanide': -1, 'cn': -1, 'cyanopyridine': 0,
+                                'dmf': 0, 'en': 0, 'fluoride': -1, 'formate': -1, 'furan': 0, 'hydroxyl': -1,
+                                'isothiocyanate': -1, 'methanol': 0, 'misc': 0, 'ncs': -1, 'nme3': 0, 'ome2': 0, 'ox': -2,
+                                'oxo': -2, 'phen': 0, 'phosphine': 0, 'pisc': 0, 'pme3': 0, 'porphyrin': -2, 'pph3': 0,
+                                'pyridine': 0, 'pyrrole': -1,'scn': -1, 'tbisc': 0, 'tbuc': -2, 'thiocyanate': -1, 'thiol': -1,
+                                'thiopyridine': 0, 'uthiol': 0, 'uthiolme2': 0, 'water': 0}
     return ligand_charge_dictionary
+
 
 ########################
 def get_ligand_size_dictionary():
-    ligand_size_dictionary = {'acac':14,'acetonitrile':6,'ammonia':4,'bifuran':16,'bipy':20,'bipyrrole':18,'bromide':1,'carbonyl':2,'chloride':1,'cyanide':2,'cyanopyridine': 12,'dmf':12,'en':12,'fluoride':1,'formate':4,'furan':9,'hydroxyl':2,'isothiocyanate':3,'methanol':6,'misc':6,'nme3':13,'ome2':9,'ox':6,'oxo':1,'phen':22,'phosphine':4,'pisc':25,'pme3':13,'porphyrin':36,'pph3':34,'pyridine':11,'pyrrole':9,'tbisc':15,'tbuc':24,'thiocyanate':3,'thiol':2,'thiopyridine':11,'uthiol':3,'uthiolme2':9,'water':3}
+    ligand_size_dictionary = {'acac': 14, 'acetonitrile': 6, 'ammonia': 4, 'bifuran': 16, 'bipy': 20, 'bipyrrole': 18,
+                              'bromide': 1, 'carbonyl': 2, 'co': 2, 'chloride': 1, 'cyanide': 2, 'cn': 2, 'cyanopyridine': 12, 'dmf': 12,
+                              'en': 12, 'fluoride': 1, 'formate': 4, 'furan': 9, 'hydroxyl': 2, 'isothiocyanate': 3,
+                              'methanol': 6, 'misc': 6, 'ncs': 3, 'nme3': 13, 'ome2': 9, 'ox': 6, 'oxo': 1, 'phen': 22,
+                              'phosphine': 4, 'pisc': 25, 'pme3': 13, 'porphyrin': 36, 'pph3': 34, 'pyridine': 11,
+                              'pyrrole': 9,'scn': 3, 'tbisc': 15, 'tbuc': 24, 'thiocyanate': 3, 'thiol': 2, 'thiopyridine': 11,
+                              'uthiol': 3, 'uthiolme2': 9, 'water': 3}
     return ligand_size_dictionary
+
 
 ########################
 def isKeyword(keyword):
@@ -431,6 +457,8 @@ def isKeyword(keyword):
             return False
     else:
         return False
+
+
 ########################
 def isall_post():
     GA_run = get_current_GA()
@@ -438,6 +466,7 @@ def isall_post():
         return GA_run.config["post_all"]
     else:
         return False
+
 
 ########################
 def get_optimizer():
@@ -515,13 +544,15 @@ def translate_job_name(job):
             namelist.append(str(i))
         namelist.append(str(ahf).zfill(2))
         gene = "_".join(namelist)
-        basegene = "_".join([str(metal)]+[str(ind) for ind in indlist])
-    dict_avars = ['gene', 'gen', 'slot', 'metal', 'ox', 'liglist', 'indlist', 'spin', 'spin_cat', 'ahf', 'basename', 'basegene']
+        basegene = "_".join([str(metal)] + [str(ind) for ind in indlist])
+    dict_avars = ['gene', 'gen', 'slot', 'metal', 'ox', 'liglist', 'indlist', 'spin', 'spin_cat', 'ahf', 'basename',
+                  'basegene']
     for var in dict_avars:
-        translate_dict.update({var: locals()[var]}) 
-    # previously returning list below:
+        translate_dict.update({var: locals()[var]})
+        # previously returning list below:
     # gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, basename, basegene 
     return translate_dict
+
 
 ########################
 def construct_job_name(complex_name, HFX=20):
@@ -536,13 +567,17 @@ def construct_job_name(complex_name, HFX=20):
     eq_lig_idx = find_ligand_idx(str(complex_list[3]))
     ax1_lig_idx = find_ligand_idx(str(complex_list[5]))
     ax2_lig_idx = find_ligand_idx(str(complex_list[7]))
-    job_substring = "_".join([str(metal_idx),str(complex_list[1]),str(eq_lig_idx),str(ax1_lig_idx),str(ax2_lig_idx),str(HFX),str(int(complex_list[9]))])
+    job_substring = "_".join(
+        [str(metal_idx), str(complex_list[1]), str(eq_lig_idx), str(ax1_lig_idx), str(ax2_lig_idx), str(HFX),
+         str(int(complex_list[9]))])
     return job_substring
+
 
 ########################
 def jobname_from_parts(metal, ox, spin, lig_inds, ahf):
-    name = "_".join([str(metal),str(ox)]+[str(inds) for inds in lig_inds]+[str(ahf),str(spin)])
+    name = "_".join([str(metal), str(ox)] + [str(inds) for inds in lig_inds] + [str(ahf), str(spin)])
     return name
+
 
 ########################
 def SMILEs_to_liglist(smilesstr, denticity):
@@ -553,20 +588,23 @@ def SMILEs_to_liglist(smilesstr, denticity):
     this_lig.mol = this_mol
     return (this_lig)
 
+
 #######################
 def SMILES_converter(ligands):
     liglist = ''
     smicat = ''
     for lig in ligands:
-        if not hasattr(lig,'__iter__'): # test if SMILES:
+        if not hasattr(lig, '__iter__'):  # test if SMILES:
             liglist += " " + str(lig).strip("'[]'")
-        elif  hasattr(lig,'__iter__'): # this is the mark of SMILES strings:
-            liglist += " " +  "'"+str(lig[0])+ "'"
-            if not smicat: # false on first hit
-                smicat = " ["    + str(lig[1]).replace("'","") # cat list
+        elif hasattr(lig, '__iter__'):  # this is the mark of SMILES strings:
+            liglist += " " + "'" + str(lig[0]) + "'"
+            if not smicat:  # false on first hit
+                smicat = " [" + str(lig[1]).replace("'", "")  # cat list
             else:
-                smicat += ",  " + str(lig[1]).replace("'","") # cat list
+                smicat += ",  " + str(lig[1]).replace("'", "")  # cat list
     return liglist, smicat
+
+
 ########################
 
 def renameHFX(job, newHFX):
@@ -588,8 +626,8 @@ def renameHFX(job, newHFX):
     liglist = translate_dict['liglist']
     liginds = translate_dict['indlist']
     ahf = translate_dict['ahf']
-    new_name = jobname_from_parts(metal, ox, spin, liginds,str(newHFX))
-    new_name = '_'.join(['gen',gen,'slot',slot])+'_'+new_name
+    new_name = jobname_from_parts(metal, ox, spin, liginds, str(newHFX))
+    new_name = '_'.join(['gen', gen, 'slot', slot]) + '_' + new_name
     return new_name
 
 
@@ -621,12 +659,13 @@ def renameOxoEmpty(job):
     if gene_template['legacy']:
         liginds[2] = value
     else:
-        liginds[5] = value #assuming that the last element of the list is the oxo
+        liginds[5] = value  # assuming that the last element of the list is the oxo
     ## replace metal oxidation with 1 less
     empox = str(int(ox) - 2)
-    new_name = jobname_from_parts(metal, empox, spin, liginds,ahf)
-    new_name = '_'.join(['gen',gen,'slot',slot])+'_'+new_name
+    new_name = jobname_from_parts(metal, empox, spin, liginds, ahf)
+    new_name = '_'.join(['gen', gen, 'slot', slot]) + '_' + new_name
     return new_name, basename
+
 
 #######################
 def rename_ligand_dissoc(job):
@@ -646,14 +685,15 @@ def rename_ligand_dissoc(job):
         liginds[2] = value
     else:
         liginds[5] = value
-    new_name = jobname_from_parts(metal, ox, spin, liginds,ahf)
-    new_name = '_'.join(['gen',gen,'slot',slot])+'_'+new_name
+    new_name = jobname_from_parts(metal, ox, spin, liginds, ahf)
+    new_name = '_'.join(['gen', gen, 'slot', slot]) + '_' + new_name
     return new_name, basename
+
 
 #######################
 def renameOxoHydroxyl(job):
     # old:
-    #_, _, _, metal, ox, _, _, axlig2, _, _, _, spin, _, _, basename, _ = translate_job_name(job)
+    # _, _, _, metal, ox, _, _, axlig2, _, _, _, spin, _, _, basename, _ = translate_job_name(job)
     translate_dict = translate_job_name(job)
     gen = translate_dict['gen']
     slot = translate_dict['slot']
@@ -663,13 +703,13 @@ def renameOxoHydroxyl(job):
     basename = translate_dict['basename']
     liglist = translate_dict['liglist']
     liginds = translate_dict['indlist']
-    ahf = str(int(translate_dict['ahf'])).zfill(2)    
+    ahf = str(int(translate_dict['ahf'])).zfill(2)
     gene_template = get_gene_template()
     value = str(find_ligand_idx('hydroxyl'))
     if gene_template['legacy']:
         liginds[2] = value
     else:
-        liginds[5] = value #assuming that the last element of the list is the oxo
+        liginds[5] = value  # assuming that the last element of the list is the oxo
     ## replace metal oxidation with 1 less
     hydox = str(int(ox) - 1)
     upperspin = int(spin) + 1
@@ -679,9 +719,11 @@ def renameOxoHydroxyl(job):
     these_states = metal_spin_dictionary[metal_key][int(hydox)]
     new_name_upper = False
     if upperspin in these_states:
-        new_name_upper = jobname_from_parts(metal, hydox, upperspin, liginds,ahf)
-        new_name_upper = '_'.join(['gen',gen,'slot',slot])+'_'+new_name_upper
+        new_name_upper = jobname_from_parts(metal, hydox, upperspin, liginds, ahf)
+        new_name_upper = '_'.join(['gen', gen, 'slot', slot]) + '_' + new_name_upper
     return new_name_upper, basename
+
+
 #######################
 def to_decimal_string(inp):
     # nusiance function to convert
@@ -706,7 +748,8 @@ def HFXordering():
                          "10": ["05", "10"],
                          "5": ["00", "05"]}
     return (HFXdictionary)
-    
+
+
 ########################
 
 def get_sql_path():
@@ -720,10 +763,9 @@ def get_sql_path():
             return False
     except:
         return False
- 
-    
-########################
 
+
+########################
 
 
 def setup_paths():
@@ -751,7 +793,10 @@ def setup_paths():
         "good_reports": working_dir + "reports/good_geo/",
         "bad_reports": working_dir + "reports/bad_geo/",
         "other_reports": working_dir + "reports/other/",
-        "pdb_path": working_dir + "pdb/"}
+        "pdb_path": working_dir + "pdb/",
+        "molscontrol_log_path": working_dir + "molscontrol_logs/",
+        "dynamic_feature_path": working_dir + "dynamic_feature/",
+    }
 
     #    shutil.copyfile(get_source_dir()+'wake.sh',get_run_dir()+'wake.sh')
     ## set scr path to scr/sp for single points
@@ -767,20 +812,20 @@ def setup_paths():
         path_dictionary.update({"thermo_out_path": working_dir + "thermo_outfiles/"})
         path_dictionary.update({"thermo_in_path": working_dir + "thermo_infiles/"})
     GA_run = get_current_GA()
-    #if "DLPNO" in GA_run.config.keys():
+    # if "DLPNO" in GA_run.config.keys():
     #    if GA_run.config["DLPNO"]:
     if isKeyword('DLPNO'):
         path_dictionary.update({"DLPNO_path": working_dir + "DLPNO_files/"})
     if isKeyword('TS'):
-        path_dictionary.update({"PRFO_initial_geo_HAT":working_dir + "prfo_initial_geo/hat/"})
-        path_dictionary.update({"PRFO_prog_geo_HAT":working_dir + "prfo_prog_geo/hat/"})
-        path_dictionary.update({"PRFO_optimized_geo_HAT":working_dir + "prfo_opt_geo/hat/"})
+        path_dictionary.update({"PRFO_initial_geo_HAT": working_dir + "prfo_initial_geo/hat/"})
+        path_dictionary.update({"PRFO_prog_geo_HAT": working_dir + "prfo_prog_geo/hat/"})
+        path_dictionary.update({"PRFO_optimized_geo_HAT": working_dir + "prfo_opt_geo/hat/"})
         path_dictionary.update({"PRFO_in_path_HAT": working_dir + "prfo_infiles/hat/"})
         path_dictionary.update({"PRFO_out_path_HAT": working_dir + "prfo_outfiles/hat/"})
         path_dictionary.update({"PRFO_scr_path_HAT": working_dir + "scr/prfo/hat/"})
-        path_dictionary.update({"PRFO_initial_geo_Oxo":working_dir + "prfo_initial_geo/oxo/"})
-        path_dictionary.update({"PRFO_prog_geo_Oxo":working_dir + "prfo_prog_geo/oxo/"})
-        path_dictionary.update({"PRFO_optimized_geo_Oxo":working_dir + "prfo_opt_geo/oxo/"})
+        path_dictionary.update({"PRFO_initial_geo_Oxo": working_dir + "prfo_initial_geo/oxo/"})
+        path_dictionary.update({"PRFO_prog_geo_Oxo": working_dir + "prfo_prog_geo/oxo/"})
+        path_dictionary.update({"PRFO_optimized_geo_Oxo": working_dir + "prfo_opt_geo/oxo/"})
         path_dictionary.update({"PRFO_in_path_Oxo": working_dir + "prfo_infiles/oxo/"})
         path_dictionary.update({"PRFO_out_path_Oxo": working_dir + "prfo_outfiles/oxo/"})
         path_dictionary.update({"PRFO_scr_path_Oxo": working_dir + "scr/prfo/oxo/"})
@@ -808,12 +853,14 @@ def get_ligands():
     ligands_list = GA_run.config['liglist']
     return ligands_list
 
+
 ########################
 def get_gene_template():
     GA_run = GA_run_defintion()
     GA_run.deserialize('.madconfig')
     gene_template = GA_run.gene_template
     return gene_template
+
 
 ########################
 
@@ -850,7 +897,7 @@ def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=2.5, lower_
     #             (range_value) of the property parameter (which would maintain a fitness of 1)                #
     ############################################################################################################
     print('-------------------------USING PROP HINGE FITNESS!!!!!!!!--------------------------')
-    if type(prop_energy) == list: #For cases where 2 properties used for fitness
+    if type(prop_energy) == list:  # For cases where 2 properties used for fitness
         upper_hinge_list = []
         lower_hinge_list = []
         for i, prop in enumerate(prop_parameter):
@@ -858,16 +905,16 @@ def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=2.5, lower_
                 lower_bound = float(min(prop))
                 upper_bound = float(max(prop))
             else:
-                lower_bound = float(prop)-float(range_value)
-                upper_bound = float(prop)+float(range_value)
+                lower_bound = float(prop) - float(range_value)
+                upper_bound = float(prop) + float(range_value)
             upper_hinge = float(max(0.0, prop_energy[i] - upper_bound))
             lower_hinge = float(max(0.0, lower_bound - prop_energy[i]))
             upper_hinge_list.append(upper_hinge)
             lower_hinge_list.append(lower_hinge)
         en_hinge = 0
         for j, hinge in enumerate(upper_hinge_list):
-            en_hinge += hinge+lower_hinge_list[j] #Loop over all of the hinges
-        en = -1* (en_hinge)
+            en_hinge += hinge + lower_hinge_list[j]  # Loop over all of the hinges
+        en = -1 * (en_hinge)
     else:
         if lower_bound == None and upper_bound == None:
             lower_bound = float(prop_parameter) - float(range_value)
@@ -907,9 +954,9 @@ def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance
     #    If upper and lower bounds are not provided by the user, then they are designed to be +/- 1.           #
     #                of 1/3 of the property parameter (which would maintain a fitness of 1)                    #
     ############################################################################################################
-    
+
     print('-------------------------USING PROP HINGE DIST FITNESS!!!!!!!!--------------------------')
-    if type(prop_energy) == list: #For cases where 2 properties used for fitness
+    if type(prop_energy) == list:  # For cases where 2 properties used for fitness
         upper_hinge_list = []
         lower_hinge_list = []
         for i, prop in enumerate(prop_parameter):
@@ -917,8 +964,8 @@ def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance
                 lower_bound = float(min(prop))
                 upper_bound = float(max(prop))
             else:
-                lower_bound = float(prop)-float(range_value)
-                upper_bound = float(prop)+float(range_value)
+                lower_bound = float(prop) - float(range_value)
+                upper_bound = float(prop) + float(range_value)
             upper_hinge = float(max(0.0, prop_energy[i] - upper_bound))
             lower_hinge = float(max(0.0, lower_bound - prop_energy[i]))
             upper_hinge_list.append(upper_hinge)
@@ -926,9 +973,9 @@ def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance
         en_hinge = 0
         dist_total = 0
         for j, hinge in enumerate(upper_hinge_list):
-            en_hinge += hinge+lower_hinge_list[j] #Loop over all of the hinges
+            en_hinge += hinge + lower_hinge_list[j]  # Loop over all of the hinges
             dist_total += np.power((float(distance[j]) / distance_parameter[j]), 2.0)
-        en = -1* (en_hinge + dist_total)
+        en = -1 * (en_hinge + dist_total)
     else:
         if lower_bound == None and upper_bound == None:
             lower_bound = float(prop_parameter) - float(range_value)
@@ -1154,12 +1201,13 @@ def purge_submitted_jobs(job):
     else:
         print(str(job) + ' not removed since it is not in subm keys')
 
+
 ########################
-#Function to move the outfile, infile, and scr directiory of a specific job to a new folder so that the job can be restarted
-#job should be a string of the same format as in files/outstading_jobs.txt
-#if the script will run somewhere otehr than the mad_home_directory, then the directory needs to be specified
+# Function to move the outfile, infile, and scr directiory of a specific job to a new folder so that the job can be restarted
+# job should be a string of the same format as in files/outstading_jobs.txt
+# if the script will run somewhere otehr than the mad_home_directory, then the directory needs to be specified
 ########################
-def purge_job_files(job,mad_home_dir = os.getcwd()):
+def purge_job_files(job, mad_home_dir=os.getcwd()):
     job = job.split('/')[-1]
     if job.endswith('.in'):
         job = job[:-3]
@@ -1167,41 +1215,43 @@ def purge_job_files(job,mad_home_dir = os.getcwd()):
     os.chdir(mad_home_dir)
     if not os.path.isdir('purged_job_files'):
         os.mkdir('purged_job_files')
-    outfile_loc = os.path.join(os.getcwd(),'geo_outfiles','gen_0')
-    if os.path.isfile(os.path.join(outfile_loc,job+'.out')):
-        os.rename(os.path.join(outfile_loc,job+'.out'),os.path.join(mad_home_dir,'purged_job_files',job+'.out'))
+    outfile_loc = os.path.join(os.getcwd(), 'geo_outfiles', 'gen_0')
+    if os.path.isfile(os.path.join(outfile_loc, job + '.out')):
+        os.rename(os.path.join(outfile_loc, job + '.out'), os.path.join(mad_home_dir, 'purged_job_files', job + '.out'))
         print 'purging outfile: ' + job + '.out'
-        print 'from: '+outfile_loc+ ' to: '+os.path.join(mad_home_dir,'purged_job_files')
-    infile_loc = os.path.join(os.getcwd(),'infiles','gen_0')
-    if os.path.isfile(os.path.join(infile_loc,job+'.in')):
-        os.rename(os.path.join(infile_loc,job+'.in'),os.path.join(mad_home_dir,'purged_job_files',job+'.out'))
+        print 'from: ' + outfile_loc + ' to: ' + os.path.join(mad_home_dir, 'purged_job_files')
+    infile_loc = os.path.join(os.getcwd(), 'infiles', 'gen_0')
+    if os.path.isfile(os.path.join(infile_loc, job + '.in')):
+        os.rename(os.path.join(infile_loc, job + '.in'), os.path.join(mad_home_dir, 'purged_job_files', job + '.out'))
         print 'purging infile: ' + job + '.in'
-        print 'from: '+infile_loc+ ' to: '+os.path.join(mad_home_dir,'purged_job_files')
-    scr_loc = os.path.join(os.getcwd(),'scr','geo','gen_0')
-    if os.path.isdir(os.path.join(scr_loc,job)):
-        os.rename(os.path.join(scr_loc,job),os.path.join(mad_home_dir,'purged_job_files',job))
+        print 'from: ' + infile_loc + ' to: ' + os.path.join(mad_home_dir, 'purged_job_files')
+    scr_loc = os.path.join(os.getcwd(), 'scr', 'geo', 'gen_0')
+    if os.path.isdir(os.path.join(scr_loc, job)):
+        os.rename(os.path.join(scr_loc, job), os.path.join(mad_home_dir, 'purged_job_files', job))
         print 'purging scr: ' + job
-        print 'from: '+scr_loc+ ' to: '+os.path.join(mad_home_dir,'purged_job_files')
+        print 'from: ' + scr_loc + ' to: ' + os.path.join(mad_home_dir, 'purged_job_files')
     os.chdir(cwd)
 
+
 #######################
-#WARNING, this operation is permanent
-#given a specific compound (as a string in the same format as found in jobs/outstanding_jobs.txt)
-#this function will trick mad into starting it over from the beginning
-#all outfiles and scr directors will be saved in a 'purged jobs' directory within the mad home directory
+# WARNING, this operation is permanent
+# given a specific compound (as a string in the same format as found in jobs/outstanding_jobs.txt)
+# this function will trick mad into starting it over from the beginning
+# all outfiles and scr directors will be saved in a 'purged jobs' directory within the mad home directory
 #######################
-def hard_reset_job(full_name,alpha = 'undef'):
+def hard_reset_job(full_name, alpha='undef'):
     tools.purge_submitted_jobs(full_name)
     tools.purge_converged_jobs(full_name)
     tools.remove_outstanding_jobs(full_name)
     purge_job_files(full_name)
-    #if alpha not specified, attempt to get it in this sketchy way
+    # if alpha not specified, attempt to get it in this sketchy way
     if alpha == 'undef':
         alpha = int(full_name.split('_')[-1])
     if alpha == 20:
         tools.add_to_outstanding_jobs(full_name)
         tools.create_generic_infile(full_name)
         print full_name + 'added to outstanding job list and new infile created'
+
 
 ########################
 def writeprops(extrct_props, newfile):
@@ -1210,11 +1260,14 @@ def writeprops(extrct_props, newfile):
     newfile.write("\n")
     return
 
+
 ########################
 def propline(extrct_props):
     string_to_write = ','.join([str(word) for word in extrct_props])
     string_to_write += '\n'
     return string_to_write
+
+
 ########################
 def atrextract(a_run, list_of_props):
     extrct_props = []
@@ -1299,7 +1352,6 @@ def write_output(name, list_of_things_with_props, list_of_props, base_path_dicti
                 g.writelines(data)
             g.close()
         except:
-            print('FAILED to look through results dictionaries. Appending.')
             with open(output_path, 'a') as f:
                 for thing in list_of_things_with_props:
                     values = atrextract(thing, list_of_props)
@@ -1377,6 +1429,7 @@ def process_run_post(filepost, filedescriptors):
         df_noprog = df_unconv[df_unconv['status'] == 3]
         df_noprog.to_csv('%s_noprogress.csv' % file_prefix)
 
+
 ########################
 def protect_lig_bash(liglist):
     ligtmp = ""
@@ -1384,5 +1437,26 @@ def protect_lig_bash(liglist):
         if x != "(" and x != ")":
             ligtmp += x
         else:
-            ligtmp += "\%s"%x
+            ligtmp += "\%s" % x
     return ligtmp
+
+
+#######################
+def safe_copy(file1, file2, dir2):
+    if not os.path.isfile(file2):
+        if os.path.isfile(file1) and os.path.isdir(dir2):
+            shutil.move(file1, file2)
+
+
+#######################
+def check_infile_control(infile):
+    use_molscontrol = 0
+    if os.path.isfile(infile):
+        with open(infile, "r") as fo:
+            for line in fo:
+                if "coordinates" in line:
+                    if "initial_geo" in line:
+                        use_molscontrol = 1
+    else:
+        raise ValueError("infile cannot be found during the submission.", infile)
+    return use_molscontrol
