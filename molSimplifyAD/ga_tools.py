@@ -43,6 +43,7 @@ def get_infile_from_job(job):
     path_dictionary = setup_paths()
     path_dictionary = advance_paths(path_dictionary, gen)
     scr_path = path_dictionary["scr_path"] + base_name + '/'
+    scr_path = 'scr'+scr_path.split('scr')[1]
     target_inpath = path_dictionary["infiles"] + base_name + '.in'
     use_old_optimizer = get_optimizer()
     if os.path.isfile(target_inpath):
@@ -171,10 +172,13 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
                         newf.write(line)
     ## The global 'use_old_optimizer' variable is set entirely by the mad_config file
     ## The next 4 lines introduce behaviour to determine if the old optimizer should be used for this specific job
-    _, _, _, _, _, eqlig, axlig1, axlig2, _, _, _, _, _, _, _, _ = translate_job_name(job)
-    old_optimizer_list = get_old_optimizer_ligand_list()
-    if eqlig in old_optimizer_list or axlig1 in old_optimizer_list or axlig2 in old_optimizer_list:
-        use_old_optimizer = True
+    #_, _, _, _, _, eqlig, axlig1, axlig2, _, _, _, _, _, _, _, _ = translate_job_name(job)
+    #eqlig = translate_dict['eqlig']
+    #axlig1 = translate_dict['axlig1']
+    #axlig2 = translate_dict['axlig2']
+    #old_optimizer_list = get_old_optimizer_ligand_list()
+    #if eqlig in old_optimizer_list or axlig1 in old_optimizer_list or axlig2 in old_optimizer_list:
+    #    use_old_optimizer = True
     ## append geo
     with open(target_inpath, 'a') as newf:
         newf.write('coordinates ' + geometry_path + '\n')
@@ -217,7 +221,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
                           'prog_devi_linear_avrg', 'prog_devi_linear_max',
                           'rmsd', 'maxd',
                           'init_ax1_MLB', 'init_ax2_MLB', 'init_eq_MLB', 'thermo_cont', 'imag', 'solvent_cont',
-                          'water_cont',
+                          'water_cont','sp_ss_act','sp_ss_target',
                           'terachem_version', 'terachem_detailed_version',
                           'basis', 'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
                           'mop_coord', 'sp_energy','empty_sp_energy', 'tot_time', 'tot_step', 'metal_translation']
@@ -340,7 +344,7 @@ def get_mulliken_oxocatalysis(moldenpath,catlig, spin):
             for num, line in enumerate(lines):
                 if "Population of atoms" in line:
                     idx = 2
-                    if len(lines[num+2].split()) == 5:
+                    if len(lines[num+2].split()) == 5 and 'Atomic' not in lines[num+2]:
                         idx -= 1
                     metalalpha = float(lines[num+2].split()[idx])
                     metalbeta = float(lines[num+2].split()[idx+1])
