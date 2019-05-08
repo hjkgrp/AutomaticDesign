@@ -695,7 +695,7 @@ def check_empty_sp_file(this_run):
             found_time = False
             for i,lines in enumerate(data):
                 if str(lines).find('FINAL ENERGY') != -1:
-                    print("found single point line")
+                    print("found empty site single point line")
                     print(lines)
                     energy =str(lines.split()[2])
                     found_data = True
