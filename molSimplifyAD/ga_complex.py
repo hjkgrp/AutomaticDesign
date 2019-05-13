@@ -1055,8 +1055,8 @@ class octahedral_complex:
         if os.path.isfile(geometry_path):
             mol.readfromxyz(geometry_path)
         flag_oct, flag_list, dict_oct_info = mol.IsOct()
-        flag_H = not mol.closest_H_2_metal()[0]
-        flag_oct = flag_oct and flag_H
+        # flag_H = not mol.closest_H_2_metal()[0]
+        # flag_oct = flag_oct and flag_H
         return flag_oct, flag_list, dict_oct_info
 
 
