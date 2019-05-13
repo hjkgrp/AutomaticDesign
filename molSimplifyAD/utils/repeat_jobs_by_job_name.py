@@ -18,8 +18,8 @@ if len(sys.argv) > 1:
     time.sleep(5)
 else:
     dry_run = True
-    print('dry run is ON. Files are safe.  2 second sleep engaged...' )
-    time.sleep(2)  
+    print('dry run is ON. Files are safe.  0 second sleep engaged...' )
+    time.sleep(0)  
    
 # warning, this will irreverisbly destroy
 # all convergence info for bad geometries 
@@ -49,7 +49,7 @@ use_old_optimizer = get_optimizer()
 final_results = dict()
 all_runs = dict()
 print('found:  ' + str(len(joblist)) + ' jobs to check')
-joblist  =  list(set(joblist+outstanding_jobs))
+joblist  =  list(set(joblist+outstanding_jobs+converged_jobs.keys()))
 print('found:  ' + str(len(joblist)) + ' jobs to check')
 
 job_to_rep = []
@@ -72,42 +72,45 @@ if isKeyword('oxocatalysis'):
             value = str(i)
 
 ####### JOB CHECK STARTS HERE #########
+print(len([job for job in job_to_rep if job in joblist]))
+print joblist[1:3]
+print job_to_rep[1:3]
 for jobs in joblist:
             ##upack job name
-            gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(jobs)
+            #gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, basename, basegene = translate_job_name(jobs)
+            locals().update(translate_job_name(jobs))
             if (jobs in job_to_rep) and not (jobs in live_job_dictionary.keys()):               
                 print('found ligand in repeat list list: ' + str(jobs))
-                this_run = DFTRun(base_name)
-                this_run.scrpath = path_dictionary["scr_path" ]  + base_name +"/optim.xyz"
-                this_run.gene = base_gene
+                this_run = DFTRun(basename)
+                this_run.scrpath = path_dictionary["scr_path" ]  + basename +"/optim.xyz"
+                this_run.gene = basegene
                 this_run.number = slot
                 this_run.gen = gen
                 this_run.job = jobs
-                if axlig2 == 'x':
+                if 'x' in liglist:
                     this_run.octahedral = False
                 else:
                     this_run.octahedral = True
                 alpha = float(ahf)
                 this_run.logpath = path_dictionary['state_path']
                 ## populate run with properies
-                this_run.configure(metal, ox, eqlig, axlig1, axlig2, spin, alpha, spin_cat)
+                this_run.configure(metal, ox, liglist, spin, alpha, spin_cat)
                 ## make unique gene
-                name = "_".join([str(metal), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), 'ahf',
-                                 str(int(alpha)).zfill(2)])
+                name = "_".join(['gene', str(metal)] + [str(i) for i in liglist] + [str(int(alpha)).zfill(2)])
                 ## set file paths
                 path_dictionary = setup_paths()
                 path_dictionary = advance_paths(path_dictionary, gen)  ## this adds the /gen_x/ to the paths
-                this_run.geopath = (path_dictionary["optimial_geo_path"] + base_name + ".xyz")
-                this_run.progpath = (path_dictionary["prog_geo_path"] + base_name + ".xyz")
-                this_run.init_geopath = (path_dictionary["initial_geo_path"] + base_name + ".xyz")
-                this_run.outpath = (path_dictionary["geo_out_path"] + base_name + ".out")
-                this_run.spoutpath = path_dictionary["sp_out_path"]+base_name+".out"
-                this_run.spinpath = path_dictionary["sp_in_path"]+base_name+".in"
-                this_run.scrpath = path_dictionary["scr_path"] + base_name + "/optim.xyz"
-                this_run.scrfolder = path_dictionary["scr_path"] + base_name 
-                this_run.inpath = path_dictionary["job_path"] + base_name + ".in"
-                this_run.infiles = path_dictionary["infiles"] + base_name + ".in"
-                this_run.comppath = path_dictionary["done_path"] + base_name + ".in"
+                this_run.geopath = (path_dictionary["optimial_geo_path"] + basename + ".xyz")
+                this_run.progpath = (path_dictionary["prog_geo_path"] + basename + ".xyz")
+                this_run.init_geopath = (path_dictionary["initial_geo_path"] + basename + ".xyz")
+                this_run.outpath = (path_dictionary["geo_out_path"] + basename + ".out")
+                this_run.spoutpath = path_dictionary["sp_out_path"]+basename+".out"
+                this_run.spinpath = path_dictionary["sp_in_path"]+basename+".in"
+                this_run.scrpath = path_dictionary["scr_path"] + basename + "/optim.xyz"
+                this_run.scrfolder = path_dictionary["scr_path"] + basename 
+                this_run.inpath = path_dictionary["job_path"] + basename + ".in"
+                this_run.infiles = path_dictionary["infiles"] + basename + ".in"
+                this_run.comppath = path_dictionary["done_path"] + basename + ".in"
                 restart_list.append(this_run)
                 namelist.append(name)
                 
@@ -120,7 +123,8 @@ for runs in restart_list:
                      # otherwise it needs to go
     new_tree = GA_generation('current_gen')
     new_tree.read_state()
-    gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(runs.job)
+    # old: gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, basename, basegene = translate_job_name(runs.job)
+    locals().update(translate_job_name(runs.job))
     if int(spin) == 1:
         print('THIS IS A SINGLET!!!! MAKE SURE DOESNT CONFLICT WITH THE RESTARTING OF THE SINGLETS!')
     if gene in new_tree.gene_fitness_dictionary.keys():
@@ -137,7 +141,7 @@ for runs in restart_list:
 
     if True: # always use initial geo:
         old_optimizer_list = get_old_optimizer_ligand_list()
-        if runs.axlig1 in old_optimizer_list or runs.eqlig in old_optimizer_list:
+        if any([_ in old_optimizer_list for _ in liglist]):
             use_old_optimizer = True
         print('OLD OPTIMIZER: ', use_old_optimizer)
         if not dry_run:
