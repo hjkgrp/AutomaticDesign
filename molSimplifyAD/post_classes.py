@@ -542,9 +542,9 @@ class DFTRun(object):
             f_solvent.write(guess_string)
             this_spin = self.spin
             if int(this_spin) == 1:
-                f_thermo.write('method b3lyp\n')
+                f_solvent.write('method b3lyp\n')
             else:
-                f_thermo.write('method ub3lyp\n')
+                f_solvent.write('method ub3lyp\n')
             with open(self.inpath, 'r') as ref:
                 for line in ref:
                     if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line) and not (
