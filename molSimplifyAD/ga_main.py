@@ -92,9 +92,10 @@ class GA_generation:
         found_smi = False
 
         for l in ligs:
-            if isinstance(l[0], basestring):
-                print('dictionary  lig: ' + str(l[0]))
-                procd_ligs.append(l[0])
+            if isinstance(l, basestring):
+                print('dictionary  lig: ' + str(l))
+                procd_ligs.append(l)
+                print(procd_ligs)
             else:
                 print('smiles lig: ' + str(l[0]))
                 procd_ligs.append(l[0][0])
@@ -105,12 +106,15 @@ class GA_generation:
         else:
             print('checking for ligand availability')
             print(ligands_list_inds)
+            print(procd_ligs)
+
             if not set(procd_ligs).issubset(set(ligands_list_inds)):
                 print('Error: requested ligs not available in list, aborting')
                 exit()
 
         if not metal in metal_list_inds:
             print(metal)
+            print(metal_list_inds)
             print('Error: requested metal not available in list, aborting')
             exit()
 
