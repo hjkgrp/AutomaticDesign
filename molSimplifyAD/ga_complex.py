@@ -108,7 +108,8 @@ class octahedral_complex:
     def _get_random_spin(self):
         local_spin_dictionary = spin_dictionary()
         metal_list = get_metals()
-        metal_key = metal_list[self.metal]
+        # metal_key = metal_list[self.metal]
+        metal_key = metal_list[self.core]
         these_states = local_spin_dictionary[metal_key][self.ox]
         self.spin = numpy.random.choice(these_states)
 
