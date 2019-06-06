@@ -796,6 +796,8 @@ def setup_paths():
         "pdb_path": working_dir + "pdb/",
         "molscontrol_log_path": working_dir + "molscontrol_logs/",
         "dynamic_feature_path": working_dir + "dynamic_feature/",
+        "fod_input_path": working_dir + "fod_infiles/",
+        "fod_output_path": working_dir + "fod_outfiles/",
     }
 
     #    shutil.copyfile(get_source_dir()+'wake.sh',get_run_dir()+'wake.sh')

@@ -1045,6 +1045,24 @@ class DFTRun(object):
                         f_DLPNO.write('\n')
                         f_DLPNO.close()
 
+    def write_FOD(self):
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
+        fod_py_file = path_dictionary["fod_input_path"]+self.name+"_run_fod.py"
+        fod_py = open(fod_py_file, 'w')
+        fod_str='import MultirefPredict\n'\
+               +'input_dict = {"xyzfile": "'+ self.geopath+'",'\
+               +'"molname": "'+ self.name+'",'\
+               +'"charge":' + str(self.charge)+','\
+               +'"spinmult": ' + str(self.spin) + ','\
+               +'"rundir": ' + path_dictionary["fod_output_path"]+ ','\
+               +'"program": "terachem",'\
+               +'"record": True}\n'\
+               +'MultirefPredict.diagnostic_factory("FOD",\
+               **input_dict).computeDiagnostic()\n'
+        fod_py.write(fod_str)
+        fod_py.close()
+
     def archive(self, sub_number):
         # this fuinciton copies all files to arch
         path_dictionary = setup_paths()
