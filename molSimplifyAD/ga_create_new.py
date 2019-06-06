@@ -43,10 +43,12 @@ def create_new_run(args):
     if 'DFT' in configuration.keys():
         if configuration['DFT']:
             print 'Using DFT, copying over launch script'
-            molscontrol = False
-            if 'molscontrol' in configuration.keys():
-                _m  = configuration['molscontrol']
-                molscontrol = True if str(_m).lower() == "true" else False
+            check_list = ["molscontrol", "fod"]
+            for keyw in check_list:
+                globals().update({keyw: False})
+                if keyw in configuration.keys():
+                    _m  = configuration[keyw]
+                    globals()[keyw] = True if str(_m).lower() == "true" else False
             sp_file,geo_file,thermo_file,solvent_file,water_file,PRFO_HAT,PRFO_Oxo = get_launch_script_file(configuration["queue_type"],
                                                                                                             molscontrol=molscontrol)
             shutil.copy(sp_file,configuration["rundir"]+'launch_script_sp.sh')
@@ -64,6 +66,9 @@ def create_new_run(args):
             if molscontrol:
                 molscontrol_config_file = get_molscontrol_configure()
                 shutil.copy(molscontrol_config_file, configuration["rundir"]+'configure.json')
+            if fod:
+                fod_script = get_fod_script()
+                shutil.copy(fod_script, configuration["rundir"]+'launch_script_fod.sh')
     if 'DFT' in configuration.keys() and 'runtype' in configuration.keys():
         if configuration['runtype'] == 'redox' and not configuration['DFT']:
             print('unable to run ANN based GA using redox at this time, changing to spin splitting')
