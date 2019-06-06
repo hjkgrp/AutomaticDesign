@@ -68,7 +68,7 @@ class DFTRun(object):
         list_of_init_false = ['solvent_cont', 'water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
-                              'islive', 'set_desc', 'sp_status', 'empty_sp_status']
+                              'islive', 'set_desc', 'sp_status', 'empty_sp_status', 'fod_cont']
         list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord', 'empty_ss_target',
                              'empty_ss_act']
         if isKeyword('oxocatalysis'):
@@ -1045,7 +1045,7 @@ class DFTRun(object):
                         f_DLPNO.write('\n')
                         f_DLPNO.close()
 
-    def write_FOD(self):
+    def write_fod_input(self):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         fod_py_file = path_dictionary["fod_input_path"]+self.name+"_run_fod.py"
