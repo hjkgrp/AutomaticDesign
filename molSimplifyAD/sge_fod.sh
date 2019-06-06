@@ -6,7 +6,7 @@
 #$ -pe smp 1 		#number parrallel jobs
 #$ -cwd
 module load anaconda3
-source activate test
+source activate /opt/anaconda3/envs/test
 module load terachem/tip
 
 fullpath="$1"
