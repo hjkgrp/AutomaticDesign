@@ -44,6 +44,7 @@ class GA_run_defintion:
                   ax_lig_dissoc=False,
                   spin_constraint=False,
                   molscontrol=False,
+                  fod=False,
                   **KWARGS):
         ## first time start-up function
         #                print('configuring status dictionaty')
@@ -85,6 +86,7 @@ class GA_run_defintion:
                        'ax_lig_dissoc': ax_lig_dissoc,
                        'spin_constraint': spin_constraint,
                        'molscontrol': molscontrol,
+                       'fod': fod,
                        }
 
     def serialize(self):
@@ -263,6 +265,12 @@ def get_molscontrol_configure():
     molscontrol_config_file = resource_filename(Requirement.parse("molSimplifyAD"),
                                                 "molSimplifyAD/" + "/configure.json")
     return molscontrol_config_file
+
+
+def get_fod_script(queue_type='SGE'):
+    fod_script = resource_filename(Requirement.parse("molSimplifyAD"),
+                                   "molSimplifyAD/" + queue_type.lower() + "_fod.sh")
+    return fod_script
 
 
 ########################
