@@ -1055,7 +1055,7 @@ class DFTRun(object):
                +'"molname": "'+ self.name+'",'\
                +'"charge":' + str(self.charge)+','\
                +'"spinmult": ' + str(self.spin) + ','\
-               +'"rundir": ' + path_dictionary["fod_output_path"]+ ','\
+               +'"rundir": "' + path_dictionary["fod_output_path"]+ '",'\
                +'"program": "terachem",'\
                +'"record": True}\n'\
                +'MultirefPredict.diagnostic_factory("FOD",\
