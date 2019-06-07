@@ -487,7 +487,10 @@ def translate_job_name(job):
     basename = base.strip(".in")
     basename = basename.strip(".xyz")
     basename = basename.strip(".out")
+    basename = basename.strip(".py")
+    basename = basename.replace("_run_fod","")
     ll = (str(basename)).split("_")
+    print(ll)
     ligands_dict = get_ligands()
     # print(ll)
     gen = ll[1]
