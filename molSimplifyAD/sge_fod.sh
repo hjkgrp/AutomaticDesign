@@ -24,7 +24,7 @@ generalpath=`echo $(dirname $generalpath) | sed "s,/*[^/]\*$,,"`
 generalpath=`echo $(dirname $generalpath) | sed "s,/*[^/]\*$,,"`
 echo "gen path is $generalpath"
 
-namebase=`echo $fullpath | sed "s/[.]in//"| sed "s:.*/::"`
+namebase=`echo $fullpath | sed "s/[.]py//"| sed "s:.*/::"`
 
 echo "Begining calcualtion run"
 echo "general path is $generalpath"
@@ -33,8 +33,8 @@ echo "gen path  $generalpath "
 echo " gen num path $gennumpath"
 echo "base name is  $namebase "
 sourcepath=$fullpath
-inpath=$generalpath/fod_infiles/$gennumpath/${namebase}_run_fod.py
-outpath=$generalpath/fod_outfiles/$gennumpath/${namebase}_run_fod.out
+inpath=$generalpath/fod_infiles/$gennumpath/${namebase}.py
+outpath=$generalpath/fod_outfiles/$gennumpath/${namebase}.out
 #scrpath=$generalpath/scr/geo/$gennumpath/
 #echo "scr will be copied to  $scrpath"
 echo "paths set"
