@@ -525,12 +525,16 @@ def check_water_file(this_run):
 
 
 def check_fod_file(this_run):
-    fod_file = this_run.fod_outpath + "/" + this_run.name + "_FonBased.json"
+    fod_file = "/".join(this_run.fod_outpath.split("/")[:-1])+ "/" + this_run.name + "_FonBased.json"
+    print(fod_file)
     if os.path.isfile(fod_file):
-        fod_json = json.load(fod_file)
-        if set(fod_json["FonBased"].keys) == set(["FOD", "Mattito", "Entanglement"]):
+        with open(fod_file, 'r') as fo:
+            fod_json = json.load(fo)
+        if set(fod_json["FonBased"].keys()) == set(["FOD", "Mattito", "Entanglement"]):
+            print("fod finished.")
             this_run.fod_cont = True
         else:
+            print("fod carried out, but had some problems.")
             this_run.fod_cont = False
     return this_run
 
