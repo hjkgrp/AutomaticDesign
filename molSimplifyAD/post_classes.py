@@ -55,8 +55,8 @@ class DFTRun(object):
                               'terachem_version', 'terachem_detailed_version', 'basis', 'alpha_level_shift',
                               'beta_level_shift', 'functional', 'rmsd', 'maxd', 'thermo_time', 'solvent_time',
                               'water_time', 'angletest', 'ligrsmd', 'flag_oct', 'flag_list', 'num_coord_metal',
-                              'rmsd_max', 'spin_cat','sp_alphaHOMO','sp_alphaLUMO','sp_betaHOMO','sp_betaLUMO',
-                              'sp_ss_act','sp_ss_target',
+                              'rmsd_max', 'spin_cat', 'sp_alphaHOMO', 'sp_alphaLUMO', 'sp_betaHOMO', 'sp_betaLUMO',
+                              'sp_ss_act', 'sp_ss_target',
                               'atom_dist_max', 'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
                               'devi_linear_avrg', 'devi_linear_max', 'flag_oct_loose', 'flag_list_loose',
                               'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max', 'area',
@@ -659,7 +659,7 @@ class DFTRun(object):
 
     def write_HFX_inputs(self, newHFX, refHFX):
         ## set file paths for HFX resampling
-        ## the fixed ordering is 
+        ## the fixed ordering is
         ## 20 -> 25 -> 30, 20->15->10->05->00
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
@@ -709,7 +709,7 @@ class DFTRun(object):
 
     def write_empty_inputs(self, refHFX, lines_to_remove=1, ligand_charge=0):
         ## set file paths for empty structure gen
-        ## the fixed ordering is 
+        ## the fixed ordering is
         ## HFX20 Oxo --> HFX20 Empty SP + HFX20 Empty Geo --> HFX25 Oxo --> HFX25 Empty SP + HFX25 Empty Geo... etc.
         # _, _, _, _, _, _, _, _, _, _, _, this_spin, _, _, _, _ = translate_job_name(self.job)
         translate_dict = translate_job_name(self.job)
@@ -1005,7 +1005,7 @@ class DFTRun(object):
         return HAT_inpath, Oxo_inpath
 
     def write_DLPNO_inputs(self):
-        ## set files  for DLNPO calcs 
+        ## set files  for DLNPO calcs
         path_dictionary = setup_paths()
         print(path_dictionary)
         print(path_dictionary['DLPNO_path'])
@@ -1048,18 +1048,17 @@ class DFTRun(object):
     def write_fod_input(self):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
-        fod_py_file = path_dictionary["fod_input_path"]+self.name+"_run_fod.py"
+        fod_py_file = path_dictionary["fod_input_path"] + self.name + ".py"
         fod_py = open(fod_py_file, 'w')
-        fod_str='import MultirefPredict\n'\
-               +'input_dict = {"xyzfile": "'+ self.geopath+'",'\
-               +'"molname": "'+ self.name+'",'\
-               +'"charge":' + str(self.charge)+','\
-               +'"spinmult": ' + str(self.spin) + ','\
-               +'"rundir": ' + path_dictionary["fod_output_path"]+ ','\
-               +'"program": "terachem",'\
-               +'"record": True}\n'\
-               +'MultirefPredict.diagnostic_factory("FOD",\
-               **input_dict).computeDiagnostic()\n'
+        fod_str = 'import MultirefPredict\n' \
+                  + 'input_dict = {"xyzfile": "' + self.geopath + '",' \
+                  + '"molname": "' + self.name + '",' \
+                  + '"charge":' + str(self.charge) + ',' \
+                  + '"spinmult": ' + str(self.spin) + ',' \
+                  + '"rundir": ' + '"%s"' % path_dictionary["fod_output_path"] + ',' \
+                  + '"program": "terachem",' \
+                  + '"record": True}\n' \
+                  + 'MultirefPredict.diagnostic_factory("FOD", **input_dict).computeDiagnostic()\n'
         fod_py.write(fod_str)
         fod_py.close()
 
@@ -1068,7 +1067,7 @@ class DFTRun(object):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         archive_path = path_dictionary["archive_path"] + self.name + '/'
-        # ensure unique dir exists  
+        # ensure unique dir exists
         counter = 0
         org_name = archive_path
         archive_path = org_name.rstrip('/') + '_' + str(sub_number) + '/'
@@ -1319,7 +1318,7 @@ class Comp(object):
         #### MUST REMOVE
         ## this is a hack
         ## needed to fool
-        ## the spin 
+        ## the spin
         ## spliting logic
         ## should only use
         ## ox2_split
@@ -1348,8 +1347,8 @@ class Comp(object):
                               'status', 'comment',
                               'ax1_MLB', 'ax2_MLB', 'eq_MLB',
                               'init_ax1_MLB', 'init_ax2_MLB', 'init_eq_MLB',
-                              'ss_act', 'ss_target', 'geopath','sp_ss_act','sp_ss_target',
-                              'sp_alphaHOMO','sp_alphaLUMO','sp_betaHOMO','sp_betaLUMO',
+                              'ss_act', 'ss_target', 'geopath', 'sp_ss_act', 'sp_ss_target',
+                              'sp_alphaHOMO', 'sp_alphaLUMO', 'sp_betaHOMO', 'sp_betaLUMO',
                               'terachem_version', 'terachem_detailed_version',
                               'basis', 'functional',
                               'alpha_level_shift', 'beta_level_shift', 'job_gene',
@@ -1480,7 +1479,7 @@ class Comp(object):
             self.ox3split = 777
 
     def get_some_split(self):
-        ## this function is part 
+        ## this function is part
         ## of the hack that this needed
         ## to handle splitting energy
         ## in 4-class redox cases

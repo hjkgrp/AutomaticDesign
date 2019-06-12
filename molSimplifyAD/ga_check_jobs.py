@@ -183,8 +183,8 @@ def check_all_current_convergence():
                 this_run.sp_outpath = (path_dictionary["sp_out_path"] + '/' + base_name + ".out")
 
                 if isKeyword('fod'):
-                    this_run.fod_outpath = (path_dictionary["fod_output_path"] + base_name + "_run_fod.out")
-                    this_run.fod_inpath = (path_dictionary["fod_input_path"] + base_name + "_run_fod.py")
+                    this_run.fod_outpath = (path_dictionary["fod_output_path"] + base_name + ".out")
+                    this_run.fod_inpath = (path_dictionary["fod_input_path"] + base_name + ".py")
 
                 if isKeyword('thermo'):
                     this_run.thermo_outpath = (path_dictionary["thermo_out_path"] + base_name + ".out")
@@ -277,6 +277,7 @@ def check_all_current_convergence():
 
                         if isKeyword('fod'):
                             this_run = check_fod_file(this_run)
+                            print("fod_cont:" , this_run.fod_cont)
                             if this_run.fod_cont and run_success:
                                 remove_outstanding_jobs(this_run.fod_inpath)
                             elif run_success:
