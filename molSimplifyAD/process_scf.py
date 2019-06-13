@@ -917,11 +917,12 @@ def test_terachem_go_convergence(this_run):
                 print(this_run.tspin)
                 print(this_run.spin)
                 # sardines
-
         else:
             this_run.status = 1
             this_run.comment += 'coord not good ' + str(this_run.coord) + '\n '
             this_run.comment += 'flag_oct_list: %s\n' % (this_run.flag_list)
+        if this_run.converged:
+            this_run.obtain_wavefunction()
 
 
 def test_terachem_TS_convergence(this_run):

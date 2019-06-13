@@ -68,7 +68,8 @@ class DFTRun(object):
         list_of_init_false = ['solvent_cont', 'water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
-                              'islive', 'set_desc', 'sp_status', 'empty_sp_status', 'fod_cont']
+                              'islive', 'set_desc', 'sp_status', 'empty_sp_status', 'fod_cont', "wavefunction",
+                              "wavefunction_path", "molden_path"]
         list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord', 'empty_ss_target',
                              'empty_ss_act']
         if isKeyword('oxocatalysis'):
@@ -1197,32 +1198,30 @@ class DFTRun(object):
                             try:
                                 _time_tot += float(ll[ll.index('sec') - 1])
                             except:
-                                print '\n\n CHECK GEO OUTFILE FOR abnormal sec'
+                                print
+                                '\n\n CHECK GEO OUTFILE FOR abnormal sec'
         else:
             print('!!combined output file not found!!')
         self.tot_time = tot_time
         self.tot_step = tot_step
 
-    def get_descriptor_vector(self, loud=False, name=False):
+    def get_descriptor_vector(self, loud=False, name=False, useinitgeo=False):
         ox_modifier = {self.metal: self.ox}
-        print(ox_modifier)
-        if self.converged and self.flag_oct:
-            # self.mol.update_graph_check()
+        if (self.converged and self.flag_oct) and (not useinitgeo):
             descriptor_names, descriptors = get_descriptor_vector(this_complex=self.mol,
                                                                   custom_ligand_dict=False,
                                                                   ox_modifier=ox_modifier)
         else:
             try:
-                # self.init_mol.update_graph_check()
                 descriptor_names, descriptors = get_descriptor_vector(this_complex=self.init_mol,
                                                                       custom_ligand_dict=False,
                                                                       ox_modifier=ox_modifier)
             except:
                 descriptor_names, descriptors = [], []
-
         self.descriptor_names = descriptor_names
         self.descriptors = descriptors
         self.set_desc = True
+        return descriptor_names, descriptors
 
     def append_descriptors(self, list_of_names, list_of_props, prefix, suffix):
         for names in list_of_names:
@@ -1283,6 +1282,26 @@ class DFTRun(object):
                     if "job killed" in line:
                         killed = True
         return killed
+
+    def obtain_wavefunction(self):
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)
+        scrdir = path_dictionary["scr_path"] + self.name + '/'
+        wavefunc_keys = ["c0", "ca0", "cb0"]
+        self.wavefunction = {}
+        self.wavefunction_path = {}
+        for key in wavefunc_keys:
+            wavefunc_file = scrdir + key
+            if os.path.isfile(wavefunc_file):
+                print("found %s. Writting into DFTrun..."%key)
+                with open(wavefunc_file, "rb") as fo:
+                    wf = fo.read()
+            else:
+                wf = False
+                wavefunc_file = False
+            self.wavefunction.update({key: wf})
+            self.wavefunction_path.update({key: wavefunc_file})
+        self.molden_path = path_dictionary["scr_path"] + self.name + '/' + self.name + ".molden"
 
 
 class Comp(object):
