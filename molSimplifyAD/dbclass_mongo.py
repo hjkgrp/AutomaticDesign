@@ -1,3 +1,4 @@
+import os
 import pickle
 import numpy as np
 from datetime import datetime
@@ -8,7 +9,7 @@ mongo_attr_from_run_undef = ["name", "metal", "ox", "spin", "lig1", "lig2", "lig
 mongo_attr_from_run_nan = ["energy", "ss_target", "ss_actual", 'alphaHOMO', 'betaHOMO',
                            'alphaLUMO', 'betaLUMO']
 mongo_attr_other = ["date", "geo_type", "geo_flag", "ss_flag", "opt_geo", "init_geo", "prog_geo",
-                    "RACs", "initRACs", "ligcharge", "dftrun", "tag", "subtag"]
+                    "RACs", "initRACs", "ligcharge", "dftrun", "tag", "subtag", "unique_name"]
 mongo_attr_id = ["metal", "ox", "spin", "lig1", "lig2", "lig3", "lig4", "lig5", "lig6",
                  "alpha", "functional", "basis", 'converged']  ### keys that identify a complex in matching.
 
@@ -79,19 +80,41 @@ class tmcMongo():
         except:
             pass
         self.RACs = descriptor_dict
-        self.construct_document()
         self.construct_identity()
+        self.make_unique_name()
+        self.construct_document()
 
     def deserialize_dftrun(self):
         return pickle.loads(self.dftrun)
 
     def construct_document(self):
         for attr in mongo_attr_from_run_undef + mongo_attr_from_run_nan + mongo_attr_other:
-            self.document.update({attr: getattr(self, attr)})
+            try:
+                self.document.update({attr: getattr(self, attr)})
+            except:
+                pass
 
     def construct_identity(self):
         for attr in mongo_attr_id:
             self.id_doc.update({attr: getattr(self, attr)})
+
+    def make_unique_name(self):
+        name_ele = []
+        for key in mongo_attr_id:
+            name_ele.append(key)
+            name_ele.append(str(self.id_doc[key]))
+        self.unique_name = '_'.join(name_ele)
+
+    def write_wfn(self, this_run, wfn_basepath='/data/wfn/'):
+        wfn_path = wfn_basepath + self.unique_name + '/'
+        if not os.path.isdir(wfn_path):
+            os.makedirs(wfn_path)
+        for key in this_run.wavefunction:
+            if this_run.wavefunction[key]:
+                with open(wfn_path + key, "wb") as fo:
+                    fo.write(this_run.wavefunction[key])
+            this_run.wavefunction.update({key: wfn_path + key})
+        return this_run
 
     def back_to_mAD(self):
         pass

@@ -4,7 +4,7 @@ from pymongo import MongoClient
 import pandas as pd
 from pandas.io.json import json_normalize
 import pickle
-from molSimplifyAD.dbclass_mongo import tmcMongo
+from molSimplifyAD.dbclass_mongo import tmcMongo, mongo_attr_id
 from molSimplifyAD.ga_check_jobs import check_all_current_convergence
 from molSimplifyAD.ga_tools import isKeyword
 
@@ -80,8 +80,8 @@ def deserialize_dftrun_from_db(tmc):
     return this_run
 
 
-def connect2db(user, pwd, host, port, database, localhost):
-    if localhost:
+def connect2db(user, pwd, host, port, database, auth):
+    if not auth:
         client = MongoClient()
     else:
         cstr = "mongodb://%s:%s@%s:%d/%s" % (user, pwd, host, port, database)
@@ -90,7 +90,7 @@ def connect2db(user, pwd, host, port, database, localhost):
     return db
 
 
-def push2db(database, collection, user=False, pwd=False, host=False, port=False, localhost=False,
+def push2db(database, collection, user=False, pwd=False, host="localhost", port=27017, auth=False,
             all_runs_pickle=False, tag=False, subtag=False):
     if not tag:
         if not os.path.isfile(".madconfig") or not isKeyword('tag'):
@@ -100,7 +100,7 @@ def push2db(database, collection, user=False, pwd=False, host=False, port=False,
         if not os.path.isfile(".madconfig") or not isKeyword('subtag'):
             raise ValueError("This is not a mAD folder with a subtag to push.")
         subtag = str(isKeyword('subtag'))
-    db = connect2db(user, pwd, host, port, database, localhost)
+    db = connect2db(user, pwd, host, port, database, auth)
     colls = db.list_collection_names()
     if not collection in colls:
         finish = False
@@ -127,10 +127,20 @@ def push2db(database, collection, user=False, pwd=False, host=False, port=False,
         if sys.getsizeof(pickle.dumps(this_run)) * 1. / 10 ** 6 > 16.7:
             print(
                 "DFTrun too large. Deleting wavefunction binary. Only the path of wavefunction files is hold by DFTrun.")
-            for key in this_run.wavefunction:
-                this_run.wavefunction.update({key: False})
+            _this_tmc = tmcMongo(this_run=this_run, tag=tag, subtag=subtag)
+            this_run = _this_tmc.write_wfn(this_run)
         this_tmc = tmcMongo(this_run=this_run, tag=tag, subtag=subtag)
         insetred = insert(db, collection, this_tmc)
         if insetred:
             count += 1
     print("add %d entries in the %s['%s']." % (count, database, collection))
+
+
+def unique_name(tmcdoc):
+    this_tmc = tmcMongo(document=tmcdoc, tag=tmcdoc['tag'], subtag=tmcdoc['subtag'])
+    name_ele = []
+    for key in mongo_attr_id:
+        name_ele.append(key)
+        name_ele.append(str(this_tmc.id_doc[key]))
+    name = '_'.join(name_ele)
+    return name
