@@ -1,4 +1,5 @@
 import os
+import getpass
 import pickle
 import numpy as np
 from datetime import datetime
@@ -6,15 +7,35 @@ from datetime import datetime
 mongo_attr_from_run_undef = ["name", "metal", "ox", "spin", "lig1", "lig2", "lig3", "lig4", "lig5", "lig6",
                              "alpha", "functional", "basis", "status", 'converged', 'charge',
                              'terachem_version']
-mongo_attr_from_run_nan = ["energy", "ss_target", "ss_actual", 'alphaHOMO', 'betaHOMO',
+mongo_attr_from_run_nan = ["energy", "ss_target", "ss_act", 'alphaHOMO', 'betaHOMO',
                            'alphaLUMO', 'betaLUMO']
-mongo_attr_other = ["date", "geo_type", "geo_flag", "ss_flag", "opt_geo", "init_geo", "prog_geo",
+mongo_attr_other = ["date", "author", "geo_type", "geo_flag", "ss_flag", "opt_geo", "init_geo", "prog_geo",
                     "RACs", "initRACs", "ligcharge", "dftrun", "tag", "subtag", "unique_name"]
 mongo_attr_id = ["metal", "ox", "spin", "lig1", "lig2", "lig3", "lig4", "lig5", "lig6",
                  "alpha", "functional", "basis", 'converged']  ### keys that identify a complex in matching.
+mongo_not_web = ["dftrun"]
 
 
 class tmcMongo():
+
+    '''
+    Classes that converts between DFTrun and documents in MongoDB.
+
+    Inputs:
+        tag: tag of your data. Recommend to use the project name (may related to the name of your paper).
+        subtag: Recommend as the name of your mAD folder (considering we may have many mAD folders for each project).
+        this_run: DFTrun object.
+        document: document from MongoDB.
+        geo_type: type of the geometry of TM complex.
+    Note: To successfully initiate a tmcMongo object, either this_run or document is required as an input.
+
+    Key attributes:
+        document: the document to be inserted in MongoDB (contains DFTrub object).
+        web_doc: a simplified document to be inserted in MongoDB for the web interface (DFTrun object excluded).
+        id_doc: a dictionary that tells the unique identity of a TM complex.
+        dftrun: a pickle-dumped DFTrun object.
+    '''
+
     def __init__(self, tag, subtag, this_run=False, document=False, geo_type=False):
         if not this_run:
             if document:
@@ -24,8 +45,13 @@ class tmcMongo():
                     raise ValueError("The input document does not contain a DFTrun object.")
             else:
                 raise ValueError("Either a DFTrun object or a tmcMongo object is required as an input.")
+        if (this_run and document):
+            raise ValueError(
+                "Confusion. Either a DFTrun object or a tmcMongo object is required as an input. Not both.")
         self.document = {}
+        self.web_doc = {}
         self.id_doc = {}
+        self.author = getpass.getuser()
         self.tag = tag
         self.subtag = subtag
         self.date = datetime.now()
@@ -83,6 +109,7 @@ class tmcMongo():
         self.construct_identity()
         self.make_unique_name()
         self.construct_document()
+        self.construct_webdoc()
 
     def deserialize_dftrun(self):
         return pickle.loads(self.dftrun)
@@ -93,6 +120,14 @@ class tmcMongo():
                 self.document.update({attr: getattr(self, attr)})
             except:
                 pass
+
+    def construct_webdoc(self):
+        for attr in mongo_attr_from_run_undef + mongo_attr_from_run_nan + mongo_attr_other:
+            if not attr in mongo_not_web:
+                try:
+                    self.web_doc.update({attr: getattr(self, attr)})
+                except:
+                    pass
 
     def construct_identity(self):
         for attr in mongo_attr_id:
@@ -117,4 +152,4 @@ class tmcMongo():
         return this_run
 
     def back_to_mAD(self):
-        pass
+        pass #TODO
