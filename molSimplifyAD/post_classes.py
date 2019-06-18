@@ -1059,7 +1059,8 @@ class DFTRun(object):
                   + '"rundir": ' + '"%s"' % path_dictionary["fod_output_path"] + ',' \
                   + '"program": "terachem",' \
                   + '"record": True}\n' \
-                  + 'MultirefPredict.diagnostic_factory("FOD", **input_dict).computeDiagnostic()\n'
+                  + 'MultirefPredict.diagnostic_factory("FOD",'\
+                  + '**input_dict).computeDiagnostic("b3lyp")\n'
         fod_py.write(fod_str)
         fod_py.close()
 
