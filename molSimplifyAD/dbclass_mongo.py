@@ -37,6 +37,9 @@ class tmcMongo():
     '''
 
     def __init__(self, tag, subtag, this_run=False, document=False, geo_type=False):
+        if (this_run and document):
+            raise ValueError(
+                "Confusion. Either a DFTrun object or a tmcMongo object is required as an input. Not both.")
         if not this_run:
             if document:
                 try:
@@ -45,9 +48,6 @@ class tmcMongo():
                     raise ValueError("The input document does not contain a DFTrun object.")
             else:
                 raise ValueError("Either a DFTrun object or a tmcMongo object is required as an input.")
-        if (this_run and document):
-            raise ValueError(
-                "Confusion. Either a DFTrun object or a tmcMongo object is required as an input. Not both.")
         self.document = {}
         self.web_doc = {}
         self.id_doc = {}

@@ -164,7 +164,7 @@ def push2db(database, collection, user=False, pwd=False, host="localhost", port=
         print("DFTruns loaded from %s." % all_runs_pickle)
     count = 0
     for this_run in all_runs.values():
-        print("complex: ", this_run.name)
+        print("adding complex: ", this_run.name)
         if sys.getsizeof(pickle.dumps(this_run)) * 1. / 10 ** 6 > 16.7:
             print(
                 "DFTrun too large. Deleting wavefunction binary. Only the path of wavefunction files is hold by DFTrun.")
