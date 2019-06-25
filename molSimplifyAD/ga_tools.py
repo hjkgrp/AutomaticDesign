@@ -487,7 +487,9 @@ def translate_job_name(job):
     basename = base.strip(".in")
     basename = basename.strip(".xyz")
     basename = basename.strip(".out")
+    basename = basename.strip(".py")
     ll = (str(basename)).split("_")
+    print(ll)
     ligands_dict = get_ligands()
     # print(ll)
     gen = ll[1]
@@ -796,6 +798,8 @@ def setup_paths():
         "pdb_path": working_dir + "pdb/",
         "molscontrol_log_path": working_dir + "molscontrol_logs/",
         "dynamic_feature_path": working_dir + "dynamic_feature/",
+        "fod_input_path": working_dir + "fod_infiles/",
+        "fod_output_path": working_dir + "fod_outfiles/",
     }
 
     #    shutil.copyfile(get_source_dir()+'wake.sh',get_run_dir()+'wake.sh')

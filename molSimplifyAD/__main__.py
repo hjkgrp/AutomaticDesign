@@ -1,6 +1,7 @@
 from molSimplifyAD.ga_io_control import *
 from molSimplifyAD.ga_create_new import *
 from molSimplifyAD.ga_resume_run import *
+from molSimplifyAD.ga_database_io import push_run
 import sys
 
 
@@ -21,11 +22,14 @@ def main():
     print(args)
     
     if args.new:
-        print 'Starting new run...'
+        print('Starting new run...')
         create_new_run(args)
     elif args.resume:
-        print 'Resuming existing run...'
+        print('Resuming existing run...')
         resume_run(args)
+    elif args.push:
+        print('Push current run to db...')
+        push_run(args)
     
 if __name__ == '__main__':
     main()

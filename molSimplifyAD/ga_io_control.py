@@ -44,6 +44,7 @@ class GA_run_defintion:
                   ax_lig_dissoc=False,
                   spin_constraint=False,
                   molscontrol=False,
+                  fod=False,
                   **KWARGS):
         ## first time start-up function
         #                print('configuring status dictionaty')
@@ -85,6 +86,7 @@ class GA_run_defintion:
                        'ax_lig_dissoc': ax_lig_dissoc,
                        'spin_constraint': spin_constraint,
                        'molscontrol': molscontrol,
+                       'fod': fod,
                        }
 
     def serialize(self):
@@ -176,6 +178,9 @@ def parseall(parser):
                         default=False)
     parser.add_argument("-reps", help="repeat n resume operations ", nargs='?', const=1, default=False)
     parser.add_argument("-sleep", help="time (in seconds) to sleep beweetwn reps ", nargs='?', const=0, default=False)
+    parser.add_argument("-push", help="finsh the whole mad run and push to db", nargs='?', const=True, default=False)
+    parser.add_argument("-user", help="username of db", nargs='?', const=True, default=False)
+    parser.add_argument("-pwd", help="username of db", nargs='?', const=True, default=False)
     args = parser.parse_args()
     return args
 
@@ -183,7 +188,7 @@ def parseall(parser):
 ########################
 def checkinput(args):
     ## verfiy compatible arguments given
-    if not args.new and not args.resume:
+    if not args.new and not args.resume and not args.push:
         print  'Error: choose either -new to start a new run, or -resume to continue an existing one. Aborting.'
         exit()
     if args.new:
@@ -263,6 +268,12 @@ def get_molscontrol_configure():
     molscontrol_config_file = resource_filename(Requirement.parse("molSimplifyAD"),
                                                 "molSimplifyAD/" + "/configure.json")
     return molscontrol_config_file
+
+
+def get_fod_script(queue_type='SGE'):
+    fod_script = resource_filename(Requirement.parse("molSimplifyAD"),
+                                   "molSimplifyAD/" + queue_type.lower() + "_fod.sh")
+    return fod_script
 
 
 ########################
@@ -351,3 +362,5 @@ def get_old_optimizer_ligand_list():
         for lines in f.readlines():
             old_optimizer_list.append(lines.strip().strip('\n'))
     return old_optimizer_list
+
+

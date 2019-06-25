@@ -54,6 +54,11 @@ def launch_job(job, sub_num):
     elif "sp_infiles" in job:
         cmd_script = "launch_script_sp.sh"
         infile = job
+    elif "fod" in job:
+        cmd_script = "launch_script_fod.sh"
+        infile =job
+        opath = path_dictionary["queue_output"] + name + '_fod.o'
+        epath = path_dictionary["queue_output"] + name + '_fod.e'
     else:
         if isKeyword("optimize"):
             cmd_script = "launch_script_geo.sh"

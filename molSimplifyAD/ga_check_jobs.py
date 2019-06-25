@@ -84,6 +84,7 @@ def check_all_current_convergence():
         ## 7  -> allowed submissions exceeded  (in ga_monitor)
         ## 8  -> prog geo was found, but was a bad geo
         ## 9  -> killed by molscontrol during the first submission
+        ## 11 -> job requests fod
         ## 12 -> job requests thermo
         ## 13 -> job requests solvent
         ## 14 -> job requests sp calc
@@ -172,7 +173,7 @@ def check_all_current_convergence():
                 this_run.dynamicfeaturepath = path_dictionary[
                                                   "dynamic_feature_path"] + base_name + "_dynamic_feature.json"
                 safe_copy(path_dictionary["scr_path"] + base_name + "/molscontrol.log",
-                              this_run.molslogpath, path_dictionary["molscontrol_log_path"])
+                          this_run.molslogpath, path_dictionary["molscontrol_log_path"])
                 safe_copy(path_dictionary["scr_path"] + base_name + "/features.json",
                           this_run.dynamicfeaturepath, path_dictionary["dynamic_feature_path"])
 
@@ -180,6 +181,10 @@ def check_all_current_convergence():
 
                 this_run.sp_inpath = path_dictionary["sp_in_path"] + base_name + ".in"
                 this_run.sp_outpath = (path_dictionary["sp_out_path"] + '/' + base_name + ".out")
+
+                if isKeyword('fod'):
+                    this_run.fod_outpath = (path_dictionary["fod_output_path"] + base_name + ".out")
+                    this_run.fod_inpath = (path_dictionary["fod_input_path"] + base_name + ".py")
 
                 if isKeyword('thermo'):
                     this_run.thermo_outpath = (path_dictionary["thermo_out_path"] + base_name + ".out")
@@ -269,6 +274,16 @@ def check_all_current_convergence():
                         if isKeyword('SASA'):  ## if we want SASA
                             print('getting area for ' + this_run.name)
                             this_run.obtain_area()
+
+                        if isKeyword('fod'):
+                            this_run = check_fod_file(this_run)
+                            print("fod_cont:" , this_run.fod_cont)
+                            if this_run.fod_cont and run_success:
+                                remove_outstanding_jobs(this_run.fod_inpath)
+                            elif run_success:
+                                this_run.status = 11
+                                run_success = False
+
                         # only thermo and solvent for
                         # B3LYP, also check HFX sample
                         if isKeyword('thermo'):
@@ -304,7 +319,7 @@ def check_all_current_convergence():
                                 else:
                                     run_success = True  # mark true here
                                     remove_outstanding_jobs(this_run.thermo_inpath)
-                            else:
+                            elif run_success:
                                 this_run.status = 12
                                 run_success = False
 
@@ -377,7 +392,7 @@ def check_all_current_convergence():
                             else:
                                 print('Both HAT and Oxo TSs still need to be run')
                                 this_run.status = 16
-                        if run_success and not this_run.status in [12, 13, 14, 15, 16, 17, 18, 19]:
+                        if run_success and not this_run.status in [11, 12, 13, 14, 15, 16, 17, 18, 19]:
                             this_run.status = 0  # all done
                         ## mark as compelete
                     else:  # not B3LYP, check coord only:
@@ -483,7 +498,8 @@ def check_all_current_convergence():
                             logger(base_path_dictionary['state_path'],
                                    str(datetime.datetime.now()) + ' Check on prog_geo: flag_oct: ' + str(flag_oct))
                             logger(base_path_dictionary['state_path'],
-                                   str(datetime.datetime.now()) + ' Current structure is supposed to be octahedral: ' + str(
+                                   str(
+                                       datetime.datetime.now()) + ' Current structure is supposed to be octahedral: ' + str(
                                        this_run.octahedral))
                             if not flag_oct:
                                 logger(base_path_dictionary['state_path'],
@@ -497,7 +513,8 @@ def check_all_current_convergence():
                                 create_generic_infile(jobs, use_old_optimizer=use_old_optimizer, restart=True)
                                 this_run.status = 2  ## prog geo is good
                                 logger(base_path_dictionary['state_path'],
-                                       str(datetime.datetime.now()) + ' job allowed to restart since good prog geo found ')
+                                       str(
+                                           datetime.datetime.now()) + ' job allowed to restart since good prog geo found ')
                             else:
                                 logger(base_path_dictionary['state_path'], str(
                                     datetime.datetime.now()) + ' job not allowed to restart since prog geo is not good ')
@@ -525,7 +542,7 @@ def check_all_current_convergence():
                     else:
                         this_run.status = 9
                         logger(base_path_dictionary['state_path'],
-                                   str(datetime.datetime.now()) + 'killed by molscontrol.')
+                               str(datetime.datetime.now()) + 'killed by molscontrol.')
                 ## record convergence status
                 update_converged_job_dictionary(jobs, this_run.status)
                 ## store this run
@@ -538,10 +555,15 @@ def check_all_current_convergence():
                 logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                        + ' added ' + this_run.name + ' to all_runs with status ' + str(this_run.status))
 
-                if this_run.status in [0, 1, 12, 13, 14, 15, 16, 17, 18, 19]:  ##  convergence is successful!
+                if this_run.status in [0, 1, 11, 12, 13, 14, 15, 16, 17, 18, 19]:  ##  convergence is successful!
                     print('removing job from OSL due to status  ' + str(this_run.status))
                     jobs_complete += 1
                     remove_outstanding_jobs(jobs)  # take out of queue
+                    if isKeyword('fod'):
+                        if this_run.status == 11:  ## need fod:
+                            print('addding fod based on ' + str(jobs))
+                            this_run.write_fod_input()
+                            add_to_outstanding_jobs(this_run.fod_inpath)
                     if isKeyword('solvent'):
                         if this_run.status == 13:  ## need solvent:
                             print('addding solvent based on ' + str(jobs))

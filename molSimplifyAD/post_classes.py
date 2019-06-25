@@ -55,8 +55,8 @@ class DFTRun(object):
                               'terachem_version', 'terachem_detailed_version', 'basis', 'alpha_level_shift',
                               'beta_level_shift', 'functional', 'rmsd', 'maxd', 'thermo_time', 'solvent_time',
                               'water_time', 'angletest', 'ligrsmd', 'flag_oct', 'flag_list', 'num_coord_metal',
-                              'rmsd_max', 'spin_cat','sp_alphaHOMO','sp_alphaLUMO','sp_betaHOMO','sp_betaLUMO',
-                              'sp_ss_act','sp_ss_target',
+                              'rmsd_max', 'spin_cat', 'sp_alphaHOMO', 'sp_alphaLUMO', 'sp_betaHOMO', 'sp_betaLUMO',
+                              'sp_ss_act', 'sp_ss_target',
                               'atom_dist_max', 'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
                               'devi_linear_avrg', 'devi_linear_max', 'flag_oct_loose', 'flag_list_loose',
                               'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max', 'area',
@@ -68,7 +68,8 @@ class DFTRun(object):
         list_of_init_false = ['solvent_cont', 'water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
-                              'islive', 'set_desc', 'sp_status', 'empty_sp_status']
+                              'islive', 'set_desc', 'sp_status', 'empty_sp_status', 'fod_cont', "wavefunction",
+                              "wavefunction_path", "molden_path"]
         list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord', 'empty_ss_target',
                              'empty_ss_act']
         if isKeyword('oxocatalysis'):
@@ -659,7 +660,7 @@ class DFTRun(object):
 
     def write_HFX_inputs(self, newHFX, refHFX):
         ## set file paths for HFX resampling
-        ## the fixed ordering is 
+        ## the fixed ordering is
         ## 20 -> 25 -> 30, 20->15->10->05->00
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
@@ -709,7 +710,7 @@ class DFTRun(object):
 
     def write_empty_inputs(self, refHFX, lines_to_remove=1, ligand_charge=0):
         ## set file paths for empty structure gen
-        ## the fixed ordering is 
+        ## the fixed ordering is
         ## HFX20 Oxo --> HFX20 Empty SP + HFX20 Empty Geo --> HFX25 Oxo --> HFX25 Empty SP + HFX25 Empty Geo... etc.
         # _, _, _, _, _, _, _, _, _, _, _, this_spin, _, _, _, _ = translate_job_name(self.job)
         translate_dict = translate_job_name(self.job)
@@ -1005,7 +1006,7 @@ class DFTRun(object):
         return HAT_inpath, Oxo_inpath
 
     def write_DLPNO_inputs(self):
-        ## set files  for DLNPO calcs 
+        ## set files  for DLNPO calcs
         path_dictionary = setup_paths()
         print(path_dictionary)
         print(path_dictionary['DLPNO_path'])
@@ -1045,12 +1046,30 @@ class DFTRun(object):
                         f_DLPNO.write('\n')
                         f_DLPNO.close()
 
+    def write_fod_input(self):
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
+        fod_py_file = path_dictionary["fod_input_path"] + self.name + ".py"
+        fod_py = open(fod_py_file, 'w')
+        fod_str = 'import MultirefPredict\n' \
+                  + 'input_dict = {"xyzfile": "' + self.geopath + '",' \
+                  + '"molname": "' + self.name + '",' \
+                  + '"charge":' + str(self.charge) + ',' \
+                  + '"spinmult": ' + str(self.spin) + ',' \
+                  + '"rundir": ' + '"%s"' % path_dictionary["fod_output_path"] + ',' \
+                  + '"program": "terachem",' \
+                  + '"record": True}\n' \
+                  + 'MultirefPredict.diagnostic_factory("FOD",'\
+                  + '**input_dict).computeDiagnostic("b3lyp")\n'
+        fod_py.write(fod_str)
+        fod_py.close()
+
     def archive(self, sub_number):
         # this fuinciton copies all files to arch
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         archive_path = path_dictionary["archive_path"] + self.name + '/'
-        # ensure unique dir exists  
+        # ensure unique dir exists
         counter = 0
         org_name = archive_path
         archive_path = org_name.rstrip('/') + '_' + str(sub_number) + '/'
@@ -1180,32 +1199,30 @@ class DFTRun(object):
                             try:
                                 _time_tot += float(ll[ll.index('sec') - 1])
                             except:
-                                print '\n\n CHECK GEO OUTFILE FOR abnormal sec'
+                                print
+                                '\n\n CHECK GEO OUTFILE FOR abnormal sec'
         else:
             print('!!combined output file not found!!')
         self.tot_time = tot_time
         self.tot_step = tot_step
 
-    def get_descriptor_vector(self, loud=False, name=False):
+    def get_descriptor_vector(self, loud=False, name=False, useinitgeo=False):
         ox_modifier = {self.metal: self.ox}
-        print(ox_modifier)
-        if self.converged and self.flag_oct:
-            # self.mol.update_graph_check()
+        if (self.converged and self.flag_oct) and (not useinitgeo):
             descriptor_names, descriptors = get_descriptor_vector(this_complex=self.mol,
                                                                   custom_ligand_dict=False,
                                                                   ox_modifier=ox_modifier)
         else:
             try:
-                # self.init_mol.update_graph_check()
                 descriptor_names, descriptors = get_descriptor_vector(this_complex=self.init_mol,
                                                                       custom_ligand_dict=False,
                                                                       ox_modifier=ox_modifier)
             except:
                 descriptor_names, descriptors = [], []
-
         self.descriptor_names = descriptor_names
         self.descriptors = descriptors
         self.set_desc = True
+        return descriptor_names, descriptors
 
     def append_descriptors(self, list_of_names, list_of_props, prefix, suffix):
         for names in list_of_names:
@@ -1267,6 +1284,26 @@ class DFTRun(object):
                         killed = True
         return killed
 
+    def obtain_wavefunction(self):
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)
+        scrdir = path_dictionary["scr_path"] + self.name + '/'
+        wavefunc_keys = ["c0", "ca0", "cb0"]
+        self.wavefunction = {}
+        self.wavefunction_path = {}
+        for key in wavefunc_keys:
+            wavefunc_file = scrdir + key
+            if os.path.isfile(wavefunc_file):
+                print("found %s. Writting into DFTrun..."%key)
+                with open(wavefunc_file, "rb") as fo:
+                    wf = fo.read()
+            else:
+                wf = False
+                wavefunc_file = False
+            self.wavefunction.update({key: wf})
+            self.wavefunction_path.update({key: wavefunc_file})
+        self.molden_path = path_dictionary["scr_path"] + self.name + '/' + self.name + ".molden"
+
 
 class Comp(object):
     """ This is a class for each unique composition and configuration"""
@@ -1301,7 +1338,7 @@ class Comp(object):
         #### MUST REMOVE
         ## this is a hack
         ## needed to fool
-        ## the spin 
+        ## the spin
         ## spliting logic
         ## should only use
         ## ox2_split
@@ -1330,8 +1367,8 @@ class Comp(object):
                               'status', 'comment',
                               'ax1_MLB', 'ax2_MLB', 'eq_MLB',
                               'init_ax1_MLB', 'init_ax2_MLB', 'init_eq_MLB',
-                              'ss_act', 'ss_target', 'geopath','sp_ss_act','sp_ss_target',
-                              'sp_alphaHOMO','sp_alphaLUMO','sp_betaHOMO','sp_betaLUMO',
+                              'ss_act', 'ss_target', 'geopath', 'sp_ss_act', 'sp_ss_target',
+                              'sp_alphaHOMO', 'sp_alphaLUMO', 'sp_betaHOMO', 'sp_betaLUMO',
                               'terachem_version', 'terachem_detailed_version',
                               'basis', 'functional',
                               'alpha_level_shift', 'beta_level_shift', 'job_gene',
@@ -1462,7 +1499,7 @@ class Comp(object):
             self.ox3split = 777
 
     def get_some_split(self):
-        ## this function is part 
+        ## this function is part
         ## of the hack that this needed
         ## to handle splitting energy
         ## in 4-class redox cases
