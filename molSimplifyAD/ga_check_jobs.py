@@ -96,7 +96,7 @@ def check_all_current_convergence():
         joblist.sort()
 
         print('testing if  post-all is on: ', isKeyword('post_all'))
-        print("jobslist: ", joblist)
+        # print("jobslist: ", joblist)
         print("dbjobs_dict: ", dbjobs_dict)
 
         for jobs in joblist:
