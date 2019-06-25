@@ -594,7 +594,7 @@ def check_all_current_convergence():
                             this_run.oxygen_mulliken_charge = oxocharge
                         else:
                             print("No molden path found for this run (" + str(jobs) + ")")
-                if this_run.status in [3, 5, 6, 8, 9, "undef"]:  ##  convergence is not successful!
+                if this_run.status in [2, 3, 5, 6, 8, 9, "undef"]:  ##  convergence is not successful!
                     number_of_subs = submitted_job_dictionary[jobs]
                     if this_run.status == "undef":
                         this_run.status = 3
@@ -615,6 +615,13 @@ def check_all_current_convergence():
                                + " giving up on job : " + str(jobs) + ' with status ' + str(this_run.status)
                                + ' after ' + str(number_of_subs) + ' subs since prog geo was bad')
                         remove_outstanding_jobs(jobs)  # take out of pool
+                    elif this_run.status in [2]:  ## ok prog geo, make sure in outstanding
+                        logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
+                               + " resubmitting job : " + str(jobs) + ' with status ' + str(this_run.status)
+                               + ' after ' + str(number_of_subs) + ' subs since prog geo was good')
+                        add_to_outstanding_jobs(jobs)
+
+
                 print('END OF JOB \n *******************\n')
             elif ("sp_infiles" in jobs and not isKeyword('optimize')) or (
                     "sp_infiles" in jobs and isKeyword('oxocatalysis')):
