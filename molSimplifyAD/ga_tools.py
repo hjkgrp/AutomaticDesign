@@ -293,7 +293,8 @@ def find_live_jobs():
 
 ########################
 def get_metals():
-    metals_list = ['cr', 'mn', 'fe', 'co', 'mo', 'tc', 'ru', 'rh']
+    # metals_list = ['cr', 'mn', 'fe', 'co', 'mo', 'tc', 'ru', 'rh']
+    metals_list = ['co']
     return metals_list
 
 
@@ -1075,6 +1076,29 @@ def log_bad_initial(job):
     else:
         with open(path, 'w') as f:
             f.write(job + "\n")
+
+
+########################
+def log_indb_pairs(jobpath, tmcdoc):
+    path = isKeyword('rundir') + 'jobs_indb.csv'
+    if os.path.isfile(path):
+        with open(path, 'a') as f:
+            f.write(jobpath + ',' + tmcdoc["unique_name"] + ',' + str(tmcdoc["_id"])+ "\n")
+    else:
+        with open(path, 'w') as f:
+            f.write(jobpath + ',' + tmcdoc["unique_name"] + ',' + str(tmcdoc["_id"])+ "\n")
+
+
+#########################
+def find_indb_jobs():
+    path = isKeyword('rundir') + 'jobs_indb.csv'
+    dbjobs_dict = {}
+    with open(path, "r") as fo:
+        for line in fo:
+            ll = line.split(",")
+            if len(ll) ==  3:
+                dbjobs_dict.update({ll[0]: {"unqiue_name": ll[1], "_id": ll[2]}})
+    return dbjobs_dict
 
 
 ########################

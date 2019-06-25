@@ -11,6 +11,8 @@ import shutil
 from molSimplifyAD.ga_tools import *
 from molSimplifyAD.ga_complex import *
 from molSimplifyAD.ga_check_jobs import *
+from molSimplifyAD.utils.pymongo_tools import connect2db, query_one
+from molSimplifyAD.dbclass_mongo import tmcMongo
 
 
 ########################
@@ -139,7 +141,7 @@ class GA_generation:
         else:#except:
             print('cannot make eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) + ' + ' + str(ligs[1][1]))
             sardines
-            
+
     def write_state(self):
         ## first write genes to path
         state_path = self.current_path_dictionary["state_path"] + "current_genes.csv"
@@ -425,6 +427,9 @@ class GA_generation:
         converged_jobs = find_converged_job_dictionary()
         gene_template = get_gene_template()
         spins_dict = spin_dictionary()
+        db = connect2db(user="readonly_user", pwd="readonly", host="localhost", port=27017, database="tmc", auth=True)
+        print("# of complex in db: ", db.oct.count())
+
         for keys in self.outstanding_genes.keys():
             job_prefix = "gen_" + str(self.status_dictionary["gen"]) + "_slot_" + str(keys) + "_"
             genes = self.outstanding_genes[keys]
@@ -433,7 +438,7 @@ class GA_generation:
             ## If ox in gene_template, then use the ox provided, else loop over possible ox.
             if gene_template['ox']:
                 ox_list = [genes.ox]
-            else: 
+            else:
                 ox_list = get_ox_states()
             for ox in ox_list:
                 ## Same for spin
@@ -445,6 +450,7 @@ class GA_generation:
                 for spin in spin_list:
                     ## generate HS/LS
                     ## convert the gene into a job file and geometery
+                    tmcdoc = False
                     if gene_template['legacy']:
                         jobpath, mol_name, ANN_results, flag_oct = genes.generate_geometry_legacy(prefix=job_prefix,
                                                                                            spin=spin,
@@ -452,23 +458,45 @@ class GA_generation:
                                                                                            rundirpath=isKeyword('rundir'),
                                                                                            gen=self.status_dictionary['gen'])
                     else:
+                        constraints = genes.assemble_constraints(ox=ox, spin=spin)
+                        print("query constraints: ", constraints)
+                        tmcdoc = query_one(db, collection="oct", constraints=constraints)
+                        if not tmcdoc ==  None:
+                            if not tmcdoc["converged"]:
+                                tmcdoc = False
+                                print("Found in the database but whose geometry optimization did not converge.", constraints)
+                            else:
+                                print("using results from database with constraints: ", constraints)
+                        else:
+                            tmcdoc = False
+                            print("Not found in the database. ")
                         jobpath, mol_name, ANN_results, flag_oct = genes.generate_geometry(prefix=job_prefix,
                                                                                            ox = ox,
                                                                                            spin=spin,
                                                                                            path_dictionary=self.current_path_dictionary,
                                                                                            rundirpath=isKeyword('rundir'),
-                                                                                           gen=self.status_dictionary['gen'])
-                    
+                                                                                           gen=self.status_dictionary['gen'],
+                                                                                           tmcdoc=tmcdoc)
+                        print("coverged jobs: ", converged_jobs.keys())
                     if flag_oct:
                         if (jobpath not in current_outstanding) and (jobpath not in converged_jobs.keys()):
                             msg, ANN_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + 'ANN_results.csv')
                             print('saving result in ANN dict: ' + mol_name)
-
                             ANN_results_dict.update({mol_name: ANN_results})
-                            jobpaths.append(jobpath)
-                            logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen "
-                                   + str(self.status_dictionary['gen'])
-                                   + " missing information for gene number  " + str(keys) + ' with  name ' + str(genes.name))
+                            if not tmcdoc:
+                                jobpaths.append(jobpath)
+                                logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen "
+                                       + str(self.status_dictionary['gen'])
+                                       + " missing information for gene number  " + str(keys) + ' with  name ' + str(genes.name))
+                            else:
+                                print("in DB.")
+                                logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen "
+                                       + str(self.status_dictionary['gen'])
+                                       + " completed geometry optimization for gene number " + str(keys) +
+                                       ' with  name ' + str(genes.name) + ' Extracted from database with a complex named uniquely as ' +
+                                       tmcdoc["unique_name"])
+                                update_converged_job_dictionary(jobpath, 2)
+                                log_indb_pairs(jobpath, tmcdoc)
                     else:
                         logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) + ":  Gen "
                                    + str(self.status_dictionary['gen'])
@@ -581,7 +609,7 @@ class GA_generation:
                 this_dist = full_gene_info[gene][1]
             else:
                 this_prop = float(full_gene_info[gene][0])
-                this_dist = float(full_gene_info[gene][1])            
+                this_dist = float(full_gene_info[gene][1])
             if self.status_dictionary['scoring_function'] == "prop+dist":
                 fitness = find_prop_dist_fitness(this_prop, self.status_dictionary['property_parameter'],
                                                  this_dist, self.status_dictionary['distance_parameter'])

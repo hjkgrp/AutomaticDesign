@@ -21,6 +21,7 @@ def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary):
     ## function to choos if a job should
     # GA_run = get_current_GA()
 
+    postProc = False
     ## be post processed:
     if (job not in live_job_dictionary.keys()) and (len(job.strip('\n')) != 0):
         if not ("sp_infiles" in job) and not ("thermo" in job) and not ("solvent" in job) and not (
@@ -32,17 +33,11 @@ def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary):
                     this_outcome = int(converged_jobs_dictionary[job])
                 except:
                     this_outcome = 3
-                if this_outcome in [0, 1, 3, 6, 8]:  # dead jobs
-                    postProc = False
-                else:
+                if not this_outcome in [0, 1, 3, 6, 8]:  # dead jobs
                     postProc = True
             else:
                 postProc = True
-        else:
-            postProc = False
-    else:
-        postProc = False
-    return (postProc)
+    return postProc
 
 
 #######################
@@ -59,6 +54,10 @@ def check_all_current_convergence():
     converged_jobs = find_converged_job_dictionary()
     ## sub'd jobs
     joblist = submitted_job_dictionary.keys()
+    ## indb jobs
+    dbjobs_dict = find_indb_jobs()
+    dbjobs_list = list(dbjobs_dict.keys())
+    joblist += dbjobs_list
     ## outstanding jobs:
     outstanding_jobs = get_outstanding_jobs()
     gene_template = get_gene_template()
@@ -97,9 +96,12 @@ def check_all_current_convergence():
         joblist.sort()
 
         print('testing if  post-all is on: ', isKeyword('post_all'))
+        print("jobslist: ", joblist)
+        print("dbjobs_dict: ", dbjobs_dict)
 
         for jobs in joblist:
             print('\n\n' + jobs + '\n\n')
+            print("process? ", postprocessJob(job=jobs, live_job_dictionary=live_job_dictionary, converged_jobs_dictionary=converged_jobs))
             if postprocessJob(job=jobs, live_job_dictionary=live_job_dictionary,
                               converged_jobs_dictionary=converged_jobs):
                 ##upack job name

@@ -5,7 +5,6 @@ import pandas as pd
 from pandas.io.json import json_normalize
 import pickle
 from molSimplifyAD.dbclass_mongo import tmcMongo, mongo_attr_id
-from molSimplifyAD.ga_check_jobs import check_all_current_convergence
 from molSimplifyAD.ga_tools import isKeyword
 
 
@@ -133,6 +132,7 @@ def push2db(database, collection, user=False, pwd=False, host="localhost", port=
     :param web: Whether to push it to the MongoDB shown on web.
     :return: None
     '''
+    from molSimplifyAD.ga_check_jobs import check_all_current_convergence
     if not tag:
         if not os.path.isfile(".madconfig") or not isKeyword('tag'):
             raise ValueError("This is not a mAD folder with a tag to push.")
