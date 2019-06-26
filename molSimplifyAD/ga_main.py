@@ -431,8 +431,12 @@ class GA_generation:
         converged_jobs = find_converged_job_dictionary()
         gene_template = get_gene_template()
         spins_dict = spin_dictionary()
-        db = connect2db(user="readonly_user", pwd="readonly", host="localhost", port=27017, database="tmc", auth=True)
-        print("# of complex in db: ", db.oct.count())
+        try:
+            db = connect2db(user="readonly_user", pwd="readonly", host="localhost", port=27017, database="tmc", auth=True)
+            print("# of complex in db: ", db.oct.count())
+            connected = True
+        except:
+            connected = False
 
         for keys in self.outstanding_genes.keys():
             job_prefix = "gen_" + str(self.status_dictionary["gen"]) + "_slot_" + str(keys) + "_"
@@ -462,18 +466,19 @@ class GA_generation:
                                                                                            rundirpath=isKeyword('rundir'),
                                                                                            gen=self.status_dictionary['gen'])
                     else:
-                        constraints = genes.assemble_constraints(ox=ox, spin=spin)
-                        print("query constraints: ", constraints)
-                        tmcdoc = query_one(db, collection="oct", constraints=constraints)
-                        if not tmcdoc ==  None:
-                            if not tmcdoc["converged"]:
-                                tmcdoc = False
-                                print("Found in the database but whose geometry optimization did not converge.", constraints)
+                        if connected:
+                            constraints = genes.assemble_constraints(ox=ox, spin=spin)
+                            print("query constraints: ", constraints)
+                            tmcdoc = query_one(db, collection="oct", constraints=constraints)
+                            if not tmcdoc ==  None:
+                                if not tmcdoc["converged"]:
+                                    tmcdoc = False
+                                    print("Found in the database but whose geometry optimization did not converge.", constraints)
+                                else:
+                                    print("using results from database with constraints: ", constraints)
                             else:
-                                print("using results from database with constraints: ", constraints)
-                        else:
-                            tmcdoc = False
-                            print("Not found in the database. ")
+                                tmcdoc = False
+                                print("Not found in the database. ")
                         jobpath, mol_name, ANN_results, flag_oct = genes.generate_geometry(prefix=job_prefix,
                                                                                            ox = ox,
                                                                                            spin=spin,

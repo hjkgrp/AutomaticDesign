@@ -20,23 +20,26 @@ from molSimplifyAD.ga_oct_check import *
 def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary):
     ## function to choos if a job should
     # GA_run = get_current_GA()
+    notin_list = ["sp_infiles", "thermo", "solvent", "water", "prfo", "fod"]
+    geoopt = True
+    for ele in notin_list:
+    	if ele in job:
+    		geoopt = False
 
     postProc = False
     ## be post processed:
-    if (job not in live_job_dictionary.keys()) and (len(job.strip('\n')) != 0):
-        if not ("sp_infiles" in job) and not ("thermo" in job) and not ("solvent" in job) and not (
-                "water" in job) and not ("prfo" in job):
-            if isKeyword('post_all'):
+    if (job not in live_job_dictionary.keys()) and (len(job.strip('\n')) != 0) and geoopt:
+        if isKeyword('post_all'):
+            postProc = True
+        elif job in converged_jobs_dictionary.keys():
+            try:
+                this_outcome = int(converged_jobs_dictionary[job])
+            except:
+                this_outcome = 3
+            if not this_outcome in [0, 1, 3, 6, 8]:  # dead jobs
                 postProc = True
-            elif job in converged_jobs_dictionary.keys():
-                try:
-                    this_outcome = int(converged_jobs_dictionary[job])
-                except:
-                    this_outcome = 3
-                if not this_outcome in [0, 1, 3, 6, 8]:  # dead jobs
-                    postProc = True
-            else:
-                postProc = True
+        else:
+            postProc = True
     return postProc
 
 
