@@ -4,7 +4,7 @@ from pymongo import MongoClient
 import pandas as pd
 from pandas.io.json import json_normalize
 import pickle
-from molSimplifyAD.dbclass_mongo import tmcMongo, mongo_attr_id
+from molSimplifyAD.dbclass_mongo import tmcMongo, mongo_attr_id, mongo_not_web
 from molSimplifyAD.ga_tools import isKeyword
 
 
@@ -38,14 +38,46 @@ def insert(db, collection, tmc, web="web"):
     inserted = False
     if not repeated:
         db[collection].insert_one(tmc.document)
-        if web:
-            web_coll = collection + "_" + web
-            db[web_coll].insert_one(tmc.web_doc)
         inserted = True
     else:
-        this_tmc = tmcMongo(document=_tmcdoc, tag="undef", subtag='undef')
+        this_tmc = tmcMongo(document=_tmcdoc, tag=_tmcdoc["tag"], subtag=_tmcdoc["subtag"])
         print("existed: ", this_tmc.id_doc)
+        print("merging....")
+        merge_documents(db, collection, doc1=_tmcdoc, doc2=tmc.document)
+    if web:
+        web_coll = collection + "_" + web
+        repeated, _tmcdoc = check_repeated(db, web_coll, tmc)
+        if not repeated:
+            db[web_coll].insert_one(tmc.web_doc)
+            inserted = True
+        else:
+            for key in mongo_not_web:
+                if key in tmc.document:
+                    tmc.document.pop(key)
+                if key in _tmcdoc:
+                    _tmcdoc.pop(key)
+            merge_documents(db, web_coll, doc1=_tmcdoc, doc2=tmc.document)
     return inserted
+
+
+def merge_documents(db, collection, doc1, doc2):
+    for key in doc2:
+        if not key in doc1:
+            doc1.update({key: doc2[key]})
+    if "dftrun" in doc1 and "dftrun" in doc2:
+        new_dftrun = merge_dftrun(dftrun1=pickle.loads(doc1["dftrun"]),
+                                  dftrun2=pickle.loads(doc2["dftrun"])
+                                  )
+        doc1.update({"dftrun": pickle.dumps(new_dftrun)})
+    db[collection].replace_one({"_id": doc1["_id"]}, doc1)
+
+
+
+def merge_dftrun(dftrun1, dftrun2):
+    for attr, val in dftrun2.__dict__.items():
+        if not attr in dftrun1.__dict__:
+            setattr(dftrun1, attr, val)
+    return dftrun1
 
 
 def convert2dataframe(db, collection, constraints=False, dropcols=["dftrun"], directload=False, normalized=False):
@@ -147,7 +179,7 @@ def push2db(database, collection, user=False, pwd=False, host="localhost", port=
         finish = False
         while not finish:
             print(
-                    "Collection %s is not currently in this database. Are you sure you want to create a new collection? (y/n)" % collection)
+                "Collection %s is not currently in this database. Are you sure you want to create a new collection? (y/n)" % collection)
             _in = raw_input()
             if _in == "y":
                 finish = True
@@ -163,6 +195,7 @@ def push2db(database, collection, user=False, pwd=False, host="localhost", port=
         all_runs = pickle.load(open(all_runs_pickle, "rb"))
         print("DFTruns loaded from %s." % all_runs_pickle)
     count = 0
+    merged = 0
     for this_run in all_runs.values():
         print("adding complex: ", this_run.name)
         if sys.getsizeof(pickle.dumps(this_run)) * 1. / 10 ** 6 > 16.7:
@@ -174,7 +207,10 @@ def push2db(database, collection, user=False, pwd=False, host="localhost", port=
         insetred = insert(db, collection, this_tmc, web=web)
         if insetred:
             count += 1
+        else:
+            merged += 1
     print("add %d entries in the %s['%s']." % (count, database, collection))
+    print("merge %d entries in the %s['%s']." % (count, database, collection))
 
 
 def unique_name(tmcdoc):

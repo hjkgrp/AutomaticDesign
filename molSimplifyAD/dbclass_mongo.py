@@ -17,7 +17,6 @@ mongo_not_web = ["dftrun"]
 
 
 class tmcMongo():
-
     '''
     Classes that converts between DFTrun and documents in MongoDB.
 
@@ -122,10 +121,10 @@ class tmcMongo():
                 pass
 
     def construct_webdoc(self):
-        for attr in mongo_attr_from_run_undef + mongo_attr_from_run_nan + mongo_attr_other:
-            if not attr in mongo_not_web:
+        for key in self.document:
+            if not key in mongo_not_web:
                 try:
-                    self.web_doc.update({attr: getattr(self, attr)})
+                    self.web_doc.update({key: self.document[key]})
                 except:
                     pass
 
@@ -152,4 +151,4 @@ class tmcMongo():
         return this_run
 
     def back_to_mAD(self):
-        pass #TODO
+        pass  # TODO
