@@ -139,7 +139,7 @@ class tmcMongo():
             name_ele.append(str(self.id_doc[key]))
         self.unique_name = '_'.join(name_ele)
 
-    def write_wfn(self, this_run, wfn_basepath='/data/wfn/'):
+    def write_wfn(self, this_run, wfn_basepath='/opt/data/wfn/'):
         wfn_path = wfn_basepath + self.unique_name + '/'
         if not os.path.isdir(wfn_path):
             os.makedirs(wfn_path)
