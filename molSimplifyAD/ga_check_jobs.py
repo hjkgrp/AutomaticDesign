@@ -235,8 +235,8 @@ def check_all_current_convergence():
                     else:
                         print(' cannot find scr:   ' + this_run.scrpath)
                     ### Merge scr files and output files
-                    # this_run.merge_scr_files()
-                    # this_run.merge_geo_outfiles()
+                    this_run.merge_scr_files()
+                    this_run.merge_geo_outfiles()
                     # this_run.obtain_metal_translation()
 
                 ## check if outpath exists
@@ -777,8 +777,8 @@ def check_all_current_convergence():
         # print('-------')
         # print(final_results)
         if isKeyword('post_all'):
-            # write_run_reports(all_runs)
-            write_run_pickle(final_results)
+            # run global default run pickle disabled 
+            # write_run_pickle(final_results)
             try:
                 process_run_post(run_output_path, run_descriptor_path)
             except:
