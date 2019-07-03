@@ -328,7 +328,6 @@ class octahedral_complex:
                                 eq_dent = eq_ligand_properties[0]
                             self.inds[0:4] = 4 * [eq_ind]
                             self.ligands[0:4] = 4 * [self.ligands_list[eq_ind][0]]
-                        this_ax_dent  = self.ligands_list[self.inds[f_ind]][1][0]
                         elif this_ax_dent > 1 and isKeyword('oxocatalysis'):
                             print('ILLEGAL BIDENTATE AXIAL!')
                             sardines
@@ -1089,25 +1088,8 @@ class octahedral_complex:
 
         # Initialize ANN results dictionary
         ANN_results = {}
-        if not (geo_exists):
-            print('generating ' + str(mol_name) + ' with ligands ' + str(liglist))
-            try:
-                # if True:
-                with open(ms_dump_path, 'a') as ms_pipe:
-                    with open(ms_error_path, 'a') as ms_error_pipe:
-                        call = " ".join(["molsimplify ", '-core ' + this_metal, '-lig ' + str(liglist),
-                                         '-ligocc ' + ','.join([str(i) for i in self.lig_occs if i > 0]),
-                                         '-rundir ' + "'" + rundirpath.rstrip("/") + "'",
-                                         '-keepHs yes,yes,yes,yes,yes,yes', '-jobdir', 'temp',
-                                         '-coord 6', '-ligalign ' + str(ligalign), '-ligloc ' + str(ligloc),
-                                         '-calccharge yes', '-name ' + "'" + mol_name + "'",
-                                         '-geometry ' + geometry, '-spin ' + str(spin), '-oxstate ' + str(ox),
-                                         '-exchange ' + str(exchange),
-                                         '-qccode TeraChem', '-runtyp ' + rty, "-ffoption " + ff_opt, ' -ff UFF'])
-                        if smicat:
-                            call += ' -smicat ' + smicat
         properties = ['split','split_dist' 'homo','homo_dist','gap','gap_dist','oxo','oxo_dist',
-                        'hat','hat_dist','oxo20','oxo20_dist','homo_empty','homo_empty_dist']
+        'hat','hat_dist','oxo20','oxo20_dist','homo_empty','homo_empty_dist']
         if not (geo_exists):
             print('generating '+ str(mol_name) + ' with ligands ' + str(liglist))
             # try:
