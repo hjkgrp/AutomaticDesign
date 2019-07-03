@@ -17,19 +17,19 @@ from molSimplifyAD.ga_oct_check import *
 
 
 #######################
-def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary):
+def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary, post_all=False):
     ## function to choos if a job should
     # GA_run = get_current_GA()
     notin_list = ["sp_infiles", "thermo", "solvent", "water", "prfo", "fod"]
     geoopt = True
     for ele in notin_list:
-    	if ele in job:
-    		geoopt = False
+        if ele in job:
+            geoopt = False
 
     postProc = False
     ## be post processed:
     if (job not in live_job_dictionary.keys()) and (len(job.strip('\n')) != 0) and geoopt:
-        if isKeyword('post_all'):
+        if isKeyword('post_all') or post_all:
             postProc = True
         elif job in converged_jobs_dictionary.keys():
             try:
@@ -44,7 +44,7 @@ def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary):
 
 
 #######################
-def check_all_current_convergence():
+def check_all_current_convergence(post_all=False):
     print('\nchecking convergence of jobs\n')
     ## set up environment:        
     path_dictionary = setup_paths()
@@ -104,9 +104,14 @@ def check_all_current_convergence():
 
         for jobs in joblist:
             print('\n\n' + jobs + '\n\n')
-            print("process? ", postprocessJob(job=jobs, live_job_dictionary=live_job_dictionary, converged_jobs_dictionary=converged_jobs))
-            if postprocessJob(job=jobs, live_job_dictionary=live_job_dictionary,
-                              converged_jobs_dictionary=converged_jobs):
+            print("process? ", postprocessJob(job=jobs,
+                                              live_job_dictionary=live_job_dictionary,
+                                              converged_jobs_dictionary=converged_jobs,
+                                              post_all=post_all))
+            if postprocessJob(job=jobs,
+                              live_job_dictionary=live_job_dictionary,
+                              converged_jobs_dictionary=converged_jobs,
+                              post_all=post_all):
                 ##upack job name
                 # old:
                 # gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(jobs)
@@ -282,7 +287,7 @@ def check_all_current_convergence():
 
                         if isKeyword('fod'):
                             this_run = check_fod_file(this_run)
-                            print("fod_cont:" , this_run.fod_cont)
+                            print("fod_cont:", this_run.fod_cont)
                             if this_run.fod_cont and run_success:
                                 remove_outstanding_jobs(this_run.fod_inpath)
                             elif run_success:
@@ -647,7 +652,6 @@ def check_all_current_convergence():
                                + " resubmitting job : " + str(jobs) + ' with status ' + str(this_run.status)
                                + ' after ' + str(number_of_subs) + ' subs since prog geo was good')
                         add_to_outstanding_jobs(jobs)
-
 
                 print('END OF JOB \n *******************\n')
             elif ("sp_infiles" in jobs and not isKeyword('optimize')) or (

@@ -43,7 +43,8 @@ def insert(db, collection, tmc, web="web"):
         this_tmc = tmcMongo(document=_tmcdoc, tag=_tmcdoc["tag"], subtag=_tmcdoc["subtag"])
         print("existed: ", this_tmc.id_doc)
         print("merging....")
-        merge_documents(db, collection, doc1=_tmcdoc, doc2=tmc.document)
+        merge_documents(db, collection, doc1=_tmcdoc, doc2=tmc.document,
+                        update_fields=tmc.update_fields)
     if web:
         web_coll = collection + "_" + web
         repeated, _tmcdoc = check_repeated(db, web_coll, tmc)
@@ -56,26 +57,27 @@ def insert(db, collection, tmc, web="web"):
                     tmc.document.pop(key)
                 if key in _tmcdoc:
                     _tmcdoc.pop(key)
-            merge_documents(db, web_coll, doc1=_tmcdoc, doc2=tmc.document)
+            merge_documents(db, web_coll, doc1=_tmcdoc, doc2=tmc.document,
+                            update_fields=tmc.update_fields)
     return inserted
 
 
-def merge_documents(db, collection, doc1, doc2):
+def merge_documents(db, collection, doc1, doc2, update_fields):
     for key in doc2:
-        if not key in doc1:
+        if not key in doc1 or key in update_fields:
             doc1.update({key: doc2[key]})
     if "dftrun" in doc1 and "dftrun" in doc2:
         new_dftrun = merge_dftrun(dftrun1=pickle.loads(doc1["dftrun"]),
-                                  dftrun2=pickle.loads(doc2["dftrun"])
+                                  dftrun2=pickle.loads(doc2["dftrun"]),
+                                  update_fields=update_fields
                                   )
         doc1.update({"dftrun": pickle.dumps(new_dftrun)})
     db[collection].replace_one({"_id": doc1["_id"]}, doc1)
 
 
-
-def merge_dftrun(dftrun1, dftrun2):
+def merge_dftrun(dftrun1, dftrun2, update_fields):
     for attr, val in dftrun2.__dict__.items():
-        if not attr in dftrun1.__dict__:
+        if not attr in dftrun1.__dict__ or attr in update_fields:
             setattr(dftrun1, attr, val)
     return dftrun1
 
@@ -156,7 +158,7 @@ def push2db(database, collection, user=False, pwd=False, host="localhost", port=
     :param port: port to connect. 
     :param auth: whether authentication is required to connect to the MongoDB.
     :param all_runs_pickle: whether to push from a pickle file of a list of DFTrun objects. If False, will run
-    check_all_current_convergence() in your mAD folder. Set "post_all" in .madconfig as True to push all your runs.
+    check_all_current_convergence() in your mAD folder.
     :param tag: tag of your data. Recommend to use the project name (may related to the name of your paper). If not set,
     will try to find it in .madconfig.
     :param subtag: Recommend as the name of your mAD folder (considering we may have many mAD folders for each project).
@@ -179,7 +181,7 @@ def push2db(database, collection, user=False, pwd=False, host="localhost", port=
         finish = False
         while not finish:
             print(
-                "Collection %s is not currently in this database. Are you sure you want to create a new collection? (y/n)" % collection)
+                    "Collection %s is not currently in this database. Are you sure you want to create a new collection? (y/n)" % collection)
             _in = raw_input()
             if _in == "y":
                 finish = True
@@ -190,10 +192,11 @@ def push2db(database, collection, user=False, pwd=False, host="localhost", port=
                 finish = False
     print('Warning: db push is enabled, attempting commit with tag: %s, subtag: %s' % (tag, subtag))
     if not all_runs_pickle:
-        _, all_runs = check_all_current_convergence()
+        _, all_runs = check_all_current_convergence(post_all=True)
     else:
         all_runs = pickle.load(open(all_runs_pickle, "rb"))
         print("DFTruns loaded from %s." % all_runs_pickle)
+    print("number of DFTruns exists: ", len(all_runs))
     count = 0
     merged = 0
     for this_run in all_runs.values():
@@ -210,7 +213,7 @@ def push2db(database, collection, user=False, pwd=False, host="localhost", port=
         else:
             merged += 1
     print("add %d entries in the %s['%s']." % (count, database, collection))
-    print("merge %d entries in the %s['%s']." % (count, database, collection))
+    print("merge %d entries in the %s['%s']." % (merged, database, collection))
 
 
 def unique_name(tmcdoc):

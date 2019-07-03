@@ -33,9 +33,12 @@ class tmcMongo():
         web_doc: a simplified document to be inserted in MongoDB for the web interface (DFTrun object excluded).
         id_doc: a dictionary that tells the unique identity of a TM complex.
         dftrun: a pickle-dumped DFTrun object.
+        update_fields: fields that will be updated when merging two documents. Default as an empty list.
     '''
 
-    def __init__(self, tag, subtag, this_run=False, document=False, geo_type=False):
+    def __init__(self, tag, subtag,
+                 this_run=False, document=False,
+                 geo_type=False, update_fields=False):
         if (this_run and document):
             raise ValueError(
                 "Confusion. Either a DFTrun object or a tmcMongo object is required as an input. Not both.")
@@ -109,6 +112,8 @@ class tmcMongo():
         self.make_unique_name()
         self.construct_document()
         self.construct_webdoc()
+        self.update_fields = list()
+        self.get_update_fileds(update_fields)
 
     def deserialize_dftrun(self):
         return pickle.loads(self.dftrun)
@@ -150,5 +155,8 @@ class tmcMongo():
             this_run.wavefunction.update({key: wfn_path + key})
         return this_run
 
-    def back_to_mAD(self):
-        pass  # TODO
+    def get_update_fileds(self, update_fields):
+        if update_fields:
+            for field in update_fields:
+                if field in self.document.keys():
+                    self.update_fields.append(field)
