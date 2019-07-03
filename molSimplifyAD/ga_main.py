@@ -91,66 +91,43 @@ class GA_generation:
         ## check if ligs are known
         print('ligands requested:', [ligs[0][0], ligs[1][0], ligs[1][1]])
         print('indicies:', ligands_list_inds[0:7])
+        print('ligs:',ligs)
 
-        if isinstance(ligs[0][0], basestring):
-            print('dictionary  lig: ' + str(ligs[0][0]))
-            lig1 = ligs[0][0]
-        else:
-            print('smiles lig: ' + str(ligs[0][0]))
-            lig1 = ligs[0][0][0]
+        ## now test if each lig is a SMILEs or
+        ## dictionary ligand
+        procd_ligs = []
+        proc_inds = []
+        found_smi = False
 
-        if isinstance(ligs[0][1], basestring):
-            print('dictionary  lig: ' + str(ligs[0][1]))
-            lig2 = ligs[0][1]
-        else:
-            print('smiles lig: ' + str(ligs[0][1]))
-            lig2 = ligs[0][1][0]
+        for l in ligs:
+            if isinstance(l[0], basestring):
+                print('dictionary  lig: ' + str(l[0]))
+                procd_ligs.append(l[0])
+            else:
+                print('smiles lig: ' + str(l[0]))
+                procd_ligs.append(l[0][0])
+                found_smi = True
 
-        if isinstance(ligs[0][2], basestring):
-            print('dictionary  lig: ' + str(ligs[0][2]))
-            lig3 = ligs[0][2]
-        else:
-            print('smiles lig: ' + str(ligs[0][2]))
-            lig3 = ligs[0][2][0]
 
-        if isinstance(ligs[0][3], basestring):
-            print('dictionary  lig: ' + str(ligs[0][3]))
-            lig4 = ligs[0][3]
-        else:
-            print('smiles lig: ' + str(ligs[0][3]))
-            lig4 = ligs[0][3][0]
 
-        if isinstance(ligs[1][0], basestring):
-            print('dictionary  lig: ' + str(ligs[1][0]))
-            lig5 = ligs[1][0]
+
+
+        if found_smi:
+            print('Warning, we cannot check SMILES for ligand uniqueness for SMILEs strings')
         else:
-            print('smiles lig: ' + str(ligs[1][0]))
-            lig5 = ligs[1][0][0]
-        
-        if isinstance(ligs[1][1], basestring):
-            print('dictionary  lig: ' + str(ligs[1][1]))
-            lig6 = ligs[1][1]
-        else:
-            print('smiles lig: ' + str(ligs[1][1]))
-            lig6 = ligs[1][1][0]
-        try:
-            if not set([lig1, lig2, lig3, lig4, lig5, lig6]).issubset(ligands_list_inds):
+            print('checking for ligand availability')
+            print(type(procd_ligs))
+            print(ligands_list_inds)
+            if not set(procd_ligs).issubset(set(ligands_list_inds)):
                 print('Error: requested ligs not available in list, aborting')
                 exit()
-        except:
-            print('Warning, we cannot check SMILES for ligand uniqueness for SMILEs strings')
+
         if not metal in metal_list_inds:
             print(metal)
             print('Error: requested metal not available in list, aborting')
             exit()
-        lig1_ind = ligands_list_inds.index(ligs[0][0])
-        lig2_ind = ligands_list_inds.index(ligs[0][1])
-        lig3_ind = ligands_list_inds.index(ligs[0][2])
-        lig4_ind = ligands_list_inds.index(ligs[0][3])
-        lig5_ind = ligands_list_inds.index(ligs[1][0])
-        lig6_ind = ligands_list_inds.index(ligs[1][1])
-        inds = [lig1_ind, lig2_ind, lig3_ind, lig4_ind, lig5_ind, lig6_ind]
-        #print('this is inds', inds)
+
+        inds = [ligands_list_inds.index(i) for i in procd_ligs]
         metal_ind = metal_list_inds.index(metal)
         this_complex = octahedral_complex(self.ligands_list)
         this_complex.random_gen()
@@ -170,11 +147,10 @@ class GA_generation:
                 self.total_counter = self.total_counter + 1
                 print('adding eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) + ' + ' + str(ligs[1][1]))
             else:
-                sardines
                 print(' this gene is a duplicate and is not added')
         else:#except:
-            sardines
             print('cannot make eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) + ' + ' + str(ligs[1][1]))
+            sardines
             
     def write_state(self):
         ## first write genes to path

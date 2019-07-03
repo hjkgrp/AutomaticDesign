@@ -154,6 +154,7 @@ def submit_outstanding_jobs():
                             translate_dict = translate_job_name(jobs)
                             ahf = translate_dict['ahf']
                             gene = translate_dict['gene']
+                            basegene = translate_dict['basegene']
                             if ahf == float(isKeyword('exchange')): # if this is the target HFX frac
                                 update_current_gf_dictionary(basegene,0) # zero out fitness
             else:

@@ -695,7 +695,7 @@ def check_empty_sp_file(this_run):
             found_time = False
             for i,lines in enumerate(data):
                 if str(lines).find('FINAL ENERGY') != -1:
-                    print("found single point line")
+                    print("found empty site single point line")
                     print(lines)
                     energy =str(lines.split()[2])
                     found_data = True
@@ -981,8 +981,20 @@ def read_molden_file(this_run):
     #print(scrpath)
     moldenFile = glob.glob(scrpath + "*.molden")
     if len(moldenFile) >= 1:
-        moldenFile = moldenFile[0]
+        sizelist = 0
+        ind = 0
+        for i, file_name in enumerate(moldenFile):
+            temp = os.path.getsize(file_name)
+            if temp > sizelist:
+                sizelist = temp
+                ind = i
+        moldenFile = moldenFile[ind]
     else:
+        this_run.alphaHOMO = float('NaN')
+        this_run.alphaLUMO = float('NaN')
+        this_run.betaHOMO = float('NaN')
+        this_run.betaLUMO = float('NaN')
+        print('--------------------molden not found...---------------------')
         return
     #print(moldenFile)
     safe = False 
