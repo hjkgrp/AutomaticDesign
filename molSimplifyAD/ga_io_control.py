@@ -42,6 +42,8 @@ class GA_run_defintion:
                       TSsoftware = 'TeraChem',
                       ax_lig_dissoc = False,
                       spin_constraint = False,
+                      no_geo=False,
+                      first_row=False,
                       **KWARGS):
             ## first time start-up function
 #                print('configuring status dictionaty')
@@ -82,6 +84,8 @@ class GA_run_defintion:
                               'TSsoftware':TSsoftware,
                               'ax_lig_dissoc':ax_lig_dissoc,
                               'spin_constraint': spin_constraint,
+                              'no_geo':no_geo,
+                              'first_row': first_row
                                }
         def serialize(self):
             ## serialize run info
@@ -94,9 +98,15 @@ class GA_run_defintion:
             with open(path,'r') as instream:
                 ob = json.load(instream)
             self.config = ob
-            with open(self.config['rundir']+'gene_template.json','r') as instream:
-                ob = json.load(instream)
-            self.gene_template = ob
+            if os.path.isfile(self.config['rundir'] + 'gene_template.json'):
+                with open(self.config['rundir'] + 'gene_template.json', 'r') as instream:
+                    ob = json.load(instream)
+                    self.gene_template = ob
+            else:
+                # self.gene_template = {'legacy': True, 'ox': True, 'spin': False}
+                ### TEMPORARY SWITCH
+                self.gene_template = {'legacy': False, 'ox': True, 'spin': True}
+            
 
 
 ########################
