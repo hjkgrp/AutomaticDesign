@@ -175,11 +175,17 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
     ## The next 4 lines introduce behaviour to determine if the old optimizer should be used for this specific job
     # _, _, _, _, _, eqlig, axlig1, axlig2, _, _, _, _, _, _, _, _ = translate_job_name(job)
     translate_dict = translate_job_name(job)
-
     old_optimizer_list = get_old_optimizer_ligand_list()
     for l in translate_dict['liglist']:
         if l in old_optimizer_list:
             use_old_optimizer = True
+    #_, _, _, _, _, eqlig, axlig1, axlig2, _, _, _, _, _, _, _, _ = translate_job_name(job)
+    #eqlig = translate_dict['eqlig']
+    #axlig1 = translate_dict['axlig1']
+    #axlig2 = translate_dict['axlig2']
+    #old_optimizer_list = get_old_optimizer_ligand_list()
+    #if eqlig in old_optimizer_list or axlig1 in old_optimizer_list or axlig2 in old_optimizer_list:
+    #    use_old_optimizer = True
     ## append geo
     with open(target_inpath, 'a') as newf:
         newf.write('coordinates ' + geometry_path + '\n')
@@ -292,15 +298,17 @@ def find_live_jobs():
 
 
 ########################
-def get_metals():
-    metals_list = ['cr', 'mn', 'fe', 'co', 'mo', 'tc', 'ru', 'rh']
-    # metals_list = ['co']
+def get_metals(first_row=False):
+    metals_list = ['cr', 'mn', 'fe', 'co', 'mo', 'tc', 'ru' , 'rh']
+    if first_row or isKeyword('first_row'):
+        metals_list = ['cr', 'mn', 'fe', 'co']
     return metals_list
 
 
 ########################
 def find_ligand_idx(lig):
     ligs = get_ligands()
+    idx = None
     for i, item in enumerate(ligs):
         if lig == item or (lig == item[0]):
             idx = int(i)
@@ -409,13 +417,12 @@ def spin_dictionary():
 
 ########################
 def get_ligand_charge_dictionary():
-    ligand_charge_dictionary = {'acac': -1, 'acetonitrile': 0, 'ammonia': 0, 'bifuran': 0, 'bipy': 0, 'bipyrrole': 0,
-                                'bromide': -1, 'carbonyl': 0, 'co': 0, 'chloride': -1, 'cyanide': -1, 'cn': -1, 'cyanopyridine': 0,
-                                'dmf': 0, 'en': 0, 'fluoride': -1, 'formate': -1, 'furan': 0, 'hydroxyl': -1,
-                                'isothiocyanate': -1, 'methanol': 0, 'misc': 0, 'ncs': -1, 'nme3': 0, 'ome2': 0, 'ox': -2,
-                                'oxo': -2, 'phen': 0, 'phosphine': 0, 'pisc': 0, 'pme3': 0, 'porphyrin': -2, 'pph3': 0,
-                                'pyridine': 0, 'pyrrole': -1,'scn': -1, 'tbisc': 0, 'tbuc': -2, 'thiocyanate': -1, 'thiol': -1,
-                                'thiopyridine': 0, 'uthiol': 0, 'uthiolme2': 0, 'water': 0}
+    ligand_charge_dictionary = {'acac':-1,'acetonitrile':0,'ammonia':0,'bifuran':0,'bipy':0,'bipyrrole':0,'bromide':-1,
+                                'carbonyl':0,'chloride':-1,'cyanide':-1,'cn':-1,'cyanopyridine': 0,'dmf':0,'en':0,'fluoride':-1,
+                                'formate':-1,'furan':0,'hydroxyl':-1,'isothiocyanate':-1,'methanol':0,'misc':0,'ncs':-1,'nme3':0,
+                                'ome2':0,'ox':-2,'oxo':-2,'phen':0,'phosphine':0,'pisc':0,'pme3':0,'porphyrin':-2,
+                                'pph3':0,'pyridine':0,'pyrrole':-1,'scn':-1,'tbisc':0,'tbuc':-2,'tetrahydrofuran':0,'thiocyanate':-1,
+                                'thiol':-1,'thiopyridine':0,'uthiol':0,'uthiolme2':0,'water':0}
     return ligand_charge_dictionary
 
 
@@ -529,6 +536,7 @@ def translate_job_name(job):
         indlist = [eqlig_ind, axlig1_ind, axlig2_ind]
         gene = "_".join([str(metal), str(ox), str(eqlig_ind), str(axlig1_ind), str(axlig2_ind), str(ahf).zfill(2)])
         basegene = "_".join([str(metal), str(eqlig_ind), str(axlig1_ind), str(axlig2_ind)])
+        chem_name = "_".join([str(metal_key), str(ox), str(eqlig), str(axlig1), str(axlig2), str(ahf).zfill(2)])
         #### liglist and indlist ordering is eqlig, axlig1, axlig2
     else:
         indlist = [int(i) for i in ll[6:-2]]
@@ -539,17 +547,29 @@ def translate_job_name(job):
             else:
                 liglist.append(ligands_dict[int(ind)][0])
         namelist = [str(metal)]
+        chem_namelist = [str(metal_key)]
         if gene_template['ox']:
+            # print('Including ox in the gene...')
             namelist.append(str(ox))
+            chem_namelist.append(str(ox))
         if gene_template['spin']:
             namelist.append(str(spin))
+            chem_namelist.append(str(spin))
         for i in indlist:
             namelist.append(str(i))
+            if hasattr(ligands_dict[int(i)][0], '__iter__'):  # SMILEs string
+                lig = ligands_dict[int(i)][0][0]
+            else:
+                lig = ligands_dict[int(i)][0]
+            chem_namelist.append(str(lig))
+        # print('THIS IS THE CHEMNAME LIST', chem_namelist)
+        # print('THIS IS THE NAME LIST', namelist)
         namelist.append(str(ahf).zfill(2))
+        chem_namelist.append(str(ahf).zfill(2))
         gene = "_".join(namelist)
-        basegene = "_".join([str(metal)] + [str(ind) for ind in indlist])
-    dict_avars = ['gene', 'gen', 'slot', 'metal', 'ox', 'liglist', 'indlist', 'spin', 'spin_cat', 'ahf', 'basename',
-                  'basegene']
+        basegene = "_".join([str(metal)]+[str(ind) for ind in indlist])
+        chem_name = "_".join(chem_namelist)
+    dict_avars = ['gene', 'gen', 'slot', 'metal', 'ox', 'liglist', 'indlist', 'spin', 'spin_cat', 'ahf', 'basename', 'basegene','chem_name']
     for var in dict_avars:
         translate_dict.update({var: locals()[var]})
         # previously returning list below:
@@ -883,12 +903,75 @@ def write_dictionary(dictionary, path, force_append=False):
         emsg = "Error, could not write state space: " + path
     return emsg
 
+########################
+# Below is the NSGA sort, where values1 and values2 are the two objectives
+def fast_non_dominated_sort(values1, values2):
+    S=[[] for i in range(0,len(values1))]
+    front = [[]]
+    n=[0 for i in range(0,len(values1))]
+    rank = [0 for i in range(0, len(values1))]
+    for p in range(0,len(values1)):
+        S[p]=[]
+        n[p]=0
+        for q in range(0, len(values1)):
+            if (values1[p] > values1[q] and values2[p] > values2[q]) or (values1[p] >= values1[q] and values2[p] > values2[q]) or (values1[p] > values1[q] and values2[p] >= values2[q]):
+                if q not in S[p]:
+                    S[p].append(q)
+            elif (values1[q] > values1[p] and values2[q] > values2[p]) or (values1[q] >= values1[p] and values2[q] > values2[p]) or (values1[q] > values1[p] and values2[q] >= values2[p]):
+                n[p] = n[p] + 1
+        if n[p]==0:
+            rank[p] = 0
+            if p not in front[0]:
+                front[0].append(p)
+    i = 0
+    while(front[i] != []):
+        Q=[]
+        for p in front[i]:
+            for q in S[p]:
+                n[q] =n[q] - 1
+                if( n[q]==0):
+                    rank[q]=i+1
+                    if q not in Q:
+                        Q.append(q)
+        i = i+1
+        front.append(Q)
+    final_front = front[:-1]
+    ##### returns a pareto front ####
+    return final_front
+
+########################
+# Below is the NSGA crowding distance calculator, where values1 and values2 are the two objectives, and front is the pareto front from the sort
+def crowding_distance(values1, values2, front):
+    distance = [0 for i in range(0,len(front))]
+    sorted1 = sort_by_values(front, values1[:])
+    sorted2 = sort_by_values(front, values2[:])
+    distance[0] = 1000000000000000
+    distance[len(front) - 1] = 1000000000000000
+    for k in range(1,len(front)-1):
+        distance[k] = distance[k]+ (values1[sorted1[k+1]] - values2[sorted1[k-1]])/(max(values1)-min(values1))
+    for k in range(1,len(front)-1):
+        distance[k] = distance[k]+ (values1[sorted2[k+1]] - values2[sorted2[k-1]])/(max(values2)-min(values2))
+    return distance
+
+########################
+# Below is a sorter for NSGA
+def sort_by_values(list1, values):
+    sorted_list = []
+    while(len(sorted_list)!=len(list1)):
+        if values.index(min(values)) in list1:
+            sorted_list.append(values.index(min(values)))
+        values[values.index(min(values))] = np.inf
+    return sorted_list
 
 ########################
 
 def find_prop_fitness(prop_energy, prop_parameter):
     en = -1 * np.power((float(prop_energy) / prop_parameter), 2.0)
-    fitness = np.exp(en)
+    try:
+        fitness = np.exp(en)
+    except:
+        print('EXCEPTED FITNESS')
+        fitness = 0
     return fitness
 
 
@@ -921,19 +1004,27 @@ def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=2.5, lower_
             en_hinge += hinge + lower_hinge_list[j]  # Loop over all of the hinges
         en = -1 * (en_hinge)
     else:
-        if lower_bound == None and upper_bound == None:
+        if type(prop_parameter) == list: ## assumes range provided
+            lower_bound = float(min(prop_parameter))
+            upper_bound = float(max(prop_parameter))
+        elif lower_bound == None and upper_bound == None:
             lower_bound = float(prop_parameter) - float(range_value)
             upper_bound = float(prop_parameter) + float(range_value)
         elif lower_bound == None and upper_bound != None:
             lower_bound = float(prop_parameter) - float(range_value)
         elif lower_bound != None and upper_bound == None:
             upper_bound = float(prop_parameter) + float(range_value)
+
         # print('USED RANGE VALUE:',range_value)
         upper_hinge = float(max(0.0, prop_energy - upper_bound))
         lower_hinge = float(max(0.0, lower_bound - prop_energy))
         ####### This set of two hinges will penalize values that are not within a certain range
         en = -1 * (upper_hinge + lower_hinge)
-    fitness = np.exp(en)
+    try:
+        fitness = np.exp(en)
+    except:
+        print('EXCEPTED FITNESS')
+        fitness = 0
     return fitness
 
 
@@ -944,7 +1035,11 @@ def find_prop_dist_fitness(prop_energy, prop_parameter, distance, distance_param
 
     en = -1 * (np.power((float(prop_energy) / prop_parameter), 2.0) + np.power(
         (float(distance) / distance_parameter), 2.0))
-    fitness = np.exp(en)
+    try:
+        fitness = np.exp(en)
+    except:
+        print('EXCEPTED FITNESS')
+        fitness = 0
     return fitness
 
 
@@ -982,7 +1077,10 @@ def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance
             dist_total += np.power((float(distance[j]) / distance_parameter[j]), 2.0)
         en = -1 * (en_hinge + dist_total)
     else:
-        if lower_bound == None and upper_bound == None:
+        if type(prop_parameter) == list: ## assumes range provided
+            lower_bound = float(min(prop_parameter))
+            upper_bound = float(max(prop_parameter))
+        elif lower_bound == None and upper_bound == None:
             lower_bound = float(prop_parameter) - float(range_value)
             upper_bound = float(prop_parameter) + float(range_value)
         elif lower_bound == None and upper_bound != None:
@@ -995,7 +1093,11 @@ def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance
         lower_hinge = float(max(0.0, lower_bound - prop_energy))
         ####### This set of two hinges will penalize values that are not within a certain range
         en = -1 * ((upper_hinge + lower_hinge) + np.power((float(distance) / distance_parameter), 2.0))
-    fitness = np.exp(en)
+    try:
+        fitness = np.exp(en)
+    except:
+        print('EXCEPTED FITNESS')
+        fitness = 0
     return fitness
 
 
@@ -1058,6 +1160,20 @@ def write_ANN_results_dictionary(path, dictionary):
             if i == 0:
                 f.write(",".join(["name"] + dictionary[val].keys()) + '\n')
             f.write(",".join([val] + [str(k) for k in dictionary[val].values()]) + '\n')
+    rundir = isKeyword('rundir')
+    full_ANN_dict = rundir+'/ANN_ouput/full_ANN_results.csv'
+    if os.path.exists(full_ANN_dict):
+        emsg, already_present_dict = read_ANN_results_dictionary(full_ANN_dict)
+        with open(full_ANN_dict, 'a') as f:
+            for i, val in enumerate(dictionary.keys()):
+                if val.strip().split(',')[0] not in already_present_dict.keys():
+                    f.write(",".join([val] + [str(k) for k in dictionary[val].values()]) + '\n')
+    else:
+        with open(full_ANN_dict, 'w') as f:
+            for i, val in enumerate(dictionary.keys()):
+                if i == 0:
+                    f.write(",".join(["name"] + dictionary[val].keys()) + '\n')
+                f.write(",".join([val] + [str(k) for k in dictionary[val].values()]) + '\n')
 
 
 ########################

@@ -45,6 +45,8 @@ class GA_run_defintion:
                   spin_constraint=False,
                   molscontrol=False,
                   fod=False,
+                  no_geo=False,
+                  first_row=False,
                   **KWARGS):
         ## first time start-up function
         #                print('configuring status dictionaty')
@@ -87,6 +89,8 @@ class GA_run_defintion:
                        'spin_constraint': spin_constraint,
                        'molscontrol': molscontrol,
                        'fod': fod,
+                       'first_row': first_row,
+                       'no_geo': no_geo
                        }
 
     def serialize(self):
