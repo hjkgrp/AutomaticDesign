@@ -1,8 +1,14 @@
 import glob, math, numpy, subprocess, os, random, shutil
 import sys, shlex, time, datetime
-
 from molSimplifyAD.ga_tools import *
 from molSimplify.Classes.mol3D import *
+#####IMPORTS ADDED BY ADITYA
+from molSimplify.Classes.atom3D import *
+from molSimplify.Informatics.RACassemble import *
+from molSimplify.Classes.globalvars import *
+from molSimplify.Scripts.io import *
+from molSimplify.Scripts.structgen import *
+############################
 
 
 class octahedral_complex:
@@ -15,6 +21,8 @@ class octahedral_complex:
         self.ligands_list = get_ligands()
         self.gene_template = get_gene_template()
         self.metals_list = get_metals()
+        if isKeyword("oxocatalysis"):
+            self.metals_list = get_metals(first_row=True)
         self.ox_list = get_ox_states()
         self.core = 'U'
         self.symclass = isKeyword("symclass")
@@ -117,6 +125,7 @@ class octahedral_complex:
         metal_key = metal_list[self.core]
         these_states = local_spin_dictionary[metal_key][self.ox]
         self.spin = numpy.random.choice(these_states)
+        print('This is the spin '+ str(self.spin)+' for metal '+str(metal_key)+' and ox '+str(self.ox))
 
     def _get_random_equitorial(self):
         ### choose the equitorial ligand
@@ -226,13 +235,13 @@ class octahedral_complex:
         self.ligands = list()
         self.inds = list()
         symclass = isKeyword("symclass")
+        hyd = find_ligand_idx('hydroxyl')
+        oxo = find_ligand_idx('oxo')
+        x = find_ligand_idx('x')
         while not self.ready_for_assembly:
             ## get lig
             ind = numpy.random.randint(low=0, high=n)
             if isKeyword('oxocatalysis'):
-                hyd = find_ligand_idx('hydroxyl')
-                oxo = find_ligand_idx('oxo')
-                x = find_ligand_idx('x')
                 while ind in [x, hyd, oxo]:
                     ind = numpy.random.randint(low=0, high=n)
 
@@ -268,9 +277,12 @@ class octahedral_complex:
         # fixed inds is what we will hold constant, other spots will be randomized to enforce fixed inds
         used_dent = 0
         dent_valid = False
-        if self.symclass in ['weak', 'strong']:
+        hyd = find_ligand_idx('hydroxyl')
+        oxo = find_ligand_idx('oxo')
+        x = find_ligand_idx('x')
+        if self.symclass in ['weak','strong']:
             if not len(set(self.inds[0:4])) == 1:
-                print('Fails weak symclass check.')
+                print('Fails weak symclass check. ', self.inds[0:4],fixed_inds)
                 # print(len(set(self.inds[0:4])))
                 # print(self.inds)
                 for f_ind in fixed_inds:  ## Loop over the positions that must be fixed
@@ -285,16 +297,25 @@ class octahedral_complex:
                         axial_indices_that_can_be_changed = [i for i in range(4, 6) if i not in fixed_inds]
                         axial_ligands_that_can_be_changed = [self.inds[i] for i in axial_indices_that_can_be_changed]
                         all_ax_dent = [self.ligands_list[i][1][0] for i in axial_ligands_that_can_be_changed]
-                        if max(all_ax_dent) == 2 and not new_eq_dent == 2:
-                            while max(all_ax_dent) == 2:
+                        if (max(all_ax_dent) == 2 and not new_eq_dent == 2) or (isKeyword('oxocatalysis') and max(all_ax_dent)!=1):
+                            while max(all_ax_dent) == 2 or (isKeyword('oxocatalysis') and max(all_ax_dent)!=1):
                                 if self.symclass == 'strong':
                                     ax_inds = numpy.random.randint(low=0, high=n, size=1)
                                     ax_inds = [ax_inds, ax_inds]
                                 else:
                                     ax_inds = numpy.random.randint(low=0, high=n, size=2)
                                 all_ax_dent = [self.ligands_list[i][1][0] for i in ax_inds]
+                                if isKeyword('oxocatalysis'):
+                                    for ax in ax_inds:
+                                        if ax in [x, hyd, oxo]:
+                                            print('catalytic moiety, randomizing.')
+                                            ax_inds = numpy.random.randint(low = 0,high = n,size=2)
+                                all_ax_dent = [self.ligands_list[i][1][0] for  i in ax_inds]
                             self.inds[4:6] = ax_inds
                             self.ligands[4:6] = [self.ligands_list[i][0] for i in ax_inds]
+                            if isKeyword('oxocatalysis'):
+                                self.inds[5] = oxo
+                                self.ligands[5] = self.ligands_list[oxo][0]
                     elif f_ind >= 4:
                         this_ax_dent = self.ligands_list[self.inds[f_ind]][1][0]
                         if this_ax_dent == 2:
@@ -307,6 +328,10 @@ class octahedral_complex:
                                 eq_dent = eq_ligand_properties[0]
                             self.inds[0:4] = 4 * [eq_ind]
                             self.ligands[0:4] = 4 * [self.ligands_list[eq_ind][0]]
+                        this_ax_dent  = self.ligands_list[self.inds[f_ind]][1][0]
+                        elif this_ax_dent > 1 and isKeyword('oxocatalysis'):
+                            print('ILLEGAL BIDENTATE AXIAL!')
+                            sardines
                         else:
                             # print(self.inds[[i for i in range(4,5) if i not in fixed_inds]])
                             other_ax_dent = \
@@ -796,7 +821,6 @@ class octahedral_complex:
 
         # Initialize ANN results dictionary
         ANN_results = {}
-        property_list = ['split', 'split_dist', 'homo', 'homo_dist', 'gap', 'gap_dist', 'oxo', 'oxo_dist']
         if not (geo_exists):
             print('generating ' + str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and' + str(
                 self.ax_ligands))
@@ -821,7 +845,6 @@ class octahedral_complex:
                         if isKeyword('oxocatalysis'):
                             call += ' -qoption dftd,d3 -qoption min_maxiter,1100'
                         print(call)
-                        #                            p2 = subprocess.call(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
                         p2 = subprocess.Popen(call, stdout=ms_pipe, stderr=ms_error_pipe, shell=True)
                         p2.wait()
 
@@ -847,13 +870,12 @@ class octahedral_complex:
                             prop_val = float(line.split(",")[1])
                             ANN_results.update({prop: float(line.split(",")[1])})
                             print('ANN_' + prop + ' is ' + "{0:.2f}".format(prop_val))
-                if len(list(set(property_list).difference(ANN_results.keys()))) > 0 and not isKeyword('DFT'):
-                    for i in property_list:
+                if len(list(set(properties).difference(ANN_results.keys()))) > 0 and not isKeyword('DFT'):
+                    for i in properties:
                         if i not in ANN_results.keys():
                             ANN_results.update(
                                 {i: float(10000)})  # Chosen to be arbitrarily large to reduce the fitness value to 0.
-                            print(str(
-                                i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0. The key was not present.')
+                            print(str(i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0. The key was not present.')
                         else:
                             print(str(i) + ' set to ' + str(ANN_results[i]) + ' since the key was present')
 
@@ -899,10 +921,107 @@ class octahedral_complex:
                 print('Bad initial geometry. Setting all of the fitness values to 0 so it is not used.')
                 print('All ANN dictkeys set to 10000, chosen so that the fitness goes to 0.')
                 ANN_results = {k: float(10000) for k in ANN_results}
-                for i in property_list:
-                    ANN_results.update(
-                        {i: float(10000)})  # Chosen to be arbitrarily large to reduce the fitness value to 0.
+                for i in properties:
+                    ANN_results.update({i: float(10000)})  # Chosen to be arbitrarily large to reduce the fitness value to 0.
                     print(str(i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.')
+        should_geo_exist = not (isKeyword('no_geo')) #will be false if DFT is off.
+        #Initialize ANN results dictionary
+        ANN_results = {}
+        properties = ['split','split_dist' 'homo','homo_dist','gap','gap_dist','oxo','oxo_dist',
+                        'hat','hat_dist','oxo20','oxo20_dist','homo_empty','homo_empty_dist']
+        if not (geo_exists) or not (should_geo_exist):
+            print('generating '+ str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and'  + str(self.ax_ligands))
+            try:
+            # if True:
+                ### Add protection for brackets "()" in bash commands.
+                liglist = protect_lig_bash(liglist)
+                with open(ms_dump_path,'a') as ms_pipe:
+                    with open(ms_error_path,'a') as ms_error_pipe:
+                        call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +str(liglist),'-ligocc 1,1,1,1,1,1',
+                                 '-rundir ' +"'"+ rundirpath.rstrip("/")+"'",'-keepHs yes,yes,yes,yes,yes,yes','-jobdir','temp',
+                                 '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
+                                 '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ str(self.ox), '-exchange '+str(exchange),
+                                 '-qccode TeraChem','-runtyp '+rty,"-ffoption "+ff_opt,' -ff UFF'])
+                        if smicat:
+                            call += ' -smicat ' + smicat
+
+                        if isKeyword('oxocatalysis'):
+                            call += ' -qoption dftd,d3 -qoption min_maxiter,1100'
+                        if not should_geo_exist:
+                            call += ' -reportonly True'
+                        print(call)
+                        p2 = subprocess.Popen(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
+                        p2.wait()
+
+                assert(os.path.isfile(rundirpath + 'temp'+'/' + mol_name + '.molinp'))
+                shutil.move(rundirpath + 'temp'+'/' + mol_name + '.molinp', path_dictionary["molsimplify_inps"]+'/' + mol_name + '.molinp')
+                if should_geo_exist:
+                    shutil.move(rundirpath + 'temp'+'/' + mol_name + '.xyz', geometry_path)
+            except:
+                print('Error: molSimplify failure when calling ')
+                print(call)
+                sys.exit()
+
+            with open(rundirpath + 'temp' +'/' + mol_name + '.report') as report_f:
+                for line in report_f:
+                    for prop in properties:
+                        current_prop = line.split(',')[0]
+                        if current_prop == prop:
+                            print('****')
+                            print(line)
+                            prop_val = float(line.split(",")[1])
+                            ANN_results.update({prop:float(line.split(",")[1])})
+                            print('ANN_'+prop+' is ' +"{0:.2f}".format(prop_val))
+                if len(list(set(properties).difference(ANN_results.keys())))>0 and not isKeyword('DFT'):
+                    for i in properties:
+                        if i not in ANN_results.keys():
+                            ANN_results.update({i:float(10000)}) #Chosen to be arbitrarily large to reduce the fitness value to 0.
+                            print(str(i)+ ' set to 10000 in ANN_results, chosen so that the fitness goes to 0. The key was not present.')
+                        else:
+                            print(str(i)+ ' set to '+str(ANN_results[i])+' since the key was present')
+
+            if isKeyword('oxocatalysis') and 'oxo' in liglist and isKeyword('DFT'): #Subbing in 1.65 as Oxo BL
+                print('Modifying initial oxo geom file '+ mol_name + '.xyz to have oxo BL 1.65')
+                geo_ref_file = open(path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz','r')
+                lines = geo_ref_file.readlines()
+                geo_ref_file.close()
+                geo_replacement = open(path_dictionary["initial_geo_path"] +'/'+ mol_name + '.xyz','w')
+                adjusted_lines = lines[:-1]+[lines[-1][:-9]+'1.650000\n']
+                geo_replacement.writelines(adjusted_lines)
+                geo_replacement.close()
+
+            shutil.move(rundirpath + 'temp' +'/' + mol_name + '.report', path_dictionary["ms_reps"] +'/'+ mol_name + '.report')
+
+            ## write the job file
+            if should_geo_exist:
+                with open(jobpath,'w') as newf:
+                    with open(rundirpath + 'temp/' + mol_name + '.in','r') as oldf:
+                        for line in oldf:
+                            if not ("coordinates" in line) and (not "end" in line) and not ("scrdir" in line):
+                                newf.writelines(line)
+                    newf.writelines("scrdir " +scrpath + "\n")
+                os.remove(rundirpath + 'temp/' + mol_name + '.in')
+
+                ### check if ligands in old optimizer list
+                old_optimizer_list = get_old_optimizer_ligand_list()
+                # use_old_optimizer = False
+                for ligs in (self.eq_ligands+self.ax_ligands):
+                    if ligs in old_optimizer_list:
+                        use_old_optimizer = True
+                ### make an infile!
+                create_generic_infile(jobpath,restart=False,use_old_optimizer=use_old_optimizer)
+                flag_oct, _, _ = self.inspect_initial_geo(geometry_path)
+                if flag_oct == 0:
+                    print('Bad initial geometry. Setting all of the fitness values to 0 so it is not used.')
+                    print('All ANN dictkeys set to 10000, chosen so that the fitness goes to 0.')
+                    ANN_results = {k:float(10000) for k in ANN_results}
+                    for i in properties:
+                        ANN_results.update({i:float(10000)}) #Chosen to be arbitrarily large to reduce the fitness value to 0.
+                        print(str(i)+ ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.')
+            else:
+                with open(jobpath,'w') as newf:
+                    newf.writelines('ANN Prediction Directly from Molecular Graph')
+                flag_oct = 1
         else:
             flag_oct = 1
         sorted_ANN_results = {}
@@ -970,11 +1089,8 @@ class octahedral_complex:
 
         # Initialize ANN results dictionary
         ANN_results = {}
-        property_list = ['split', 'split_dist', 'homo', 'homo_dist', 'gap', 'gap_dist', 'oxo', 'oxo_dist', 'oxo20',
-                         'oxo20_dist', 'homo_empty', 'homo_empty_dist']
         if not (geo_exists):
             print('generating ' + str(mol_name) + ' with ligands ' + str(liglist))
-
             try:
                 # if True:
                 with open(ms_dump_path, 'a') as ms_pipe:
@@ -990,46 +1106,58 @@ class octahedral_complex:
                                          '-qccode TeraChem', '-runtyp ' + rty, "-ffoption " + ff_opt, ' -ff UFF'])
                         if smicat:
                             call += ' -smicat ' + smicat
+        properties = ['split','split_dist' 'homo','homo_dist','gap','gap_dist','oxo','oxo_dist',
+                        'hat','hat_dist','oxo20','oxo20_dist','homo_empty','homo_empty_dist']
+        if not (geo_exists):
+            print('generating '+ str(mol_name) + ' with ligands ' + str(liglist))
+            # try:
+            if True:
+                with open(ms_dump_path,'a') as ms_pipe:
+                    with open(ms_error_path,'a') as ms_error_pipe:
+                        call = " ".join(["molsimplify " ,'-core ' + this_metal,'-lig ' +str(liglist),'-ligocc '+','.join([str(i) for i in self.lig_occs if i>0]),
+                                 '-rundir ' +"'"+ rundirpath.rstrip("/")+"'",'-keepHs yes,yes,yes,yes,yes,yes','-jobdir','temp',
+                                 '-coord 6','-ligalign '+str(ligalign),'-ligloc ' + str(ligloc),'-calccharge yes','-name '+"'"+mol_name+"'",
+                                 '-geometry ' + geometry,'-spin ' + str(spin),'-oxstate '+ str(ox), '-exchange '+str(exchange),
+                                 '-qccode TeraChem','-runtyp '+rty,"-ffoption "+ff_opt,' -ff UFF'])
+                        if smicat:
+                            call += ' -smicat ' + smicat
 
                         if isKeyword('oxocatalysis'):
                             call += ' -qoption dftd,d3 -qoption min_maxiter,1100'
                         print(call)
-                        #                            p2 = subprocess.call(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
-                        p2 = subprocess.Popen(call, stdout=ms_pipe, stderr=ms_error_pipe, shell=True)
+#                            p2 = subprocess.call(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
+                        p2 = subprocess.Popen(call,stdout = ms_pipe,stderr=ms_error_pipe, shell=True)
                         p2.wait()
 
-                assert (os.path.isfile(rundirpath + 'temp' + '/' + mol_name + '.molinp'))
-                shutil.move(rundirpath + 'temp' + '/' + mol_name + '.molinp',
-                            path_dictionary["molsimplify_inps"] + '/' + mol_name + '.molinp')
-                shutil.move(rundirpath + 'temp' + '/' + mol_name + '.xyz', geometry_path)
-            except:
-                print('Error: molSimplify failure when calling ')
-                print(call)
-                sys.exit()
+                assert(os.path.isfile(rundirpath + 'temp'+'/' + mol_name + '.molinp'))
+                shutil.move(rundirpath + 'temp'+'/' + mol_name + '.molinp', path_dictionary["molsimplify_inps"]+'/' + mol_name + '.molinp')
+                shutil.move(rundirpath + 'temp'+'/' + mol_name + '.xyz', geometry_path)
+            # except:
+            #         print('Error: molSimplify failure when calling ')
+            #         print(call)
+            #         sys.exit()
 
-            with open(rundirpath + 'temp' + '/' + mol_name + '.report', 'r') as report_f:
+            #if this_GA.config['symclass']=="strong":
+
+            with open(rundirpath + 'temp' +'/' + mol_name + '.report','r') as report_f:
                 for line in report_f:
                     print(line)
-                    for prop in property_list:
+                    for prop in properties:
                         current_prop = line.split(',')[0]
-                        dist_var = prop + '_dist'
+                        dist_var = prop+'_dist'
                         if current_prop == prop:
                             print('****')
                             print(line)
                             prop_val = float(line.split(",")[1])
-                            ANN_results.update({prop: float(line.split(",")[1])})
-                            print('ANN_' + prop + ' is ' + "{0:.2f}".format(prop_val))
-                if len(list(set(property_list).difference(ANN_results.keys()))) > 0 and not isKeyword('DFT'):
-                    for i in property_list:
+                            ANN_results.update({prop:float(line.split(",")[1])})
+                            print('ANN_'+prop+' is ' +"{0:.2f}".format(prop_val))
+                if len(list(set(properties).difference(ANN_results.keys())))>0 and not isKeyword('DFT'):
+                    for i in properties:
                         if i not in ANN_results.keys():
-                            ANN_results.update(
-                                {i: float(
-                                    10000)})  # Chosen to be arbitrarily large to reduce the fitness value to 0.
-                            print(str(
-                                i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0. The key was not present.')
+                            ANN_results.update({i:float(10000)}) #Chosen to be arbitrarily large to reduce the fitness value to 0.
+                            print(str(i)+ ' set to 10000 in ANN_results, chosen so that the fitness goes to 0. The key was not present.')
                         else:
-                            print(str(i) + ' set to ' + str(ANN_results[i]) + ' since the key was present')
-
+                            print(str(i)+ ' set to '+str(ANN_results[i])+' since the key was present')
             if isKeyword('oxocatalysis') and 'oxo' in liglist and isKeyword('DFT'):  # Subbing in 1.65 as Oxo BL
                 print('Modifying initial oxo geom file ' + mol_name + '.xyz to have oxo BL 1.65')
                 geo_ref_file = open(path_dictionary["initial_geo_path"] + '/' + mol_name + '.xyz', 'r')
@@ -1048,9 +1176,8 @@ class octahedral_complex:
                 print('Bad initial geometry. Setting all of the fitness values to 0 so it is not used.')
                 print('All ANN dictkeys set to 10000, chosen so that the fitness goes to 0.')
                 ANN_results = {k: float(10000) for k in ANN_results}
-                for i in property_list:
-                    ANN_results.update(
-                        {i: float(10000)})  # Chosen to be arbitrarily large to reduce the fitness value to 0.
+                for i in properties:
+                    ANN_results.update({i: float(10000)})  # Chosen to be arbitrarily large to reduce the fitness value to 0.
                     print(str(i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.')
 
             ## write the job file
@@ -1086,6 +1213,14 @@ class octahedral_complex:
                     use_old_optimizer = True
             ### make an infile!
             create_generic_infile(jobpath, restart=False, use_old_optimizer=use_old_optimizer)
+            flag_oct, _, _ = self.inspect_initial_geo(geometry_path)
+            if flag_oct == 0:
+                print('Bad initial geometry. Setting all of the fitness values to 0 so it is not used.')
+                print('All ANN dictkeys set to 10000, chosen so that the fitness goes to 0.')
+                ANN_results = {k:float(10000) for k in ANN_results}
+                for i in properties:
+                    ANN_results.update({i:float(10000)}) #Chosen to be arbitrarily large to reduce the fitness value to 0.
+                    print(str(i)+ ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.')
         else:
             flag_oct = 1
         sorted_ANN_results = {}
@@ -1094,7 +1229,114 @@ class octahedral_complex:
                 sorted_ANN_results[key] = ANN_results[key]
         return jobpath, mol_name, sorted_ANN_results, flag_oct
 
-    def inspect_initial_geo(self, geometry_path):
+    def geo_free_RAC_generator(self,prefix, ox,spin,path_dictionary,rundirpath,gen):
+        ##### The geo free RACs get generated on a choice of genes
+        ligloc_cont = True
+        licores = getlicores()
+        if self.gene_template['legacy']:
+            inds = 4*self.eq_inds+self.ax_inds
+        else:
+            inds = self.inds
+        this_metal = self.metals_list[self.core]
+        mol_name = prefix + jobname_from_parts(metal=self.core, ox=ox, lig_inds=inds, ahf=self.ahf, spin=spin)
+        jobpath = path_dictionary["job_path"]  + mol_name + '.in'
+        ligands = [str(self.ligands_list[i][0]) for i in inds]
+        ligalign = 0
+        ligs  = []
+        cons  = []
+        emsg, complex3D = False, []
+        occs0 = []      # occurrences of each ligand
+        toccs = 0       # total occurrence count (number of ligands)
+        catsmi = []     # SMILES ligands connection atoms
+        smilesligs = 0  # count how many smiles strings
+        cats0 = []      # connection atoms for ligands
+        dentl = []      # denticity of ligands
+        connected = []  # indices in core3D of ligand atoms connected to metal
+        frozenats = []  # atoms to be frozen in optimization
+        freezeangles = False # custom angles imposed
+        MLoptbds = []   # list of bond lengths
+        rempi = False   # remove dummy pi orbital center of mass atom
+        net_lig_charge = 0 
+        backbatoms = []
+        batslist = []
+        bats = []
+        metal_mol = mol3D()
+        metal_mol.addAtom(atom3D(str(this_metal).capitalize()))
+        ### CURRENTLY only works for molsimplify ligands... ###
+        for i,name in enumerate(ligands):     
+            this_mol, emsg = lig_load(name, licores)
+            net_lig_charge += this_mol.charge
+            this_mol.convert2mol3D()
+            this_lig  = ligand(mol3D(), [],this_mol.denticity)
+            this_lig.mol = this_mol
+            this_con = this_mol.cat
+            ligs.append(this_lig)
+            cons.append(this_con)
+            if name not in licores.keys():
+                cats0.append([0])
+                dent_i = len(cats0[-1])
+                smilesligs += 1
+            else:
+                cats0.append(False)
+            # otherwise get denticity from ligands dictionary
+                if 'pi' in licores[name][2]:
+                    dent_i = 1
+                else:
+                    if isinstance(licores[name][2], (str, unicode)):
+                        dent_i = 1
+                    else:
+                        dent_i = int(len(licores[name][2]))
+            # oc_i = int(ligoc[i]) if i < len(ligoc) else 1
+            # occs0.append(0)         # initialize occurrences list
+            dentl.append(dent_i)    # append denticity to list
+            # loop over occurrence of ligand i to check for max coordination
+            # for j in range(0,oc_i):
+            #     occs0[i] += 1
+            #     toccs += dent_i
+        # sort by descending denticity (needed for adjacent connection atoms)
+        ligandsU,occsU,dentsU = ligs,occs0,dentl # save unordered lists
+        indcs = range(0,len(ligs)) #assuming no ligalign
+        lig_instances = [ligs[i] for i in indcs]  # sort ligands list
+        dents = [dentl[i] for i in indcs]   # sort denticities list
+        #### CURRENTLY ASSUMES EQ, AX1, AX2 in that ORDER, CANNOT HANDLE DENTICITIES OUT OF 1, 2, 4 #####
+        eq_number = int(4/dents[0])
+        eq_cons = eq_number*[cons[0]]
+        eq_ligs = eq_number*[lig_instances[0]]
+        
+        if dents[-2] == 2:
+            ax_ligs = 1*[lig_instances[-2]]
+            ax_cons = 1*[cons[-2]]
+        else:
+            ax_ligs = [lig_instances[-2],lig_instances[-1]]
+            ax_cons = [cons[-2],cons[-1]]
+        
+        custom_ligand_dict = {"eq_ligand_list":eq_ligs,
+                          "ax_ligand_list":ax_ligs,
+                          "eq_con_int_list":eq_cons,
+                          "ax_con_int_list":ax_cons}
+        ox_modifier = {str(this_metal).capitalize(): -ox}
+        core3D = assemble_connectivity_from_parts(metal_mol,custom_ligand_dict)
+        descriptor_names, descriptors = get_descriptor_vector(core3D, custom_ligand_dict=custom_ligand_dict, ox_modifier=ox_modifier)
+        descriptor_names += ["charge_lig"]
+        descriptors += [net_lig_charge]
+        try:
+            descriptor_names, descriptors = create_OHE(descriptor_names, descriptors, str(this_metal).capitalize(), ox)
+        except:
+            print('Not adding one hot encoding descriptors...')
+        if float(self.ahf) > 1:
+            alpha = float(self.ahf)/float(100)
+        else:
+            alpha = self.ahf
+        descriptor_names += ['alpha']
+        descriptors += [alpha]
+        descriptor_names += ['ox']
+        descriptors += [ox]
+        descriptor_names += ['spin']
+        descriptors += [spin]
+        flag_oct = True
+        return descriptor_names, descriptors, flag_oct, mol_name,jobpath
+        
+    def inspect_initial_geo(self,geometry_path):
         ## this function contains the logic for inspecting a
         ## initial geo file and reporting if there are problems with it
         mol = mol3D()  # load blank mol3D()

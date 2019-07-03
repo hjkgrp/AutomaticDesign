@@ -86,10 +86,14 @@ def _gen_gene_fitness_csv(base_path, generation, end_results, sumt):
 
 
 def _human_readable_csv(base_path, generation, end_results):
+    print(base_path, generation, end_results)
     print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ HR CSV $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
     from molSimplifyAD.get_distances import _find_distances
     from molSimplifyAD.ga_main import *
     gene_dist_dict, _, gene_prop_dict, gene_name_dict = _find_distances()
+    print('----')
+    print('THIS IS NAMEDICT', gene_name_dict)
+    print('in HR CSV point 1')
     csv_results_path = base_path + "human_readable_results.csv"
     print('AT HRCSV!!!!')
     with open(csv_results_path, _write_mode(generation)) as fo:
@@ -149,14 +153,17 @@ def _get_freq_fitness(lastgen, npool):
         full_gene_info = dict()
         ANN_prop_dict = dict()
         #GA_run = get_current_GA()
+        gene_template = get_gene_template()
         runtype = isKeyword("runtype")
         for generation in xrange(lastgen + 1):
             print('------GENERATION IN XRANGE IS '+str(generation))
             ANN_dir = isKeyword('rundir') + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
+            # print('here1')
             emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
             for keys in ANN_dict.keys():
                 # print('got here')
                 print(ANN_prop_dict.keys())
+                # print('here2')
                 translate_dict = translate_job_name(keys)
                 this_gene = translate_dict['gene']
                 metal = translate_dict['metal']
@@ -180,35 +187,53 @@ def _get_freq_fitness(lastgen, npool):
                         this_prop = float(ANN_dict[keys][runtype])
                         this_dist = float(ANN_dict[keys][runtype + '_dist'])
                         # if spin_cat == 'HS' or (metal == 'cr' and int(spin) == 2):
-                        if spin_cat == isKeyword('spin_constraint'):
-                            # print('updated ANN propdict')
-                            ANN_prop_dict.update({this_gene: this_prop})
-                        elif isKeyword('spin_constraint') and get_metals()[metal].lower() == 'cr' and ox == 5:
-                            print('Cr(V) does not exist in HS')
-                            ANN_prop_dict.update({this_gene: 10000})
+                        if gene_template['legacy']:
+                            if spin_cat == isKeyword('spin_constraint'):
+                                # print('updated ANN propdict')
+                                ANN_prop_dict.update({this_gene: this_prop})
+                            elif isKeyword('spin_constraint') and get_metals()[metal].lower() == 'cr' and ox == 5:
+                                print('Cr(V) does not exist in HS')
+                                ANN_prop_dict.update({this_gene: 10000})
+                            else:
+                                # ANN_prop_dict.update({this_gene: 10000})
+                                print('SKIPPED ANN PROP DICT ASSIGNMENT BC '+str(this_gene)+' '+str(spin))
                         else:
-                            # ANN_prop_dict.update({this_gene: 10000})
-                            print('SKIPPED ANN PROP DICT ASSIGNMENT BC '+str(this_gene)+' '+str(spin))
+                            ANN_prop_dict.update({this_gene: this_prop})
                 elif runtype in ['homo','gap']:
                     if (split_energy > 0 and int(spin) <= 3) or (split_energy < 0 and int(spin) > 3):
                         this_prop = float(ANN_dict[keys][runtype])
                         this_dist = float(ANN_dict[keys][runtype + '_dist'])
                         ANN_prop_dict.update({this_gene: this_prop})
                 elif type(runtype) == list:
+                    # print('here3')
                     this_prop = []
                     this_dist = []
-                    for run in runtype:
-                        this_prop.append(float(ANN_dict[keys][run]))
-                        this_dist.append(float(ANN_dict[keys][run + '_dist']))
-                    if spin_cat == isKeyword('spin_constraint'): #Constraining this to a single spin state.
-                        print('freq fitness multiple prop update')
-                        ANN_prop_dict.update({this_gene: this_prop})
-                    elif isKeyword('spin_constraint') and get_metals()[metal].lower() == 'cr' and ox == 5:
-                        print('Cr(V) does not exist in HS')
-                        ANN_prop_dict.update({this_gene: [10000, 10000]})
+                    if gene_template['legacy']:
+                        for run in runtype:
+                            this_prop.append(float(ANN_dict[keys][run]))
+                            this_dist.append(float(ANN_dict[keys][run + '_dist']))
+                        if spin_cat == isKeyword('spin_constraint'): #Constraining this to a single spin state.
+                            print('freq fitness multiple prop update')
+                            ANN_prop_dict.update({this_gene: this_prop})
+                        elif isKeyword('spin_constraint') and get_metals()[metal].lower() == 'cr' and ox == 5:
+                            print('Cr(V) does not exist in HS')
+                            ANN_prop_dict.update({this_gene: [10000, 10000]})
+                        else:
+                            # ANN_prop_dict.update({this_gene: 10000})
+                            print('SKIPPED ANN PROP DICT ASSIGNMENT BC '+str(this_gene)+' IS SPIN '+str(spin))
                     else:
-                        # ANN_prop_dict.update({this_gene: 10000})
-                        print('SKIPPED ANN PROP DICT ASSIGNMENT BC '+str(this_gene)+' IS SPIN '+str(spin))
+                        # print('here4')
+                        for run in runtype:
+                            print(run)
+                            this_prop.append(float(ANN_dict[keys][run]))
+                            this_dist.append(float(ANN_dict[keys][run + '_dist']))
+                            print('prop', this_prop)
+                            print('dist', this_dist)
+                        if this_gene in ANN_prop_dict.keys():
+                            print('oops')
+                            pass
+                        else:
+                            ANN_prop_dict.update({this_gene: this_prop})
                 # elif not (this_gene in ANN_prop_dict.keys()):
                 #     sardines
                 #     this_prop = float(ANN_dict[keys][runtype])
@@ -271,6 +296,8 @@ def _get_freq_fitness(lastgen, npool):
                 prop = ANN_prop_dict[geneName]
                 if 'hinge' in str(isKeyword('scoring_function')):
                     fitness = find_prop_hinge_fitness(prop, isKeyword('property_parameter'))
+                elif 'nsga' in str(isKeyword('scoring_function')).lower():
+                    fitness = 1
                 else:
                     fitness = find_prop_fitness(prop, isKeyword('property_parameter'))
 
@@ -288,23 +315,30 @@ def _get_freq_fitness(lastgen, npool):
         # print('_____________________________________________________________________Entered part 3.')
         sum_results = []
         read_path = base_path + "gen_" + str(generation) + "/gene_fitness.csv"
-        fi = open(read_path, 'r')
-        for line in fi:
-            geneName = line.split(",")[0]
-            geneName = geneName.strip('\n')
-            index = _find_gene(geneName, sum_results)
-            if index >= 0:
-                sum_results[index].frequency += 1
-            else:
-                sum_results.append(gene(geneName, 0, 1, generation, None, None))
-        fi.close()
+        # fi = open(read_path, 'r')
+        with open(read_path,'r') as fi:
+            data = fi.readlines()
+            for line in data:
+                geneName = line.split(",")[0]
+                geneName = geneName.strip('\n')
+                index = _find_gene(geneName, sum_results)
+                if index >= 0:
+                    sum_results[index].frequency += 1
+                else:
+                    sum_results.append(gene(geneName, 0, 1, generation, None, None))
+        # fi.close()
+        # print('got to this point 3')
         # Third, output the unique genes and their fitness values to .txt and .csv files.
         _write_all_txt(base_path, generation, end_results)
+        # print('got to this point 4')
         _write_all_csv(base_path, generation, end_results)
+        # print('got to this point 5')
         _gen_gene_fitness_csv(base_path, generation, end_results, sumt)
+        # print('got to this point 6')
         _human_readable_csv(base_path, generation, end_results)
-        print('here')
+        # print('got to this point 7')
         _write_summary_csv(base_path, generation, sum_results)
+        print('DONE WRITING NOW!')
         
         # Fourth, recover actual splitting energies only in ANN case
         if not isKeyword('DFT'):
@@ -339,6 +373,7 @@ def _get_freq_fitness(lastgen, npool):
                 else:
                     mean_prop = mean_prop / float(count)
             ## write
+            # print('this point...')
             _write_prop_csv(base_path, generation, mean_prop)
         generation += 1
         print('Moving to generation: ',generation)

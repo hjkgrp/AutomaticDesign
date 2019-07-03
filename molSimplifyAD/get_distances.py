@@ -10,12 +10,14 @@ from molSimplifyAD.ga_get_general import _get_gen_npool
 
 ##Finds the ANN distances, writes them to a dictionary and then to a file
 def _find_distances():
+    # print('in find distances')
     lastgen, npool = _get_gen_npool(isKeyword('rundir'))
     gene_dist_dict = dict()
     gene_prop_dict = dict()
     gene_name_dict = dict()
     #GA_run = get_current_GA()
     runtype = isKeyword("runtype")
+    # print('find dist part 1')
     # lastgen is the last generation that has been run
     for generation in range(lastgen + 1):
         ANN_dir = isKeyword('rundir') + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
@@ -34,95 +36,120 @@ def _find_distances():
                 eqlig = liglist[0]
                 axlig1 = liglist[1]
                 axlig2 = liglist[2]
+            gene = translate_dict['gene']
             indlist = translate_dict['indlist']
             spin = translate_dict['spin']
             spin_cat = translate_dict['spin_cat']
             ahf = translate_dict['ahf']
             base_name = translate_dict['basename']
             base_gene = translate_dict['basegene']
+            chem_name = translate_dict['chem_name']
             split_energy = float(ANN_dict[keys]['split'])
             if runtype in ['homo','gap']:
                 if (split_energy > 0 and int(spin)<=3) or (split_energy < 0 and int(spin)>3):
                     this_prop = float(ANN_dict[keys][runtype])
                     this_dist = float(ANN_dict[keys][runtype + '_dist'])
-                    geneName = "_".join(keys.split('_')[4:10])
+                    # geneName = "_".join(keys.split('_')[4:10])
                     metal = get_metals()[metal]
-                    chem_name = '_'.join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), str(ahf),str(spin)])
-                    if geneName in gene_dist_dict.keys():
+                    chem_name = translate_dict['chem_name']
+                    if gene in gene_dist_dict.keys():
                         pass
                     else:
-                        gene_dist_dict.update({geneName: this_dist})
-                        gene_prop_dict.update({geneName: this_prop})
-                        gene_name_dict.update({geneName: chem_name})
+                        gene_dist_dict.update({gene: this_dist})
+                        gene_prop_dict.update({gene: this_prop})
+                        gene_name_dict.update({gene: chem_name})
             elif runtype in ['oxo','hat']:
                 # if (spin_cat == 'HS' or (get_metals()[metal] == 'cr' and int(spin) == 2)):
-                if (spin_cat == isKeyword('spin_constraint')):
-                    # print('Entered into HAT and OXO statement because HIGH SPIN')
-                    print('Entered into HAT and OXO statement because LOW SPIN')
+                if gene_template['legacy']:
+                    if (spin_cat == isKeyword('spin_constraint')):
+                        # print('Entered into HAT and OXO statement because HIGH SPIN')
+                        print('Entered into HAT and OXO statement because LOW SPIN')
+                        this_prop = float(ANN_dict[keys][runtype])
+                        this_dist = float(ANN_dict[keys][runtype + '_dist'])
+                        # keys_temp = keys.split('_')[4:10]
+                        # geneName = "_".join(keys_temp)
+                        metal = get_metals()[metal]
+                        # chem_name = translate_dict['chem_name']
+                        print(chem_name+' logged in dictionary')
+                        # print('genename is '+geneName)
+                        if gene in gene_dist_dict.keys():
+                            print('SKIPPING GENENAME '+str(gene))
+                            pass
+                        else:
+                            gene_dist_dict.update({gene: this_dist})
+                            gene_prop_dict.update({gene: this_prop})
+                            gene_name_dict.update({gene: chem_name})
+                    elif (isKeyword('spin_constraint') == 'HS') and get_metals()[metal].lower() == 'cr' and ox == 5:
+                        print('Cr(V) does not exist in HS')
+                        metal = get_metals()[metal]
+                        chem_name = translate_dict['chem_name']
+                        gene_dist_dict.update({gene: 10000})
+                        gene_prop_dict.update({gene: 10000})
+                        gene_name_dict.update({gene: chem_name})
+                else:
                     this_prop = float(ANN_dict[keys][runtype])
                     this_dist = float(ANN_dict[keys][runtype + '_dist'])
-                    keys_temp = keys.split('_')[4:10]
-                    geneName = "_".join(keys_temp)
-                    metal = get_metals()[metal]
-                    chem_name = '_'.join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), str(ahf),str(spin)])
-                    print(chem_name+' logged in dictionary')
-                    print('genename is '+geneName)
-                    if geneName in gene_dist_dict.keys():
-                        print('SKIPPING GENENAME '+str(geneName))
-                        pass
-                    else:
-                        gene_dist_dict.update({geneName: this_dist})
-                        gene_prop_dict.update({geneName: this_prop})
-                        gene_name_dict.update({geneName: chem_name})
-                elif (isKeyword('spin_constraint') == 'HS') and get_metals()[metal].lower() == 'cr' and ox == 5:
-                    print('Cr(V) does not exist in HS')
-                    metal = get_metals()[metal]
-                    chem_name = '_'.join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), str(ahf),str(spin)])
-                    gene_dist_dict.update({geneName: 10000})
-                    gene_prop_dict.update({geneName: 10000})
-                    gene_name_dict.update({geneName: chem_name})
+                    gene_dist_dict.update({gene: this_dist})
+                    gene_prop_dict.update({gene: this_prop})
+                    gene_name_dict.update({gene: chem_name})
             elif runtype == 'split':
                 this_prop = float(ANN_dict[keys][runtype])
                 this_dist = float(ANN_dict[keys][runtype + '_dist'])
-                geneName = "_".join(keys.split('_')[4:10])
+                # geneName = "_".join(keys.split('_')[4:10])
                 metal = get_metals()[metal]
-                chem_name = '_'.join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), str(ahf),str(spin)])
+                chem_name = translate_dict['chem_name']
                 print(chem_name)
-                if geneName in gene_dist_dict.keys():
+                if gene in gene_dist_dict.keys():
                     pass
                 else:
-                    gene_dist_dict.update({geneName: this_dist})
-                    gene_prop_dict.update({geneName: this_prop})
-                    gene_name_dict.update({geneName: chem_name})
+                    gene_dist_dict.update({gene: this_dist})
+                    gene_prop_dict.update({gene: this_prop})
+                    gene_name_dict.update({gene: chem_name})
             elif type(runtype) == list: #Currently only supports spin dependent properties with a spin constraint
                 this_prop = []
                 this_dist = []
-                if spin_cat == isKeyword('spin_constraint'): #Constraining this to a single spin state.
+                if gene_template['legacy']:
+                    if spin_cat == isKeyword('spin_constraint'): #Constraining this to a single spin state.
+                        for run in runtype:
+                            this_prop.append(float(ANN_dict[keys][run]))
+                            this_dist.append(float(ANN_dict[keys][run + '_dist']))
+                        geneName = "_".join(keys.split('_')[4:10])
+                        metal = get_metals()[metal]
+                        chem_name = translate_dict['chem_name']
+                        if geneName in gene_dist_dict.keys():
+                            pass
+                        else:
+                            gene_dist_dict.update({geneName: this_dist})
+                            gene_prop_dict.update({geneName: this_prop})
+                            gene_name_dict.update({geneName: chem_name})
+                        print('Multiple factors in fitness (get distances)')
+                    elif (isKeyword('spin_constraint') == 'HS') and get_metals()[metal].lower() == 'cr' and ox == 5:
+                        print('Cr(V) does not exist in HS')
+                        geneName = "_".join(keys.split('_')[4:10])
+                        metal = get_metals()[metal]
+                        chem_name = translate_dict['chem_name']
+                        if geneName in gene_dist_dict.keys():
+                            pass
+                        else:
+                            gene_dist_dict.update({geneName: [10000,10000]})
+                            gene_prop_dict.update({geneName: [10000,10000]})
+                            gene_name_dict.update({geneName: chem_name})
+                else:
+                    # print('in here')
+                    # print('gene is ',gene)
                     for run in runtype:
                         this_prop.append(float(ANN_dict[keys][run]))
                         this_dist.append(float(ANN_dict[keys][run + '_dist']))
-                    geneName = "_".join(keys.split('_')[4:10])
-                    metal = get_metals()[metal]
-                    chem_name = '_'.join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), str(ahf),str(spin)])
-                    if geneName in gene_dist_dict.keys():
+                    # print('after lists')
+                    chem_name = translate_dict['chem_name']
+                    # print(chem_name)
+                    # print(this_prop, this_dist)
+                    if gene in gene_dist_dict.keys():
                         pass
                     else:
-                        gene_dist_dict.update({geneName: this_dist})
-                        gene_prop_dict.update({geneName: this_prop})
-                        gene_name_dict.update({geneName: chem_name})
-                    print('Multiple factors in fitness (get distances)')
-                elif (isKeyword('spin_constraint') == 'HS') and get_metals()[metal].lower() == 'cr' and ox == 5:
-                    print('Cr(V) does not exist in HS')
-                    geneName = "_".join(keys.split('_')[4:10])
-                    metal = get_metals()[metal]
-                    chem_name = '_'.join([str(metal), str(ox), 'eq', str(eqlig), 'ax1', str(axlig1), 'ax2', str(axlig2), str(ahf),str(spin)])
-                    if geneName in gene_dist_dict.keys():
-                        pass
-                    else:
-                        gene_dist_dict.update({geneName: [10000,10000]})
-                        gene_prop_dict.update({geneName: [10000,10000]})
-                        gene_name_dict.update({geneName: chem_name})
-                
+                        gene_dist_dict.update({gene: this_dist})
+                        gene_prop_dict.update({gene: this_prop})
+                        gene_name_dict.update({gene: chem_name})
 
     ## Writes genes and distances to a .csv file
     write_path = isKeyword('rundir') + "statespace/all_distances.csv"

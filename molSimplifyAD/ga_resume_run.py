@@ -53,13 +53,17 @@ def resume_run(args):
                            live_job_count))
                 logger(path_dictionary['state_path'], str(datetime.datetime.now()) + ' going back to sleep')
                 logger(path_dictionary['state_path'], '************************************************')
-
+            else:
+                print('------- DONE NOW (ANN VERSION)-----')
             if not isKeyword('runtype') == "redox":
+                # if True:
                 try:     
                     print('-----format_frequencies and format_distances being carried out') 
                     format_freqeuncies()
                     format_distances()
+                    print('Done with distances now.')
                 except:
+                    print('Passed in ga_resume_run.')
                     pass
             its += 1
             if args.sleep:
