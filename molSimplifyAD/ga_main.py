@@ -556,8 +556,7 @@ class GA_generation:
                                                                                            spin=spin,
                                                                                            path_dictionary=self.current_path_dictionary,
                                                                                            rundirpath=isKeyword('rundir'),
-                                                                                           gen=self.status_dictionary['gen'],
-                                                                                           tmcdoc=tmcdoc)
+                                                                                           gen=self.status_dictionary['gen'])
                             print(len(descriptor_names),len(descriptors))
                             ANN_results = {}
                             for model_num, model in enumerate(loaded_model_list):
