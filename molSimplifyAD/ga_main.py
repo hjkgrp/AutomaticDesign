@@ -3,7 +3,6 @@ import operator
 import datetime
 import math
 import numpy
-import matplotlib.pyplot as plt
 import subprocess
 import argparse
 import os
