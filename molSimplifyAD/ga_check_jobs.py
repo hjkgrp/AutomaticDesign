@@ -153,7 +153,6 @@ def check_all_current_convergence(post_all=False):
                 metal = metal_list[metal]
                 ## populate run with properies
                 this_run.configure(metal, ox, liglist, spin, alpha, spin_cat)
-
                 ## make unique gene
                 if gene_template['legacy']:
                     name = "_".join(
@@ -438,8 +437,8 @@ def check_all_current_convergence(post_all=False):
                                            str(datetime.datetime.now()) + ' converting from HFX = ' + str(
                                                this_run.alpha) + ' to ' + newHFX + ' with ref ' + refHFX)
                                     add_to_outstanding_jobs(HFX_job)
-                            if isKeyword('oxocatalysis') and int(ox) > 3 and (
-                                    liglist[-1] == 'oxo' or '[O--]' in liglist[-1][0] or '[O--]' in liglist[-1]):
+                            if (isKeyword('oxocatalysis') and int(ox) > 3 and 
+                                (liglist[-1] == 'oxo' or '[O--]' in liglist[-1][0] or '[O--]' in liglist[-1])):
                                 HFX_job = this_run.write_HFX_inputs(newHFX, refHFX)
                                 if (HFX_job not in joblist) and (HFX_job not in outstanding_jobs) and (
                                         HFX_job not in converged_jobs.keys()):
@@ -477,12 +476,11 @@ def check_all_current_convergence(post_all=False):
                                     add_to_outstanding_jobs(HAT_TS)
                                 if not this_run.attempted_Oxo_TS:
                                     add_to_outstanding_jobs(Oxo_TS)
-                    elif isKeyword('oxocatalysis') and int(ox) > 3 and (
-                            liglist[-1] == 'oxo' or '[O--]' in liglist[-1][0] or '[O--]' in liglist[
-                        -1]):  # Must do this because the empty sites are one step behind the 6-coordinates at different HFX
+                    elif (isKeyword('oxocatalysis') and int(ox) > 3 and 
+                        (liglist[-1] == 'oxo' or '[O--]' in liglist[-1][0] or '[O--]' in liglist[-1]) and int(ahf)==0):  
+                        # Must do this because the empty sites are one step behind the 6-coordinates at different HFX
                         empty_sp = this_run.write_empty_inputs('00')
-                        if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (
-                                empty_sp not in converged_jobs.keys()):
+                        if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (empty_sp not in converged_jobs.keys()):
                             print('note: converting from oxo structure to empty structure (SP)')
                             logger(base_path_dictionary['state_path'], str(
                                 datetime.datetime.now()) + ' converting from oxo structure to empty structure (SP) for ' + base_name)
