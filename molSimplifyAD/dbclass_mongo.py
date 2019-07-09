@@ -100,7 +100,10 @@ class tmcMongo():
         except:
             pass
         self.initRACs = descriptor_dict
-        this_run.get_descriptor_vector(useinitgeo=False)
+        if not "sp_outpath" in this_run.__dict__:
+            this_run.get_descriptor_vector(useinitgeo=False)
+        else:
+            this_run.get_descriptor_vector(useinitgeo=True)
         descriptor_dict = {}
         try:
             for ii, ele in enumerate(this_run.descriptor_names):
