@@ -213,7 +213,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
     if (not oxocatalysis):
         list_of_props.append('lig6')
     list_of_prop_names = ['chem_name', 'converged', 'status', 'time', 'charge', 'spin',
-                          'energy', 'init_energy',
+                          'energy', 'init_energy','net_metal_spin',
                           'ss_act', 'ss_target', "ss_flag",
                           'ax1_MLB', 'ax2_MLB', 'eq_MLB',
                           "alphaHOMO", "alphaLUMO", "betaHOMO", "betaLUMO",
@@ -246,8 +246,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
                                'ss_target_Oxo_TS', 'eigenvalue_Oxo_TS', 'init_energy_HAT_TS', 'init_energy_Oxo_TS',
                                'converged_HAT_TS', 'converged_Oxo_TS', 'attempted_HAT_TS', 'attempted_Oxo_TS']
     if oxocatalysis:
-        list_of_prop_names += ['metal_alpha', 'metal_beta', 'net_metal_spin', 'metal_mulliken_charge', 'oxygen_alpha',
-                               'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
+        list_of_prop_names += ['net_oxygen_spin']
         if comp:
             list_of_props.insert(1, 'job_gene')
             list_of_props.append('convergence')
@@ -326,57 +325,105 @@ def get_ox_states():  # could be made metal dependent like spin
 
 
 ########################
-def get_mulliken_oxocatalysis(moldenpath, catlig, spin):
-    subprocess.call("module load multiwfn/GUI", shell=True)
-    metalalpha, metalbeta, metaldiff, metalcharge = "undef", "undef", "undef", "undef"
-    oxoalpha, oxobeta, oxodiff, oxocharge = "undef", "undef", "undef", "undef"
-    proc = subprocess.Popen("multiwfn " + moldenpath, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-    commands = ['7', '5', '1', 'y', 'n']
-    newline = os.linesep
-    output = proc.communicate(newline.join(commands))
-    lines = output[0].split('\n')
+def get_mulliken(moldenpath, spin, catlig=False):
+    metal_net_spin = "undef"
+    got_metal = False
     x_flag = False
-    if str(catlig) == "x":
-        x_flag = True
-    if str(catlig) in ["[O--]", "oxo"]:
-        modifier = 1
-    if str(catlig) in ["[OH-]", "hydroxyl"]:
-        modifier = 2
-    try:
-        if int(spin) == 1:
-            for num, line in enumerate(lines):
-                if "Population of atoms" in line:
-                    idx = 4
-                    if len(lines[num + 1].split()) == 7:
-                        idx -= 1
-                    metalalpha = np.divide(float(lines[num + 1].split()[idx]), 2)
-                    metalbeta = np.divide(float(lines[num + 1].split()[idx]), 2)
-                    metaldiff = 0
-                    metalcharge = float(lines[num + 1].split()[idx + 3])
-                if "Total net" in line and not x_flag:
-                    oxoalpha = np.divide(float(lines[num - modifier].split()[4]), 2)
-                    oxobeta = np.divide(float(lines[num - modifier].split()[4]), 2)
-                    oxodiff = 0
-                    oxocharge = float(float(lines[num - modifier].split()[7]))
+    if isKeyword('oxocatalysis'):
+        oxocatalysis = True
+        oxo_net_spin = "undef"
+        got_oxo = False
+    else:
+        got_oxo = True
+        oxocatalysis = False
+    if catlig: #This only matters for oxocatalysis, where extra info is stored.
+        if str(catlig) == "x":
+            x_flag = True
+            oxo_net_spin = 0
+            got_oxo = True
+        if str(catlig) in ["[O--]", "oxo"]:
+            modifier = 1
+        if str(catlig) in ["[OH-]", "hydroxyl"]:
+            modifier = 2
+    try: #mullpop will first be parsed
+        mullpop_path = os.path.dirname(moldenpath)+'/mullpop'
+        if spin == 1:
+            metal_net_spin = 0
+            if oxocatalysis:
+                oxo_net_spin = 0
+                return [metal_net_spin, oxo_net_spin]
+            else:
+                return [metal_net_spin]
+        with open(mullpop_path) as f:
+            data = f.readlines()
+            for i, row in enumerate(reversed(data)):
+                if 'Atom' in row:
+                    spin_line = data[-i]
+                    metal_net_spin = float(spin_line.split()[-1])
+                    got_metal = True
+                if oxocatalysis and ('---' in row) and (not x_flag):
+                    spin_line = data[-i-(modifier+1)]
+                    oxo_net_spin = float(spin_line.split()[-1])
+                    got_oxo = True
+                if got_metal and got_oxo:
+                    break
+        if oxocatalysis:
+            return [metal_net_spin, oxo_net_spin]
         else:
-            print('Mulliken analyzer fed unrestricted molden file.')
-            for num, line in enumerate(lines):
-                if "Population of atoms" in line:
-                    idx = 2
-                    if len(lines[num+2].split()) == 5 and 'Atomic' not in lines[num+2]:
-                        idx -= 1
-                    metalalpha = float(lines[num + 2].split()[idx])
-                    metalbeta = float(lines[num + 2].split()[idx + 1])
-                    metaldiff = float(lines[num + 2].split()[idx + 2])
-                    metalcharge = float(lines[num + 2].split()[idx + 3])
-                if "Total net" in line and not x_flag:
-                    oxoalpha = float(lines[num - modifier].split()[2])
-                    oxobeta = float(lines[num - modifier].split()[3])
-                    oxodiff = float(lines[num - modifier].split()[4])
-                    oxocharge = float(lines[num - modifier].split()[5])
-        return metalalpha, metalbeta, metaldiff, metalcharge, oxoalpha, oxobeta, oxodiff, oxocharge
+            return [metal_net_spin]
     except:
-        return metalalpha, metalbeta, metaldiff, metalcharge, oxoalpha, oxobeta, oxodiff, oxocharge
+        print('MULLPOP NOT FOUND')
+        ##### only call multiwfn if the mullpop is not there #####
+        subprocess.call("module load multiwfn/GUI", shell=True)
+        metalalpha, metalbeta, metal_net_spin, metalcharge = "undef", "undef", "undef", "undef"
+        if isKeyword('oxocatalysis'):
+            oxoalpha, oxobeta, oxo_net_spin, oxocharge = "undef", "undef", "undef", "undef"
+        proc = subprocess.Popen("multiwfn " + moldenpath, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+        commands = ['7', '5', '1', 'y', 'n']
+        newline = os.linesep
+        output = proc.communicate(newline.join(commands))
+        lines = output[0].split('\n')
+        try:
+            if int(spin) == 1:
+                for num, line in enumerate(lines):
+                    if "Population of atoms" in line:
+                        idx = 4
+                        if len(lines[num + 1].split()) == 7:
+                            idx -= 1
+                        metalalpha = np.divide(float(lines[num + 1].split()[idx]), 2)
+                        metalbeta = np.divide(float(lines[num + 1].split()[idx]), 2)
+                        metal_net_spin = 0
+                        metalcharge = float(lines[num + 1].split()[idx + 3])
+                    if ("Total net" in line) and (not x_flag) and (oxocatalysis):
+                        oxoalpha = np.divide(float(lines[num - modifier].split()[4]), 2)
+                        oxobeta = np.divide(float(lines[num - modifier].split()[4]), 2)
+                        oxo_net_spin = 0
+                        oxocharge = float(float(lines[num - modifier].split()[7]))
+            else:
+                print('Mulliken analyzer fed unrestricted molden file.')
+                for num, line in enumerate(lines):
+                    if "Population of atoms" in line:
+                        idx = 2
+                        if len(lines[num+2].split()) == 5 and 'Atomic' not in lines[num+2]:
+                            idx -= 1
+                        metalalpha = float(lines[num + 2].split()[idx])
+                        metalbeta = float(lines[num + 2].split()[idx + 1])
+                        metal_net_spin = float(lines[num + 2].split()[idx + 2])
+                        metalcharge = float(lines[num + 2].split()[idx + 3])
+                    if ("Total net" in line) and (not x_flag) and (oxocatalysis):
+                        oxoalpha = float(lines[num - modifier].split()[2])
+                        oxobeta = float(lines[num - modifier].split()[3])
+                        oxo_net_spin = float(lines[num - modifier].split()[4])
+                        oxocharge = float(lines[num - modifier].split()[5])
+            if oxocatalysis:
+                return [metal_net_spin, oxo_net_spin]
+            else:
+                return [metal_net_spin]
+        except:
+            if oxocatalysis:
+                return [metal_net_spin, oxo_net_spin]
+            else:
+                return [metal_net_spin]
 
 
 ########################
@@ -497,9 +544,7 @@ def translate_job_name(job):
     basename = basename.strip(".out")
     basename = basename.strip(".py")
     ll = (str(basename)).split("_")
-    print(ll)
     ligands_dict = get_ligands()
-    # print(ll)
     gen = ll[1]
     slot = ll[3]
     metal = int(ll[4])
