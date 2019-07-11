@@ -46,7 +46,7 @@ class DFTRun(object):
         self.name = name
         self.comment = ''
         self.file_merge_list = ['optim.xyz', 'bond_order.list', 'charge_mull.xls', 'grad.xyz', 'mullpop', 'spin.xls']
-        list_of_init_props = ['status', 'time', 'energy', 'alphaHOMO', 'alphaLUMO', 'betaHOMO', 'betaLUMO',
+        list_of_init_props = ['status', 'time', 'energy','net_metal_spin', 'alphaHOMO', 'alphaLUMO', 'betaHOMO', 'betaLUMO',
                               'initial_energy', 'charge', 'idn', 'spin', 'metal', 'lig1_ind', 'lig2_ind', 'lig3_ind',
                               'lig4_ind',
                               'lig5_ind', 'lig6_ind', 'lig1', 'lig2', 'lig3', 'lig4', 'lig5', 'lig6', 'eq_MLB',
@@ -73,8 +73,7 @@ class DFTRun(object):
         list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord', 'empty_ss_target',
                              'empty_ss_act']
         if isKeyword('oxocatalysis'):
-            list_of_init_props += ['metal_alpha', 'metal_beta', 'net_metal_spin', 'metal_mulliken_charge',
-                                   'oxygen_alpha', 'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
+            list_of_init_props += ['net_oxygen_spin']
         if isKeyword('TS'):
             print('---------------------------- ENTERED TS SECTION IN POST CLASSES ------------------------------')
             list_of_init_props += ['terachem_version_HAT_TS', 'terachem_detailed_version_HAT_TS', 'basis_HAT_TS',
@@ -1346,7 +1345,7 @@ class Comp(object):
         self.split = 777
 
         ## run class dependent props:
-        list_of_init_props = ['chem_name', 'spin', 'charge', 'attempted', 'converged',
+        list_of_init_props = ['chem_name', 'spin','net_metal_spin', 'charge', 'attempted', 'converged',
                               'mop_converged', 'time', 'energy', 'sp_energy', 'empty_sp_energy',
                               'flag_oct', 'flag_list',
                               'num_coord_metal', 'rmsd_max', 'atom_dist_max',
@@ -1392,8 +1391,7 @@ class Comp(object):
                     this_attribute = "_".join(['ox', ox, sc, props])
                     setattr(self, this_attribute, False)
         if isKeyword('oxocatalysis'):
-            list_of_init_props += ['metal_alpha', 'metal_beta', 'net_metal_spin', 'metal_mulliken_charge',
-                                   'oxygen_alpha', 'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
+            list_of_init_props += ['net_oxygen_spin']
             if isKeyword('TS'):
                 list_of_init_props += ['terachem_version_HAT_TS', 'terachem_detailed_version_HAT_TS', 'basis_HAT_TS',
                                        'tspin_HAT_TS', 'charge_HAT_TS', 'alpha_level_shift_HAT_TS',
