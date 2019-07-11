@@ -95,6 +95,11 @@ def test_terachem_sp_convergence(job):
                     this_str = (lines.split())
                     this_run.ss_act = float(this_str[2])
                     this_run.ss_target = float(this_str[4].strip('()'))
+                    if spin == 1:
+                        this_run.ss_flag = 1
+                    else:
+                        delss = abs(this_run.ss_act - this_run.ss_act)
+                        this_run.ss_flag = 1 if delss < 1 else 0
         if (found_data == True) and (found_time == True) and (found_conv == True):
             this_run.converged = True
             this_run.status = 0
@@ -913,10 +918,6 @@ def test_terachem_go_convergence(this_run):
         print('this flag oct is ' + str(this_run.flag_oct))
         if this_run.converged and this_run.flag_oct == 1:
             this_run.status = 0
-            # if not this_run.tspin == this_run.spin:
-            #     print(this_run.tspin)
-            #     print(this_run.spin)
-                # sardines
         else:
             this_run.status = 1
             this_run.comment += 'coord not good ' + str(this_run.coord) + '\n '
@@ -924,8 +925,11 @@ def test_terachem_go_convergence(this_run):
         if this_run.converged:
             try:
                 this_run.obtain_wavefunction()
+                this_run.calculate_spin_on_metal()
             except:
                 pass
+    this_run.get_geo_ss_flag()
+    this_run.get_dynamic_feature()
 
 
 def test_terachem_TS_convergence(this_run):
@@ -995,6 +999,7 @@ def read_terachem_go_output(this_run):
                     # print('TeraChem spin: ' + str(this_run.tspin))
                 if str(lines).find('Total charge:') != -1:
                     this_run.charge = int(lines.split()[2])
+                    this_run.ligcharge = this_run.charge - this_run.ox
                     # print('TeraChem charge: ' + str(this_run.charge))
                 if str(lines).find('Alpha level shift') != -1:
                     this_run.alpha_level_shift = float(lines.split()[3])

@@ -163,6 +163,7 @@ def check_all_current_convergence(post_all=False):
                         [str(metal), str(ox), 'eq', str(liglist[0]), str(liglist[1]), str(liglist[2]), str(liglist[3]),
                          'ax1', str(liglist[4]), 'ax2', str(liglist[5]), 'ahf', str(int(alpha)).zfill(2), str(spin)])
                 this_run.chem_name = name
+                this_run.liglist =liglist
                 ## set file paths
                 path_dictionary = setup_paths()
                 path_dictionary = advance_paths(path_dictionary, gen)  ## this adds the /gen_x/ to the paths
