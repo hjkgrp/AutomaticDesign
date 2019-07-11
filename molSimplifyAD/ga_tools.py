@@ -213,7 +213,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
     if (not oxocatalysis):
         list_of_props.append('lig6')
     list_of_prop_names = ['chem_name', 'converged', 'status', 'time', 'charge', 'spin',
-                          'energy', 'init_energy',
+                          'energy', 'init_energy','net_metal_spin',
                           'ss_act', 'ss_target',
                           'ax1_MLB', 'ax2_MLB', 'eq_MLB',
                           "alphaHOMO", "alphaLUMO", "betaHOMO", "betaLUMO",
@@ -246,8 +246,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
                                'ss_target_Oxo_TS', 'eigenvalue_Oxo_TS', 'init_energy_HAT_TS', 'init_energy_Oxo_TS',
                                'converged_HAT_TS', 'converged_Oxo_TS', 'attempted_HAT_TS', 'attempted_Oxo_TS']
     if oxocatalysis:
-        list_of_prop_names += ['metal_alpha', 'metal_beta', 'net_metal_spin', 'metal_mulliken_charge', 'oxygen_alpha',
-                               'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
+        list_of_prop_names += ['net_oxygen_spin']
         if comp:
             list_of_props.insert(1, 'job_gene')
             list_of_props.append('convergence')
