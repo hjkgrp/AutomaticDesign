@@ -4,137 +4,126 @@ import pickle
 import numpy as np
 from datetime import datetime
 
-mongo_attr_from_run_undef = ["name", "metal", "ox", "spin", "lig1", "lig2", "lig3", "lig4", "lig5", "lig6",
+mongo_attr_from_run_undef = ["name", "metal", "ox", "spin", "liglist",
                              "alpha", "functional", "basis", "status", 'converged', 'charge',
-                             'terachem_version']
+                             'terachem_version', "ligcharge", "dynamic_feature"]
+mongo_attr_flags = ["geo_flag", "ss_flag", "metal_spin_flag"]
+mongo_attr_id = ["metal", "ox", "spin", "ligstr", "alpha", "functional", "basis", 'converged',
+                 "energy", "geotype"]  ### keys that identify a complex in matching.
 mongo_attr_from_run_nan = ["energy", "ss_target", "ss_act", 'alphaHOMO', 'betaHOMO',
                            'alphaLUMO', 'betaLUMO']
-mongo_attr_other = ["date", "author", "geo_type", "geo_flag", "ss_flag", "opt_geo", "init_geo", "prog_geo",
-                    "RACs", "initRACs", "ligcharge", "dftrun", "tag", "subtag", "unique_name"]
-mongo_attr_id = ["metal", "ox", "spin", "lig1", "lig2", "lig3", "lig4", "lig5", "lig6",
-                 "alpha", "functional", "basis", 'converged']  ### keys that identify a complex in matching.
+mongo_attr_other = ["date", "author", "geotype", "opt_geo", "init_geo", "prog_geo",
+                    "RACs", "initRACs", "dftrun", "tag", "subtag", "unique_name",
+                    "publication", "ligstr"]
+mongo_attr_actlearn = ["step", "is_training", "HFX_flag", "RACs", "opt_geo", "init_geo",
+                       "ligcharge", "unique_name", "name"]
 mongo_not_web = ["dftrun"]
+wfn_basepath = '/opt/data/wfn/'
+dftrun_basepath = '/opt/data/dftrun/'
 
 
-class tmcMongo():
+class TMC():
     '''
     Classes that converts between DFTrun and documents in MongoDB.
 
     Inputs:
-        tag: tag of your data. Recommend to use the project name (may related to the name of your paper).
-        subtag: Recommend as the name of your mAD folder (considering we may have many mAD folders for each project).
         this_run: DFTrun object.
         document: document from MongoDB.
-        geo_type: type of the geometry of TM complex.
+        geotype: type of the geometry of TM complex.
     Note: To successfully initiate a tmcMongo object, either this_run or document is required as an input.
 
     Key attributes:
-        document: the document to be inserted in MongoDB (contains DFTrub object).
-        web_doc: a simplified document to be inserted in MongoDB for the web interface (DFTrun object excluded).
         id_doc: a dictionary that tells the unique identity of a TM complex.
-        dftrun: a pickle-dumped DFTrun object.
-        update_fields: fields that will be updated when merging two documents. Default as an empty list.
+        dftrun: a centeralized path to the DFTrun object.
+        this_run: DFT object.
     '''
 
-    def __init__(self, tag, subtag,
-                 this_run=False, document=False,
-                 geo_type=False, update_fields=False):
+    def __init__(self, this_run=False, document=False, geotype=False):
         if (this_run and document):
             raise ValueError(
                 "Confusion. Either a DFTrun object or a tmcMongo object is required as an input. Not both.")
         if not this_run:
             if document:
                 try:
-                    this_run = pickle.loads(document["dftrun"])
+                    self.recover_dftrun(document=document)
                 except:
-                    raise ValueError("The input document does not contain a DFTrun object.")
+                    raise ValueError("The input document cannot recover a DFTrun object.")
             else:
                 raise ValueError("Either a DFTrun object or a tmcMongo object is required as an input.")
+        else:
+            self.this_run = this_run
+        if not geotype:
+            self.geotype = "oct" if self.this_run.octahedral else "sqpyr"
+        else:
+            self.geotype = geotype
         self.document = {}
-        self.web_doc = {}
         self.id_doc = {}
-        self.author = getpass.getuser()
-        self.tag = tag
-        self.subtag = subtag
-        self.date = datetime.now()
-        self.dftrun = pickle.dumps(this_run)
+        self.update_fields = list()
+        self.inherit_from_run()
+        self.cal_initRAC()
+        self.cal_RAC()
+        self.construct_identity()
+        self.make_unique_name()
+
+    def inherit_from_run(self):
+        ## Get attr from dftrun
         for attr in mongo_attr_from_run_undef:
             setattr(self, attr, "undef")
         for attr in mongo_attr_from_run_undef:
             try:
-                setattr(self, attr, getattr(this_run, attr))
+                setattr(self, attr, getattr(self.this_run, attr))
             except:
                 pass
+        self.liglist = self.this_run.liglist
+        self.ligstr = "_".join(self.this_run.liglist)
         for attr in mongo_attr_from_run_nan:
             setattr(self, attr, np.nan)
         for attr in mongo_attr_from_run_nan:
             try:
-                setattr(self, attr, float(getattr(this_run, attr)))
+                setattr(self, attr, float(getattr(self.this_run, attr)))
             except:
                 pass
-        if not geo_type:
-            self.geo_type = "oct" if this_run.octahedral else "sqpyr"
-        else:
-            self.geo_type = geo_type
-        self.geo_flag = this_run.flag_oct
-        try:
-            _, _ = float(this_run.ss_act), float(this_run.ss_target)
-            self.ss_flag = 1 if (this_run.ss_act - this_run.ss_target) < 1 else 0
-            if this_run.spin == 1:
-                self.ss_flag = 1
-        except TypeError:
-            self.ss_flag = "undef"
-        try:
-            _, _ = int(self.charge), int(self.ox)
-            self.ligcharge = int(self.charge) - int(self.ox)
-        except ValueError:
-            self.ligcharge = "undef"
-        self.opt_geo = this_run.mol.returnxyz() if this_run.mol else "undef"
-        self.init_geo = this_run.init_mol.returnxyz() if this_run.init_mol else "undef"
-        self.prog_geo = this_run.progmol.returnxyz() if this_run.progmol else "undef"
-        this_run.get_descriptor_vector(useinitgeo=True)
-        descriptor_dict = {}
-        try:
-            for ii, ele in enumerate(this_run.descriptor_names):
-                descriptor_dict.update(({ele: this_run.descriptors[ii]}))
-        except:
-            pass
-        self.initRACs = descriptor_dict
-        if not "sp_outpath" in this_run.__dict__:
-            this_run.get_descriptor_vector(useinitgeo=False)
-        else:
-            this_run.get_descriptor_vector(useinitgeo=True)
-        descriptor_dict = {}
-        try:
-            for ii, ele in enumerate(this_run.descriptor_names):
-                descriptor_dict.update(({ele: this_run.descriptors[ii]}))
-        except:
-            pass
-        self.RACs = descriptor_dict
-        self.construct_identity()
-        self.make_unique_name()
-        self.construct_document()
-        self.construct_webdoc()
-        self.update_fields = list()
-        self.get_update_fileds(update_fields)
-
-    def deserialize_dftrun(self):
-        return pickle.loads(self.dftrun)
-
-    def construct_document(self):
-        for attr in mongo_attr_from_run_undef + mongo_attr_from_run_nan + mongo_attr_other:
+        ## Get job flags
+        for attr in mongo_attr_flags:
+            setattr(self, attr, -1)
+        for attr in mongo_attr_flags:
             try:
-                self.document.update({attr: getattr(self, attr)})
+                setattr(self, attr, getattr(self.this_run, attr))
             except:
                 pass
+        ## Get geometries
+        self.opt_geo = self.this_run.mol.returnxyz() if self.this_run.mol else "undef"
+        self.init_geo = self.this_run.init_mol.returnxyz() if self.this_run.init_mol else "undef"
+        self.prog_geo = self.this_run.progmol.returnxyz() if self.this_run.progmol else "undef"
 
-    def construct_webdoc(self):
-        for key in self.document:
-            if not key in mongo_not_web:
-                try:
-                    self.web_doc.update({key: self.document[key]})
-                except:
-                    pass
+    def cal_initRAC(self):
+        try:
+            self.this_run.get_descriptor_vector(useinitgeo=True)
+            descriptor_dict = {}
+            try:
+                for ii, ele in enumerate(self.this_run.descriptor_names):
+                    descriptor_dict.update(({ele: self.this_run.descriptors[ii]}))
+            except:
+                pass
+            self.initRACs = descriptor_dict
+        except:
+            self.initRACs = {}
+
+    def cal_RAC(self):
+        try:
+            if not "sp_outpath" in self.this_run.__dict__:
+                self.this_run.get_descriptor_vector(useinitgeo=False)
+            else:
+                self.this_run.get_descriptor_vector(useinitgeo=True)
+            descriptor_dict = {}
+            try:
+                for ii, ele in enumerate(self.this_run.descriptor_names):
+                    descriptor_dict.update(({ele: self.this_run.descriptors[ii]}))
+            except:
+                pass
+            self.RACs = descriptor_dict
+        except:
+            self.RACs = {}
 
     def construct_identity(self):
         for attr in mongo_attr_id:
@@ -147,19 +136,126 @@ class tmcMongo():
             name_ele.append(str(self.id_doc[key]))
         self.unique_name = '_'.join(name_ele)
 
-    def write_wfn(self, this_run, wfn_basepath='/opt/data/wfn/'):
-        wfn_path = wfn_basepath + self.unique_name + '/'
-        if not os.path.isdir(wfn_path):
-            os.makedirs(wfn_path)
-        for key in this_run.wavefunction:
-            if this_run.wavefunction[key]:
-                with open(wfn_path + key, "wb") as fo:
-                    fo.write(this_run.wavefunction[key])
-            this_run.wavefunction.update({key: wfn_path + key})
-        return this_run
-
-    def get_update_fileds(self, update_fields):
+    def get_update_fields(self, update_fields):
         if update_fields:
             for field in update_fields:
                 if field in self.document.keys():
                     self.update_fields.append(field)
+
+    def recover_dftrun(self, document=False):
+        if not document:
+            dftrun_file = self.document["dftrun"]
+        else:
+            dftrun_file = document["dftrun"]
+        if os.path.isfile(dftrun_file):
+            self.this_run = pickle.load(open(dftrun_file, "rb"))
+        else:
+            raise ValueError("Cannot recover the DFTrun object.")
+
+
+class tmcMongo(TMC):
+    '''
+    For the database of DFTRun class.
+
+    Inputs:
+        tag: tag of your data. Recommend to use the project name (may related to the name of your paper).
+        subtag: Recommend as the name of your mAD folder (considering we may have many mAD folders for each project).
+        publication: The paper to which this complex belongs. Format: LastName_Journal_year (e. g., Duan_JCTC_2019)
+        this_run: DFTrun object.
+        document: document from MongoDB.
+        geotype: type of the geometry of TM complex.
+        update_fields: fields that will be updated when merging two documents. Default as an empty list.
+    Note: To successfully initiate a tmcMongo object, either this_run or document is required as an input.
+
+    Key attributes:
+        document: the document to be inserted in MongoDB (contains DFTrub object).
+        id_doc: a dictionary that tells the unique identity of a TM complex.
+        dftrun: a pickle-dumped DFTrun object.
+    '''
+
+    def __init__(self, tag, subtag, publication=False,
+                 this_run=False, document=False,
+                 geotype=False, update_fields=False):
+        TMC.__init__(self, this_run=this_run, document=document, geotype=geotype)
+        self.author = getpass.getuser()
+        self.tag = tag
+        self.subtag = subtag
+        self.publication = publication
+        self.date = datetime.now()
+        self.write_wfn()
+        self.write_dftrun()
+        self.construct_document()
+        # self.construct_webdoc()
+        self.get_update_fields(update_fields)
+
+    def construct_document(self):
+        for attr in mongo_attr_from_run_undef + mongo_attr_from_run_nan + mongo_attr_other + mongo_attr_flags:
+            try:
+                self.document.update({attr: getattr(self, attr)})
+            except:
+                pass
+        for ii, lig in enumerate(self.liglist):
+            self.document.update({"lig%d" % (ii + 1): lig})
+
+    def construct_webdoc(self):
+        for key in self.document:
+            if not key in mongo_not_web:
+                try:
+                    self.web_doc.update({key: self.document[key]})
+                except:
+                    pass
+
+    def write_wfn(self, wfn_basepath=wfn_basepath):
+        wfn_path = wfn_basepath + self.unique_name + '/'
+        if not os.path.isdir(wfn_path):
+            os.makedirs(wfn_path)
+        if self.this_run.wavefunction:
+            for key in self.this_run.wavefunction:
+                if self.this_run.wavefunction[key]:
+                    with open(wfn_path + key, "wb") as fo:
+                        fo.write(self.this_run.wavefunction[key])
+                self.this_run.wavefunction.update({key: wfn_path + key})
+
+    def write_dftrun(self, dftrun_basepath=dftrun_basepath):
+        dftrun_path = dftrun_basepath + self.unique_name + '/'
+        if not os.path.isdir(dftrun_path):
+            os.makedirs(dftrun_path)
+        with open(dftrun_path + "dftrun.pkl", "wb") as fo:
+            pickle.dump(self.this_run, fo, protocol=2)
+        self.dftrun = dftrun_path + "dftrun.pkl"
+
+
+class tmcActLearn(TMC):
+    '''
+    For active learning database.
+
+    Inputs:
+        gen: generation of this complex.
+        is_training: used in train (True) or test (False)
+        this_run: DFTrun object.
+        document: document from MongoDB.
+        geotype: type of the geometry of TM complex.
+        update_fields: fields that will be updated when merging two documents. Default as an empty list.
+    Note: To successfully initiate a tmcMongo object, either this_run or document is required as an input.
+
+    Key attributes:
+        document: the document to be inserted in MongoDB (contains DFTrub object).
+        id_doc: a dictionary that tells the unique identity of a TM complex.
+    '''
+
+    def __init__(self, step, is_training, HFX_flag, this_run=False, document=False,
+                 geotype=False, update_fields=False):
+        TMC.__init__(self, this_run=this_run, document=document, geotype=geotype)
+        self.step = step
+        self.is_training = is_training
+        self.construct_document()
+        self.get_update_fields(update_fields)
+
+    def construct_document(self):
+        for attr in mongo_attr_id + mongo_attr_actlearn + mongo_attr_flags:
+            try:
+                self.document.update({attr: getattr(self, attr)})
+            except:
+                pass
+        for ii, lig in enumerate(self.liglist):
+            self.document.update({"lig%d" % (ii + 1): lig})
