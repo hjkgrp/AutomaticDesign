@@ -821,7 +821,7 @@ def HFXordering():
     return (HFXdictionary)
 
 ########################
-def check_HFX_linearity(all_runs, number_of_points_tolerance=3,max_deviation=6):
+def check_HFX_linearity(all_runs, number_of_points_tolerance=3,max_deviation=10):
     # this function gets a list of run_classes,
     # groups together the same complex with 
     # different HFX values, and makes sure they
@@ -829,7 +829,7 @@ def check_HFX_linearity(all_runs, number_of_points_tolerance=3,max_deviation=6):
     # state. If fewer than 3 HFX values have converged,
     # linearity is not tested and HFX_flag is marked
     # as false. For all else, LOOCV is used with a
-    # cutoff energy. Default is 6 kcal/mol. If the
+    # cutoff energy. Default is 10 kcal/mol. If the
     # test is failed, it is marked as false for HFX_flag.
     from sklearn.linear_model import LinearRegression 
     from sklearn.model_selection import train_test_split, cross_val_score, LeaveOneOut
