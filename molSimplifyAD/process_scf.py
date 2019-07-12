@@ -925,10 +925,8 @@ def test_terachem_go_convergence(this_run):
         if this_run.converged:
             try:
                 this_run.obtain_wavefunction()
-                this_run.calculate_spin_on_metal()
             except:
                 pass
-    this_run.get_geo_ss_flag()
     this_run.get_dynamic_feature()
 
 
