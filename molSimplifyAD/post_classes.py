@@ -49,7 +49,7 @@ class DFTRun(object):
         list_of_init_props = ['status', 'time', 'energy', 'alphaHOMO', 'alphaLUMO', 'betaHOMO', 'betaLUMO',
                               'initial_energy', 'charge', 'idn', 'spin', 'metal', 'lig1_ind', 'lig2_ind', 'lig3_ind',
                               'lig4_ind', 'lig5_ind', 'lig6_ind', 'lig1', 'lig2', 'lig3', 'lig4', 'lig5',
-                              'lig6', 'eq_MLB', 'ax1_MLB', 'ax2_MLB', 'liglist', 'metal_translation',
+                              'lig6', 'eq_MLB', 'ax1_MLB', 'ax2_MLB', 'liglist', 'metal_translation','hfx_flag',
                               'init_eq_MLB', 'init_ax1_MLB', 'init_ax2_MLB', 'outpath', 'geopath', 'init_geopath',
                               'terachem_version', 'terachem_detailed_version', 'basis', 'alpha_level_shift',
                               'beta_level_shift', 'functional', 'rmsd', 'maxd', 'thermo_time', 'solvent_time',
@@ -1416,7 +1416,7 @@ class Comp(object):
         ## run class dependent props:
         list_of_init_props = ['chem_name', 'spin', 'charge', 'attempted', 'converged',
                               'mop_converged', 'time', 'energy', 'sp_energy', 'empty_sp_energy',
-                              'flag_oct', 'flag_list',
+                              'flag_oct', 'flag_list','hfx_flag',
                               'num_coord_metal', 'rmsd_max', 'atom_dist_max',
                               'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
                               'devi_linear_avrg', 'devi_linear_max',
