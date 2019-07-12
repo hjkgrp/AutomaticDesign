@@ -48,30 +48,30 @@ class DFTRun(object):
         self.file_merge_list = ['optim.xyz', 'bond_order.list', 'charge_mull.xls', 'grad.xyz', 'mullpop', 'spin.xls']
         list_of_init_props = ['status', 'time', 'energy','net_metal_spin', 'alphaHOMO', 'alphaLUMO', 'betaHOMO', 'betaLUMO',
                               'initial_energy', 'charge', 'idn', 'spin', 'metal', 'lig1_ind', 'lig2_ind', 'lig3_ind',
-                              'lig4_ind',
-                              'lig5_ind', 'lig6_ind', 'lig1', 'lig2', 'lig3', 'lig4', 'lig5', 'lig6', 'eq_MLB',
-                              'ax1_MLB', 'ax2_MLB','hfx_flag',
+                              'lig4_ind', 'lig5_ind', 'lig6_ind', 'lig1', 'lig2', 'lig3', 'lig4', 'lig5',
+                              'lig6', 'eq_MLB', 'ax1_MLB', 'ax2_MLB', 'liglist', 'metal_translation','hfx_flag',
                               'init_eq_MLB', 'init_ax1_MLB', 'init_ax2_MLB', 'outpath', 'geopath', 'init_geopath',
                               'terachem_version', 'terachem_detailed_version', 'basis', 'alpha_level_shift',
                               'beta_level_shift', 'functional', 'rmsd', 'maxd', 'thermo_time', 'solvent_time',
                               'water_time', 'angletest', 'ligrsmd', 'flag_oct', 'flag_list', 'num_coord_metal',
                               'rmsd_max', 'spin_cat', 'sp_alphaHOMO', 'sp_alphaLUMO', 'sp_betaHOMO', 'sp_betaLUMO',
-                              'sp_ss_act', 'sp_ss_target',
+                              'sp_ss_act', 'sp_ss_target', 'ligcharge',
                               'atom_dist_max', 'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
                               'devi_linear_avrg', 'devi_linear_max', 'flag_oct_loose', 'flag_list_loose',
                               'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max', 'area',
                               'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
                               'mop_energy', 'chem_name', 'sp_energy', 'empty_sp_energy', 'tot_time', 'tot_step',
-                              'metal_translation']
+                              'metal_spin', 'metal_spin_expected', 'del_metal_spin']
         list_of_init_empty = ['descriptor_names', 'descriptors']
         list_of_init_false = ['solvent_cont', 'water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
                               'islive', 'set_desc', 'sp_status', 'empty_sp_status', 'fod_cont', "wavefunction",
-                              "wavefunction_path", "molden_path"]
-        list_of_init_zero = ['ss_target', 'ss_act', 'ss_target', 'coord', 'mop_coord', 'empty_ss_target',
+                              "wavefunction_path", "molden_path", "dynamic_feature"]
+        list_of_init_zero = ['ss_target', 'ss_act', 'coord', 'mop_coord', 'empty_ss_target',
                              'empty_ss_act']
+        list_of_init_negative_one = ["geo_flag", "ss_flag", 'metal_spin_flag']
         if isKeyword('oxocatalysis'):
             list_of_init_props += ['net_oxygen_spin']
         if isKeyword('TS'):
@@ -94,6 +94,8 @@ class DFTRun(object):
             setattr(self, this_attribute, False)
         for this_attribute in list_of_init_zero:
             setattr(self, this_attribute, 0)
+        for this_attribute in list_of_init_negative_one:
+            setattr(self, this_attribute, -1)
 
     def set_geo_check_func(self):
         # try:
@@ -1058,7 +1060,7 @@ class DFTRun(object):
                   + '"rundir": ' + '"%s"' % path_dictionary["fod_output_path"] + ',' \
                   + '"program": "terachem",' \
                   + '"record": True}\n' \
-                  + 'MultirefPredict.diagnostic_factory("FOD",'\
+                  + 'MultirefPredict.diagnostic_factory("FOD",' \
                   + '**input_dict).computeDiagnostic("b3lyp")\n'
         fod_py.write(fod_str)
         fod_py.close()
@@ -1283,6 +1285,15 @@ class DFTRun(object):
                         killed = True
         return killed
 
+    def get_dynamic_feature(self):
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)
+        dynamic_feature_path = path_dictionary["dynamic_feature_path"] + self.name + "_dynamic_feature.json"
+        if os.path.isfile(dynamic_feature_path):
+            with open(dynamic_feature_path, "r") as fo:
+                self.dynamic_feature = json.load(fo)
+
+
     def obtain_wavefunction(self):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)
@@ -1293,7 +1304,7 @@ class DFTRun(object):
         for key in wavefunc_keys:
             wavefunc_file = scrdir + key
             if os.path.isfile(wavefunc_file):
-                print("found %s. Writting into DFTrun..."%key)
+                print("found %s. Writting into DFTrun..." % key)
                 with open(wavefunc_file, "rb") as fo:
                     wf = fo.read()
             else:
@@ -1303,6 +1314,46 @@ class DFTRun(object):
             self.wavefunction_path.update({key: wavefunc_file})
         self.molden_path = path_dictionary["scr_path"] + self.name + '/' + self.name + ".molden"
 
+    def calculate_spin_on_metal(self):
+        path_dictionary = setup_paths()
+        path_dictionary = advance_paths(path_dictionary, self.gen)
+        scrdir = path_dictionary["scr_path"] + self.name + '/'
+        mullpop_path = scrdir + 'mullpop'
+        format = False
+        if os.path.isfile(mullpop_path):
+            if not self.spin == 1:
+                with open(mullpop_path, "r") as fo:
+                    fo.readline()
+                    line = fo.readline()
+                    if line.split() == ['Atom', 'S', 'P', 'D', 'Total', 'S', 'P', 'D', 'Total']:
+                        format = True
+                        self.metal_spin = float(fo.readline().split()[-1])
+                if format:
+                    with open(mullpop_path, "r") as fo:
+                        self.metal_spin_expected = float(fo.readlines()[-1].split()[-1])
+                    self.del_metal_spin = abs(self.metal_spin_expected - self.metal_spin)
+                    self.metal_spin_flag = 1 if self.del_metal_spin < 1 else 0
+            else:
+                self.metal_spin, self.metal_spin_expected = 0, 0
+                self.del_metal_spin, self.metal_spin_flag = 0, 1
+        else:
+            pass  # TODO: Add Aditya's multiwfn
+
+    def get_geo_ss_flag(self):
+        if self.converged:
+            self.geo_flag = self.flag_oct
+            if not self.spin == 1:
+                self.ss_flag = 1 if abs(self.ss_act - self.ss_target) < 1 else 0
+            else:
+                self.ss_flag = 1
+        else:
+            if self.flag_oct_loose == 0:
+                self.geo_flag = 0
+            if not self.spin == 1:
+                if abs(self.ss_act - self.ss_target) > 2:
+                    self.ss_flag = 0
+            else:
+                self.ss_flag = 1
 
 class Comp(object):
     """ This is a class for each unique composition and configuration"""
@@ -1366,12 +1417,13 @@ class Comp(object):
                               'status', 'comment',
                               'ax1_MLB', 'ax2_MLB', 'eq_MLB',
                               'init_ax1_MLB', 'init_ax2_MLB', 'init_eq_MLB',
-                              'ss_act', 'ss_target', 'geopath', 'sp_ss_act', 'sp_ss_target',
+                              'ss_act', 'ss_target', 'ss_flag', 'geopath', 'sp_ss_act', 'sp_ss_target',
                               'sp_alphaHOMO', 'sp_alphaLUMO', 'sp_betaHOMO', 'sp_betaLUMO',
                               'terachem_version', 'terachem_detailed_version',
                               'basis', 'functional',
                               'alpha_level_shift', 'beta_level_shift', 'job_gene',
-                              "DFT_RUN", 'tot_time', 'tot_step', 'metal_translation']
+                              "DFT_RUN", 'tot_time', 'tot_step', 'metal_translation',
+                              'metal_spin', 'metal_spin_expected', 'del_metal_spin', 'metal_spin_flag']
         list_of_init_falses = ['attempted', 'converged',
                                'mop_converged',
                                "DFT_RUN"]

@@ -214,7 +214,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
         list_of_props.append('lig6')
     list_of_prop_names = ['chem_name', 'converged', 'status', 'time', 'charge', 'spin',
                           'energy', 'init_energy','net_metal_spin',
-                          'ss_act', 'ss_target','hfx_flag',
+                          'ss_act', 'ss_target', 'ss_flag','hfx_flag',
                           'ax1_MLB', 'ax2_MLB', 'eq_MLB',
                           "alphaHOMO", "alphaLUMO", "betaHOMO", "betaLUMO",
                           'geopath', 'attempted',
