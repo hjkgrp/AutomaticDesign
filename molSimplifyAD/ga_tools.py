@@ -214,7 +214,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
         list_of_props.append('lig6')
     list_of_prop_names = ['chem_name', 'converged', 'status', 'time', 'charge', 'spin',
                           'energy', 'init_energy','net_metal_spin',
-                          'ss_act', 'ss_target',
+                          'ss_act', 'ss_target','hfx_flag',
                           'ax1_MLB', 'ax2_MLB', 'eq_MLB',
                           "alphaHOMO", "alphaLUMO", "betaHOMO", "betaLUMO",
                           'geopath', 'attempted',
@@ -582,6 +582,7 @@ def translate_job_name(job):
         gene = "_".join([str(metal), str(ox), str(eqlig_ind), str(axlig1_ind), str(axlig2_ind), str(ahf).zfill(2)])
         basegene = "_".join([str(metal), str(eqlig_ind), str(axlig1_ind), str(axlig2_ind)])
         chem_name = "_".join([str(metal_key), str(ox), str(eqlig), str(axlig1), str(axlig2), str(ahf).zfill(2)])
+        name_without_HFX = "_".join([str(metal_key), str(ox), str(eqlig), str(axlig1), str(axlig2), str(spin)])
         #### liglist and indlist ordering is eqlig, axlig1, axlig2
     else:
         indlist = [int(i) for i in ll[6:-2]]
@@ -614,7 +615,9 @@ def translate_job_name(job):
         gene = "_".join(namelist)
         basegene = "_".join([str(metal)]+[str(ind) for ind in indlist])
         chem_name = "_".join(chem_namelist)
-    dict_avars = ['gene', 'gen', 'slot', 'metal', 'ox', 'liglist', 'indlist', 'spin', 'spin_cat', 'ahf', 'basename', 'basegene','chem_name']
+        name_without_HFX = "_".join(namelist[:-1])
+    print('nohfx',name_without_HFX)
+    dict_avars = ['gene', 'gen', 'slot', 'metal', 'ox', 'liglist', 'indlist', 'spin', 'spin_cat', 'ahf', 'basename', 'basegene','chem_name','name_without_HFX']
     for var in dict_avars:
         translate_dict.update({var: locals()[var]})
         # previously returning list below:
@@ -799,7 +802,7 @@ def to_decimal_string(inp):
     out = str(float(inp) / 100)
     return out
 
-
+#######################
 def HFXordering():
     # this function returns the dictionary
     # of HFX fractions used, where the keys
@@ -817,6 +820,113 @@ def HFXordering():
                          "5": ["00", "05"]}
     return (HFXdictionary)
 
+########################
+def check_HFX_linearity(all_runs, number_of_points_tolerance=3,max_deviation=6):
+    # this function gets a list of run_classes,
+    # groups together the same complex with 
+    # different HFX values, and makes sure they
+    # do not have a drastic change in the electronic
+    # state. If fewer than 3 HFX values have converged,
+    # linearity is not tested and HFX_flag is marked
+    # as false. For all else, LOOCV is used with a
+    # cutoff energy. Default is 6 kcal/mol. If the
+    # test is failed, it is marked as false for HFX_flag.
+    from sklearn.linear_model import LinearRegression 
+    from sklearn.model_selection import train_test_split, cross_val_score, LeaveOneOut
+    import scipy.stats as stats
+    list_of_names_withoutHFX = []
+    runkey_list = all_runs.keys()
+    print('LENGTH OF RUNKEY LIST',runkey_list)
+    for runkey in runkey_list:
+        this_run = all_runs[runkey]
+        translate_dict = translate_job_name(this_run.name)
+        list_of_names_withoutHFX.append(translate_dict['name_without_HFX'])
+    print('LENGTH OF LIST OF NAMES WITHOUT HFX',len(list_of_names_withoutHFX))
+    all_complexes = set(list_of_names_withoutHFX) #This is the list of all possible complexes.
+    for complex in all_complexes:
+        run_class_indices = [i for i,val in enumerate(list_of_names_withoutHFX) if val==complex]
+        print('THESE ARE THE RUNCLASS INDICES',run_class_indices)
+        if len(run_class_indices)<number_of_points_tolerance: #not enough points to check linearity
+            print('Not enough points. HFX flags set to false.')
+            for run_index in run_class_indices:
+                all_runs[runkey_list[run_index]].hfx_flag = False
+        else: #There are maybe enough points to check for linearity
+            x, y = [], []
+            converge_list,failed_list, remove_list = [],[],[]
+            for run_index in run_class_indices:
+                if not 'undef' in str(all_runs[runkey_list[run_index]].energy).lower():
+                    x.append(float(all_runs[runkey_list[run_index]].alpha))
+                    y.append(float(all_runs[runkey_list[run_index]].energy)*627.529)#applied Hartree to kcal/mol conv
+                    converge_list.append(run_index)
+                else:
+                    print('energy is undef for this runclass')
+                    failed_list.append(run_index)
+            if len(x) < number_of_points_tolerance:
+                print('not enough points converged')
+                for run_index in run_class_indices:
+                    all_runs[runkey_list[run_index]].hfx_flag = False
+            else: #enough points for linearity check
+                print('doing loocv')
+                #slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
+                #if (r_value**2)<0.9:
+                #    remove_list.append(converge_list[:])
+                loo = LeaveOneOut()
+                ytests = []
+                ypreds = []
+                loo_x = np.array([x]).T
+                loo_y = np.array([y]).T
+                idlist = []
+                for train_idx, test_idx in loo.split(loo_x):
+                    X_train, X_test = loo_x[train_idx], loo_x[test_idx] #requires arrays
+                    y_train, y_test = loo_y[train_idx], loo_y[test_idx]
+                    idlist.append(test_idx)
+                    model = LinearRegression()
+                    model.fit(X = X_train, y = y_train) 
+                    y_pred = model.predict(X_test)   
+                    # there is only one y-test and y-pred per iteration over the loo.split, 
+                    # so we append them to respective lists.
+                    ytests += list(y_test)
+                    ypreds += list(y_pred)
+                print('THIS IS THE IDLIST', idlist)
+                ytests = np.array(ytests)
+                ypreds = np.array(ypreds)        
+                error_array = abs(ytests-ypreds)
+                for j, val in enumerate(error_array):
+                    if float(val) > max_deviation: #These are outlying points
+                        remove_list.append(converge_list[int(idlist[j])])
+                slope_signs = []
+                slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
+                if (r_value**2)<0.97:
+                    for j2 in range(len(ytests)-1):
+                        slope, intercept, r_value, p_value, std_err = stats.linregress(x[j2:j2+2], y[j2:j2+2])
+                        slope_signs.append(np.sign(slope*1000))
+                    signchange = ((np.roll(slope_signs, 1) - slope_signs) != 0).astype(int)
+                    idx_2_remove = np.where(signchange == 1)[0]
+                    if len(idx_2_remove) == 1:
+                        if (float(idx_2_remove)/float(len(ytests)))<=0.5:
+                            for k in range(0,idx_2_remove):
+                                remove_list.append(converge_list[int(k)])
+                        else:
+                            for k in range(idx_2_remove,len(ytests)):
+                                remove_list.append(converge_list[int(k)])
+                    elif len(idx_2_remove) > 1:
+                        for k in range(0,len(ytests)):
+                            remove_list.append(converge_list[int(k)])
+                    elif len(idx_2_remove) == 0:
+                        print('all points slope the same, probably just curved')
+                if len(set(converge_list)-set(remove_list))>number_of_points_tolerance:
+                    print('there are still enough points even after elim')
+                    runs_to_keep = list(set(converge_list)-set(remove_list))
+                    for run_index in run_class_indices:
+                        if run_index in runs_to_keep:
+                            all_runs[runkey_list[run_index]].hfx_flag = True
+                        else:
+                            all_runs[runkey_list[run_index]].hfx_flag = False
+                else:
+                    print('elim caused there to not be enough points')
+                    for run_index in run_class_indices:
+                        all_runs[runkey_list[run_index]].hfx_flag = False
+    return all_runs
 
 ########################
 
