@@ -742,6 +742,9 @@ def check_all_current_convergence(post_all=False):
                 print('END OF SP JOB \n *******************\n')
         print('matching DFT runs ... \n')
         if isKeyword('oxocatalysis'):
+            all_runs = check_HFX_linearity(all_runs)
+            for runkey in all_runs.keys():
+                print('THIS IS THE HFXFLAG',all_runs[runkey].hfx_flag)
             final_results = process_runs_oxocatalysis(all_runs, spin_dictionary())
         else:
             final_results = process_runs_geo(all_runs, spin_dictionary())
