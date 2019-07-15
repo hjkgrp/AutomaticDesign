@@ -15,11 +15,11 @@ mongo_attr_from_run_nan = ["energy", "ss_target", "ss_act", 'alphaHOMO', 'betaHO
 mongo_attr_other = ["date", "author", "geotype", "opt_geo", "init_geo", "prog_geo",
                     "RACs", "initRACs", "dftrun", "tag", "subtag", "unique_name",
                     "publication", "ligstr"]
-mongo_attr_actlearn = ["step", "is_training", "HFX_flag", "RACs", "opt_geo", "init_geo",
+mongo_attr_actlearn = ["step", "is_training", "hfx_flag", "RACs", "opt_geo", "init_geo",
                        "ligcharge", "unique_name", "name"]
 mongo_not_web = ["dftrun"]
-wfn_basepath = '/opt/data/wfn/'
-dftrun_basepath = '/opt/data/dftrun/'
+wfn_basepath = '/home/data/wfn/'
+dftrun_basepath = '/home/data/dftrun/'
 
 
 class TMC():
@@ -243,11 +243,12 @@ class tmcActLearn(TMC):
         id_doc: a dictionary that tells the unique identity of a TM complex.
     '''
 
-    def __init__(self, step, is_training, HFX_flag, this_run=False, document=False,
+    def __init__(self, step, is_training, hfx_flag, this_run=False, document=False,
                  geotype=False, update_fields=False):
         TMC.__init__(self, this_run=this_run, document=document, geotype=geotype)
         self.step = step
         self.is_training = is_training
+        self.hfx_flag = hfx_flag
         self.construct_document()
         self.get_update_fields(update_fields)
 
