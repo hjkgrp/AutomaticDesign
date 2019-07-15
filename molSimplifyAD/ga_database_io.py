@@ -13,6 +13,7 @@ def deserialize_inputs(filein):
 def check_dbinputs(args_dict):
     keys_required = ["database", "collection", "tag", "subtag", "auth"]
     publication = False
+    update_fields = False
     if set(keys_required) <= set(args_dict.keys()):
         for key in keys_required:
             globals().update({key: args_dict[key]})
@@ -20,12 +21,14 @@ def check_dbinputs(args_dict):
         raise KeyError("missing necessary keys to push data. Required inputs are: ", keys_required)
     if "publication" in args_dict.keys():
         publication = args_dict["publication"]
-    return database, collection, tag, subtag, auth, publication
+    if "update_fields" in args_dict.keys():
+        update_fields = args_dict["update_fields"]
+    return database, collection, tag, subtag, auth, publication, update_fields
 
 
 def push_run(args):
     args_dict = deserialize_inputs(args.push)
-    database, collection, tag, subtag, auth, publication = check_dbinputs(args_dict)
+    database, collection, tag, subtag, auth, publication, update_fields = check_dbinputs(args_dict)
     if auth:
         if (args.user and args.pwd):
             user = args.user
@@ -38,4 +41,5 @@ def push_run(args):
     push2db(database=database, collection=collection,
             tag=tag, subtag=subtag, publication=publication,
             user=user, pwd=pwd, host="localhost", port=27017,
-            auth=auth, all_runs_pickle=False)
+            auth=auth, all_runs_pickle=False,
+            update_fields=update_fields)
