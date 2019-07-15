@@ -15,7 +15,7 @@ mongo_attr_from_run_nan = ["energy", "ss_target", "ss_act", 'alphaHOMO', 'betaHO
 mongo_attr_other = ["date", "author", "geotype", "opt_geo", "init_geo", "prog_geo",
                     "RACs", "initRACs", "dftrun", "tag", "subtag", "unique_name",
                     "publication", "ligstr"]
-mongo_attr_actlearn = ["step", "is_training", "hfx_flag", "RACs", "opt_geo", "init_geo",
+mongo_attr_actlearn = ["step", "is_training", "status_flag", "target", "descriptors", "opt_geo", "init_geo",
                        "ligcharge", "unique_name", "name"]
 mongo_not_web = ["dftrun"]
 wfn_basepath = '/home/data/wfn/'
@@ -230,8 +230,11 @@ class tmcActLearn(TMC):
     For active learning database.
 
     Inputs:
-        gen: generation of this complex.
-        is_training: used in train (True) or test (False)
+        step: the step of active learning process.
+        is_training: used in train, validation or test
+        status_flag: status of the record. 0 as good to use.
+        target: target for the learning.
+        descriptors: features used in ML predicting target. Default as the RACs for the input DFTrun object.
         this_run: DFTrun object.
         document: document from MongoDB.
         geotype: type of the geometry of TM complex.
@@ -243,12 +246,19 @@ class tmcActLearn(TMC):
         id_doc: a dictionary that tells the unique identity of a TM complex.
     '''
 
-    def __init__(self, step, is_training, hfx_flag, this_run=False, document=False,
+    def __init__(self, step, is_training, status_flag,
+                 target=np.nan, descriptors=False,
+                 this_run=False, document=False,
                  geotype=False, update_fields=False):
         TMC.__init__(self, this_run=this_run, document=document, geotype=geotype)
         self.step = step
         self.is_training = is_training
-        self.hfx_flag = hfx_flag
+        self.status_flag = status_flag
+        self.target = target
+        if not descriptors:
+            self.descriptors = self.RACs
+        else:
+            self.descriptors = descriptors
         self.construct_document()
         self.get_update_fields(update_fields)
 
