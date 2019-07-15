@@ -7,6 +7,7 @@ import pymongo
 from pandas.io.json import json_normalize
 from pymongo import MongoClient
 from molSimplifyAD.dbclass_mongo import tmcMongo, tmcActLearn, mongo_attr_id, mongo_not_web
+from molSimplifyAD.mlclass_mongo import modelActLearn
 from molSimplifyAD.ga_tools import isKeyword
 
 
@@ -159,6 +160,22 @@ def connect2db(user, pwd, host, port, database, auth):
     return db
 
 
+def ensure_collection(db, collection):
+    colls = db.list_collection_names()
+    if not collection in colls:
+        finish = False
+        while not finish:
+            print("Collection %s does not exist. Create a new collection? (y/n)" % collection)
+            _in = raw_input()
+            if _in == "y":
+                finish = True
+            elif _in == "n":
+                print("Quit. Have a nive day.")
+                quit()
+            else:
+                finish = False
+
+
 def push2db(database, collection, tag, subtag, publication=False,
             user=False, pwd=False, host="localhost", port=27017, auth=False,
             all_runs_pickle=False, update_fields=False):
@@ -181,20 +198,8 @@ def push2db(database, collection, tag, subtag, publication=False,
     '''
     from molSimplifyAD.ga_check_jobs import check_all_current_convergence
     db = connect2db(user, pwd, host, port, database, auth)
-    colls = db.list_collection_names()
-    if not collection in colls:
-        finish = False
-        while not finish:
-            print("Collection %s does not exist. Create a new collection? (y/n)" % collection)
-            _in = raw_input()
-            if _in == "y":
-                finish = True
-            elif _in == "n":
-                print("Quit. Have a nive day.")
-                quit()
-            else:
-                finish = False
-    print('Warning: db push is enabled, attempting commit with tag: %s, subtag: %s' % (tag, subtag))
+    ensure_collection(db, collection)
+    print('db push is enabled, attempting commit with tag: %s, subtag: %s to %s' % (tag, subtag, collection))
     if not all_runs_pickle:
         _, all_runs = check_all_current_convergence(post_all=True)
     else:
@@ -228,3 +233,61 @@ def push2db(database, collection, tag, subtag, publication=False,
                                  ("lig5", pymongo.ASCENDING),
                                  ("lig6", pymongo.ASCENDING)
                                  ])
+
+
+def push_complex_actlearn(step, all_complexes, database, collection,
+                          user=False, pwd=False, host="localhost", port=27017,
+                          auth=False):
+    db = connect2db(user, pwd, host, port, database, auth)
+    ensure_collection(db, collection)
+    print('db push is enabled, attempting commit to' % collection)
+    print("number of complexes to push: ", len(all_complexes))
+    count = 0
+    merged = 0
+    for this_complex in all_complexes:
+        print("adding complex: ", this_complex["dftrun"].name)
+        this_tmc = tmcActLearn(step=step,
+                               is_training=this_complex["is_training"],
+                               status_flag=this_complex["status_flag"],
+                               target=this_complex["target"],
+                               descriptors=this_complex["descriptors"],
+                               this_run=this_complex["dftrun"]
+                               )
+        _s = time.time()
+        repeated, _tmcdoc = check_repeated(db, collection, this_tmc)
+        if not repeated:
+            db[collection].insert_one(this_tmc.document)
+            count += 1
+        else:
+            merged += 1
+        print("elapse: ", time.time() - _s)
+    print("add %d entries in the %s['%s']." % (count, database, collection))
+    print("merge %d entries in the %s['%s']." % (merged, database, collection))
+    print("creating index...")
+    db[collection].create_index([("step", pymongo.ASCENDING),
+                                 ("is_training", pymongo.ASCENDING),
+                                 ("status_flag", pymongo.ASCENDING),
+                                 ("ox", pymongo.ASCENDING),
+                                 ("spin", pymongo.ASCENDING),
+                                 ("converged", pymongo.ASCENDING),
+                                 ("alpha", pymongo.ASCENDING),
+                                 ("lig1", pymongo.ASCENDING),
+                                 ("lig5", pymongo.ASCENDING),
+                                 ("lig6", pymongo.ASCENDING)
+                                 ])
+    if not merged == 0:
+        print("=====WARNING====")
+        print("Duplicate complexes(%d) occure in the active learning mode. Should never happen." % merged)
+
+
+def push_moldels_actlearn(step, model, database, collection,
+                          user=False, pwd=False,
+                          host="localhost", port=27017,
+                          auth=False):
+    db = connect2db(user, pwd, host, port, database, auth)
+    ensure_collection(db, collection)
+    actlearn_model = modelActLearn(step=step, model=model)
+    if not query_one(db, collection, constraints={"step": step}) == None:
+        print("A model of step %d has already existed.")
+    else:
+        db[collection].insert_one(actlearn_model.document)
