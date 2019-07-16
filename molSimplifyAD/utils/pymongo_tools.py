@@ -1,10 +1,13 @@
 import os
 import sys
-from pymongo import MongoClient
-import pandas as pd
-from pandas.io.json import json_normalize
 import pickle
-from molSimplifyAD.dbclass_mongo import tmcMongo, mongo_attr_id, mongo_not_web
+import time
+import pandas as pd
+import pymongo
+from pandas.io.json import json_normalize
+from pymongo import MongoClient
+from molSimplifyAD.dbclass_mongo import tmcMongo, tmcActLearn, mongo_attr_id, mongo_not_web
+from molSimplifyAD.mlclass_mongo import modelActLearn
 from molSimplifyAD.ga_tools import isKeyword
 
 
@@ -33,32 +36,49 @@ def query_one(db, collection, constraints):
     return db[collection].find_one(constraints)
 
 
-def insert(db, collection, tmc, web="web"):
+def query_lowestE_converged(db, collection, constraints):
+    cursor = query_db(db, collection, constraints)
+    minE = 100000
+    tmcdoc = None
+    for _tmcdoc in cursor:
+        if _tmcdoc["converged"] and _tmcdoc["energy"] < minE:
+            minE = _tmcdoc["energy"]
+            tmcdoc = _tmcdoc
+    return tmcdoc
+
+
+def insert(db, collection, tmc):
     repeated, _tmcdoc = check_repeated(db, collection, tmc)
     inserted = False
     if not repeated:
         db[collection].insert_one(tmc.document)
         inserted = True
     else:
-        this_tmc = tmcMongo(document=_tmcdoc, tag=_tmcdoc["tag"], subtag=_tmcdoc["subtag"])
-        print("existed: ", this_tmc.id_doc)
+        print("existed: ", _tmcdoc["unique_name"])
         print("merging....")
-        merge_documents(db, collection, doc1=_tmcdoc, doc2=tmc.document,
+        _tmc = tmcMongo(document=_tmcdoc, tag=_tmcdoc["tag"], subtag=_tmcdoc["subtag"],
+                        publication=_tmcdoc["publication"])
+        merge_documents(db, collection,
+                        doc1=_tmcdoc, doc2=tmc.document,
                         update_fields=tmc.update_fields)
-    if web:
-        web_coll = collection + "_" + web
-        repeated, _tmcdoc = check_repeated(db, web_coll, tmc)
-        if not repeated:
-            db[web_coll].insert_one(tmc.web_doc)
-            inserted = True
-        else:
-            for key in mongo_not_web:
-                if key in tmc.document:
-                    tmc.document.pop(key)
-                if key in _tmcdoc:
-                    _tmcdoc.pop(key)
-            merge_documents(db, web_coll, doc1=_tmcdoc, doc2=tmc.document,
-                            update_fields=tmc.update_fields)
+        merge_dftruns(dftrun1=_tmc.this_run,
+                      dftrun2=tmc.this_run,
+                      update_fields=tmc.update_fields)
+        _tmc.write_dftrun()
+    # if web:
+    #     web_coll = collection + "_" + web
+    #     repeated, _tmcdoc = check_repeated(db, web_coll, tmc)
+    #     if not repeated:
+    #         db[web_coll].insert_one(tmc.web_doc)
+    #         inserted = True
+    #     else:
+    #         for key in mongo_not_web:
+    #             if key in tmc.document:
+    #                 tmc.document.pop(key)
+    #             if key in _tmcdoc:
+    #                 _tmcdoc.pop(key)
+    #         merge_documents(db, web_coll, doc1=_tmcdoc, doc2=tmc.document,
+    #                         update_fields=tmc.update_fields)
     return inserted
 
 
@@ -66,23 +86,18 @@ def merge_documents(db, collection, doc1, doc2, update_fields):
     for key in doc2:
         if not key in doc1 or key in update_fields:
             doc1.update({key: doc2[key]})
-    if "dftrun" in doc1 and "dftrun" in doc2:
-        new_dftrun = merge_dftrun(dftrun1=pickle.loads(doc1["dftrun"]),
-                                  dftrun2=pickle.loads(doc2["dftrun"]),
-                                  update_fields=update_fields
-                                  )
-        doc1.update({"dftrun": pickle.dumps(new_dftrun)})
     db[collection].replace_one({"_id": doc1["_id"]}, doc1)
 
 
-def merge_dftrun(dftrun1, dftrun2, update_fields):
+def merge_dftruns(dftrun1, dftrun2, update_fields):
     for attr, val in dftrun2.__dict__.items():
         if not attr in dftrun1.__dict__ or attr in update_fields:
             setattr(dftrun1, attr, val)
-    return dftrun1
 
 
-def convert2dataframe(db, collection, constraints=False, dropcols=["dftrun"], directload=False, normalized=False):
+def convert2dataframe(db, collection,
+                      constraints=False, dropcols=["dftrun"],
+                      directload=False, normalized=False):
     '''
     Converts a collection into pandas dataframe.
 
@@ -145,8 +160,25 @@ def connect2db(user, pwd, host, port, database, auth):
     return db
 
 
-def push2db(database, collection, user=False, pwd=False, host="localhost", port=27017, auth=False,
-            all_runs_pickle=False, tag=False, subtag=False, web="web"):
+def ensure_collection(db, collection):
+    colls = db.list_collection_names()
+    if not collection in colls:
+        finish = False
+        while not finish:
+            print("Collection %s does not exist. Create a new collection? (y/n)" % collection)
+            _in = raw_input()
+            if _in == "y":
+                finish = True
+            elif _in == "n":
+                print("Quit. Have a nive day.")
+                quit()
+            else:
+                finish = False
+
+
+def push2db(database, collection, tag, subtag, publication=False,
+            user=False, pwd=False, host="localhost", port=27017, auth=False,
+            all_runs_pickle=False, update_fields=False):
     '''
     Push data to MongoDB.
 
@@ -159,38 +191,15 @@ def push2db(database, collection, user=False, pwd=False, host="localhost", port=
     :param auth: whether authentication is required to connect to the MongoDB.
     :param all_runs_pickle: whether to push from a pickle file of a list of DFTrun objects. If False, will run
     check_all_current_convergence() in your mAD folder.
-    :param tag: tag of your data. Recommend to use the project name (may related to the name of your paper). If not set,
-    will try to find it in .madconfig.
+    :param tag: tag of your data. Recommend to use the project name (may related to the name of your paper).
     :param subtag: Recommend as the name of your mAD folder (considering we may have many mAD folders for each project).
-    If not set, will try to find it in .madconfig.
-    :param web: Whether to push it to the MongoDB shown on web.
+
     :return: None
     '''
     from molSimplifyAD.ga_check_jobs import check_all_current_convergence
-    if not tag:
-        if not os.path.isfile(".madconfig") or not isKeyword('tag'):
-            raise ValueError("This is not a mAD folder with a tag to push.")
-        tag = str(isKeyword('tag'))
-    if not subtag:
-        if not os.path.isfile(".madconfig") or not isKeyword('subtag'):
-            raise ValueError("This is not a mAD folder with a subtag to push.")
-        subtag = str(isKeyword('subtag'))
     db = connect2db(user, pwd, host, port, database, auth)
-    colls = db.list_collection_names()
-    if not collection in colls:
-        finish = False
-        while not finish:
-            print(
-                    "Collection %s is not currently in this database. Are you sure you want to create a new collection? (y/n)" % collection)
-            _in = raw_input()
-            if _in == "y":
-                finish = True
-            elif _in == "n":
-                print("Quit. Have a nive day.")
-                quit()
-            else:
-                finish = False
-    print('Warning: db push is enabled, attempting commit with tag: %s, subtag: %s' % (tag, subtag))
+    ensure_collection(db, collection)
+    print('db push is enabled, attempting commit with tag: %s, subtag: %s to %s' % (tag, subtag, collection))
     if not all_runs_pickle:
         _, all_runs = check_all_current_convergence(post_all=True)
     else:
@@ -201,26 +210,84 @@ def push2db(database, collection, user=False, pwd=False, host="localhost", port=
     merged = 0
     for this_run in all_runs.values():
         print("adding complex: ", this_run.name)
-        if sys.getsizeof(pickle.dumps(this_run)) * 1. / 10 ** 6 > 16.7:
-            print(
-                "DFTrun too large. Deleting wavefunction binary. Only the path of wavefunction files is hold by DFTrun.")
-            _this_tmc = tmcMongo(this_run=this_run, tag=tag, subtag=subtag)
-            this_run = _this_tmc.write_wfn(this_run)
-        this_tmc = tmcMongo(this_run=this_run, tag=tag, subtag=subtag)
-        insetred = insert(db, collection, this_tmc, web=web)
+        print("converged:", this_run.converged, "geo_flag:", this_run.geo_flag,
+              "ss_flag: ", this_run.ss_flag, "metal_spin_flag: ", this_run.metal_spin_flag)
+        this_tmc = tmcMongo(this_run=this_run, tag=tag, subtag=subtag,
+                            publication=publication, update_fields=update_fields)
+        _s = time.time()
+        insetred = insert(db, collection, this_tmc)
+        print("elapse: ", time.time() - _s)
         if insetred:
             count += 1
         else:
             merged += 1
     print("add %d entries in the %s['%s']." % (count, database, collection))
     print("merge %d entries in the %s['%s']." % (merged, database, collection))
+    print("creating index...")
+    db[collection].create_index([("metal", pymongo.ASCENDING),
+                                 ("ox", pymongo.ASCENDING),
+                                 ("spin", pymongo.ASCENDING),
+                                 ("converged", pymongo.ASCENDING),
+                                 ("alpha", pymongo.ASCENDING),
+                                 ("lig1", pymongo.ASCENDING),
+                                 ("lig5", pymongo.ASCENDING),
+                                 ("lig6", pymongo.ASCENDING)
+                                 ])
 
 
-def unique_name(tmcdoc):
-    this_tmc = tmcMongo(document=tmcdoc, tag=tmcdoc['tag'], subtag=tmcdoc['subtag'])
-    name_ele = []
-    for key in mongo_attr_id:
-        name_ele.append(key)
-        name_ele.append(str(this_tmc.id_doc[key]))
-    name = '_'.join(name_ele)
-    return name
+def push_complex_actlearn(step, all_complexes, database, collection,
+                          user=False, pwd=False, host="localhost", port=27017,
+                          auth=False):
+    db = connect2db(user, pwd, host, port, database, auth)
+    ensure_collection(db, collection)
+    print('db push is enabled, attempting commit to' % collection)
+    print("number of complexes to push: ", len(all_complexes))
+    count = 0
+    merged = 0
+    for this_complex in all_complexes:
+        print("adding complex: ", this_complex["dftrun"].name)
+        this_tmc = tmcActLearn(step=step,
+                               is_training=this_complex["is_training"],
+                               status_flag=this_complex["status_flag"],
+                               target=this_complex["target"],
+                               descriptors=this_complex["descriptors"],
+                               this_run=this_complex["dftrun"]
+                               )
+        _s = time.time()
+        repeated, _tmcdoc = check_repeated(db, collection, this_tmc)
+        if not repeated:
+            db[collection].insert_one(this_tmc.document)
+            count += 1
+        else:
+            merged += 1
+        print("elapse: ", time.time() - _s)
+    print("add %d entries in the %s['%s']." % (count, database, collection))
+    print("merge %d entries in the %s['%s']." % (merged, database, collection))
+    print("creating index...")
+    db[collection].create_index([("step", pymongo.ASCENDING),
+                                 ("is_training", pymongo.ASCENDING),
+                                 ("status_flag", pymongo.ASCENDING),
+                                 ("ox", pymongo.ASCENDING),
+                                 ("spin", pymongo.ASCENDING),
+                                 ("converged", pymongo.ASCENDING),
+                                 ("alpha", pymongo.ASCENDING),
+                                 ("lig1", pymongo.ASCENDING),
+                                 ("lig5", pymongo.ASCENDING),
+                                 ("lig6", pymongo.ASCENDING)
+                                 ])
+    if not merged == 0:
+        print("=====WARNING====")
+        print("Duplicate complexes(%d) occure in the active learning mode. Should never happen." % merged)
+
+
+def push_moldels_actlearn(step, model, database, collection,
+                          user=False, pwd=False,
+                          host="localhost", port=27017,
+                          auth=False):
+    db = connect2db(user, pwd, host, port, database, auth)
+    ensure_collection(db, collection)
+    actlearn_model = modelActLearn(step=step, model=model)
+    if not query_one(db, collection, constraints={"step": step}) == None:
+        print("A model of step %d has already existed.")
+    else:
+        db[collection].insert_one(actlearn_model.document)

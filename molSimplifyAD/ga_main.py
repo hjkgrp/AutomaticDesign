@@ -18,7 +18,7 @@ from molSimplify.python_nn.tf_ANN import *
 from molSimplifyAD.ga_tools import *
 from molSimplifyAD.ga_complex import *
 from molSimplifyAD.ga_check_jobs import *
-from molSimplifyAD.utils.pymongo_tools import connect2db, query_one
+from molSimplifyAD.utils.pymongo_tools import connect2db, query_one, query_lowestE_converged
 from molSimplifyAD.dbclass_mongo import tmcMongo
 
 
@@ -556,19 +556,24 @@ class GA_generation:
                 self.gene_fitness_dictionary.update({gene: fitness})
                 # print('GFD: ',self.gene_fitness_dictionary)
 
-    def job_dispatcher(self,loaded_model_list=False, train_matrices=False, 
-                    mean_info= False, var_info = False, run_list=False):
+    def job_dispatcher(self,loaded_model_list=False, train_matrices=False,
+                       mean_info= False, var_info = False, run_list=False,
+                       collection="oct_new"):
         jobpaths = list()
         emsg, ANN_results_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + '/ANN_results.csv')
         current_outstanding = get_outstanding_jobs()
         converged_jobs = find_converged_job_dictionary()
         gene_template = get_gene_template()
         spins_dict = spin_dictionary()
-        try:
-            db = connect2db(user="readonly_user", pwd="readonly", host="localhost", port=27017, database="tmc", auth=True)
-            print("# of complex in db: ", db.oct.count())
-            connected = True
-        except:
+        if isKeyword("db_communicate"):
+            try:
+                db = connect2db(user="readonly_user", pwd="readonly", host="localhost", port=27017, database="tmc", auth=True)
+                print("# of complex in db: ", db[collection].count())
+                connected = True
+            except:
+                print("Error. Cannot connect to the database.")
+                quit()
+        else:
             connected = False
         properties = ['split','split_dist','homo','homo_dist','gap','gap_dist','oxo','oxo_dist',
                                 'hat','hat_dist','oxo20','oxo20_dist','homo_empty','homo_empty_dist']
@@ -641,16 +646,9 @@ class GA_generation:
                             if connected:
                                 constraints = genes.assemble_constraints(ox=ox, spin=spin)
                                 print("query constraints: ", constraints)
-                                tmcdoc = query_one(db, collection="oct", constraints=constraints)
+                                tmcdoc = query_lowestE_converged(db, collection=collection, constraints=constraints)
                                 if not tmcdoc ==  None:
-                                    if not tmcdoc["converged"]:
-                                        tmcdoc = False
-                                        print("Found in the database but whose geometry optimization did not converge.", constraints)
-                                    else:
-                                        print("using results from database with constraints: ", constraints)
-                                else:
-                                    tmcdoc = False
-                                    print("Not found in the database. ")
+                                    print("Bingo! found in db.")
                             jobpath, mol_name, ANN_results, flag_oct = genes.generate_geometry(prefix=job_prefix,
                                                                                                ox = ox,
                                                                                                spin=spin,

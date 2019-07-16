@@ -44,7 +44,7 @@ def get_infile_from_job(job):
     path_dictionary = setup_paths()
     path_dictionary = advance_paths(path_dictionary, gen)
     scr_path = path_dictionary["scr_path"] + base_name + '/'
-    scr_path = 'scr'+scr_path.split('scr')[1]
+    scr_path = 'scr' + scr_path.split('scr')[1]
     target_inpath = path_dictionary["infiles"] + base_name + '.in'
     use_old_optimizer = get_optimizer()
     if os.path.isfile(target_inpath):
@@ -179,12 +179,12 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
     for l in translate_dict['liglist']:
         if l in old_optimizer_list:
             use_old_optimizer = True
-    #_, _, _, _, _, eqlig, axlig1, axlig2, _, _, _, _, _, _, _, _ = translate_job_name(job)
-    #eqlig = translate_dict['eqlig']
-    #axlig1 = translate_dict['axlig1']
-    #axlig2 = translate_dict['axlig2']
-    #old_optimizer_list = get_old_optimizer_ligand_list()
-    #if eqlig in old_optimizer_list or axlig1 in old_optimizer_list or axlig2 in old_optimizer_list:
+    # _, _, _, _, _, eqlig, axlig1, axlig2, _, _, _, _, _, _, _, _ = translate_job_name(job)
+    # eqlig = translate_dict['eqlig']
+    # axlig1 = translate_dict['axlig1']
+    # axlig2 = translate_dict['axlig2']
+    # old_optimizer_list = get_old_optimizer_ligand_list()
+    # if eqlig in old_optimizer_list or axlig1 in old_optimizer_list or axlig2 in old_optimizer_list:
     #    use_old_optimizer = True
     ## append geo
     with open(target_inpath, 'a') as newf:
@@ -228,7 +228,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
                           'prog_devi_linear_avrg', 'prog_devi_linear_max',
                           'rmsd', 'maxd',
                           'init_ax1_MLB', 'init_ax2_MLB', 'init_eq_MLB', 'thermo_cont', 'imag', 'solvent_cont',
-                          'water_cont','sp_ss_act','sp_ss_target',
+                          'water_cont', 'sp_ss_act', 'sp_ss_target',
                           'terachem_version', 'terachem_detailed_version',
                           'basis', 'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
                           'mop_coord', 'sp_energy', 'empty_sp_energy', 'tot_time', 'tot_step', 'metal_translation']
@@ -298,9 +298,10 @@ def find_live_jobs():
 
 ########################
 def get_metals(first_row=False):
-    metals_list = ['cr', 'mn', 'fe', 'co', 'mo', 'tc', 'ru' , 'rh']
+    metals_list = ['cr', 'mn', 'fe', 'co', 'mo', 'tc', 'ru', 'rh']
     if first_row or isKeyword('first_row'):
         metals_list = ['cr', 'mn', 'fe', 'co']
+    # metals_list = ['co']
     return metals_list
 
 
@@ -326,7 +327,7 @@ def get_ox_states():  # could be made metal dependent like spin
 
 ########################
 def get_mulliken(moldenpath, spin, catlig=False):
-    metal_net_spin = "undef"
+    net_metal_spin = "undef"
     got_metal = False
     x_flag = False
     if isKeyword('oxocatalysis'):
@@ -336,7 +337,7 @@ def get_mulliken(moldenpath, spin, catlig=False):
     else:
         got_oxo = True
         oxocatalysis = False
-    if catlig: #This only matters for oxocatalysis, where extra info is stored.
+    if catlig:  # This only matters for oxocatalysis, where extra info is stored.
         if str(catlig) == "x":
             x_flag = True
             oxo_net_spin = 0
@@ -345,37 +346,37 @@ def get_mulliken(moldenpath, spin, catlig=False):
             modifier = 1
         if str(catlig) in ["[OH-]", "hydroxyl"]:
             modifier = 2
-    try: #mullpop will first be parsed
-        mullpop_path = os.path.dirname(moldenpath)+'/mullpop'
+    try:  # mullpop will first be parsed
+        mullpop_path = os.path.dirname(moldenpath) + '/mullpop'
         if spin == 1:
-            metal_net_spin = 0
+            net_metal_spin = 0
             if oxocatalysis:
                 oxo_net_spin = 0
-                return [metal_net_spin, oxo_net_spin]
+                return [net_metal_spin, oxo_net_spin]
             else:
-                return [metal_net_spin]
+                return [net_metal_spin]
         with open(mullpop_path) as f:
             data = f.readlines()
             for i, row in enumerate(reversed(data)):
                 if 'Atom' in row:
                     spin_line = data[-i]
-                    metal_net_spin = float(spin_line.split()[-1])
+                    net_metal_spin = float(spin_line.split()[-1])
                     got_metal = True
                 if oxocatalysis and ('---' in row) and (not x_flag):
-                    spin_line = data[-i-(modifier+1)]
+                    spin_line = data[-i - (modifier + 1)]
                     oxo_net_spin = float(spin_line.split()[-1])
                     got_oxo = True
                 if got_metal and got_oxo:
                     break
         if oxocatalysis:
-            return [metal_net_spin, oxo_net_spin]
+            return [net_metal_spin, oxo_net_spin]
         else:
-            return [metal_net_spin]
+            return [net_metal_spin]
     except:
         print('MULLPOP NOT FOUND')
         ##### only call multiwfn if the mullpop is not there #####
         subprocess.call("module load multiwfn/GUI", shell=True)
-        metalalpha, metalbeta, metal_net_spin, metalcharge = "undef", "undef", "undef", "undef"
+        metalalpha, metalbeta, net_metal_spin, metalcharge = "undef", "undef", "undef", "undef"
         if isKeyword('oxocatalysis'):
             oxoalpha, oxobeta, oxo_net_spin, oxocharge = "undef", "undef", "undef", "undef"
         proc = subprocess.Popen("multiwfn " + moldenpath, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
@@ -392,7 +393,7 @@ def get_mulliken(moldenpath, spin, catlig=False):
                             idx -= 1
                         metalalpha = np.divide(float(lines[num + 1].split()[idx]), 2)
                         metalbeta = np.divide(float(lines[num + 1].split()[idx]), 2)
-                        metal_net_spin = 0
+                        net_metal_spin = 0
                         metalcharge = float(lines[num + 1].split()[idx + 3])
                     if ("Total net" in line) and (not x_flag) and (oxocatalysis):
                         oxoalpha = np.divide(float(lines[num - modifier].split()[4]), 2)
@@ -404,11 +405,11 @@ def get_mulliken(moldenpath, spin, catlig=False):
                 for num, line in enumerate(lines):
                     if "Population of atoms" in line:
                         idx = 2
-                        if len(lines[num+2].split()) == 5 and 'Atomic' not in lines[num+2]:
+                        if len(lines[num + 2].split()) == 5 and 'Atomic' not in lines[num + 2]:
                             idx -= 1
                         metalalpha = float(lines[num + 2].split()[idx])
                         metalbeta = float(lines[num + 2].split()[idx + 1])
-                        metal_net_spin = float(lines[num + 2].split()[idx + 2])
+                        net_metal_spin = float(lines[num + 2].split()[idx + 2])
                         metalcharge = float(lines[num + 2].split()[idx + 3])
                     if ("Total net" in line) and (not x_flag) and (oxocatalysis):
                         oxoalpha = float(lines[num - modifier].split()[2])
@@ -416,14 +417,14 @@ def get_mulliken(moldenpath, spin, catlig=False):
                         oxo_net_spin = float(lines[num - modifier].split()[4])
                         oxocharge = float(lines[num - modifier].split()[5])
             if oxocatalysis:
-                return [metal_net_spin, oxo_net_spin]
+                return [net_metal_spin, oxo_net_spin]
             else:
-                return [metal_net_spin]
+                return [net_metal_spin]
         except:
             if oxocatalysis:
-                return [metal_net_spin, oxo_net_spin]
+                return [net_metal_spin, oxo_net_spin]
             else:
-                return [metal_net_spin]
+                return [net_metal_spin]
 
 
 ########################
@@ -464,23 +465,30 @@ def spin_dictionary():
 
 ########################
 def get_ligand_charge_dictionary():
-    ligand_charge_dictionary = {'acac':-1,'acetonitrile':0,'ammonia':0,'bifuran':0,'bipy':0,'bipyrrole':0,'bromide':-1,
-                                'carbonyl':0,'chloride':-1,'cyanide':-1,'cn':-1,'cyanopyridine': 0,'dmf':0,'en':0,'fluoride':-1,
-                                'formate':-1,'furan':0,'hydroxyl':-1,'isothiocyanate':-1,'methanol':0,'misc':0,'ncs':-1,'nme3':0,
-                                'ome2':0,'ox':-2,'oxo':-2,'phen':0,'phosphine':0,'pisc':0,'pme3':0,'porphyrin':-2,
-                                'pph3':0,'pyridine':0,'pyrrole':-1,'scn':-1,'tbisc':0,'tbuc':-2,'tetrahydrofuran':0,'thiocyanate':-1,
-                                'thiol':-1,'thiopyridine':0,'uthiol':0,'uthiolme2':0,'water':0}
+    ligand_charge_dictionary = {'acac': -1, 'acetonitrile': 0, 'ammonia': 0, 'bifuran': 0, 'bipy': 0, 'bipyrrole': 0,
+                                'bromide': -1,
+                                'carbonyl': 0, 'chloride': -1, 'cyanide': -1, 'cn': -1, 'cyanopyridine': 0, 'dmf': 0,
+                                'en': 0, 'fluoride': -1,
+                                'formate': -1, 'furan': 0, 'hydroxyl': -1, 'isothiocyanate': -1, 'methanol': 0,
+                                'misc': 0, 'ncs': -1, 'nme3': 0,
+                                'ome2': 0, 'ox': -2, 'oxo': -2, 'phen': 0, 'phosphine': 0, 'pisc': 0, 'pme3': 0,
+                                'porphyrin': -2,
+                                'pph3': 0, 'pyridine': 0, 'pyrrole': -1, 'scn': -1, 'tbisc': 0, 'tbuc': -2,
+                                'tetrahydrofuran': 0, 'thiocyanate': -1,
+                                'thiol': -1, 'thiopyridine': 0, 'uthiol': 0, 'uthiolme2': 0, 'water': 0}
     return ligand_charge_dictionary
 
 
 ########################
 def get_ligand_size_dictionary():
     ligand_size_dictionary = {'acac': 14, 'acetonitrile': 6, 'ammonia': 4, 'bifuran': 16, 'bipy': 20, 'bipyrrole': 18,
-                              'bromide': 1, 'carbonyl': 2, 'co': 2, 'chloride': 1, 'cyanide': 2, 'cn': 2, 'cyanopyridine': 12, 'dmf': 12,
+                              'bromide': 1, 'carbonyl': 2, 'co': 2, 'chloride': 1, 'cyanide': 2, 'cn': 2,
+                              'cyanopyridine': 12, 'dmf': 12,
                               'en': 12, 'fluoride': 1, 'formate': 4, 'furan': 9, 'hydroxyl': 2, 'isothiocyanate': 3,
                               'methanol': 6, 'misc': 6, 'ncs': 3, 'nme3': 13, 'ome2': 9, 'ox': 6, 'oxo': 1, 'phen': 22,
                               'phosphine': 4, 'pisc': 25, 'pme3': 13, 'porphyrin': 36, 'pph3': 34, 'pyridine': 11,
-                              'pyrrole': 9,'scn': 3, 'tbisc': 15, 'tbuc': 24, 'thiocyanate': 3, 'thiol': 2, 'thiopyridine': 11,
+                              'pyrrole': 9, 'scn': 3, 'tbisc': 15, 'tbuc': 24, 'thiocyanate': 3, 'thiol': 2,
+                              'thiopyridine': 11,
                               'uthiol': 3, 'uthiolme2': 9, 'water': 3}
     return ligand_size_dictionary
 
@@ -613,11 +621,12 @@ def translate_job_name(job):
         namelist.append(str(ahf).zfill(2))
         chem_namelist.append(str(ahf).zfill(2))
         gene = "_".join(namelist)
-        basegene = "_".join([str(metal)]+[str(ind) for ind in indlist])
+        basegene = "_".join([str(metal)] + [str(ind) for ind in indlist])
         chem_name = "_".join(chem_namelist)
         name_without_HFX = "_".join(namelist[:-1])
-    print('nohfx',name_without_HFX)
-    dict_avars = ['gene', 'gen', 'slot', 'metal', 'ox', 'liglist', 'indlist', 'spin', 'spin_cat', 'ahf', 'basename', 'basegene','chem_name','name_without_HFX']
+    liglist = rename_ligands(liglist)
+    dict_avars = ['gene', 'gen', 'slot', 'metal', 'ox', 'liglist', 'indlist', 'spin', 'spin_cat', 'ahf',
+                  'basename', 'basegene','chem_name','name_without_HFX']
     for var in dict_avars:
         translate_dict.update({var: locals()[var]})
         # previously returning list below:
@@ -1090,65 +1099,73 @@ def write_dictionary(dictionary, path, force_append=False):
         emsg = "Error, could not write state space: " + path
     return emsg
 
+
 ########################
 # Below is the NSGA sort, where values1 and values2 are the two objectives
 def fast_non_dominated_sort(values1, values2):
-    S=[[] for i in range(0,len(values1))]
+    S = [[] for i in range(0, len(values1))]
     front = [[]]
-    n=[0 for i in range(0,len(values1))]
+    n = [0 for i in range(0, len(values1))]
     rank = [0 for i in range(0, len(values1))]
-    for p in range(0,len(values1)):
-        S[p]=[]
-        n[p]=0
+    for p in range(0, len(values1)):
+        S[p] = []
+        n[p] = 0
         for q in range(0, len(values1)):
-            if (values1[p] > values1[q] and values2[p] > values2[q]) or (values1[p] >= values1[q] and values2[p] > values2[q]) or (values1[p] > values1[q] and values2[p] >= values2[q]):
+            if (values1[p] > values1[q] and values2[p] > values2[q]) or (
+                    values1[p] >= values1[q] and values2[p] > values2[q]) or (
+                    values1[p] > values1[q] and values2[p] >= values2[q]):
                 if q not in S[p]:
                     S[p].append(q)
-            elif (values1[q] > values1[p] and values2[q] > values2[p]) or (values1[q] >= values1[p] and values2[q] > values2[p]) or (values1[q] > values1[p] and values2[q] >= values2[p]):
+            elif (values1[q] > values1[p] and values2[q] > values2[p]) or (
+                    values1[q] >= values1[p] and values2[q] > values2[p]) or (
+                    values1[q] > values1[p] and values2[q] >= values2[p]):
                 n[p] = n[p] + 1
-        if n[p]==0:
+        if n[p] == 0:
             rank[p] = 0
             if p not in front[0]:
                 front[0].append(p)
     i = 0
-    while(front[i] != []):
-        Q=[]
+    while (front[i] != []):
+        Q = []
         for p in front[i]:
             for q in S[p]:
-                n[q] =n[q] - 1
-                if( n[q]==0):
-                    rank[q]=i+1
+                n[q] = n[q] - 1
+                if (n[q] == 0):
+                    rank[q] = i + 1
                     if q not in Q:
                         Q.append(q)
-        i = i+1
+        i = i + 1
         front.append(Q)
     final_front = front[:-1]
     ##### returns a pareto front ####
     return final_front
 
+
 ########################
 # Below is the NSGA crowding distance calculator, where values1 and values2 are the two objectives, and front is the pareto front from the sort
 def crowding_distance(values1, values2, front):
-    distance = [0 for i in range(0,len(front))]
+    distance = [0 for i in range(0, len(front))]
     sorted1 = sort_by_values(front, values1[:])
     sorted2 = sort_by_values(front, values2[:])
     distance[0] = 1000000000000000
     distance[len(front) - 1] = 1000000000000000
-    for k in range(1,len(front)-1):
-        distance[k] = distance[k]+ (values1[sorted1[k+1]] - values2[sorted1[k-1]])/(max(values1)-min(values1))
-    for k in range(1,len(front)-1):
-        distance[k] = distance[k]+ (values1[sorted2[k+1]] - values2[sorted2[k-1]])/(max(values2)-min(values2))
+    for k in range(1, len(front) - 1):
+        distance[k] = distance[k] + (values1[sorted1[k + 1]] - values2[sorted1[k - 1]]) / (max(values1) - min(values1))
+    for k in range(1, len(front) - 1):
+        distance[k] = distance[k] + (values1[sorted2[k + 1]] - values2[sorted2[k - 1]]) / (max(values2) - min(values2))
     return distance
+
 
 ########################
 # Below is a sorter for NSGA
 def sort_by_values(list1, values):
     sorted_list = []
-    while(len(sorted_list)!=len(list1)):
+    while (len(sorted_list) != len(list1)):
         if values.index(min(values)) in list1:
             sorted_list.append(values.index(min(values)))
         values[values.index(min(values))] = np.inf
     return sorted_list
+
 
 ########################
 
@@ -1191,7 +1208,7 @@ def find_prop_hinge_fitness(prop_energy, prop_parameter, range_value=2.5, lower_
             en_hinge += hinge + lower_hinge_list[j]  # Loop over all of the hinges
         en = -1 * (en_hinge)
     else:
-        if type(prop_parameter) == list: ## assumes range provided
+        if type(prop_parameter) == list:  ## assumes range provided
             lower_bound = float(min(prop_parameter))
             upper_bound = float(max(prop_parameter))
         elif lower_bound == None and upper_bound == None:
@@ -1264,7 +1281,7 @@ def find_prop_hinge_dist_fitness(prop_energy, prop_parameter, distance, distance
             dist_total += np.power((float(distance[j]) / distance_parameter[j]), 2.0)
         en = -1 * (en_hinge + dist_total)
     else:
-        if type(prop_parameter) == list: ## assumes range provided
+        if type(prop_parameter) == list:  ## assumes range provided
             lower_bound = float(min(prop_parameter))
             upper_bound = float(max(prop_parameter))
         elif lower_bound == None and upper_bound == None:
@@ -1348,7 +1365,7 @@ def write_ANN_results_dictionary(path, dictionary):
                 f.write(",".join(["name"] + dictionary[val].keys()) + '\n')
             f.write(",".join([val] + [str(k) for k in dictionary[val].values()]) + '\n')
     rundir = isKeyword('rundir')
-    full_ANN_dict = rundir+'/ANN_ouput/full_ANN_results.csv'
+    full_ANN_dict = rundir + '/ANN_ouput/full_ANN_results.csv'
     if os.path.exists(full_ANN_dict):
         emsg, already_present_dict = read_ANN_results_dictionary(full_ANN_dict)
         with open(full_ANN_dict, 'a') as f:
@@ -1386,10 +1403,10 @@ def log_indb_pairs(jobpath, tmcdoc):
     path = isKeyword('rundir') + 'jobs_indb.csv'
     if os.path.isfile(path):
         with open(path, 'a') as f:
-            f.write(jobpath + ',' + tmcdoc["unique_name"] + ',' + str(tmcdoc["_id"])+ "\n")
+            f.write(jobpath + ',' + tmcdoc["unique_name"] + ',' + str(tmcdoc["_id"]) + "\n")
     else:
         with open(path, 'w') as f:
-            f.write(jobpath + ',' + tmcdoc["unique_name"] + ',' + str(tmcdoc["_id"])+ "\n")
+            f.write(jobpath + ',' + tmcdoc["unique_name"] + ',' + str(tmcdoc["_id"]) + "\n")
 
 
 #########################
@@ -1400,7 +1417,7 @@ def find_indb_jobs():
         with open(path, "r") as fo:
             for line in fo:
                 ll = line.split(",")
-                if len(ll) ==  3:
+                if len(ll) == 3:
                     dbjobs_dict.update({ll[0]: {"unqiue_name": ll[1], "_id": ll[2]}})
     return dbjobs_dict
 
@@ -1792,3 +1809,14 @@ def check_infile_control(infile):
     else:
         raise ValueError("infile cannot be found during the submission.", infile)
     return use_molscontrol
+
+
+#######################
+def rename_ligands(liglist):
+    lig_dict = {"c3c(P(c1ccccc1)c2ccccc2)cccc3": "pph3",
+                "c1ccncc1": "pyr",
+                }
+    for idx, lig in enumerate(liglist):
+        if lig in lig_dict.keys():
+            liglist[idx] = lig_dict[lig]
+    return liglist

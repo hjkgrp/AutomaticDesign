@@ -48,6 +48,7 @@ class GA_run_defintion:
                   fod=False,
                   no_geo=False,
                   first_row=False,
+                  db_communicate=True,
                   **KWARGS):
         ## first time start-up function
         #                print('configuring status dictionaty')
@@ -92,7 +93,8 @@ class GA_run_defintion:
                        'molscontrol': molscontrol,
                        'fod': fod,
                        'first_row': first_row,
-                       'no_geo': no_geo
+                       'no_geo': no_geo,
+                       'db_communicate': db_communicate,
                        }
 
     def serialize(self):

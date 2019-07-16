@@ -46,7 +46,7 @@ class DFTRun(object):
         self.name = name
         self.comment = ''
         self.file_merge_list = ['optim.xyz', 'bond_order.list', 'charge_mull.xls', 'grad.xyz', 'mullpop', 'spin.xls']
-        list_of_init_props = ['status', 'time', 'energy','net_metal_spin', 'alphaHOMO', 'alphaLUMO', 'betaHOMO', 'betaLUMO',
+        list_of_init_props = ['status', 'time', 'energy', 'alphaHOMO', 'alphaLUMO', 'betaHOMO', 'betaLUMO',
                               'initial_energy', 'charge', 'idn', 'spin', 'metal', 'lig1_ind', 'lig2_ind', 'lig3_ind',
                               'lig4_ind', 'lig5_ind', 'lig6_ind', 'lig1', 'lig2', 'lig3', 'lig4', 'lig5',
                               'lig6', 'eq_MLB', 'ax1_MLB', 'ax2_MLB', 'liglist', 'metal_translation','hfx_flag',
@@ -62,7 +62,7 @@ class DFTRun(object):
                               'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
                               'mop_energy', 'chem_name', 'sp_energy', 'empty_sp_energy', 'tot_time', 'tot_step',
-                              'metal_spin', 'metal_spin_expected', 'del_metal_spin']
+                              'net_metal_spin', 'metal_spin_expected', 'del_metal_spin']
         list_of_init_empty = ['descriptor_names', 'descriptors']
         list_of_init_false = ['solvent_cont', 'water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
@@ -73,7 +73,8 @@ class DFTRun(object):
                              'empty_ss_act']
         list_of_init_negative_one = ["geo_flag", "ss_flag", 'metal_spin_flag']
         if isKeyword('oxocatalysis'):
-            list_of_init_props += ['net_oxygen_spin']
+            list_of_init_props += ['metal_alpha', 'metal_beta', 'net_metal_spin', 'metal_mulliken_charge',
+                                   'oxygen_alpha', 'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
         if isKeyword('TS'):
             print('---------------------------- ENTERED TS SECTION IN POST CLASSES ------------------------------')
             list_of_init_props += ['terachem_version_HAT_TS', 'terachem_detailed_version_HAT_TS', 'basis_HAT_TS',
@@ -338,8 +339,10 @@ class DFTRun(object):
             self.lig4 = liglist[3]
             self.lig5 = liglist[4]
             self.lig6 = liglist[5]
+        self.liglist = [self.lig1, self.lig2, self.lig3, self.lig4, self.lig5, self.lig6]
         self.spin_cat = spin_cat
         self.alpha = alpha
+
 
     def test_prog(self):
         ok = False
@@ -1314,7 +1317,7 @@ class DFTRun(object):
             self.wavefunction_path.update({key: wavefunc_file})
         self.molden_path = path_dictionary["scr_path"] + self.name + '/' + self.name + ".molden"
 
-    def calculate_spin_on_metal(self):
+    def calculate_spin_on_metal(self): ### This function should be replaced by get_Mulliken in ga_tools.
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)
         scrdir = path_dictionary["scr_path"] + self.name + '/'
@@ -1336,24 +1339,39 @@ class DFTRun(object):
             else:
                 self.metal_spin, self.metal_spin_expected = 0, 0
                 self.del_metal_spin, self.metal_spin_flag = 0, 1
-        else:
-            pass  # TODO: Add Aditya's multiwfn
 
-    def get_geo_ss_flag(self):
+    def get_check_flags(self, ss_cutoff=1, ss_loose_cutoff=2,
+                        metalspin_cutoff=1, metalspin_loss_cutoff=2):
+        self.metal_spin_expected = self.spin - 1
         if self.converged:
             self.geo_flag = self.flag_oct
             if not self.spin == 1:
-                self.ss_flag = 1 if abs(self.ss_act - self.ss_target) < 1 else 0
+                self.ss_flag = 1 if abs(self.ss_act - self.ss_target) < ss_cutoff else 0
             else:
                 self.ss_flag = 1
+            if not self.spin == 1:
+                if isinstance(self.net_metal_spin, float):
+                    self.del_metal_spin = abs(self.metal_spin_expected - self.net_metal_spin)
+                    self.metal_spin_flag = 1 if self.del_metal_spin < metalspin_cutoff else 0
+            else:
+                self.net_metal_spin, self.metal_spin_expected = 0, 0
+                self.del_metal_spin, self.metal_spin_flag = 0, 1
         else:
             if self.flag_oct_loose == 0:
                 self.geo_flag = 0
             if not self.spin == 1:
-                if abs(self.ss_act - self.ss_target) > 2:
+                if abs(self.ss_act - self.ss_target) > ss_loose_cutoff:
                     self.ss_flag = 0
             else:
                 self.ss_flag = 1
+            if not self.spin == 1:
+                if isinstance(self.net_metal_spin, float):
+                    self.del_metal_spin = abs(self.metal_spin_expected - self.net_metal_spin)
+                    if self.del_metal_spin > metalspin_loss_cutoff:
+                        self.metal_spin_flag = 0
+            else:
+                self.net_metal_spin, self.metal_spin_expected = 0, 0
+                self.del_metal_spin, self.metal_spin_flag = 0, 1
 
 class Comp(object):
     """ This is a class for each unique composition and configuration"""
@@ -1396,7 +1414,7 @@ class Comp(object):
         self.split = 777
 
         ## run class dependent props:
-        list_of_init_props = ['chem_name', 'spin','net_metal_spin', 'charge', 'attempted', 'converged',
+        list_of_init_props = ['chem_name', 'spin', 'charge', 'attempted', 'converged',
                               'mop_converged', 'time', 'energy', 'sp_energy', 'empty_sp_energy',
                               'flag_oct', 'flag_list','hfx_flag',
                               'num_coord_metal', 'rmsd_max', 'atom_dist_max',
@@ -1423,7 +1441,7 @@ class Comp(object):
                               'basis', 'functional',
                               'alpha_level_shift', 'beta_level_shift', 'job_gene',
                               "DFT_RUN", 'tot_time', 'tot_step', 'metal_translation',
-                              'metal_spin', 'metal_spin_expected', 'del_metal_spin', 'metal_spin_flag']
+                              'net_metal_spin', 'metal_spin_expected', 'del_metal_spin', 'metal_spin_flag']
         list_of_init_falses = ['attempted', 'converged',
                                'mop_converged',
                                "DFT_RUN"]
@@ -1443,7 +1461,8 @@ class Comp(object):
                     this_attribute = "_".join(['ox', ox, sc, props])
                     setattr(self, this_attribute, False)
         if isKeyword('oxocatalysis'):
-            list_of_init_props += ['net_oxygen_spin']
+            list_of_init_props += ['metal_alpha', 'metal_beta', 'net_metal_spin', 'metal_mulliken_charge',
+                                   'oxygen_alpha', 'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
             if isKeyword('TS'):
                 list_of_init_props += ['terachem_version_HAT_TS', 'terachem_detailed_version_HAT_TS', 'basis_HAT_TS',
                                        'tspin_HAT_TS', 'charge_HAT_TS', 'alpha_level_shift_HAT_TS',

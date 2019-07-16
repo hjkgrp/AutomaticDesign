@@ -1330,8 +1330,7 @@ class octahedral_complex:
         return flag_oct, flag_list, dict_oct_info
 
     def assemble_constraints(self, ox, spin):
-        id_keys = ["metal", "ox", "spin", "lig1", "lig2", "lig3", "lig4", "lig5",
-                   "lig6"]  ## Note: Here alpha is not considered.
+        id_keys = ["metal", "ox", "spin", "ligstr", "alpha"]
         purified_ligands = [self.ligands[i] for i in range(6) if self.lig_occs[i] > 0]
         print(purified_ligands)
         _liglist, smicat = SMILES_converter(purified_ligands)
@@ -1341,8 +1340,8 @@ class octahedral_complex:
         query_constraints.update({"metal": self.metals_list[self.core]})
         query_constraints.update({"ox": ox})
         query_constraints.update({"spin": spin})
-        for ii in range(6):
-            query_constraints.update({"lig%d" % (ii + 1): liglist[ii]})
+        query_constraints.update({"ligstr": "_".join(liglist)})
+        query_constraints.update({"alpha": 20.0})
         return query_constraints
 
     def generate_from_db(self, tmcdoc, mol_name, path_dictionary, charge, spinmult):
