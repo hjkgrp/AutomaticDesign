@@ -75,7 +75,7 @@ class TMC():
             except:
                 pass
         self.liglist = self.this_run.liglist
-        self.ligstr = "_".join(self.this_run.liglist)
+        self.ligstr = "_".join(self.this_run.liglist_compact)
         for attr in mongo_attr_from_run_nan:
             setattr(self, attr, np.nan)
         for attr in mongo_attr_from_run_nan:
