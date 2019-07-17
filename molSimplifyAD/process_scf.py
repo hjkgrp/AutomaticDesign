@@ -558,9 +558,6 @@ def compile_and_filter_data(final_results, local_spin_dictionary, local_metal_li
                                                     if int(getattr(comp_class,empty_prefix+'hfx_flag')) == 1:
                                                         print('Passed all checks to calculate oxo formation energy.')
                                                         reason_flag_oxo = 0
-                                                        oxo = (float(getattr(comp_class,oxo_prefix+'energy')) -
-                                                               float(getattr(comp_class,empty_prefix+'energy')) -
-                                                               0.5*reference_molecule_info[alpha]['O2'])*HF_to_Kcal_mol
                                                     else:
                                                         reason_flag_oxo = 14
                                                 else:
@@ -579,6 +576,10 @@ def compile_and_filter_data(final_results, local_spin_dictionary, local_metal_li
                             reason_flag_oxo = 2
                     else:
                         reason_flag_oxo = 1
+                    if (getattr(comp_class,oxo_prefix+'energy') != 'undef') and (getattr(comp_class,empty_prefix+'energy') != 'undef'):
+                        oxo = (float(getattr(comp_class,oxo_prefix+'energy')) -
+                               float(getattr(comp_class,empty_prefix+'energy')) -
+                               0.5*reference_molecule_info[alpha]['O2'])*HF_to_Kcal_mol
                     oxo_dictionaries_for_db.append({'dftrun': oxo_representative_run_class, 'descriptors':oxo_descriptor_dictionary, 'target': oxo, 'status_flag':reason_flag_oxo})
         print('moving on to HAT NOW!')
         for oxidation_state in oxo_hyd_spin_match[current_metal.lower()].keys():
@@ -614,10 +615,6 @@ def compile_and_filter_data(final_results, local_spin_dictionary, local_metal_li
                                                         if int(getattr(comp_class,hyd_prefix+'hfx_flag')) == 1:
                                                             print('Passed all checks to calculate HAT energy.')
                                                             reason_flag_hat = 0
-                                                            HAT = (float(getattr(comp_class,hyd_prefix+'energy')) -
-                                                                   float(getattr(comp_class,oxo_prefix+'energy')) +
-                                                                   reference_molecule_info[alpha]['CH3'] -
-                                                                   reference_molecule_info[alpha]['CH4'])*HF_to_Kcal_mol
                                                         else:
                                                             reason_flag_hat = 24
                                                     else:
@@ -638,6 +635,11 @@ def compile_and_filter_data(final_results, local_spin_dictionary, local_metal_li
                             reason_flag_hat = 2
                     else:
                         reason_flag_hat = 1
+                    if (getattr(comp_class,hyd_prefix+'energy') != 'undef') and (getattr(comp_class,oxo_prefix+'energy') != 'undef'):
+                        HAT = (float(getattr(comp_class,hyd_prefix+'energy')) -
+                               float(getattr(comp_class,oxo_prefix+'energy')) +
+                               reference_molecule_info[alpha]['CH3'] -
+                               reference_molecule_info[alpha]['CH4'])*HF_to_Kcal_mol
                     hat_dictionaries_for_db.append({'dftrun': HAT_representative_run_class, 'descriptors':HAT_descriptor_dictionary, 'target': HAT, 'status_flag':reason_flag_hat})
     print('done compiling oxo and hat dictionaries')
     return oxo_dictionaries_for_db, hat_dictionaries_for_db
@@ -675,6 +677,10 @@ def assign_train_flag(list_of_dict_to_assign, group_HFX=True,frac=0.8):
                     complexes_grouped_by_HFX.append(grouped_hfx_indices)
                     checked_name_list.add(unique_complex)
             shuffled_grouped_complexes = np.array(shuffle(complexes_grouped_by_HFX))
+            if len(complexes_grouped_by_HFX) < 3:
+                for val in shuffled_grouped_complexes.flatten():
+                    list_of_dict_to_assign[val]['is_training'] = 'train' #make all examples training
+                return list_of_dict_to_assign
             print(shuffled_grouped_complexes)
             print(shuffled_grouped_complexes.shape)
             #### This is first split into train and test
@@ -686,6 +692,10 @@ def assign_train_flag(list_of_dict_to_assign, group_HFX=True,frac=0.8):
             val = train_val_split[1].flatten()
         else:
             indices_to_split = np.array(valid_indices)
+            if len(indices_to_split) < 3:
+                for val in indices_to_split:
+                    list_of_dict_to_assign[val]['is_training'] = 'train' #make all examples train
+                return list_of_dict_to_assign
             test_split = np.split(indices_to_split, [int(frac * indices_to_split.shape[0])])
             train_val_split = np.split(test_split[0],[int(0.9 * test_split[0].shape[0])])
             train = train_val_split[0].flatten()
