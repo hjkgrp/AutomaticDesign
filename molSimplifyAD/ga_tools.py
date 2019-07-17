@@ -212,9 +212,9 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
     list_of_props.append('lig5')
     if (not oxocatalysis):
         list_of_props.append('lig6')
-    list_of_prop_names = ['chem_name', 'converged', 'status', 'time', 'charge', 'spin',
-                          'energy', 'init_energy','net_metal_spin',
-                          'ss_act', 'ss_target', 'ss_flag','hfx_flag',
+    list_of_prop_names = ['chem_name','name_without_HFX', 'converged', 'status', 'time', 'charge', 'spin',
+                          'energy', 'init_energy','net_metal_spin','del_metal_spin','metal_spin_expected',
+                          'ss_act', 'ss_target', 'ss_flag','hfx_flag','metal_spin_flag','geo_flag',
                           'ax1_MLB', 'ax2_MLB', 'eq_MLB',
                           "alphaHOMO", "alphaLUMO", "betaHOMO", "betaLUMO",
                           'geopath', 'attempted',
@@ -250,6 +250,7 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
         if comp:
             list_of_props.insert(1, 'job_gene')
             list_of_props.append('convergence')
+            list_of_prop_names.append('DFT_RUN')
             for props in list_of_prop_names:
                 for spin_cat in ['LS', 'IS', 'HS']:
                     for catax in ['x', 'oxo', 'hydroxyl']:
@@ -830,7 +831,7 @@ def HFXordering():
     return (HFXdictionary)
 
 ########################
-def check_HFX_linearity(all_runs, number_of_points_tolerance=3,max_deviation=10):
+def check_HFX_linearity(all_runs, number_of_points_tolerance=3, max_deviation=10, R2_cutoff=0.9):
     # this function gets a list of run_classes,
     # groups together the same complex with 
     # different HFX values, and makes sure they
@@ -906,10 +907,10 @@ def check_HFX_linearity(all_runs, number_of_points_tolerance=3,max_deviation=10)
                         remove_list.append(converge_list[int(idlist[j])])
                 slope_signs = []
                 slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
-                if (r_value**2)<0.97:
-                    for j2 in range(len(ytests)-1):
+                if (r_value ** 2)< R2_cutoff:
+                    for j2 in range(len(ytests) - 1):
                         slope, intercept, r_value, p_value, std_err = stats.linregress(x[j2:j2+2], y[j2:j2+2])
-                        slope_signs.append(np.sign(slope*1000))
+                        slope_signs.append(np.sign(slope * 1000))
                     signchange = ((np.roll(slope_signs, 1) - slope_signs) != 0).astype(int)
                     print('before sign change', signchange)
                     signchange[0] = 0 #Do not want circular behavior
@@ -918,18 +919,18 @@ def check_HFX_linearity(all_runs, number_of_points_tolerance=3,max_deviation=10)
                     print('THIS IS SLOPES AND SIGNCHANGE and i2r', slope_signs, signchange, idx_2_remove)
                     if len(idx_2_remove) == 1: #one point on either end
                         print('IDX2R is 1 long')
-                        if (float(idx_2_remove[0])/float(len(ytests)))<=0.5:
+                        if (float(idx_2_remove[0]) / float(len(ytests))) <= 0.5:
                             print('discontinuity on the left')
-                            remove_list.append(converge_list[int(idx_2_remove[0]-1)])
+                            remove_list.append(converge_list[int(idx_2_remove[0] - 1)])
                         else:
                             print('discontinuity on the right')
-                            remove_list.append(converge_list[int(idx_2_remove[0]+1)])
+                            remove_list.append(converge_list[int(idx_2_remove[0] + 1)])
                     elif len(idx_2_remove) == 2:
                         print('IDX2R is 2 long')
                         middle = False
                         pos_list = []
                         for k in idx_2_remove:
-                            check_position = float(int(k)-1)/float(len(ytests))
+                            check_position = float(int(k) - 1)/float(len(ytests))
                             if (check_position < 0.7 and check_position > 0.3):
                                 print('discontinuity in the middle, removing all points')
                                 middle = True #The discontinuity is in the middle. Remove all points. 
@@ -945,10 +946,10 @@ def check_HFX_linearity(all_runs, number_of_points_tolerance=3,max_deviation=10)
                             for k, pos in enumerate(pos_list):
                                 if pos == 'L':
                                     print('Discontinuity on the left')
-                                    remove_list.append(converge_list[int(idx_2_remove[k]-1)])
+                                    remove_list.append(converge_list[int(idx_2_remove[k] - 1)])
                                 else:
                                     print('Discontinuity on the right')
-                                    remove_list.append(converge_list[int(idx_2_remove[k]+1)])
+                                    remove_list.append(converge_list[int(idx_2_remove[k] + 1)])
                     elif len(idx_2_remove) == 0:
                         print('all points slope the same, probably just curved')
                     else:
