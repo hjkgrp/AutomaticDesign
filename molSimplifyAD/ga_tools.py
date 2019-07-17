@@ -834,7 +834,7 @@ def HFXordering():
 
 
 ########################
-def check_HFX_linearity(all_runs, number_of_points_tolerance=3, max_deviation=10, R2_cutoff=0.9):
+def check_HFX_linearity(all_runs, number_of_points_tolerance=3, max_deviation=15, R2_cutoff=0.9):
     # this function gets a list of run_classes,
     # groups together the same complex with 
     # different HFX values, and makes sure they
@@ -842,7 +842,7 @@ def check_HFX_linearity(all_runs, number_of_points_tolerance=3, max_deviation=10
     # state. If fewer than 3 HFX values have converged,
     # linearity is not tested and HFX_flag is marked
     # as false. For all else, LOOCV is used with a
-    # cutoff energy. Default is 5 kcal/mol. If the
+    # cutoff energy. Default is 15 kcal/mol. If the
     # test is failed, it is marked as false for HFX_flag.
     from sklearn.linear_model import LinearRegression
     from sklearn.model_selection import train_test_split, cross_val_score, LeaveOneOut
@@ -867,111 +867,111 @@ def check_HFX_linearity(all_runs, number_of_points_tolerance=3, max_deviation=10
             x, y = [], []
             print('checking linearity')
             converge_list, failed_list, remove_list = [], [], []
+            for run_index in run_class_indices:
+                if not 'undef' in str(all_runs[runkey_list[run_index]].energy).lower():
+                    x.append(float(all_runs[runkey_list[run_index]].alpha))
+                    y.append(
+                        float(all_runs[runkey_list[run_index]].energy) * 627.529)  # applied Hartree to kcal/mol conv
+                    converge_list.append(run_index)
+                else:
+                    print('energy is undef for this runclass')
+                    failed_list.append(run_index)
+            if len(x) < number_of_points_tolerance:
+                print('not enough points converged')
                 for run_index in run_class_indices:
-                    if not 'undef' in str(all_runs[runkey_list[run_index]].energy).lower():
-                        x.append(float(all_runs[runkey_list[run_index]].alpha))
-                        y.append(
-                            float(all_runs[runkey_list[run_index]].energy) * 627.529)  # applied Hartree to kcal/mol conv
-                        converge_list.append(run_index)
-                    else:
-                        print('energy is undef for this runclass')
-                        failed_list.append(run_index)
-                if len(x) < number_of_points_tolerance:
-                    print('not enough points converged')
-                    for run_index in run_class_indices:
-                        all_runs[runkey_list[run_index]].hfx_flag = False
-                else:  # enough points for linearity check
-                    print('doing loocv')
-                    # slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
-                    # if (r_value**2)<0.9:
-                    #    remove_list.append(converge_list[:])
-                    loo = LeaveOneOut()
-                    ytests = []
-                    ypreds = []
-                    loo_x = np.array([x]).T
-                    loo_y = np.array([y]).T
-                    idlist = []
-                    for train_idx, test_idx in loo.split(loo_x):
-                        X_train, X_test = loo_x[train_idx], loo_x[test_idx]  # requires arrays
-                        y_train, y_test = loo_y[train_idx], loo_y[test_idx]
-                        idlist.append(test_idx)
-                        model = LinearRegression()
-                        model.fit(X=X_train, y=y_train)
-                        y_pred = model.predict(X_test)
-                        # there is only one y-test and y-pred per iteration over the loo.split, 
-                        # so we append them to respective lists.
-                        ytests += list(y_test)
-                        ypreds += list(y_pred)
-                    print('THIS IS THE IDLIST', idlist)
-                    ytests = np.array(ytests)
-                    ypreds = np.array(ypreds)
-                    error_array = abs(ytests - ypreds)
-                    for j, val in enumerate(error_array):
-                        if float(val) > max_deviation:  # These are outlying points
-                            remove_list.append(converge_list[int(idlist[j])])
-                    slope_signs = []
-                    slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
-                    if (r_value ** 2) < R2_cutoff:
-                        for j2 in range(len(ytests) - 1):
-                            slope, intercept, r_value, p_value, std_err = stats.linregress(x[j2:j2 + 2], y[j2:j2 + 2])
-                            slope_signs.append(np.sign(slope * 1000))
-                        signchange = ((np.roll(slope_signs, 1) - slope_signs) != 0).astype(int)
-                        print('before sign change', signchange)
-                        signchange[0] = 0 #Do not want circular behavior
-                        print('after sign change', signchange)
-                        idx_2_remove = np.where(signchange == 1)[0]
-                        print('THIS IS SLOPES AND SIGNCHANGE and i2r', slope_signs, signchange, idx_2_remove)
-                        if len(idx_2_remove) == 1: #one point on either end
-                            print('IDX2R is 1 long')
-                            if (float(idx_2_remove[0]) / float(len(ytests))) <= 0.5:
-                                print('discontinuity on the left')
-                                remove_list.append(converge_list[int(idx_2_remove[0] - 1)])
-                            else:
-                                print('discontinuity on the right')
-                                remove_list.append(converge_list[int(idx_2_remove[0] + 1)])
-                        elif len(idx_2_remove) == 2:
-                            print('IDX2R is 2 long')
-                            middle = False
-                            pos_list = []
-                            for k in idx_2_remove:
-                                check_position = float(int(k) - 1)/float(len(ytests))
-                                if (check_position < 0.7 and check_position > 0.3):
-                                    print('discontinuity in the middle, removing all points')
-                                    middle = True #The discontinuity is in the middle. Remove all points. 
-                                    break
-                                elif check_position < 0.3:
-                                    pos_list.append('L')
-                                else:
-                                    pos_list.append('R')
-                            if middle:
-                                for k in range(0,len(ytests)):
-                                    remove_list.append(converge_list[int(k)])
-                            else:
-                                for k, pos in enumerate(pos_list):
-                                    if pos == 'L':
-                                        print('Discontinuity on the left')
-                                        remove_list.append(converge_list[int(idx_2_remove[k] - 1)])
-                                    else:
-                                        print('Discontinuity on the right')
-                                        remove_list.append(converge_list[int(idx_2_remove[k] + 1)])
-                        elif len(idx_2_remove) == 0:
-                            print('all points slope the same, probably just curved')
+                    all_runs[runkey_list[run_index]].hfx_flag = False
+            else:  # enough points for linearity check
+                print('doing loocv')
+                # slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
+                # if (r_value**2)<0.9:
+                #    remove_list.append(converge_list[:])
+                loo = LeaveOneOut()
+                ytests = []
+                ypreds = []
+                loo_x = np.array([x]).T
+                loo_y = np.array([y]).T
+                idlist = []
+                for train_idx, test_idx in loo.split(loo_x):
+                    X_train, X_test = loo_x[train_idx], loo_x[test_idx]  # requires arrays
+                    y_train, y_test = loo_y[train_idx], loo_y[test_idx]
+                    idlist.append(test_idx)
+                    model = LinearRegression()
+                    model.fit(X=X_train, y=y_train)
+                    y_pred = model.predict(X_test)
+                    # there is only one y-test and y-pred per iteration over the loo.split, 
+                    # so we append them to respective lists.
+                    ytests += list(y_test)
+                    ypreds += list(y_pred)
+                print('THIS IS THE IDLIST', idlist)
+                ytests = np.array(ytests)
+                ypreds = np.array(ypreds)
+                error_array = abs(ytests - ypreds)
+                for j, val in enumerate(error_array):
+                    if float(val) > max_deviation:  # These are outlying points
+                        remove_list.append(converge_list[int(idlist[j])])
+                slope_signs = []
+                slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
+                if (r_value ** 2) < R2_cutoff:
+                    for j2 in range(len(ytests) - 1):
+                        slope, intercept, r_value, p_value, std_err = stats.linregress(x[j2:j2 + 2], y[j2:j2 + 2])
+                        slope_signs.append(np.sign(slope * 1000))
+                    signchange = ((np.roll(slope_signs, 1) - slope_signs) != 0).astype(int)
+                    print('before sign change', signchange)
+                    signchange[0] = 0 #Do not want circular behavior
+                    print('after sign change', signchange)
+                    idx_2_remove = np.where(signchange == 1)[0]
+                    print('THIS IS SLOPES AND SIGNCHANGE and i2r', slope_signs, signchange, idx_2_remove)
+                    if len(idx_2_remove) == 1: #one point on either end
+                        print('IDX2R is 1 long')
+                        if (float(idx_2_remove[0]) / float(len(ytests))) <= 0.5:
+                            print('discontinuity on the left')
+                            remove_list.append(converge_list[int(idx_2_remove[0] - 1)])
                         else:
-                            print('MORE than 2...')
+                            print('discontinuity on the right')
+                            remove_list.append(converge_list[int(idx_2_remove[0] + 1)])
+                    elif len(idx_2_remove) == 2:
+                        print('IDX2R is 2 long')
+                        middle = False
+                        pos_list = []
+                        for k in idx_2_remove:
+                            check_position = float(int(k) - 1)/float(len(ytests))
+                            if (check_position < 0.7 and check_position > 0.3):
+                                print('discontinuity in the middle, removing all points')
+                                middle = True #The discontinuity is in the middle. Remove all points. 
+                                break
+                            elif check_position < 0.3:
+                                pos_list.append('L')
+                            else:
+                                pos_list.append('R')
+                        if middle:
                             for k in range(0,len(ytests)):
                                 remove_list.append(converge_list[int(k)])
-                    if len(set(converge_list) - set(remove_list)) > number_of_points_tolerance:
-                        print('there are still enough points even after elim')
-                        runs_to_keep = list(set(converge_list) - set(remove_list))
-                        for run_index in run_class_indices:
-                            if run_index in runs_to_keep:
-                                all_runs[runkey_list[run_index]].hfx_flag = True
-                            else:
-                                all_runs[runkey_list[run_index]].hfx_flag = False
+                        else:
+                            for k, pos in enumerate(pos_list):
+                                if pos == 'L':
+                                    print('Discontinuity on the left')
+                                    remove_list.append(converge_list[int(idx_2_remove[k] - 1)])
+                                else:
+                                    print('Discontinuity on the right')
+                                    remove_list.append(converge_list[int(idx_2_remove[k] + 1)])
+                    elif len(idx_2_remove) == 0:
+                        print('all points slope the same, probably just curved')
                     else:
-                        print('elim caused there to not be enough points')
-                        for run_index in run_class_indices:
+                        print('MORE than 2...')
+                        for k in range(0,len(ytests)):
+                            remove_list.append(converge_list[int(k)])
+                if len(set(converge_list) - set(remove_list)) > number_of_points_tolerance:
+                    print('there are still enough points even after elim')
+                    runs_to_keep = list(set(converge_list) - set(remove_list))
+                    for run_index in run_class_indices:
+                        if run_index in runs_to_keep:
+                            all_runs[runkey_list[run_index]].hfx_flag = True
+                        else:
                             all_runs[runkey_list[run_index]].hfx_flag = False
+                else:
+                    print('elim caused there to not be enough points')
+                    for run_index in run_class_indices:
+                        all_runs[runkey_list[run_index]].hfx_flag = False
     return all_runs
 
 
