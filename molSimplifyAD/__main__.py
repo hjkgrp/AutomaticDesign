@@ -1,7 +1,7 @@
 from molSimplifyAD.ga_io_control import *
 from molSimplifyAD.ga_create_new import *
 from molSimplifyAD.ga_resume_run import *
-from molSimplifyAD.ga_database_io import push_run
+from molSimplifyAD.ga_database_io import push_run, push_run_act_learn
 import sys
 
 
@@ -30,6 +30,9 @@ def main():
     elif args.push:
         print('Push current run to db...')
         push_run(args)
+    elif args.push_act_learn:
+        print('Pushing active learning info to db...')
+        push_run_act_learn(args)
     
 if __name__ == '__main__':
     main()
