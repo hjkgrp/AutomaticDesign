@@ -201,7 +201,7 @@ def push2db(database, collection, tag, subtag, publication=False,
     ensure_collection(db, collection)
     print('db push is enabled, attempting commit with tag: %s, subtag: %s to %s' % (tag, subtag, collection))
     if not all_runs_pickle:
-        _, all_runs = check_all_current_convergence(post_all=True)
+        _, all_runs, _ = check_all_current_convergence(post_all=True)
     else:
         all_runs = pickle.load(open(all_runs_pickle, "rb"))
         print("DFTruns loaded from %s." % all_runs_pickle)
