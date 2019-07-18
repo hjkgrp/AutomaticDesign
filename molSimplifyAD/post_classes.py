@@ -150,7 +150,7 @@ class DFTRun(object):
         if self.octahedral:
             flag_oct, flag_list, dict_oct_info = self.mol.IsOct(
                 dict_check=globs.geo_check_dictionary()["dict_oct_check_st"],
-                debug=debug)
+                debug=debug) 
         else:
             flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(
                 dict_check=globs.geo_check_dictionary()["dict_oneempty_check_st"],
@@ -1362,7 +1362,7 @@ class DFTRun(object):
                         self.del_metal_spin = abs(float(self.metal_spin_expected) - float(self.net_metal_spin))
                         self.metal_spin_flag = 1 if self.del_metal_spin < metalspin_cutoff else 0
                     except:
-                        self.metal_spin_flag = "ERROR"
+                        self.metal_spin_flag = -1 #assigned by default if flag cannot be computed
             else:
                 self.net_metal_spin, self.metal_spin_expected = 0, 0
                 self.del_metal_spin, self.metal_spin_flag = 0, 1
