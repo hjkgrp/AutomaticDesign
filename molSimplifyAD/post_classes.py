@@ -62,7 +62,7 @@ class DFTRun(object):
                               'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
                               'mop_energy', 'chem_name','name_without_HFX', 'sp_energy', 'empty_sp_energy', 'tot_time', 'tot_step',
-                              'net_metal_spin', 'metal_spin_expected', 'del_metal_spin']
+                              'net_metal_spin', 'metal_spin_expected', 'del_metal_spin','sub_count']
         list_of_init_empty = ['descriptor_names', 'descriptors']
         list_of_init_false = ['solvent_cont', 'water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',

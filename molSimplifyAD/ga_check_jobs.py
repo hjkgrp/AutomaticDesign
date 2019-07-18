@@ -553,17 +553,11 @@ def check_all_current_convergence(post_all=False):
                         this_run.status = 9
                         logger(base_path_dictionary['state_path'],
                                str(datetime.datetime.now()) + 'killed by molscontrol.')
+                ## get the number of subds
+                number_of_subs = submitted_job_dictionary[jobs]
+                this_run.sub_count = number_of_subs
                 ## record convergence status
                 update_converged_job_dictionary(jobs, this_run.status)
-                ## store this run
-                # get features of this run before we save it
-                this_run.get_descriptor_vector()
-                all_runs.update({this_run.name: this_run})
-                print('added ' + this_run.name + ' to all_runs')
-                print('run status is  ' + str(this_run.status))
-                base_path_dictionary = setup_paths()
-                logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
-                       + ' added ' + this_run.name + ' to all_runs with status ' + str(this_run.status))
 
                 if this_run.status in [0, 1, 11, 12, 13, 14, 15, 16, 17, 18, 19]:  ##  convergence is successful!
                     print('removing job from OSL due to status  ' + str(this_run.status))
@@ -622,7 +616,7 @@ def check_all_current_convergence(post_all=False):
                         else:
                             print("No molden path found for this run (" + str(jobs) + ")")
                 if this_run.status in [2, 3, 5, 6, 8, 9, "undef"]:  ##  convergence is not successful!
-                    number_of_subs = submitted_job_dictionary[jobs]
+
                     if this_run.status == "undef":
                         this_run.status = 3
                     if this_run.status in [3, 5, 6, "undef"]:  ## unknown error, allow retry
@@ -632,6 +626,7 @@ def check_all_current_convergence(post_all=False):
                                + ' after ' + str(number_of_subs) + ' subs, trying again... ')
 
                         if int(number_of_subs) > isKeyword('max_resubmit'):
+                            this_run.status = 7
                             print(' giving up on job ' + str(jobs) + ' after ' + str(number_of_subs))
                             logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                                    + " giving up on job : " + str(jobs) + ' with status ' + str(this_run.status)
@@ -652,6 +647,17 @@ def check_all_current_convergence(post_all=False):
                 else:
                     this_run.get_check_flags()
                 print('END OF JOB \n *******************\n')
+
+                ## store this run
+                # get features of this run before we save it
+                this_run.get_descriptor_vector()
+                all_runs.update({this_run.name: this_run})
+                print('added ' + this_run.name + ' to all_runs')
+                print('run status is  ' + str(this_run.status))
+                base_path_dictionary = setup_paths()
+                logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
+                       + ' added ' + this_run.name + ' to all_runs with status ' + str(this_run.status))
+
             elif ("sp_infiles" in jobs and not isKeyword('optimize')) or (
                     "sp_infiles" in jobs and isKeyword('oxocatalysis')):
                 translate_dict = translate_job_name(jobs)
