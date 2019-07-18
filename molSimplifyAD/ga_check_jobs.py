@@ -750,14 +750,16 @@ def check_all_current_convergence(post_all=False):
                     print(str(jobs) + ' is live\n')
                 print('END OF SP JOB \n *******************\n')
         print('matching DFT runs ... \n')
+        active_learning_dictionaries = []
         if isKeyword('oxocatalysis'):
             all_runs = check_HFX_linearity(all_runs)
             for runkey in all_runs.keys():
-                print('THIS IS THE HFXFLAG',all_runs[runkey].hfx_flag)
+                print('THIS IS THE HFXFLAG',all_runs[runkey].hfx_flag,all_runs[runkey].chem_name)
             final_results = process_runs_oxocatalysis(all_runs, spin_dictionary())
             oxo_dictionaries_for_db, hat_dictionaries_for_db = compile_and_filter_data(final_results,spin_dictionary())
             oxo_dictionaries_for_db = assign_train_flag(oxo_dictionaries_for_db)
             hat_dictionaries_for_db = assign_train_flag(hat_dictionaries_for_db)
+            active_learning_dictionaries = [oxo_dictionaries_for_db, hat_dictionaries_for_db]
         else:
             final_results = process_runs_geo(all_runs, spin_dictionary())
 
@@ -848,4 +850,4 @@ def check_all_current_convergence(post_all=False):
                 values = atrextract(final_results[reskeys], list_of_props)
                 writeprops(values, f)
         print('\n**** end of file inspection **** \n')
-    return final_results, all_runs
+    return final_results, all_runs, active_learning_dictionaries
