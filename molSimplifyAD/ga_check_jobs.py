@@ -128,6 +128,7 @@ def check_all_current_convergence(post_all=False):
                 ahf = translate_dict['ahf']
                 base_name = translate_dict['basename']
                 base_gene = translate_dict['basegene']
+                name_without_HFX = translate_dict['name_without_HFX']
                 ## create run
                 this_run = DFTRun(base_name)
                 print('Here!')
@@ -163,6 +164,7 @@ def check_all_current_convergence(post_all=False):
                         [str(metal), str(ox), 'eq', str(liglist[0]), str(liglist[1]), str(liglist[2]), str(liglist[3]),
                          'ax1', str(liglist[4]), 'ax2', str(liglist[5]), 'ahf', str(int(alpha)).zfill(2), str(spin)])
                 this_run.chem_name = name
+                this_run.name_without_HFX = name_without_HFX
                 ## set file paths
                 path_dictionary = setup_paths()
                 path_dictionary = advance_paths(path_dictionary, gen)  ## this adds the /gen_x/ to the paths
@@ -551,19 +553,11 @@ def check_all_current_convergence(post_all=False):
                         this_run.status = 9
                         logger(base_path_dictionary['state_path'],
                                str(datetime.datetime.now()) + 'killed by molscontrol.')
-
-                this_run.get_check_flags()
+                ## get the number of subds
+                number_of_subs = submitted_job_dictionary[jobs]
+                this_run.sub_count = number_of_subs
                 ## record convergence status
                 update_converged_job_dictionary(jobs, this_run.status)
-                ## store this run
-                # get features of this run before we save it
-                this_run.get_descriptor_vector()
-                all_runs.update({this_run.name: this_run})
-                print('added ' + this_run.name + ' to all_runs')
-                print('run status is  ' + str(this_run.status))
-                base_path_dictionary = setup_paths()
-                logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
-                       + ' added ' + this_run.name + ' to all_runs with status ' + str(this_run.status))
 
                 if this_run.status in [0, 1, 11, 12, 13, 14, 15, 16, 17, 18, 19]:  ##  convergence is successful!
                     print('removing job from OSL due to status  ' + str(this_run.status))
@@ -622,7 +616,7 @@ def check_all_current_convergence(post_all=False):
                         else:
                             print("No molden path found for this run (" + str(jobs) + ")")
                 if this_run.status in [2, 3, 5, 6, 8, 9, "undef"]:  ##  convergence is not successful!
-                    number_of_subs = submitted_job_dictionary[jobs]
+
                     if this_run.status == "undef":
                         this_run.status = 3
                     if this_run.status in [3, 5, 6, "undef"]:  ## unknown error, allow retry
@@ -632,6 +626,7 @@ def check_all_current_convergence(post_all=False):
                                + ' after ' + str(number_of_subs) + ' subs, trying again... ')
 
                         if int(number_of_subs) > isKeyword('max_resubmit'):
+                            this_run.status = 7
                             print(' giving up on job ' + str(jobs) + ' after ' + str(number_of_subs))
                             logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                                    + " giving up on job : " + str(jobs) + ' with status ' + str(this_run.status)
@@ -647,8 +642,22 @@ def check_all_current_convergence(post_all=False):
                                + " resubmitting job : " + str(jobs) + ' with status ' + str(this_run.status)
                                + ' after ' + str(number_of_subs) + ' subs since prog geo was good')
                         add_to_outstanding_jobs(jobs)
-
+                if isKeyword('oxocatalysis'):
+                    this_run.get_check_flags(metalspin_cutoff = 2)
+                else:
+                    this_run.get_check_flags()
                 print('END OF JOB \n *******************\n')
+
+                ## store this run
+                # get features of this run before we save it
+                this_run.get_descriptor_vector()
+                all_runs.update({this_run.name: this_run})
+                print('added ' + this_run.name + ' to all_runs')
+                print('run status is  ' + str(this_run.status))
+                base_path_dictionary = setup_paths()
+                logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
+                       + ' added ' + this_run.name + ' to all_runs with status ' + str(this_run.status))
+
             elif ("sp_infiles" in jobs and not isKeyword('optimize')) or (
                     "sp_infiles" in jobs and isKeyword('oxocatalysis')):
                 translate_dict = translate_job_name(jobs)
@@ -664,6 +673,7 @@ def check_all_current_convergence(post_all=False):
                 ahf = translate_dict['ahf']
                 base_name = translate_dict['basename']
                 base_gene = translate_dict['basegene']
+                name_without_HFX = translate_dict['name_without_HFX']
                 metal_list = get_metals()
                 metal = metal_list[metal]
                 alpha = int(ahf)
@@ -679,6 +689,7 @@ def check_all_current_convergence(post_all=False):
                     print('checking status of SP job ' + str(jobs))
                     this_run = test_terachem_sp_convergence(jobs)
                     this_run.chem_name = name
+                    this_run.name_without_HFX = name_without_HFX
                     this_run.number = slot
                     this_run.gen = gen
                     this_run.job = jobs
@@ -733,6 +744,8 @@ def check_all_current_convergence(post_all=False):
                                 print('Moldens exist but are empty for this run (' + str(jobs) + ')')
                         else:
                             print('Moldens exist but are empty for this run (' + str(jobs) + ')')
+                    if isKeyword('oxocatalysis'):
+                        this_run.get_check_flags(metalspin_cutoff = 2,sp_calc=True)
                     if this_run.status == 6:  ##  convergence is not successful!
                         logger(base_path_dictionary['state_path'],
                                str(datetime.datetime.now()) + " failure at SP job : " + str(
@@ -748,6 +761,9 @@ def check_all_current_convergence(post_all=False):
             for runkey in all_runs.keys():
                 print('THIS IS THE HFXFLAG',all_runs[runkey].hfx_flag)
             final_results = process_runs_oxocatalysis(all_runs, spin_dictionary())
+            oxo_dictionaries_for_db, hat_dictionaries_for_db = compile_and_filter_data(final_results,spin_dictionary())
+            oxo_dictionaries_for_db = assign_train_flag(oxo_dictionaries_for_db)
+            hat_dictionaries_for_db = assign_train_flag(hat_dictionaries_for_db)
         else:
             final_results = process_runs_geo(all_runs, spin_dictionary())
 

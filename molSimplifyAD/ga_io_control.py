@@ -12,6 +12,7 @@ class GA_run_defintion:
 
     def configure(self, DFT=False,
                   rundir=False,
+                  genetemplate=False,
                   runtype="split",
                   optimize=False,
                   use_singlets=True,
@@ -56,6 +57,7 @@ class GA_run_defintion:
             monitor_distance = False
         self.config = {'DFT': DFT,
                        'rundir': rundir,
+                       'genetemplate':genetemplate,
                        'runtype': runtype,
                        'optimize': optimize,
                        'use_singlets': use_singlets,

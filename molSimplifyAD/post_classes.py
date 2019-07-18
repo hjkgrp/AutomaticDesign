@@ -61,8 +61,8 @@ class DFTRun(object):
                               'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max', 'area',
                               'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
-                              'mop_energy', 'chem_name', 'sp_energy', 'empty_sp_energy', 'tot_time', 'tot_step',
-                              'net_metal_spin', 'metal_spin_expected', 'del_metal_spin']
+                              'mop_energy', 'chem_name','name_without_HFX', 'sp_energy', 'empty_sp_energy', 'tot_time', 'tot_step',
+                              'net_metal_spin', 'metal_spin_expected', 'del_metal_spin','sub_count']
         list_of_init_empty = ['descriptor_names', 'descriptors']
         list_of_init_false = ['solvent_cont', 'water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
@@ -1342,10 +1342,13 @@ class DFTRun(object):
                 self.del_metal_spin, self.metal_spin_flag = 0, 1
 
     def get_check_flags(self, ss_cutoff=1, ss_loose_cutoff=2,
-                        metalspin_cutoff=1, metalspin_loss_cutoff=2):
+                        metalspin_cutoff=1, metalspin_loss_cutoff=2, sp_calc = False):
         self.metal_spin_expected = self.spin - 1
         if self.converged:
-            self.geo_flag = self.flag_oct
+            if not sp_calc:
+                self.geo_flag = self.flag_oct
+            else:
+                self.geo_flag = 1
             if not self.spin == 1:
                 self.ss_flag = 1 if abs(self.ss_act - self.ss_target) < ss_cutoff else 0
             else:
@@ -1354,15 +1357,26 @@ class DFTRun(object):
                 if isinstance(self.net_metal_spin, float):
                     self.del_metal_spin = abs(self.metal_spin_expected - self.net_metal_spin)
                     self.metal_spin_flag = 1 if self.del_metal_spin < metalspin_cutoff else 0
+                else:
+                    try:
+                        self.del_metal_spin = abs(float(self.metal_spin_expected) - float(self.net_metal_spin))
+                        self.metal_spin_flag = 1 if self.del_metal_spin < metalspin_cutoff else 0
+                    except:
+                        self.metal_spin_flag = "ERROR"
             else:
                 self.net_metal_spin, self.metal_spin_expected = 0, 0
                 self.del_metal_spin, self.metal_spin_flag = 0, 1
         else:
-            if self.flag_oct_loose == 0:
-                self.geo_flag = 0
+            if not sp_calc:
+                if self.flag_oct_loose == 0:
+                    self.geo_flag = 0
+            else:
+                self.geo_flag = 1
             if not self.spin == 1:
                 if abs(self.ss_act - self.ss_target) > ss_loose_cutoff:
                     self.ss_flag = 0
+                else:
+                    self.ss_flag = 1
             else:
                 self.ss_flag = 1
             if not self.spin == 1:
@@ -1370,6 +1384,14 @@ class DFTRun(object):
                     self.del_metal_spin = abs(self.metal_spin_expected - self.net_metal_spin)
                     if self.del_metal_spin > metalspin_loss_cutoff:
                         self.metal_spin_flag = 0
+                    else:
+                        self.metal_spin_flag = 1
+                else:
+                    try:
+                        self.del_metal_spin = abs(float(self.metal_spin_expected) - float(self.net_metal_spin))
+                        self.metal_spin_flag = 1 if self.del_metal_spin < metalspin_cutoff else 0
+                    except:
+                        self.metal_spin_flag = "ERROR"
             else:
                 self.net_metal_spin, self.metal_spin_expected = 0, 0
                 self.del_metal_spin, self.metal_spin_flag = 0, 1
@@ -1399,6 +1421,8 @@ class Comp(object):
         self.convergence = 0
         self.attempted = 0
         self.repmol = mol3D()
+        self.init_mol = mol3D()
+        self.mol = mol3D()
         self.set_desc = False
         self.descriptors = list()
         self.descriptor_names = list()
@@ -1415,9 +1439,9 @@ class Comp(object):
         self.split = 777
 
         ## run class dependent props:
-        list_of_init_props = ['chem_name', 'spin', 'charge', 'attempted', 'converged',
+        list_of_init_props = ['chem_name','name_without_HFX', 'spin', 'charge', 'attempted', 'converged',
                               'mop_converged', 'time', 'energy', 'sp_energy', 'empty_sp_energy',
-                              'flag_oct', 'flag_list','hfx_flag',
+                              'flag_oct', 'flag_list','hfx_flag','geo_flag',
                               'num_coord_metal', 'rmsd_max', 'atom_dist_max',
                               'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
                               'devi_linear_avrg', 'devi_linear_max',
@@ -1444,8 +1468,7 @@ class Comp(object):
                               "DFT_RUN", 'tot_time', 'tot_step', 'metal_translation',
                               'net_metal_spin', 'metal_spin_expected', 'del_metal_spin', 'metal_spin_flag']
         list_of_init_falses = ['attempted', 'converged',
-                               'mop_converged',
-                               "DFT_RUN"]
+                               'mop_converged']
         if isKeyword('ax_lig_dissoc'):
             list_of_init_props += ['empty_ss_act', 'empty_ss_target']
         spinloop = ['LS', 'HS']
