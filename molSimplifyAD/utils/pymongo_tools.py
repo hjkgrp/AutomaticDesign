@@ -7,7 +7,7 @@ import pymongo
 from pandas.io.json import json_normalize
 from pymongo import MongoClient
 from molSimplifyAD.dbclass_mongo import tmcMongo, tmcActLearn, mongo_attr_id, mongo_not_web
-from molSimplifyAD.mlclass_mongo import modelActLearn
+from molSimplifyAD.mlclass_mongo import modelActLearn, modelMongo
 from molSimplifyAD.ga_tools import isKeyword
 
 
@@ -65,20 +65,6 @@ def insert(db, collection, tmc):
                       dftrun2=tmc.this_run,
                       update_fields=tmc.update_fields)
         _tmc.write_dftrun()
-    # if web:
-    #     web_coll = collection + "_" + web
-    #     repeated, _tmcdoc = check_repeated(db, web_coll, tmc)
-    #     if not repeated:
-    #         db[web_coll].insert_one(tmc.web_doc)
-    #         inserted = True
-    #     else:
-    #         for key in mongo_not_web:
-    #             if key in tmc.document:
-    #                 tmc.document.pop(key)
-    #             if key in _tmcdoc:
-    #                 _tmcdoc.pop(key)
-    #         merge_documents(db, web_coll, doc1=_tmcdoc, doc2=tmc.document,
-    #                         update_fields=tmc.update_fields)
     return inserted
 
 
@@ -278,6 +264,23 @@ def push_complex_actlearn(step, all_complexes, database, collection,
     if not merged == 0:
         print("=====WARNING====")
         print("Duplicate complexes(%d) occure in the active learning mode. Should never happen." % merged)
+
+
+def push_models(model, model_dict, database, collection,
+                user=False, pwd=False,
+                host="localhost", port=27017,
+                auth=False):
+    db = connect2db(user, pwd, host, port, database, auth)
+    ensure_collection(db, collection)
+    this_model = modelMongo(model=model, **model_dict)
+    if not query_one(db, collection,
+                     constraints={"predictor": this_model.predictor, "len_tot": this_model.len_tot}) == None:
+        print("A model of step %d has already existed.")
+    elif this_model.force_push:
+        print("force_push is truned on. pushing...")
+        db[collection].insert_one(this_model.document)
+    else:
+        db[collection].insert_one(this_model.document)
 
 
 def push_moldels_actlearn(step, model, database, collection,
