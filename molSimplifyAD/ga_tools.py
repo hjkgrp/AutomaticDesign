@@ -233,6 +233,8 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
                           'terachem_version', 'terachem_detailed_version',
                           'basis', 'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
                           'mop_coord', 'sp_energy', 'empty_sp_energy', 'tot_time', 'tot_step', 'metal_translation']
+    if not comp:
+        list_of_prop_names.append("sub_count")
     if SASA:
         list_of_prop_names.append("area")
     if isKeyword('ax_lig_dissoc'):
