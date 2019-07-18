@@ -71,7 +71,7 @@ class DFTRun(object):
                               "wavefunction_path", "molden_path", "dynamic_feature"]
         list_of_init_zero = ['ss_target', 'ss_act', 'coord', 'mop_coord', 'empty_ss_target',
                              'empty_ss_act']
-        list_of_init_negative_one = ["geo_flag", "ss_flag", 'metal_spin_flag']
+        list_of_init_nan = ["geo_flag", "ss_flag", 'metal_spin_flag']
         if isKeyword('oxocatalysis'):
             list_of_init_props += ['metal_alpha', 'metal_beta', 'net_metal_spin', 'metal_mulliken_charge',
                                    'oxygen_alpha', 'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
@@ -95,8 +95,8 @@ class DFTRun(object):
             setattr(self, this_attribute, False)
         for this_attribute in list_of_init_zero:
             setattr(self, this_attribute, 0)
-        for this_attribute in list_of_init_negative_one:
-            setattr(self, this_attribute, -1)
+        for this_attribute in list_of_init_nan:
+            setattr(self, this_attribute, np.nan)
 
     def set_geo_check_func(self):
         # try:
@@ -1119,7 +1119,7 @@ class DFTRun(object):
                 _scr_path = dirpath + '/scr/'
                 archive_list.append(_scr_path)
         archive_list.sort()
-        archive_list.append(scr_path)
+        # archive_list.append(scr_path) ### We have already archive files first!!!
         print('!!!!archive_list', archive_list)
         self.archive_list = archive_list
 
@@ -1151,7 +1151,7 @@ class DFTRun(object):
                 _scr_path = dirpath + '/' + self.name
                 archive_list.append(_scr_path)
         archive_list.sort()
-        archive_list.append(out_path)
+        # archive_list.append(out_path) ### We have already archive files first!!!
         print('!!!!archive_list', archive_list)
         self.archive_list = archive_list
 
