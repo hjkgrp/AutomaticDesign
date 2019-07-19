@@ -688,7 +688,7 @@ def assign_train_flag(list_of_dict_to_assign, group_HFX=True,frac=0.8):
             shuffle(complexes_grouped_by_HFX)
             shuffled_grouped_complexes = np.array(complexes_grouped_by_HFX)
             if len(complexes_grouped_by_HFX) < 5:
-                for val in shuffled_grouped_complexes.flatten():
+                for val in np.concatenate(shuffled_grouped_complexes.flatten()).ravel():
                     list_of_dict_to_assign[val]['is_training'] = 'train' #make all examples training
                 return list_of_dict_to_assign
             print(complexes_grouped_by_HFX)
