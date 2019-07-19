@@ -10,11 +10,12 @@ def deserialize_inputs(filein):
     return args_dict
 
 
-def check_dbinputs(args_dict,step=False):
+def check_dbinputs(args_dict,get_step=None):
     db_keyword_dict = {}
     keys_required = ["database", "collection", "tag", "subtag", "auth"]
-    if step:
+    if get_step != None:
         keys_required += ["step"]
+        step = args_dict["step"]
     else:
         step = False
     publication = False
@@ -88,9 +89,9 @@ def push_run_act_learn(args):
     _, all_runs, act_learn_dict_lists = check_all_current_convergence(post_all=True)
     ### act_learn_dict is list with 2 elements. First one is oxo, second one is hat
     ordering = ['oxo','hat'] #overwriting collection
-    push_complex_actlearn(step=step, all_complexes=descriptor_dict_list[0], database=database, collection="act_learn_oxo",
+    push_complex_actlearn(step=step, all_complexes=act_learn_dict_lists[0], database=database, collection="act_learn_oxo",
                           user=user, pwd=pwd, host="localhost", port=27017,
                           auth=auth)
-    push_complex_actlearn(step=step, all_complexes=descriptor_dict_list[1], database=database, collection="act_learn_hat",
+    push_complex_actlearn(step=step, all_complexes=act_learn_dict_lists[1], database=database, collection="act_learn_hat",
                           user=user, pwd=pwd, host="localhost", port=27017,
                           auth=auth)
