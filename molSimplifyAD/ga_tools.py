@@ -232,7 +232,10 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
                           'water_cont', 'sp_ss_act', 'sp_ss_target',
                           'terachem_version', 'terachem_detailed_version',
                           'basis', 'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
-                          'mop_coord', 'sp_energy', 'empty_sp_energy', 'tot_time', 'tot_step', 'metal_translation']
+                          'mop_coord', 'sp_energy', 'empty_sp_energy', 'tot_time', 'tot_step', 'metal_translation',
+                          'e_delta','e_delta_tol', 'grad_rms','grad_rms_tol',
+                          'grad_max','grad_max_tol','displace_rms', 'displace_rms_tol',
+                          'displace_max', 'displace_max_tol']
     if not comp:
         list_of_prop_names.append("sub_count")
     if SASA:
@@ -1527,7 +1530,7 @@ def update_converged_job_dictionary(jobs, status):
     converged_job_dictionary = find_converged_job_dictionary()
     converged_job_dictionary.update({jobs: status})
     if status != 0:
-        print(' wrtiting ' + str(jobs) + ' as status ' + str(status))
+        print(' writing ' + str(jobs) + ' as status ' + str(status))
     write_dictionary(converged_job_dictionary, path_dictionary["job_path"] + "/converged_job_dictionary.csv")
 
 

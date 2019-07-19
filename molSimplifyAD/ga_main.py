@@ -226,16 +226,14 @@ class GA_generation:
             open(state_path, 'a').close()
         emsg = write_dictionary(self.status_dictionary, state_path)
         if emsg:
-            print(emsg)
-        print('!!!!!!!!--------------------!!!!!!!!!!!!--------------------!!!!!!!!!!!!!!')
-        # print(self.genes)
+            print(str(emsg))
         ## third,  write gene-fitness info to path
         state_path = self.current_path_dictionary["state_path"] + "/gene_fitness.csv"
         if not os.path.isfile(state_path):
             open(state_path, 'a').close()
         emsg = write_dictionary(self.gene_fitness_dictionary, state_path)
         if emsg:
-            print(emsg)
+            print(str(emsg))
 
     def read_state(self):
         ## first read live info from base directory
