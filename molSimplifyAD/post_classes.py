@@ -62,7 +62,13 @@ class DFTRun(object):
                               'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
                               'mop_energy', 'chem_name','name_without_HFX', 'sp_energy', 'empty_sp_energy', 'tot_time', 'tot_step',
-                              'net_metal_spin', 'metal_spin_expected', 'del_metal_spin','sub_count']
+                              'net_metal_spin', 'metal_spin_expected', 'del_metal_spin','sub_count',
+                              'e_delta','e_delta_tol','e_delta_hist',
+                              'grad_rms','grad_rms_tol','grad_rms_hist',
+                              'grad_max','grad_max_tol','grad_max_hist',
+                              'displace_rms', 'displace_rms_tol','displace_rms_hist',
+                              'displace_max', 'displace_max_tol','displace_max_hist',
+                              'e_hist']
         list_of_init_empty = ['descriptor_names', 'descriptors']
         list_of_init_false = ['solvent_cont', 'water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
@@ -1176,11 +1182,30 @@ class DFTRun(object):
         self.get_optimization_time_step(current_path)
 
     def get_optimization_time_step(self, current_path):
+        ## initialize variables
         tot_step = -1
         tot_time = -1
+        convcrit_read = False # marker for tolerance lines (new optim only)
+        e_delta = False
+        grad_rms = False
+        grad_max = False
+        displace_rms = False
+        displace_max = False
+        e_delta_tol = False
+        grad_rms_tol = False
+        grad_max_tol = False
+        displace_rms_tol = False
+        displace_max_tol = False
+        # convergence history
+        e_hist = []
+        e_delta_hist = []
+        grad_rms_hist = []
+        grad_max_hist = []
+        displace_rms_hist = []
+        displace_max_hist = []
         if os.path.isfile(current_path):
             with open(current_path, 'r') as fin:
-                for line in fin:
+                for i,line in enumerate(fin):
                     ll = line.split()
                     if line[:len('FINAL ENERGY:')] == 'FINAL ENERGY:':
                         tot_step += 1
@@ -1206,10 +1231,57 @@ class DFTRun(object):
                             except:
                                 print
                                 '\n\n CHECK GEO OUTFILE FOR abnormal sec'
+                    if not (line.find('Checking Convergence Criteria')) == -1:
+                       convcrit_read = i
+                    if convcrit_read:
+                        if i == convcrit_read + 2 and len(ll) > 2:
+                            e_delta_tol, grad_rms_tol, grad_max_tol, displace_rms_tol, \
+                            displace_max_tol =  [float(ii) for ii in line.strip().split()[2:]]
+                        elif i == convcrit_read + 4:
+                            inds_to_read = [2, 3,5,7,9,11]
+
+                            convcrit_read = False
+                            if len(ll) > 2 :
+                                try:
+                                    _e, e_delta, grad_rms, grad_max, displace_rms, \
+                                    displace_max =  [float(ii) for ii in [line.strip().split()[jj] for jj in inds_to_read]]
+                                    e_hist.append(_e)
+                                    e_delta_hist.append(e_delta)
+                                    grad_rms_hist.append(grad_rms)
+                                    grad_max_hist.append(grad_max)
+                                    displace_rms_hist.append(displace_rms)
+                                    displace_max_hist.append(displace_max)
+                                except:
+                                    pass
+
+                            else:
+                                print(line)
+                                sad
         else:
             print('!!combined output file not found!!')
         self.tot_time = tot_time
         self.tot_step = tot_step
+        # bind final values
+        self.e_delta = e_delta
+        self.grad_rms = grad_rms
+        self.grad_max = grad_max
+        self.displace_rms = displace_rms
+        self.displace_max = displace_max
+
+        # bind tolerances values
+        self.e_delta_tol = e_delta_tol
+        self.grad_rms_tol = grad_rms_tol
+        self.grad_max_tol = grad_max_tol
+        self.displace_rms_tol = displace_rms_tol
+        self.displace_max_tol = displace_max_tol
+
+        # bind histories
+        self.e_hist = e_hist
+        self.e_delta_hist = e_delta_hist
+        self.grad_rms_hist = grad_rms_hist
+        self.grad_max_hist = grad_max_hist
+        self.displace_rms_hist = displace_rms_hist
+        self.displace_max_hist = displace_max_hist
 
     def get_descriptor_vector(self, loud=False, name=False, useinitgeo=False):
         ox_modifier = {self.metal: self.ox}
@@ -1466,7 +1538,14 @@ class Comp(object):
                               'basis', 'functional',
                               'alpha_level_shift', 'beta_level_shift', 'job_gene',
                               "DFT_RUN", 'tot_time', 'tot_step', 'metal_translation',
-                              'net_metal_spin', 'metal_spin_expected', 'del_metal_spin', 'metal_spin_flag']
+                              'net_metal_spin', 'metal_spin_expected', 'del_metal_spin', 'metal_spin_flag',
+                              'sub_count','e_delta','e_delta_tol','e_delta_hist',
+                              'grad_rms','grad_rms_tol','grad_rms_hist',
+                              'grad_max','grad_max_tol','grad_max_hist',
+                              'displace_rms', 'displace_rms_tol','displace_rms_hist',
+                              'displace_max', 'displace_max_tol','displace_max_hist',
+                              'e_hist']
+ 
         list_of_init_falses = ['attempted', 'converged',
                                'mop_converged']
         if isKeyword('ax_lig_dissoc'):

@@ -100,7 +100,7 @@ def check_all_current_convergence(post_all=False):
 
         print('testing if  post-all is on: ', isKeyword('post_all'))
         # print("jobslist: ", joblist)
-        print("dbjobs_dict: ", dbjobs_dict)
+        #print("dbjobs_dict: ", dbjobs_dict)
 
         for jobs in joblist:
             print('\n\n' + jobs + '\n\n')
@@ -626,7 +626,6 @@ def check_all_current_convergence(post_all=False):
                                + ' after ' + str(number_of_subs) + ' subs, trying again... ')
 
                         if int(number_of_subs) > isKeyword('max_resubmit'):
-                            this_run.status = 7
                             print(' giving up on job ' + str(jobs) + ' after ' + str(number_of_subs))
                             logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                                    + " giving up on job : " + str(jobs) + ' with status ' + str(this_run.status)
@@ -638,6 +637,9 @@ def check_all_current_convergence(post_all=False):
                                + ' after ' + str(number_of_subs) + ' subs since prog geo was bad')
                         remove_outstanding_jobs(jobs)  # take out of pool
                     elif this_run.status in [2]:  ## ok prog geo, make sure in outstanding
+                        if (int(number_of_subs) <= isKeyword('max_resubmit')):
+                                this_run.status = 7
+
                         logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                                + " resubmitting job : " + str(jobs) + ' with status ' + str(this_run.status)
                                + ' after ' + str(number_of_subs) + ' subs since prog geo was good')
