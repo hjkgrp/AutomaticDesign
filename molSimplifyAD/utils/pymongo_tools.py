@@ -240,7 +240,7 @@ def push_complex_actlearn(step, all_complexes, database, collection,
                           auth=False):
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
-    print('db push is enabled, attempting commit to' % collection)
+    print('db push is enabled, attempting commit to ', collection)
     print("number of complexes to push: ", len(all_complexes))
     count = 0
     merged = 0
