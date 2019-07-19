@@ -75,7 +75,10 @@ class TMC():
             except:
                 pass
         self.liglist = self.this_run.liglist
-        self.ligstr = "_".join(self.this_run.liglist_compact)
+        if "liglist_compact" in self.this_run.__dict__:
+            self.ligstr = "_".join(self.this_run.liglist_compact)
+        else:
+            self.ligstr = "_".join(self.this_run.liglist)
         for attr in mongo_attr_from_run_nan:
             setattr(self, attr, np.nan)
         for attr in mongo_attr_from_run_nan:
@@ -85,7 +88,7 @@ class TMC():
                 pass
         ## Get job flags
         for attr in mongo_attr_flags:
-            setattr(self, attr, -1)
+            setattr(self, attr, np.nan)
         for attr in mongo_attr_flags:
             try:
                 setattr(self, attr, getattr(self.this_run, attr))
@@ -111,9 +114,9 @@ class TMC():
 
     def cal_RAC(self):
         try:
-            if not "sp_outpath" in self.this_run.__dict__:
+            if "mol" in self.this_run.__dict__:
                 self.this_run.get_descriptor_vector(useinitgeo=False)
-            else:
+            elif "init_mol" in self.this_run.__dict__:
                 self.this_run.get_descriptor_vector(useinitgeo=True)
             descriptor_dict = {}
             try:
