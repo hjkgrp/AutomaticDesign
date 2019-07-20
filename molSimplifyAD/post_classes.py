@@ -156,7 +156,7 @@ class DFTRun(object):
         if self.octahedral:
             flag_oct, flag_list, dict_oct_info = self.mol.IsOct(
                 dict_check=globs.geo_check_dictionary()["dict_oct_check_st"],
-                debug=debug)
+                debug=debug) 
         else:
             flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(
                 dict_check=globs.geo_check_dictionary()["dict_oneempty_check_st"],
@@ -1075,7 +1075,7 @@ class DFTRun(object):
         fod_py.write(fod_str)
         fod_py.close()
 
-    def archive(self, sub_number):
+    def archive(self, sub_number, converged=False):
         # this fuinciton copies all files to arch
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
@@ -1089,11 +1089,18 @@ class DFTRun(object):
             ensure_dir(archive_path)
             print('archiving to ' + archive_path)
             # copy files:
-            if os.path.isfile(self.progpath):
-                print('archiving  ' + self.progpath)
-                shutil.copy(self.progpath, archive_path + self.name + '.xyz')
+            if not converged:
+                if os.path.isfile(self.progpath):
+                    print('archiving  ' + self.progpath)
+                    shutil.copy(self.progpath, archive_path + self.name + '.xyz')
+                else:
+                    print('archiving did NOT find  ' + self.progpath)
             else:
-                print('archiving did NOT find  ' + self.progpath)
+                if os.path.isfile(self.geopath):
+                    print('archiving  ' + self.geopath)
+                    shutil.copy(self.geopath, archive_path + self.name + '.xyz')
+                else:
+                    print('archiving did NOT find  ' + self.geopath)
             scrfolder = os.path.dirname(self.scrpath)
             if os.path.isdir(scrfolder):
                 print('archiving  ' + scrfolder)
@@ -1434,7 +1441,7 @@ class DFTRun(object):
                         self.del_metal_spin = abs(float(self.metal_spin_expected) - float(self.net_metal_spin))
                         self.metal_spin_flag = 1 if self.del_metal_spin < metalspin_cutoff else 0
                     except:
-                        self.metal_spin_flag = "ERROR"
+                        self.metal_spin_flag = -1 #assigned by default if flag cannot be computed
             else:
                 self.net_metal_spin, self.metal_spin_expected = 0, 0
                 self.del_metal_spin, self.metal_spin_flag = 0, 1

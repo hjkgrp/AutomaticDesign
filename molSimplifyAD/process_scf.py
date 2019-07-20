@@ -487,17 +487,17 @@ def compile_and_filter_data(final_results, local_spin_dictionary, local_metal_li
             # 2 --> oxo calculation converged, but geometry was bad.
             # 3 --> oxo calculation converged and geometry was good, but oxo structure was spin contaminated.
             # 4 --> oxo calculation converged, geometry was good, spin contamination was good, but spin on the metal deviated more than the threshold.
-            # 5 --> everything looks good, but HFX linearity flag failed (oxo electronic state).
             # 10 --> oxo structure looks good. empty site SP did not converge.
             # 11 --> left blank currently for the case where empty site geo opt is brought back
             # 12 --> oxo structure looks good. empty site SP is spin contaminated.
             # 13 --> oxo structure looks good, empty site SP not spin contaminated, but the spin on the metal deviated more than the threshold.
-            # 14 --> everything looks good, but HFX linearity flag failed (empty site electronic state).
             # 20 --> oxo structure looks good, hydroxyl did not converge.
             # 21 --> oxo structure looks good, hydroxyl calculation converged, but the geometry was bad.
             # 22 --> oxo structure and hydroxyl structure both converged to good geometries, but the hydroxyl calculation was spin contaminated.
-            # 23 --> oxo and hydroxyl are converged to good geometries and overal wavefunctions, but spin on the metal deviated more than expected.
-            # 24 --> everything looks good, but HFX linearity flag failed (hydroxyl electronic state).
+            # 23 --> oxo and hydroxyl are converged to good geometries and overall wavefunctions, but spin on the metal deviated more than expected.
+            # 30 --> everything looks good, but oxo HFX linearity failed for this complex.
+            # 31 --> everything looks good, but empty site HFX linearity failed for this complex.
+            # 32 --> everything looks good, but hydroxyl HFX linearity failed for this complex.
     reference_molecule_info = {0:{'O2':-150.3174859583,'CH3':-39.8149343614,'CH4':-40.5052828099},5:{'O2':-150.3180922105,'CH3':-39.8183759034,'CH4':-40.5088362323},
                                 10:{'O2':-150.3187938358,'CH3':-39.8218421303,'CH4':-40.5124159479},15:{'O2':-150.3195898637,'CH3':-39.825329179,'CH4':-40.5160209995},
                                 20:{'O2':-150.3204792677,'CH3':-39.8288383525,'CH4':-40.5196504995},25:{'O2':-150.3214613294,'CH3':-39.8323687137,'CH4':-40.5233056972},
@@ -551,23 +551,23 @@ def compile_and_filter_data(final_results, local_spin_dictionary, local_metal_li
                         if int(getattr(comp_class,oxo_prefix+'flag_oct')) == 1:
                             if int(getattr(comp_class,oxo_prefix+'ss_flag')) == 1:
                                 if int(getattr(comp_class,oxo_prefix+'metal_spin_flag')) == 1:
-                                    if int(getattr(comp_class,oxo_prefix+'hfx_flag') == 1):
-                                        if getattr(comp_class,empty_prefix+'converged'):
-                                            if int(getattr(comp_class,empty_prefix+'ss_flag')) == 1:
-                                                if int(getattr(comp_class,empty_prefix+'metal_spin_flag')) == 1:
+                                    if getattr(comp_class,empty_prefix+'converged'):
+                                        if int(getattr(comp_class,empty_prefix+'ss_flag')) == 1:
+                                            if int(getattr(comp_class,empty_prefix+'metal_spin_flag')) == 1:
+                                                if int(getattr(comp_class,oxo_prefix+'hfx_flag') == 1):
                                                     if int(getattr(comp_class,empty_prefix+'hfx_flag')) == 1:
                                                         print('Passed all checks to calculate oxo formation energy.')
                                                         reason_flag_oxo = 0
                                                     else:
-                                                        reason_flag_oxo = 14
+                                                        reason_flag_oxo = 31
                                                 else:
-                                                    reason_flag_oxo = 13
+                                                    reason_flag_oxo = 30
                                             else:
-                                                reason_flag_oxo = 12
+                                                reason_flag_oxo = 13
                                         else:
-                                            reason_flag_oxo = 10
+                                            reason_flag_oxo = 12
                                     else:
-                                        reason_flag_oxo = 5
+                                        reason_flag_oxo = 10
                                 else:
                                     reason_flag_oxo = 4
                             else:
@@ -576,20 +576,21 @@ def compile_and_filter_data(final_results, local_spin_dictionary, local_metal_li
                             reason_flag_oxo = 2
                     else:
                         reason_flag_oxo = 1
-                    if (getattr(comp_class,oxo_prefix+'energy') != 'undef') and (getattr(comp_class,empty_prefix+'energy') != 'undef'):
+                    try:
                         oxo = (float(getattr(comp_class,oxo_prefix+'energy')) -
                                float(getattr(comp_class,empty_prefix+'energy')) -
                                0.5*reference_molecule_info[alpha]['O2'])*HF_to_Kcal_mol
+                    except:
+                        oxo = np.nan
                     oxo_dictionaries_for_db.append({'dftrun': oxo_representative_run_class, 'descriptors':oxo_descriptor_dictionary, 'target': oxo, 'status_flag':reason_flag_oxo})
         print('moving on to HAT NOW!')
         for oxidation_state in oxo_hyd_spin_match[current_metal.lower()].keys():
             for spin_state in oxo_hyd_spin_match[current_metal.lower()][int(oxidation_state)].keys():
-                print('checking hat',current_metal, oxidation_state, spin_state, key_num)
                 HAT = np.nan
                 reason_flag_hat = 100
                 oxo_prefix = 'ox_'+str(oxidation_state)+'_'+str(spin_state)+'_oxo_'
                 matching_hyd_spin = oxo_hyd_spin_match[current_metal.lower()][int(oxidation_state)][spin_state]
-                hyd_prefix = 'ox_'+str(oxidation_state-2)+'_'+str(matching_hyd_spin)+'_hydroxyl_'
+                hyd_prefix = 'ox_'+str(oxidation_state-1)+'_'+str(matching_hyd_spin)+'_hydroxyl_'
                 if getattr(comp_class, oxo_prefix+'chem_name') != "undef":
                     print(getattr(comp_class, oxo_prefix+'chem_name'))
                     HAT_representative_run_class = getattr(comp_class,oxo_prefix+'DFT_RUN')
@@ -607,26 +608,26 @@ def compile_and_filter_data(final_results, local_spin_dictionary, local_metal_li
                         if int(getattr(comp_class,oxo_prefix+'flag_oct')) == 1:
                             if int(getattr(comp_class,oxo_prefix+'ss_flag')) == 1:
                                 if int(getattr(comp_class,oxo_prefix+'metal_spin_flag')) == 1:
-                                    if int(getattr(comp_class,oxo_prefix+'hfx_flag') == 1):
-                                        if getattr(comp_class,hyd_prefix+'converged'):
-                                            if int(getattr(comp_class,hyd_prefix+'flag_oct')) == 1:
-                                                if int(getattr(comp_class,hyd_prefix+'ss_flag')) == 1:
-                                                    if int(getattr(comp_class,hyd_prefix+'metal_spin_flag')) == 1:
+                                    if getattr(comp_class,hyd_prefix+'converged'):
+                                        if int(getattr(comp_class,hyd_prefix+'flag_oct')) == 1:
+                                            if int(getattr(comp_class,hyd_prefix+'ss_flag')) == 1:
+                                                if int(getattr(comp_class,hyd_prefix+'metal_spin_flag')) == 1:
+                                                    if int(getattr(comp_class,oxo_prefix+'hfx_flag')) == 1:
                                                         if int(getattr(comp_class,hyd_prefix+'hfx_flag')) == 1:
                                                             print('Passed all checks to calculate HAT energy.')
                                                             reason_flag_hat = 0
                                                         else:
-                                                            reason_flag_hat = 24
+                                                            reason_flag_hat = 32
                                                     else:
-                                                        reason_flag_hat = 23
+                                                        reason_flag_hat = 30
                                                 else:
-                                                    reason_flag_hat = 22
+                                                    reason_flag_hat = 23
                                             else:
-                                                reason_flag_hat = 21
+                                                reason_flag_hat = 22
                                         else:
-                                            reason_flag_hat = 20
+                                            reason_flag_hat = 21
                                     else:
-                                        reason_flag_hat = 5
+                                        reason_flag_hat = 20
                                 else:
                                     reason_flag_hat = 4
                             else:
@@ -635,11 +636,14 @@ def compile_and_filter_data(final_results, local_spin_dictionary, local_metal_li
                             reason_flag_hat = 2
                     else:
                         reason_flag_hat = 1
-                    if (getattr(comp_class,hyd_prefix+'energy') != 'undef') and (getattr(comp_class,oxo_prefix+'energy') != 'undef'):
+                    print('THIS IS THE HAT REASON FLAG', reason_flag_hat)
+                    try:
                         HAT = (float(getattr(comp_class,hyd_prefix+'energy')) -
                                float(getattr(comp_class,oxo_prefix+'energy')) +
                                reference_molecule_info[alpha]['CH3'] -
                                reference_molecule_info[alpha]['CH4'])*HF_to_Kcal_mol
+                    except:
+                        HAT = np.nan
                     hat_dictionaries_for_db.append({'dftrun': HAT_representative_run_class, 'descriptors':HAT_descriptor_dictionary, 'target': HAT, 'status_flag':reason_flag_hat})
     print('done compiling oxo and hat dictionaries')
     return oxo_dictionaries_for_db, hat_dictionaries_for_db
@@ -654,11 +658,10 @@ def assign_train_flag(list_of_dict_to_assign, group_HFX=True,frac=0.8):
     from random import shuffle
     valid_indices = []
     corresponding_name_list = []
-    checked_name_list = set()
     invalid_indices = []
     complexes_grouped_by_HFX = [] #list of lists with complexes grouped by HFX
     for i, individual_dict in enumerate(list_of_dict_to_assign):
-        if (not np.isnan(individual_dict['target'])) and (int(individual_dict['status_flag'] == 0)):
+        if (not np.isnan(individual_dict['target'])) and (int(individual_dict['status_flag'] in [0, 30, 31, 32])):
             #This one is not nan, we have to do a grouped split if desired.
             valid_indices.append(i)
             corresponding_name_list.append(individual_dict['dftrun'].name_without_HFX)
@@ -669,44 +672,53 @@ def assign_train_flag(list_of_dict_to_assign, group_HFX=True,frac=0.8):
         return list_of_dict_to_assign
     else:
         if group_HFX:
+            checked_name_list = set()
             for unique_complex in set(corresponding_name_list):
                 if unique_complex in checked_name_list:
                     continue
                 else:
                     grouped_hfx_indices = [valid_indices[j] for j, x in enumerate(corresponding_name_list) if x == unique_complex]
-                    complexes_grouped_by_HFX.append(grouped_hfx_indices)
+                    complexes_grouped_by_HFX.append(np.array(grouped_hfx_indices))
                     checked_name_list.add(unique_complex)
-            shuffled_grouped_complexes = np.array(shuffle(complexes_grouped_by_HFX))
-            if len(complexes_grouped_by_HFX) < 3:
-                for val in shuffled_grouped_complexes.flatten():
+                    print('added ',unique_complex,'to checked_names')
+                    print(complexes_grouped_by_HFX, 'complexes grouped by HFX')
+                    print(grouped_hfx_indices, 'grouped_HFX_inds')
+                    print('corr name', corresponding_name_list)
+            ### shuffle acts on the list itself.
+            shuffle(complexes_grouped_by_HFX)
+            shuffled_grouped_complexes = np.array(complexes_grouped_by_HFX)
+            if len(complexes_grouped_by_HFX) < 5:
+                for val in np.concatenate(shuffled_grouped_complexes.flatten()).ravel():
                     list_of_dict_to_assign[val]['is_training'] = 'train' #make all examples training
                 return list_of_dict_to_assign
+            print(complexes_grouped_by_HFX)
             print(shuffled_grouped_complexes)
             print(shuffled_grouped_complexes.shape)
             #### This is first split into train and test
             test_split = np.split(shuffled_grouped_complexes,[int(frac*shuffled_grouped_complexes.shape[0])])
             #### Train is further split into train and val (90% train, 10% val).
             train_val_split = np.split(test_split[0],[int(0.9 * test_split[0].shape[0])])
-            train = train_val_split[0].flatten()
-            test = test_split[1].flatten()
-            val = train_val_split[1].flatten()
         else:
+            shuffle(valid_indices)
             indices_to_split = np.array(valid_indices)
-            if len(indices_to_split) < 3:
+            if len(indices_to_split) < 5:
                 for val in indices_to_split:
                     list_of_dict_to_assign[val]['is_training'] = 'train' #make all examples train
                 return list_of_dict_to_assign
             test_split = np.split(indices_to_split, [int(frac * indices_to_split.shape[0])])
             train_val_split = np.split(test_split[0],[int(0.9 * test_split[0].shape[0])])
-            train = train_val_split[0].flatten()
-            test = test_split[1].flatten()
-            val = train_val_split[1].flatten()
+        train = np.concatenate(train_val_split[0].flatten()).ravel()
+        test = np.concatenate(test_split[1].flatten()).ravel()
+        val = np.concatenate(train_val_split[1].flatten()).ravel()
+        print('train',train)
+        print('test',test)
+        print('val',val)
         for train_example in train:
             list_of_dict_to_assign[train_example]['is_training'] = 'train'
         for test_example in test:
-            list_of_dict_to_assign[train_example]['is_training'] = 'test'
+            list_of_dict_to_assign[test_example]['is_training'] = 'test'
         for val_example in val:
-            list_of_dict_to_assign[train_example]['is_training'] = 'val'    
+            list_of_dict_to_assign[val_example]['is_training'] = 'val'    
         return list_of_dict_to_assign
 
 def check_solvent_file(this_run):
