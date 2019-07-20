@@ -495,64 +495,68 @@ def check_all_current_convergence(post_all=False):
                                 logger(base_path_dictionary['state_path'], str(
                                     datetime.datetime.now()) + ' converting from oxo structure to upper spin hydroxyl structure for ' + base_name)
                                 add_to_outstanding_jobs(hydroxyl_upper)
-                if not this_run.converged and not this_run.islive:
-                    print(' job  ' + str(this_run.outpath) + ' not converged')
-                    logger(base_path_dictionary['state_path'],
-                           str(datetime.datetime.now()) + ' job  ' + str(this_run.outpath) + ' not converged')
-                    this_run.extract_prog()
-                    killed = this_run.molscontrol_status()
-                    print("whether job has been killed by molsconrtrol: ", killed)
-                    if not killed:
-                        if this_run.progstatus == 0:
-                            flag_oct, flag_list, dict_oct_info = this_run.check_oct_on_prog()  # set bad geo to prog_status 1
-                            logger(base_path_dictionary['state_path'],
-                                   str(datetime.datetime.now()) + ' Check on prog_geo: flag_oct: ' + str(flag_oct))
-                            logger(base_path_dictionary['state_path'],
-                                   str(
-                                       datetime.datetime.now()) + ' Current structure is supposed to be octahedral: ' + str(
-                                       this_run.octahedral))
-                            if not flag_oct:
-                                logger(base_path_dictionary['state_path'],
-                                       str(datetime.datetime.now()) + ' Bad geometry because of flag_list: ' + str(
-                                           flag_list))
-                                logger(base_path_dictionary['state_path'],
-                                       str(datetime.datetime.now()) + ' Metrics : ' + str(dict_oct_info))
+                if not this_run.islive:
+                    sub_number = submitted_job_dictionary[jobs]
+                    if not this_run.converged:
+                        print(' job  ' + str(this_run.outpath) + ' not converged')
+                        logger(base_path_dictionary['state_path'],
+                               str(datetime.datetime.now()) + ' job  ' + str(this_run.outpath) + ' not converged')
+                        this_run.extract_prog()
+                        killed = this_run.molscontrol_status()
+                        print("whether job has been killed by molsconrtrol: ", killed)
+                        this_run.archive(sub_number, converged=False)
+                        if not killed:
                             if this_run.progstatus == 0:
-                                sub_number = submitted_job_dictionary[jobs]
-                                this_run.archive(sub_number)
-                                create_generic_infile(jobs, use_old_optimizer=use_old_optimizer, restart=True)
-                                this_run.status = 2  ## prog geo is good
+                                flag_oct, flag_list, dict_oct_info = this_run.check_oct_on_prog()  # set bad geo to prog_status 1
+                                logger(base_path_dictionary['state_path'],
+                                       str(datetime.datetime.now()) + ' Check on prog_geo: flag_oct: ' + str(flag_oct))
                                 logger(base_path_dictionary['state_path'],
                                        str(
-                                           datetime.datetime.now()) + ' job allowed to restart since good prog geo found ')
+                                           datetime.datetime.now()) + ' Current structure is supposed to be octahedral: ' + str(
+                                           this_run.octahedral))
+                                if not flag_oct:
+                                    logger(base_path_dictionary['state_path'],
+                                           str(datetime.datetime.now()) + ' Bad geometry because of flag_list: ' + str(
+                                               flag_list))
+                                    logger(base_path_dictionary['state_path'],
+                                           str(datetime.datetime.now()) + ' Metrics : ' + str(dict_oct_info))
+                                if this_run.progstatus == 0:
+                                    create_generic_infile(jobs, use_old_optimizer=use_old_optimizer, restart=True)
+                                    this_run.status = 2  ## prog geo is good
+                                    logger(base_path_dictionary['state_path'],
+                                           str(
+                                               datetime.datetime.now()) + ' job allowed to restart since good prog geo found ')
+                                else:
+                                    logger(base_path_dictionary['state_path'], str(
+                                        datetime.datetime.now()) + ' job not allowed to restart since prog geo is not good ')
+                                    this_run.status = 8  ## prog geo is bad
+
                             else:
+                                this_run.status = 3  ## no prog found!
                                 logger(base_path_dictionary['state_path'], str(
-                                    datetime.datetime.now()) + ' job not allowed to restart since prog geo is not good ')
-                                this_run.status = 8  ## prog geo is bad
+                                    datetime.datetime.now()) + ' job not allowed to restart since no prog geo could be found')
+                                if this_run.alpha == 20:
+                                    try:
+                                        shutil.copy(this_run.init_geopath,
+                                                    path_dictionary['stalled_jobs'] + this_run.name + '.xyz')
+                                    except:
+                                        print("GEOMETRY NOT FOUND FOR THIS JOB!")
+                                try:
+                                    this_run.obtain_mol3d()
+                                    try:
+                                        this_run.obtain_rmsd()
+                                    except:
+                                        this_run.rmsd = "undef"
 
+                                except:
+                                    print("ERROR: scr not found for" + str(this_run.scrpath))
                         else:
-                            this_run.status = 3  ## no prog found!
-                            logger(base_path_dictionary['state_path'], str(
-                                datetime.datetime.now()) + ' job not allowed to restart since no prog geo could be found')
-                            if this_run.alpha == 20:
-                                try:
-                                    shutil.copy(this_run.init_geopath,
-                                                path_dictionary['stalled_jobs'] + this_run.name + '.xyz')
-                                except:
-                                    print("GEOMETRY NOT FOUND FOR THIS JOB!")
-                            try:
-                                this_run.obtain_mol3d()
-                                try:
-                                    this_run.obtain_rmsd()
-                                except:
-                                    this_run.rmsd = "undef"
-
-                            except:
-                                print("ERROR: scr not found for" + str(this_run.scrpath))
+                            this_run.status = 9
+                            logger(base_path_dictionary['state_path'],
+                                   str(datetime.datetime.now()) + 'killed by molscontrol.')
                     else:
-                        this_run.status = 9
-                        logger(base_path_dictionary['state_path'],
-                               str(datetime.datetime.now()) + 'killed by molscontrol.')
+                        this_run.archive(sub_number, converged=True)
+
                 ## get the number of subds
                 number_of_subs = submitted_job_dictionary[jobs]
                 this_run.sub_count = number_of_subs
