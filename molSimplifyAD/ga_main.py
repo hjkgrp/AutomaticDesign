@@ -18,7 +18,7 @@ from molSimplify.python_nn.tf_ANN import *
 from molSimplifyAD.ga_tools import *
 from molSimplifyAD.ga_complex import *
 from molSimplifyAD.ga_check_jobs import *
-from molSimplifyAD.utils.pymongo_tools import connect2db, query_one, query_lowestE_converged
+from molSimplifyAD.utils.pymongo_tools import *#connect2db, query_one, query_lowestE_converged, convert2dataframe
 from molSimplifyAD.dbclass_mongo import tmcMongo
 
 
@@ -364,6 +364,45 @@ class GA_generation:
             var_x_list.append(train_var_x)
             var_y_list.append(train_var_y)
         return mean_x_list, mean_y_list, var_x_list, var_y_list
+    
+    def get_variables(self, drop=False, run='rac155wspin'):
+        ### drop is a list of variables that are to be removed from the descriptor list
+        var_dict = {'rac155wspin': ['misc-dent-ax','misc-dent-eq','f-chi-0-all','f-chi-1-all','f-chi-2-all',
+                            'f-chi-3-all','f-Z-0-all','f-Z-1-all','f-Z-2-all','f-Z-3-all',
+                            'f-I-0-all','f-I-1-all','f-I-2-all','f-I-3-all', 'f-T-0-all',
+                            'f-T-1-all','f-T-2-all','f-T-3-all','f-S-0-all','f-S-1-all',
+                            'f-S-2-all','f-S-3-all','f-chi-0-ax','f-chi-1-ax','f-chi-2-ax',
+                            'f-chi-3-ax','f-Z-0-ax' ,'f-Z-1-ax','f-Z-2-ax','f-Z-3-ax',
+                            'f-I-0-ax','f-I-1-ax','f-I-2-ax','f-I-3-ax','f-T-0-ax',
+                            'f-T-1-ax','f-T-2-ax','f-T-3-ax','f-S-0-ax','f-S-1-ax',
+                            'f-S-2-ax','f-S-3-ax','f-chi-0-eq','f-chi-1-eq','f-chi-2-eq',
+                            'f-chi-3-eq','f-Z-0-eq','f-Z-1-eq','f-Z-2-eq','f-Z-3-eq',
+                            'f-I-0-eq','f-I-1-eq','f-I-2-eq','f-I-3-eq', 'f-T-0-eq',
+                            'f-T-1-eq','f-T-2-eq','f-T-3-eq','f-S-0-eq','f-S-1-eq',
+                            'f-S-2-eq','f-S-3-eq','lc-chi-0-ax','lc-chi-1-ax','lc-chi-2-ax',
+                            'lc-chi-3-ax','lc-Z-0-ax','lc-Z-1-ax','lc-Z-2-ax','lc-Z-3-ax',
+                            'lc-I-1-ax','lc-I-2-ax','lc-I-3-ax','lc-T-0-ax','lc-T-1-ax',
+                            'lc-T-2-ax','lc-T-3-ax','lc-S-0-ax','lc-S-1-ax','lc-S-2-ax',
+                            'lc-S-3-ax','lc-chi-0-eq','lc-chi-1-eq','lc-chi-2-eq','lc-chi-3-eq',
+                            'lc-Z-0-eq','lc-Z-1-eq','lc-Z-2-eq','lc-Z-3-eq','lc-I-1-eq',
+                            'lc-I-2-eq','lc-I-3-eq','lc-T-0-eq','lc-T-1-eq','lc-T-2-eq',
+                            'lc-T-3-eq','lc-S-0-eq','lc-S-1-eq','lc-S-2-eq','lc-S-3-eq',
+                            'D_lc-chi-1-ax', 'D_lc-chi-2-ax','D_lc-chi-3-ax','D_lc-Z-1-ax','D_lc-Z-2-ax',
+                            'D_lc-Z-3-ax','D_lc-T-1-ax','D_lc-T-2-ax','D_lc-T-3-ax','D_lc-S-1-ax',
+                            'D_lc-S-2-ax','D_lc-S-3-ax','D_lc-chi-1-eq','D_lc-chi-2-eq','D_lc-chi-3-eq',
+                            'D_lc-Z-1-eq','D_lc-Z-2-eq','D_lc-Z-3-eq','D_lc-T-1-eq','D_lc-T-2-eq',
+                            'D_lc-T-3-eq','D_lc-S-1-eq','D_lc-S-2-eq','D_lc-S-3-eq','mc-chi-0-all',
+                            'mc-chi-1-all','mc-chi-2-all','mc-chi-3-all','mc-Z-0-all', 'mc-Z-1-all',
+                            'mc-Z-2-all','mc-Z-3-all','mc-I-2-all','mc-I-3-all','mc-T-1-all',
+                            'mc-T-2-all','mc-T-3-all','mc-S-0-all', 'mc-S-1-all','mc-S-2-all',
+                            'mc-S-3-all','D_mc-chi-1-all','D_mc-chi-2-all','D_mc-chi-3-all','D_mc-Z-1-all',
+                            'D_mc-Z-2-all','D_mc-Z-3-all','D_mc-T-1-all','D_mc-T-2-all','D_mc-T-3-all',
+                            'D_mc-S-1-all','D_mc-S-2-all','D_mc-S-3-all','alpha','ox','spin']}
+        list_of_vars = var_dict[run]
+        if drop:
+            for variable_to_drop in drop:
+                list_of_vars.remove(str(variable_to_drop))
+        return list_of_vars
 
     def assess_fitness(self):
         print('***********')
@@ -408,11 +447,54 @@ class GA_generation:
             self.status_dictionary["ready_to_advance"] = True
         else:
             if not self.status_dictionary['DFT'] and isKeyword('no_geo'):
-                print('Loading models and latent train data now to hand to job_dispatcher...')
-                model_list, matrix_list, runlist= self.model_information_loader()
-                mean_x_list, mean_y_list, var_x_list, var_y_list = self.normalization_info_getter()
-                self.job_dispatcher(loaded_model_list=model_list, train_matrices=matrix_list, 
-                    mean_info= [mean_x_list,mean_y_list], var_info = [var_x_list,var_y_list], run_list=runlist)
+                if isinstance(isKeyword('active_learning_step'),int):
+                    import pandas as pd ### Need to load pandas frame for normalization.
+                    print('now loading models and data from the active learning database at step '+str(isKeyword('active_learning_step')))
+                    model_constraints = {"step":int(isKeyword('active_learning_step'))}
+                    comp_class_constraints =  {"step":{"$in":(range(int(isKeyword('active_learning_step'))+1))},"status_flag":{"$in":[0]}}
+                    db = connect2db(user="readonly_user", pwd="readonly", host="localhost", port=27017, database="tmc", auth=True)
+                    runtype = isKeyword("runtype")
+                    if type(runtype) == list:
+                        import pickle
+                        runlist = []
+                        model_list = []
+                        train_data_matrices = []
+                        mean_x_list = []
+                        mean_y_list = []
+                        var_x_list = []
+                        var_y_list = []
+                        for run in runtype:
+                            runlist.append(run)
+                            varlist = self.get_variables(drop=['misc-dent-ax'])
+                            model_collection = str(run)+'_models'
+                            comp_collection = 'act_learn_'+str(run)
+                            model_query = query_db(db,model_collection,model_constraints) #query the db to get the model
+                            for model_doc in model_query:
+                                model = pickle.loads(model_doc['model'])
+                                model_list.append(model)
+                            df = convert2dataframe(db, comp_collection,comp_class_constraints, ["ox","alpha","spin"], normalized=True)
+                            df.columns = [str(val).split('.')[1] if 'descriptor' in str(val) else str(val) for val in df.columns]
+                            train_df = df[df['is_training'] == 'train']
+                            train_x = train_df[varlist]
+                            train_y = train_df[['target']]
+                            mean_x = train_x.mean()
+                            std_x = train_x.std()
+                            mean_y = train_y.mean()
+                            std_y = train_y.std()
+                            #### In this active learning case, returning dataframes for ease of use. Also returning std instead of var.
+                            train_data_matrices.append(train_x) # in the case of act learn, returning the training data...
+                            mean_x_list.append(mean_x)
+                            mean_y_list.append(mean_y)
+                            var_x_list.append(std_x)
+                            var_y_list.append(std_y) # in act learn case, providing 
+                    self.job_dispatcher(loaded_model_list=model_list, train_matrices=train_data_matrices,
+                        mean_info= [mean_x_list,mean_y_list], var_info = [var_x_list,var_y_list], run_list=runlist)
+                else:
+                    print('Loading models and latent train data now to hand to job_dispatcher...')
+                    model_list, matrix_list, runlist= self.model_information_loader()
+                    mean_x_list, mean_y_list, var_x_list, var_y_list = self.normalization_info_getter()
+                    self.job_dispatcher(loaded_model_list=model_list, train_matrices=matrix_list, 
+                        mean_info= [mean_x_list,mean_y_list], var_info = [var_x_list,var_y_list], run_list=runlist)
             else:
                 self.job_dispatcher()
             # pass
@@ -604,28 +686,39 @@ class GA_generation:
                                                                                            path_dictionary=self.current_path_dictionary,
                                                                                            rundirpath=isKeyword('rundir'),
                                                                                            gen=self.status_dictionary['gen'])
-                            print(len(descriptor_names),len(descriptors))
                             ANN_results = {}
-                            for model_num, model in enumerate(loaded_model_list):
-                                excitation = tf_ANN_excitation_prepare(predictor=str(run_list[model_num]),descriptors=descriptors, descriptor_names=descriptor_names)
-                                norm_excitation = data_normalize(data=excitation, train_mean=mean_info[0][model_num], train_var=var_info[0][model_num])
-                                result = data_rescale(model.predict(norm_excitation), mean_info[1][model_num], var_info[1][model_num])
-                                ANN_results.update({run_list[model_num]:float(result)})
-                                ###### NEED TO ADJUST LATER
-                                min_dist = 100000000
-                                min_ind = 0
-                                best_scaled_row = 0
-                                for i, rows in enumerate(np.array(train_matrices[model_num],dtype='float64')):
-                                    scaled_row = np.squeeze(data_normalize(rows, mean_info[0][model_num].T, var_info[0][model_num].T))  # Normalizing the row before finding the distance
-                                    # print(scaled_row)
-                                    this_dist = np.linalg.norm(np.subtract(scaled_row, np.array(norm_excitation)))
-                                    if this_dist < min_dist:
-                                        min_dist = this_dist
-                                        min_ind = i
-                                        # best_row = rownames[i]
-                                        best_scaled_row = scaled_row
-                                        min_row = rows
-                                ANN_results.update({run_list[model_num]+'_dist':float(min_dist)})
+                            if isinstance(isKeyword('active_learning_step'), int):
+                                print('Take descriptors from active learning and make predictions with model')
+                                descriptor_dict = dict(zip(descriptor_names, descriptors))
+                                descriptor_series = pd.Series(descriptor_dict)
+                                for model_num, model in enumerate(loaded_model_list):
+                                    selected_descriptor_series = descriptor_series[train_matrices[model_num].columns]
+                                    excitation = np.array([((selected_descriptor_series - mean_info[0][model_num])/var_info[0][model_num]).values]) #normalizing 
+                                    print(excitation.shape)
+                                    result = (model.predict(excitation)*var_info[1][model_num].values+mean_info[1][model_num].values)
+                                    ANN_results.update({run_list[model_num]:float(result)})
+                                    ANN_results.update({run_list[model_num]+'_dist':float(10)}) ### PLACE HOLDER FOR VALUES
+                            else:
+                                for model_num, model in enumerate(loaded_model_list):
+                                    excitation = tf_ANN_excitation_prepare(predictor=str(run_list[model_num]),descriptors=descriptors, descriptor_names=descriptor_names)
+                                    norm_excitation = data_normalize(data=excitation, train_mean=mean_info[0][model_num], train_var=var_info[0][model_num])
+                                    result = data_rescale(model.predict(norm_excitation), mean_info[1][model_num], var_info[1][model_num])
+                                    ANN_results.update({run_list[model_num]:float(result)})
+                                    ###### NEED TO ADJUST LATER
+                                    min_dist = 100000000
+                                    min_ind = 0
+                                    best_scaled_row = 0
+                                    for i, rows in enumerate(np.array(train_matrices[model_num],dtype='float64')):
+                                        scaled_row = np.squeeze(data_normalize(rows, mean_info[0][model_num].T, var_info[0][model_num].T))  # Normalizing the row before finding the distance
+                                        # print(scaled_row)
+                                        this_dist = np.linalg.norm(np.subtract(scaled_row, np.array(norm_excitation)))
+                                        if this_dist < min_dist:
+                                            min_dist = this_dist
+                                            min_ind = i
+                                            # best_row = rownames[i]
+                                            best_scaled_row = scaled_row
+                                            min_row = rows
+                                    ANN_results.update({run_list[model_num]+'_dist':float(min_dist)})
                             if len(list(set(properties).difference(ANN_results.keys())))>0:
                                 for i in properties:
                                     if i not in ANN_results.keys():

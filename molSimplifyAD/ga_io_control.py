@@ -49,6 +49,7 @@ class GA_run_defintion:
                   no_geo=False,
                   first_row=False,
                   db_communicate=True,
+                  active_learning_step=False,
                   **KWARGS):
         ## first time start-up function
         #                print('configuring status dictionaty')
@@ -95,6 +96,7 @@ class GA_run_defintion:
                        'first_row': first_row,
                        'no_geo': no_geo,
                        'db_communicate': db_communicate,
+                       'active_learning_step': active_learning_step,
                        }
 
     def serialize(self):

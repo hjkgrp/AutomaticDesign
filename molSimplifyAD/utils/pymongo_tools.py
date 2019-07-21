@@ -156,7 +156,7 @@ def ensure_collection(db, collection):
             if _in == "y":
                 finish = True
             elif _in == "n":
-                print("Quit. Have a nive day.")
+                print("Quit. Have a nice day.")
                 quit()
             else:
                 finish = False
@@ -164,7 +164,7 @@ def ensure_collection(db, collection):
 
 def push2db(database, collection, tag, subtag, publication=False,
             user=False, pwd=False, host="localhost", port=27017, auth=False,
-            all_runs_pickle=False, update_fields=False):
+            all_runs_pickle=False, update_fields=False, all_runs_list = False):
     '''
     Push data to MongoDB.
 
@@ -187,7 +187,10 @@ def push2db(database, collection, tag, subtag, publication=False,
     ensure_collection(db, collection)
     print('db push is enabled, attempting commit with tag: %s, subtag: %s to %s' % (tag, subtag, collection))
     if not all_runs_pickle:
-        _, all_runs, _ = check_all_current_convergence(post_all=True)
+        if all_runs_list:
+            all_runs = all_runs_list
+        else:
+            _, all_runs, _ = check_all_current_convergence(post_all=True)
     else:
         all_runs = pickle.load(open(all_runs_pickle, "rb"))
         print("DFTruns loaded from %s." % all_runs_pickle)
@@ -283,7 +286,7 @@ def push_models(model, model_dict, database, collection,
         db[collection].insert_one(this_model.document)
 
 
-def push_moldels_actlearn(step, model, database, collection,
+def push_models_actlearn(step, model, database, collection,
                           user=False, pwd=False,
                           host="localhost", port=27017,
                           auth=False):
