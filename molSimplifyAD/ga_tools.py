@@ -1046,6 +1046,8 @@ def setup_paths():
     ## set scr path to scr/sp for single points
     if not isKeyword('optimize'):
         path_dictionary.update({"scr_path": working_dir + "scr/geo/"})
+    if isKeyword('oxocatalysis'):
+        path_dictionary.update({"sp_scr_path": working_dir + "scr/sp/"})
     if isKeyword('solvent'):
         path_dictionary.update({"solvent_out_path": working_dir + "solvent_outfiles/"})
         path_dictionary.update({"solvent_in_path": working_dir + "solvent_infiles/"})
@@ -1394,13 +1396,15 @@ def write_ANN_results_dictionary(path, dictionary):
         with open(full_ANN_dict, 'a') as f:
             for i, val in enumerate(dictionary.keys()):
                 if val.strip().split(',')[0] not in already_present_dict.keys():
-                    f.write(",".join([val] + [str(k) for k in dictionary[val].values()]) + '\n')
+                    translated = translate_job_name(val)['chem_name']
+                    f.write(",".join([translated,val] + [str(k) for k in dictionary[val].values()]) + '\n')
     else:
         with open(full_ANN_dict, 'w') as f:
             for i, val in enumerate(dictionary.keys()):
                 if i == 0:
-                    f.write(",".join(["name"] + dictionary[val].keys()) + '\n')
-                f.write(",".join([val] + [str(k) for k in dictionary[val].values()]) + '\n')
+                    f.write(",".join(["chem_name","name"] + dictionary[val].keys()) + '\n')
+                translated = translate_job_name(val)['chem_name']
+                f.write(",".join([translated,val] + [str(k) for k in dictionary[val].values()]) + '\n')
 
 
 ########################
