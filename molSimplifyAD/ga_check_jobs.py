@@ -641,7 +641,7 @@ def check_all_current_convergence(post_all=False):
                                + ' after ' + str(number_of_subs) + ' subs since prog geo was bad')
                         remove_outstanding_jobs(jobs)  # take out of pool
                     elif this_run.status in [2]:  ## ok prog geo, make sure in outstanding
-                        if (int(number_of_subs) <= isKeyword('max_resubmit')):
+                        if (int(number_of_subs) > isKeyword('max_resubmit')):
                                 this_run.status = 7
 
                         logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
