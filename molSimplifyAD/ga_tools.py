@@ -1547,6 +1547,15 @@ def find_converged_job_dictionary():
         converged_job_dictionary = dict()
     return converged_job_dictionary
 
+########################
+def find_job_classification_dictionary():
+    path_dictionary = setup_paths()
+    job_classification_dictionary = dict()
+    if os.path.exists(path_dictionary["job_path"] + "/job_classification_dictionary.csv"):
+        emsg, job_classification_dictionary = read_dictionary(path_dictionary["job_path"] + "/job_classification_dictionary.csv")
+    else:
+        job_classification_dictionary = dict()
+    return job_classification_dictionary
 
 ########################
 def update_converged_job_dictionary(jobs, status):
@@ -1556,6 +1565,18 @@ def update_converged_job_dictionary(jobs, status):
     if status != 0:
         print(' writing ' + str(jobs) + ' as status ' + str(status))
     write_dictionary(converged_job_dictionary, path_dictionary["job_path"] + "/converged_job_dictionary.csv")
+
+########################
+def update_job_classification_dictionary(jobs, flag_status):
+    #### This dictionary contains the results of the 3 flags: geo, ss, metal_spin. 
+    #### 0 if all are good. 1 if convergence issues. 2 if geo is bad. 3 if ss is bad. 4 if metal spin is bad. First failed check is logged.
+    failure_mode_dict = {0:'good', 1:'convergence failure',2:'geo failure',3:'ss failure', 4: 'metal spin failure'}
+    path_dictionary = setup_paths()
+    job_classification_dictionary = find_job_classification_dictionary()
+    job_classification_dictionary.update({jobs: flag_status})
+    if flag_status != 0:
+        print(' writing ' + str(jobs) + ' to have flag_status ' + str(flag_status)+': '+str(failure_mode_dict[int(flag_status)]))
+    write_dictionary(job_classification_dictionary, path_dictionary["job_path"] + "/job_classification_dictionary.csv")
 
 
 ########################
