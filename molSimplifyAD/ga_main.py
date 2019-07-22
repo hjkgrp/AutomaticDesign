@@ -792,7 +792,7 @@ class GA_generation:
         gene_template = get_gene_template()
         runtype = isKeyword("runtype")
         for gen in xrange(curr_gen + 1):
-            ANN_dir = isKeyword('rundir') + "ANN_ouput/gen_" + str(gen) + "/ANN_results.csv"
+            ANN_dir = isKeyword('rundir') + "ANN_output/gen_" + str(gen) + "/ANN_results.csv"
             emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
             for keys in ANN_dict.keys():
                 #_, _, _, metal, ox, eqlig, axlig1, axlig2, _, _, _, spin, spin_cat, ahf, _, _ = translate_job_name(keys)
@@ -1092,7 +1092,7 @@ class GA_generation:
         ## The old ANN dict from the previous generation must be loaded to gather the results
         ## advance counter
         self.status_dictionary['gen'] += 1
-        msg, ANN_dict = read_ANN_results_dictionary(self.base_path_dictionary["ANN_output"] + 'full_ANN_results.csv')
+        msg, ANN_dict = read_ANN_results_dictionary(self.base_path_dictionary["ANN_output"] + 'full_ANN_results.csv',full=True)
         logger(self.base_path_dictionary['state_path'], str(datetime.datetime.now()) +
                ":  Gen " + str(self.status_dictionary['gen'] - 1)
                + " advancing to Gen " + str(self.status_dictionary['gen']))

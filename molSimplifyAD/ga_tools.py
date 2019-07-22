@@ -1033,7 +1033,7 @@ def setup_paths():
         "molsimplify_inps": working_dir + "ms_inps/",
         "infiles": working_dir + "infiles/",
         "mopac_path": working_dir + "mopac/",
-        "ANN_output": working_dir + "ANN_ouput/",
+        "ANN_output": working_dir + "ANN_output/",
         "ms_reps": working_dir + "ms_reps/",
         "good_reports": working_dir + "reports/good_geo/",
         "bad_reports": working_dir + "reports/bad_geo/",
@@ -1365,7 +1365,7 @@ def read_dictionary(path):
 
 
 ########################
-def read_ANN_results_dictionary(path):
+def read_ANN_results_dictionary(path,full=False):
     emsg = False
     dictionary = dict()
     try:
@@ -1377,7 +1377,12 @@ def read_ANN_results_dictionary(path):
                     ll = val.strip().split(',')
                     key = ll[0]
                     dictionary2 = {}
-                    for j, val2 in enumerate(ll[1:]):
+                    if full:
+                        search_list = ll[1:-1]
+                        dictionary2[keynames[-1]] = str(ll[-1])
+                    else:
+                        search_list = ll[1:]
+                    for j, val2 in enumerate(search_list):
                         dictionary2[keynames[j + 1]] = float(val2)
                     dictionary[key] = dictionary2
     except:
@@ -1393,21 +1398,21 @@ def write_ANN_results_dictionary(path, dictionary):
                 f.write(",".join(["name"] + dictionary[val].keys()) + '\n')
             f.write(",".join([val] + [str(k) for k in dictionary[val].values()]) + '\n')
     rundir = isKeyword('rundir')
-    full_ANN_dict = rundir + '/ANN_ouput/full_ANN_results.csv'
+    full_ANN_dict = rundir + '/ANN_output/full_ANN_results.csv'
     if os.path.exists(full_ANN_dict):
-        emsg, already_present_dict = read_ANN_results_dictionary(full_ANN_dict)
+        emsg, already_present_dict = read_ANN_results_dictionary(full_ANN_dict,full=True)
         with open(full_ANN_dict, 'a') as f:
             for i, val in enumerate(dictionary.keys()):
                 if val.strip().split(',')[0] not in already_present_dict.keys():
                     translated = translate_job_name(val)['chem_name']
-                    f.write(",".join([translated,val] + [str(k) for k in dictionary[val].values()]) + '\n')
+                    f.write(",".join([val] + [str(k) for k in dictionary[val].values()] + [translated]) + '\n')
     else:
         with open(full_ANN_dict, 'w') as f:
             for i, val in enumerate(dictionary.keys()):
                 if i == 0:
-                    f.write(",".join(["chem_name","name"] + dictionary[val].keys()) + '\n')
+                    f.write(",".join(["name"] + dictionary[val].keys()+["chem_name"]) + '\n')
                 translated = translate_job_name(val)['chem_name']
-                f.write(",".join([translated,val] + [str(k) for k in dictionary[val].values()]) + '\n')
+                f.write(",".join([val] + [str(k) for k in dictionary[val].values()] + [translated]) + '\n')
 
 
 ########################
