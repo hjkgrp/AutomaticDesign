@@ -1192,6 +1192,7 @@ class DFTRun(object):
         ## initialize variables
         tot_step = -1
         tot_time = -1
+        _time_tot = -1
         convcrit_read = False # marker for tolerance lines (new optim only)
         e_delta = False
         grad_rms = False
