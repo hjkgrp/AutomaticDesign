@@ -65,6 +65,9 @@ def check_all_current_convergence(post_all=False):
     outstanding_jobs = get_outstanding_jobs()
     gene_template = get_gene_template()
 
+    ## jobs classified by flags
+    job_classification_dictionary = find_job_classification_dictionary()
+
     jobs_complete = 0
     # GA_run = get_current_GA()
     use_old_optimizer = get_optimizer()
@@ -650,6 +653,18 @@ def check_all_current_convergence(post_all=False):
                         add_to_outstanding_jobs(jobs)
                 if isKeyword('oxocatalysis'):
                     this_run.get_check_flags(metalspin_cutoff = 2)
+                    log_status = 1 # default value
+                    if this_run.converged:
+                        log_status = 0
+                        if this_run.geo_flag != 1:
+                            log_status = 2
+                        else:
+                            if this_run.ss_flag != 1:
+                                log_status = 3
+                            else:
+                                if this_run.metal_spin_flag != 1:
+                                    log_status = 4            
+                    update_job_classification_dictionary(jobs,log_status)
                 else:
                     this_run.get_check_flags()
                 print('END OF JOB \n *******************\n')
@@ -752,6 +767,18 @@ def check_all_current_convergence(post_all=False):
                             print('Moldens exist but are empty for this run (' + str(jobs) + ')')
                     if isKeyword('oxocatalysis'):
                         this_run.get_check_flags(metalspin_cutoff = 2,sp_calc=True)
+                        log_status = 1 # default value
+                        if this_run.converged:
+                            log_status = 0
+                            if this_run.geo_flag != 1:
+                                log_status = 2
+                            else:
+                                if this_run.ss_flag != 1:
+                                    log_status = 3
+                                else:
+                                    if this_run.metal_spin_flag != 1:
+                                        log_status = 4            
+                        update_job_classification_dictionary(jobs,log_status)
                     if this_run.status == 6:  ##  convergence is not successful!
                         logger(base_path_dictionary['state_path'],
                                str(datetime.datetime.now()) + " failure at SP job : " + str(
