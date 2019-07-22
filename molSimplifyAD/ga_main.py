@@ -447,7 +447,7 @@ class GA_generation:
             self.status_dictionary["ready_to_advance"] = True
         else:
             if not self.status_dictionary['DFT'] and isKeyword('no_geo'):
-                if isinstance(isKeyword('active_learning_step'),int):
+                if type(isKeyword('active_learning_step')) == int:
                     import pandas as pd ### Need to load pandas frame for normalization.
                     print('now loading models and data from the active learning database at step '+str(isKeyword('active_learning_step')))
                     model_constraints = {"step":int(isKeyword('active_learning_step'))}
@@ -687,7 +687,7 @@ class GA_generation:
                                                                                            rundirpath=isKeyword('rundir'),
                                                                                            gen=self.status_dictionary['gen'])
                             ANN_results = {}
-                            if isinstance(isKeyword('active_learning_step'), int):
+                            if type(isKeyword('active_learning_step')) == int:
                                 print('Take descriptors from active learning and make predictions with model')
                                 descriptor_dict = dict(zip(descriptor_names, descriptors))
                                 descriptor_series = pd.Series(descriptor_dict)
