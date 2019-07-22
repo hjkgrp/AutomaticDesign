@@ -100,7 +100,10 @@ def check_all_current_convergence(post_all=False):
         ## 19 -> job requests axial ligand dissociation energy
         ## sort to get consistent transversal order
         joblist.sort()
-
+        if isKeyword('oxocatalysis'):
+            my_own_order = ['20', '25', '30', '15', '10', '05', '00']
+            order = {key: i for i, key in enumerate(my_own_order)}
+            joblist = sorted(joblist, key=lambda x: order[x.split("_")[-2]])
         print('testing if  post-all is on: ', isKeyword('post_all'))
         # print("jobslist: ", joblist)
         #print("dbjobs_dict: ", dbjobs_dict)
@@ -115,6 +118,8 @@ def check_all_current_convergence(post_all=False):
                               live_job_dictionary=live_job_dictionary,
                               converged_jobs_dictionary=converged_jobs,
                               post_all=post_all):
+                if isKeyword('oxocatalysis') and 'bigbasis' in jobs:
+                    continue
                 ##upack job name
                 # old:
                 # gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(jobs)
@@ -148,6 +153,7 @@ def check_all_current_convergence(post_all=False):
                 ## check empty
                 if 'x' == liglist[-1]:  # last element of list
                     this_run.octahedral = False
+                    continue
                 else:
                     this_run.octahedral = True
 
