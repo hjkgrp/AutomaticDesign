@@ -157,7 +157,7 @@ def _get_freq_fitness(lastgen, npool):
         runtype = isKeyword("runtype")
         for generation in xrange(lastgen + 1):
             print('------GENERATION IN XRANGE IS '+str(generation))
-            ANN_dir = isKeyword('rundir') + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
+            ANN_dir = isKeyword('rundir') + "ANN_output/gen_" + str(generation) + "/ANN_results.csv"
             # print('here1')
             emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
             for keys in ANN_dict.keys():
