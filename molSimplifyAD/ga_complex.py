@@ -548,6 +548,8 @@ class octahedral_complex:
         child = octahedral_complex(self.ligands_list)
         child.copy(self)  # copies this parent
         n = len(self.ligands_list)
+        if isKeyword('oxocatalysis'):
+            n -= 3 #the last 3 are always oxo, x, hydroxyl. We do not want to mutate to those
         self.examine()
         fixed_inds = []
         if self.gene_template['legacy']:
@@ -635,6 +637,9 @@ class octahedral_complex:
         else:
             message = 'old ligands ' + '/'.join([str(i) for i in child.ligands])
             pos_to_mutate = np.random.choice([i for i in range(0, 7) if not i in fixed_inds])
+            if isKeyword('oxocatalysis') and pos_to_mutate == 5:
+                while pos_to_mutate == 5:
+                    pos_to_mutate = np.random.choice([i for i in range(0, 7) if not i in fixed_inds])
             print(pos_to_mutate)
             if pos_to_mutate < 6:
                 ready_for_assembly = False
