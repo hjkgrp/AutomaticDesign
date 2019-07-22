@@ -20,7 +20,7 @@ def _find_distances():
     # print('find dist part 1')
     # lastgen is the last generation that has been run
     for generation in range(lastgen + 1):
-        ANN_dir = isKeyword('rundir') + "ANN_ouput/gen_" + str(generation) + "/ANN_results.csv"
+        ANN_dir = isKeyword('rundir') + "ANN_output/gen_" + str(generation) + "/ANN_results.csv"
         emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
         for keys in ANN_dict.keys():
             #gene, _, _, metal, ox, eqlig, axlig1, axlig2, _, _, _, spin, spin_cat, ahf, _, _ = translate_job_name(keys)
