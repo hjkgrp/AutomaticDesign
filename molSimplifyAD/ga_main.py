@@ -646,6 +646,7 @@ class GA_generation:
         converged_jobs = find_converged_job_dictionary()
         gene_template = get_gene_template()
         spins_dict = spin_dictionary()
+        avg_train_train_dist = None
         if isKeyword("db_communicate"):
             try:
                 db = connect2db(user="readonly_user", pwd="readonly", host="localhost", port=27017, database="tmc", auth=True)
@@ -699,17 +700,18 @@ class GA_generation:
                                     result = (model.predict(excitation)*var_info[1][model_num].values+mean_info[1][model_num].values)
                                     get_outputs = K.function([model.layers[0].input, K.learning_phase()],[model.layers[len(model.layers) - 2].output])
                                     train_df = train_matrices[model_num]
-                                    norm_train_df = ((train_matrices-train_df.mean())/train_df.std()).values
-                                    latent_train_df = get_outputs([norm_train_df, 0])
-                                    train_dist_array = distance_matrix(latent_train_df,latent_train_df)
-                                    nearest_10_NN = []
-                                    for j, row in enumerate(train_dist_array):
-                                        nearest_10_NN.append(np.sort(np.squeeze(row))[1:11]) #nearest 10NN
-                                    nearest_10_NN = np.array(nearest_10_NN)
-                                    avg10NNtraindist = np.mean(nearest_10_NN)
-                                    latent_excitation = get_outputs([norm_train_df, 0])
-                                    latent_vector_to_train = np.sort(np.squeeze(np.array(distance_matrix(latent_excitation,latent_train))))
-                                    min_dist = np.mean(latent_vector_to_train[1:11])/avg10NNtraindist
+                                    norm_train_df = ((train_df-train_df.mean())/train_df.std()).values
+                                    latent_train_df = np.squeeze(np.array(get_outputs([norm_train_df, 0])))
+                                    if avg_train_train_dist == None:
+                                        train_dist_array = distance_matrix(latent_train_df,latent_train_df)
+                                        nearest_10_NN = []
+                                        for j, row in enumerate(train_dist_array):
+                                            nearest_10_NN.append(np.sort(np.squeeze(row))[1:11]) #nearest 10NN
+                                        nearest_10_NN = np.array(nearest_10_NN)
+                                        avg_train_train_dist = np.mean(nearest_10_NN)
+                                    latent_excitation = np.array([np.squeeze(np.array(get_outputs([excitation, 0])))])
+                                    latent_vector_to_train = np.sort(np.squeeze(np.array(distance_matrix(latent_excitation,latent_train_df))))
+                                    min_dist = np.mean(latent_vector_to_train[1:11])/avg_train_train_dist
                                     ANN_results.update({run_list[model_num]:float(result)})
                                     ANN_results.update({run_list[model_num]+'_dist':float(min_dist)}) ### PLACE HOLDER FOR VALUES
                             else:
@@ -728,14 +730,15 @@ class GA_generation:
                                     normalized_train = np.array(normalized_train)
                                     latent_train = np.squeeze(np.array(get_outputs([normalized_train, 0])))
                                     latent_excitation =np.array([np.squeeze(np.array(get_outputs([norm_excitation, 0])))])
-                                    train_dist_array = distance_matrix(latent_train,latent_train)
-                                    nearest_10_NN = []
-                                    for j, row in enumerate(train_dist_array):
-                                        nearest_10_NN.append(np.sort(np.squeeze(row))[1:11]) #nearest 10NN
-                                    nearest_10_NN = np.array(nearest_10_NN)
-                                    avg10NNtraindist = np.mean(nearest_10_NN)
+                                    if avg_train_train_dist == None:
+                                        train_dist_array = distance_matrix(latent_train_df,latent_train_df)
+                                        nearest_10_NN = []
+                                        for j, row in enumerate(train_dist_array):
+                                            nearest_10_NN.append(np.sort(np.squeeze(row))[1:11]) #nearest 10NN
+                                        nearest_10_NN = np.array(nearest_10_NN)
+                                        avg_train_train_dist = np.mean(nearest_10_NN)
                                     latent_vector_to_train = np.sort(np.squeeze(np.array(distance_matrix(latent_excitation,latent_train))))
-                                    min_dist = np.mean(latent_vector_to_train[1:11])/avg10NNtraindist
+                                    min_dist = np.mean(latent_vector_to_train[1:11])/avg_train_train_dist
                                     ### This currently gets the normalized 10NN latent distances, but the distance calculation is slow. Should store latent vectors...
                                     ANN_results.update({run_list[model_num]+'_dist':float(min_dist)})
                             if len(list(set(properties).difference(ANN_results.keys())))>0:
