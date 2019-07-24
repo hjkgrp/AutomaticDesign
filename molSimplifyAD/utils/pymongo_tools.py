@@ -36,6 +36,13 @@ def query_one(db, collection, constraints):
     return db[collection].find_one(constraints)
 
 
+def count_find(cursor):
+    count = 0
+    for _ in cursor:
+        count += 1
+    return count
+
+
 def query_lowestE_converged(db, collection, constraints):
     cursor = query_db(db, collection, constraints)
     minE = 100000
@@ -105,7 +112,7 @@ def convert2dataframe(db, collection,
         else:
             df = json_normalize(list(cursor))
     else:
-        df = iterator2dataframes_withoutruns(cursor, 100, dropcols, normalized)
+        df = iterator2dataframes_withoutruns(cursor, 256, dropcols, normalized)
     return df
 
 
@@ -164,7 +171,7 @@ def ensure_collection(db, collection):
 
 def push2db(database, collection, tag, subtag, publication=False,
             user=False, pwd=False, host="localhost", port=27017, auth=False,
-            all_runs_pickle=False, update_fields=False, all_runs_list = False):
+            all_runs_pickle=False, update_fields=False, all_runs_list=False):
     '''
     Push data to MongoDB.
 
@@ -220,7 +227,10 @@ def push2db(database, collection, tag, subtag, publication=False,
                                  ("alpha", pymongo.ASCENDING),
                                  ("lig1", pymongo.ASCENDING),
                                  ("lig5", pymongo.ASCENDING),
-                                 ("lig6", pymongo.ASCENDING)
+                                 ("lig6", pymongo.ASCENDING),
+                                 ("status", pymongo.ASCENDING),
+                                 ("geo_flag", pymongo.ASCENDING),
+                                 ("ss_flag", pymongo.ASCENDING)
                                  ])
 
 
@@ -262,7 +272,9 @@ def push_complex_actlearn(step, all_complexes, database, collection,
                                  ("alpha", pymongo.ASCENDING),
                                  ("lig1", pymongo.ASCENDING),
                                  ("lig5", pymongo.ASCENDING),
-                                 ("lig6", pymongo.ASCENDING)
+                                 ("lig6", pymongo.ASCENDING),
+                                 ("geo_flag", pymongo.ASCENDING),
+                                 ("ss_flag", pymongo.ASCENDING)
                                  ])
     if not merged == 0:
         print("=====WARNING====")
@@ -278,18 +290,23 @@ def push_models(model, model_dict, database, collection,
     this_model = modelMongo(model=model, **model_dict)
     if not query_one(db, collection,
                      constraints={"predictor": this_model.predictor, "len_tot": this_model.len_tot}) == None:
-        print("A model of step %d has already existed.")
-    elif this_model.force_push:
+        print("A model of has already existed.")
+        print("force_push?", this_model.force_push)
+    if this_model.force_push:
         print("force_push is truned on. pushing...")
         db[collection].insert_one(this_model.document)
     else:
+        print("pushing...")
         db[collection].insert_one(this_model.document)
+    db[collection].create_index([("predictor", pymongo.ASCENDING),
+                                 ("len_tot", pymongo.ASCENDING)
+                                 ])
 
 
 def push_models_actlearn(step, model, database, collection,
-                          user=False, pwd=False,
-                          host="localhost", port=27017,
-                          auth=False):
+                         user=False, pwd=False,
+                         host="localhost", port=27017,
+                         auth=False):
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
     actlearn_model = modelActLearn(step=step, model=model)
