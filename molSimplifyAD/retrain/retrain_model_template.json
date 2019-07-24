@@ -1,0 +1,1 @@
+{"database": "tmc", "collection_model": "models", "epochs": 1000, "collection": "oct", "constraints": {"ss_flag": {"$in": [0, 1]}, "alpha": 20.0}, "force_push": false}
