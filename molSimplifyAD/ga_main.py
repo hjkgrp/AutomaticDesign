@@ -14,6 +14,7 @@ import shutil
 # from molSimplify.Informatics.RACassemble import *
 # from molSimplify.Classes.globalvars import *
 from molSimplify.python_nn.tf_ANN import *
+from scipy.spatial import distance_matrix
 # ############################
 from molSimplifyAD.ga_tools import *
 from molSimplifyAD.ga_complex import *
@@ -688,36 +689,54 @@ class GA_generation:
                                                                                            gen=self.status_dictionary['gen'])
                             ANN_results = {}
                             if type(isKeyword('active_learning_step')) == int:
+                                from keras import backend as K
                                 print('Take descriptors from active learning and make predictions with model')
                                 descriptor_dict = dict(zip(descriptor_names, descriptors))
                                 descriptor_series = pd.Series(descriptor_dict)
                                 for model_num, model in enumerate(loaded_model_list):
                                     selected_descriptor_series = descriptor_series[train_matrices[model_num].columns]
                                     excitation = np.array([((selected_descriptor_series - mean_info[0][model_num])/var_info[0][model_num]).values]) #normalizing 
-                                    print(excitation.shape)
                                     result = (model.predict(excitation)*var_info[1][model_num].values+mean_info[1][model_num].values)
+                                    get_outputs = K.function([model.layers[0].input, K.learning_phase()],[model.layers[len(model.layers) - 2].output])
+                                    train_df = train_matrices[model_num]
+                                    norm_train_df = ((train_matrices-train_df.mean())/train_df.std()).values
+                                    latent_train_df = get_outputs([norm_train_df, 0])
+                                    train_dist_array = distance_matrix(latent_train_df,latent_train_df)
+                                    nearest_10_NN = []
+                                    for j, row in enumerate(train_dist_array):
+                                        nearest_10_NN.append(np.sort(np.squeeze(row))[1:11]) #nearest 10NN
+                                    nearest_10_NN = np.array(nearest_10_NN)
+                                    avg10NNtraindist = np.mean(nearest_10_NN)
+                                    latent_excitation = get_outputs([norm_train_df, 0])
+                                    latent_vector_to_train = np.sort(np.squeeze(np.array(distance_matrix(latent_excitation,latent_train))))
+                                    min_dist = np.mean(latent_vector_to_train[1:11])/avg10NNtraindist
                                     ANN_results.update({run_list[model_num]:float(result)})
-                                    ANN_results.update({run_list[model_num]+'_dist':float(10)}) ### PLACE HOLDER FOR VALUES
+                                    ANN_results.update({run_list[model_num]+'_dist':float(min_dist)}) ### PLACE HOLDER FOR VALUES
                             else:
+                                from keras import backend as K
                                 for model_num, model in enumerate(loaded_model_list):
                                     excitation = tf_ANN_excitation_prepare(predictor=str(run_list[model_num]),descriptors=descriptors, descriptor_names=descriptor_names)
                                     norm_excitation = data_normalize(data=excitation, train_mean=mean_info[0][model_num], train_var=var_info[0][model_num])
                                     result = data_rescale(model.predict(norm_excitation), mean_info[1][model_num], var_info[1][model_num])
                                     ANN_results.update({run_list[model_num]:float(result)})
-                                    ###### NEED TO ADJUST LATER
-                                    min_dist = 100000000
-                                    min_ind = 0
-                                    best_scaled_row = 0
+                                    get_outputs = K.function([model.layers[0].input, K.learning_phase()],[model.layers[len(model.layers) - 2].output])
+                                    normalized_train = []
                                     for i, rows in enumerate(np.array(train_matrices[model_num],dtype='float64')):
                                         scaled_row = np.squeeze(data_normalize(rows, mean_info[0][model_num].T, var_info[0][model_num].T))  # Normalizing the row before finding the distance
                                         # print(scaled_row)
-                                        this_dist = np.linalg.norm(np.subtract(scaled_row, np.array(norm_excitation)))
-                                        if this_dist < min_dist:
-                                            min_dist = this_dist
-                                            min_ind = i
-                                            # best_row = rownames[i]
-                                            best_scaled_row = scaled_row
-                                            min_row = rows
+                                        normalized_train.append(scaled_row)
+                                    normalized_train = np.array(normalized_train)
+                                    latent_train = np.squeeze(np.array(get_outputs([normalized_train, 0])))
+                                    latent_excitation =np.array([np.squeeze(np.array(get_outputs([norm_excitation, 0])))])
+                                    train_dist_array = distance_matrix(latent_train,latent_train)
+                                    nearest_10_NN = []
+                                    for j, row in enumerate(train_dist_array):
+                                        nearest_10_NN.append(np.sort(np.squeeze(row))[1:11]) #nearest 10NN
+                                    nearest_10_NN = np.array(nearest_10_NN)
+                                    avg10NNtraindist = np.mean(nearest_10_NN)
+                                    latent_vector_to_train = np.sort(np.squeeze(np.array(distance_matrix(latent_excitation,latent_train))))
+                                    min_dist = np.mean(latent_vector_to_train[1:11])/avg10NNtraindist
+                                    ### This currently gets the normalized 10NN latent distances, but the distance calculation is slow. Should store latent vectors...
                                     ANN_results.update({run_list[model_num]+'_dist':float(min_dist)})
                             if len(list(set(properties).difference(ANN_results.keys())))>0:
                                 for i in properties:
