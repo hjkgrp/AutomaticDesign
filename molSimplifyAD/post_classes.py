@@ -1192,6 +1192,7 @@ class DFTRun(object):
         ## initialize variables
         tot_step = -1
         tot_time = -1
+        _time_tot = -1
         convcrit_read = False # marker for tolerance lines (new optim only)
         e_delta = False
         grad_rms = False
@@ -1242,8 +1243,11 @@ class DFTRun(object):
                        convcrit_read = i
                     if convcrit_read:
                         if i == convcrit_read + 2 and len(ll) > 2:
-                            e_delta_tol, grad_rms_tol, grad_max_tol, displace_rms_tol, \
-                            displace_max_tol =  [float(ii) for ii in line.strip().split()[2:]]
+                            try:
+                                e_delta_tol, grad_rms_tol, grad_max_tol, displace_rms_tol, \
+                                displace_max_tol =  [float(ii) for ii in line.strip().split()[2:]]
+                            except:
+                                pass
                         elif i == convcrit_read + 4:
                             inds_to_read = [2, 3,5,7,9,11]
 

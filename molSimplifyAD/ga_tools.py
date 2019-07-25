@@ -1033,7 +1033,7 @@ def setup_paths():
         "molsimplify_inps": working_dir + "ms_inps/",
         "infiles": working_dir + "infiles/",
         "mopac_path": working_dir + "mopac/",
-        "ANN_output": working_dir + "ANN_ouput/",
+        "ANN_output": working_dir + "ANN_output/",
         "ms_reps": working_dir + "ms_reps/",
         "good_reports": working_dir + "reports/good_geo/",
         "bad_reports": working_dir + "reports/bad_geo/",
@@ -1365,7 +1365,7 @@ def read_dictionary(path):
 
 
 ########################
-def read_ANN_results_dictionary(path):
+def read_ANN_results_dictionary(path,full=False):
     emsg = False
     dictionary = dict()
     try:
@@ -1377,7 +1377,12 @@ def read_ANN_results_dictionary(path):
                     ll = val.strip().split(',')
                     key = ll[0]
                     dictionary2 = {}
-                    for j, val2 in enumerate(ll[1:]):
+                    if full:
+                        search_list = ll[1:-1]
+                        dictionary2[keynames[-1]] = str(ll[-1])
+                    else:
+                        search_list = ll[1:]
+                    for j, val2 in enumerate(search_list):
                         dictionary2[keynames[j + 1]] = float(val2)
                     dictionary[key] = dictionary2
     except:
@@ -1393,21 +1398,21 @@ def write_ANN_results_dictionary(path, dictionary):
                 f.write(",".join(["name"] + dictionary[val].keys()) + '\n')
             f.write(",".join([val] + [str(k) for k in dictionary[val].values()]) + '\n')
     rundir = isKeyword('rundir')
-    full_ANN_dict = rundir + '/ANN_ouput/full_ANN_results.csv'
+    full_ANN_dict = rundir + '/ANN_output/full_ANN_results.csv'
     if os.path.exists(full_ANN_dict):
-        emsg, already_present_dict = read_ANN_results_dictionary(full_ANN_dict)
+        emsg, already_present_dict = read_ANN_results_dictionary(full_ANN_dict,full=True)
         with open(full_ANN_dict, 'a') as f:
             for i, val in enumerate(dictionary.keys()):
                 if val.strip().split(',')[0] not in already_present_dict.keys():
                     translated = translate_job_name(val)['chem_name']
-                    f.write(",".join([translated,val] + [str(k) for k in dictionary[val].values()]) + '\n')
+                    f.write(",".join([val] + [str(k) for k in dictionary[val].values()] + [translated]) + '\n')
     else:
         with open(full_ANN_dict, 'w') as f:
             for i, val in enumerate(dictionary.keys()):
                 if i == 0:
-                    f.write(",".join(["chem_name","name"] + dictionary[val].keys()) + '\n')
+                    f.write(",".join(["name"] + dictionary[val].keys()+["chem_name"]) + '\n')
                 translated = translate_job_name(val)['chem_name']
-                f.write(",".join([translated,val] + [str(k) for k in dictionary[val].values()]) + '\n')
+                f.write(",".join([val] + [str(k) for k in dictionary[val].values()] + [translated]) + '\n')
 
 
 ########################
@@ -1542,6 +1547,15 @@ def find_converged_job_dictionary():
         converged_job_dictionary = dict()
     return converged_job_dictionary
 
+########################
+def find_job_classification_dictionary():
+    path_dictionary = setup_paths()
+    job_classification_dictionary = dict()
+    if os.path.exists(path_dictionary["job_path"] + "/job_classification_dictionary.csv"):
+        emsg, job_classification_dictionary = read_dictionary(path_dictionary["job_path"] + "/job_classification_dictionary.csv")
+    else:
+        job_classification_dictionary = dict()
+    return job_classification_dictionary
 
 ########################
 def update_converged_job_dictionary(jobs, status):
@@ -1551,6 +1565,18 @@ def update_converged_job_dictionary(jobs, status):
     if status != 0:
         print(' writing ' + str(jobs) + ' as status ' + str(status))
     write_dictionary(converged_job_dictionary, path_dictionary["job_path"] + "/converged_job_dictionary.csv")
+
+########################
+def update_job_classification_dictionary(jobs, flag_status):
+    #### This dictionary contains the results of the 3 flags: geo, ss, metal_spin. 
+    #### 0 if all are good. 1 if convergence issues. 2 if geo is bad. 3 if ss is bad. 4 if metal spin is bad. First failed check is logged.
+    failure_mode_dict = {0:'good', 1:'convergence failure',2:'geo failure',3:'ss failure', 4: 'metal spin failure'}
+    path_dictionary = setup_paths()
+    job_classification_dictionary = find_job_classification_dictionary()
+    job_classification_dictionary.update({jobs: flag_status})
+    if flag_status != 0:
+        print(' writing ' + str(jobs) + ' to have flag_status ' + str(flag_status)+': '+str(failure_mode_dict[int(flag_status)]))
+    write_dictionary(job_classification_dictionary, path_dictionary["job_path"] + "/job_classification_dictionary.csv")
 
 
 ########################
