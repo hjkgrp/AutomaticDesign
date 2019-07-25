@@ -293,7 +293,14 @@ def get_default_gene_template(queue_type='SGE'):
     template = resource_filename(Requirement.parse("molSimplifyAD"), "molSimplifyAD/gene_template.json")
     return template
 
-
+########################
+def get_active_learning_templates():
+    status_template = resource_filename(Requirement.parse("molSimplifyAD"), "molSimplifyAD/active_learning/status.json")
+    hyperopt = resource_filename(Requirement.parse("molSimplifyAD"), "molSimplifyAD/active_learning/hyperopt_template.py")
+    jobscript = resource_filename(Requirement.parse("molSimplifyAD"), "molSimplifyAD/active_learning/jobscript")
+    new_mad_input = resource_filename(Requirement.parse("molSimplifyAD"), "molSimplifyAD/active_learning/mad_initializer_template.txt")
+    active_learning_gene_template = resource_filename(Requirement.parse("molSimplifyAD"), "molSimplifyAD/active_learning/oxo_and_hat_genetemplate.json")
+    return status_template,hyperopt,jobscript,new_mad_input,active_learning_gene_template
 ########################
 def process_new_run_input(path):
     ### import and check new run file
