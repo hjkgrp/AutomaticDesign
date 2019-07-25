@@ -1,6 +1,7 @@
 # from molSimplifyAD.ga_tools import *
 from molSimplify.Scripts.io import getlicores
 import os, json, argparse
+import yaml
 from pkg_resources import resource_filename, Requirement
 
 
@@ -192,6 +193,8 @@ def parseall(parser):
     parser.add_argument("-push_act_learn", help="gather target value and classify flags from whole mad run and push to db", nargs='?', const=True, default=False)
     parser.add_argument("-user", help="username of db", nargs='?', const=True, default=False)
     parser.add_argument("-pwd", help="username of db", nargs='?', const=True, default=False)
+    parser.add_argument("-retrain", help="predictor", nargs='?', const=True, default=False)
+    parser.add_argument("-infile", help="input for model retraining", nargs='?', const=True, default=False)
     args = parser.parse_args()
     return args
 
@@ -199,7 +202,7 @@ def parseall(parser):
 ########################
 def checkinput(args):
     ## verfiy compatible arguments given
-    if not args.new and not args.resume and not args.push and not args.push_act_learn:
+    if not args.new and not args.resume and not args.push and not args.push_act_learn and not args.retrain:
         print  'Error: choose either -new to start a new run, or -resume to continue an existing one. Aborting.'
         exit()
     if args.new:
@@ -382,3 +385,8 @@ def get_old_optimizer_ligand_list():
     return old_optimizer_list
 
 
+########################
+def deserialize_json(filein):
+    with open(filein, "r") as fo:
+        args_dict = yaml.safe_load(fo)
+    return args_dict

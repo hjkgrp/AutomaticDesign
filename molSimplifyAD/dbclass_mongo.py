@@ -114,7 +114,7 @@ class TMC():
 
     def cal_RAC(self):
         try:
-            if "mol" in self.this_run.__dict__:
+            if "mol" in self.this_run.__dict__ and not self.this_run.status in [1, 2, 8, 9]:
                 self.this_run.get_descriptor_vector(useinitgeo=False)
             elif "init_mol" in self.this_run.__dict__:
                 self.this_run.get_descriptor_vector(useinitgeo=True)
