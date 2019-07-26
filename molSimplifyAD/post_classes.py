@@ -1425,7 +1425,7 @@ class DFTRun(object):
                 self.del_metal_spin, self.metal_spin_flag = 0, 1
 
     def get_check_flags(self, ss_cutoff=1, ss_loose_cutoff=2,
-                        metalspin_cutoff=1, metalspin_loss_cutoff=2, sp_calc = False):
+                        metalspin_cutoff=1, metalspin_loose_cutoff=2, sp_calc = False):
         self.metal_spin_expected = self.spin - 1
         if self.converged:
             if not sp_calc:
@@ -1441,11 +1441,8 @@ class DFTRun(object):
                     self.del_metal_spin = abs(self.metal_spin_expected - self.net_metal_spin)
                     self.metal_spin_flag = 1 if self.del_metal_spin < metalspin_cutoff else 0
                 else:
-                    try:
-                        self.del_metal_spin = abs(float(self.metal_spin_expected) - float(self.net_metal_spin))
-                        self.metal_spin_flag = 1 if self.del_metal_spin < metalspin_cutoff else 0
-                    except:
-                        self.metal_spin_flag = -1 #assigned by default if flag cannot be computed
+                    self.metal_spin_flag = np.nan #assigned by default if flag cannot be computed
+                    self.del_metal_spin = np.nan
             else:
                 self.net_metal_spin, self.metal_spin_expected = 0, 0
                 self.del_metal_spin, self.metal_spin_flag = 0, 1
@@ -1458,26 +1455,21 @@ class DFTRun(object):
             if not self.spin == 1:
                 if abs(self.ss_act - self.ss_target) > ss_loose_cutoff:
                     self.ss_flag = 0
-                else:
-                    self.ss_flag = 1
             else:
                 self.ss_flag = 1
             if not self.spin == 1:
                 if isinstance(self.net_metal_spin, float):
                     self.del_metal_spin = abs(self.metal_spin_expected - self.net_metal_spin)
-                    if self.del_metal_spin > metalspin_loss_cutoff:
+                    if self.del_metal_spin > metalspin_loose_cutoff:
                         self.metal_spin_flag = 0
-                    else:
-                        self.metal_spin_flag = 1
                 else:
-                    try:
-                        self.del_metal_spin = abs(float(self.metal_spin_expected) - float(self.net_metal_spin))
-                        self.metal_spin_flag = 1 if self.del_metal_spin < metalspin_cutoff else 0
-                    except:
-                        self.metal_spin_flag = "ERROR"
+                    self.metal_spin_flag = np.nan #assigned by default if flag cannot be computed
+                    self.del_metal_spin = np.nan
             else:
                 self.net_metal_spin, self.metal_spin_expected = 0, 0
                 self.del_metal_spin, self.metal_spin_flag = 0, 1
+        print("geo_flag: ", self.geo_flag, "ss_flag: ", self.ss_flag, "metal_spin_flag: ", self.metal_spin_flag)
+        print("metal_spin_expected: ", self.metal_spin_expected, "metal_spin_actual: ", self.net_metal_spin)
 
 class Comp(object):
     """ This is a class for each unique composition and configuration"""

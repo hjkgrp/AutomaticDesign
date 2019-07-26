@@ -51,6 +51,8 @@ def extract_data_from_db(predictor, db, collection, constraints):
     df = convert2dataframe(db, collection, constraints=constraints, normalized=True)
     fnames = get_vars(predictor)
     lname = get_label(predictor)
+    print("features: ", fnames)
+    print("target: ", lname)
     df_use = df[fnames + lname]
     shape = df_use.shape[0]
     df_use = df_use.dropna()
@@ -76,6 +78,7 @@ def normalize_data(df, fnames, lname, predictor, frac=0.8):
         y_scaler.fit(y_train)
         y_train = y_scaler.transform(y_train)
         y_test = y_scaler.transform(y_test)
+    print("mean in target train/test: %f/%f" % (np.mean(y_train), np.mean(y_test)))
     return X_train, X_test, y_train, y_test
 
 
