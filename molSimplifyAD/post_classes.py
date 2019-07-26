@@ -1264,10 +1264,6 @@ class DFTRun(object):
                                     displace_max_hist.append(displace_max)
                                 except:
                                     pass
-
-                            else:
-                                print(line)
-                                sad
         else:
             print('!!combined output file not found!!')
         self.tot_time = tot_time
