@@ -125,6 +125,17 @@ def submit_outstanding_jobs():
     number_live_jobs = len(live_job_dictionary.keys())
     ## set of jobs to dispatch
     joblist = get_outstanding_jobs()
+    if isKeyword('oxocatalysis'):
+        x_idx = find_ligand_idx('x')
+        hyd_idx = find_ligand_idx('hydroxyl')
+        oxo_idx = find_ligand_idx('oxo')
+        hfx_order = ['20', '25', '30', '15', '10', '05', '00']
+        new_order_list = []
+        for order in hfx_order:
+            for i in [str(x_idx), str(hyd_idx), str(oxo_idx)]:
+                new_order_list.append(str(i)+'_'+order)
+        order = {key: i for i, key in enumerate(new_order_list)}
+        joblist = sorted(joblist, key=lambda x: order["_".join(x.split("_")[-3:-1])])
     logger(path_dictionary['state_path'], str(datetime.datetime.now())
            + " number of calculations to be completed =   " + str(len(joblist)))
 
