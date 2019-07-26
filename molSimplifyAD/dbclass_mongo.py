@@ -185,10 +185,9 @@ class tmcMongo(TMC):
         self.subtag = subtag
         self.publication = publication
         self.date = datetime.now()
-        self.write_wfn()
-        self.write_dftrun()
+        self.write_wfn(force=False)
+        self.write_dftrun(force=False)
         self.construct_document()
-        # self.construct_webdoc()
         self.get_update_fields(update_fields)
 
     def construct_document(self):
@@ -208,24 +207,30 @@ class tmcMongo(TMC):
                 except:
                     pass
 
-    def write_wfn(self, wfn_basepath=wfn_basepath):
+    def write_wfn(self, wfn_basepath=wfn_basepath, force=False):
         wfn_path = wfn_basepath + self.unique_name + '/'
-        if not os.path.isdir(wfn_path):
+        noexist = False
+        if (not os.path.isdir(wfn_path)):
             os.makedirs(wfn_path)
-        if self.this_run.wavefunction:
-            for key in self.this_run.wavefunction:
-                if self.this_run.wavefunction[key]:
-                    with open(wfn_path + key, "wb") as fo:
-                        fo.write(self.this_run.wavefunction[key])
-                self.this_run.wavefunction.update({key: wfn_path + key})
+            noexist = True
+        if noexist or force:
+            if self.this_run.wavefunction:
+                for key in self.this_run.wavefunction:
+                    if self.this_run.wavefunction[key]:
+                        with open(wfn_path + key, "wb") as fo:
+                            fo.write(self.this_run.wavefunction[key])
+                    self.this_run.wavefunction.update({key: wfn_path + key})
 
-    def write_dftrun(self, dftrun_basepath=dftrun_basepath):
+    def write_dftrun(self, dftrun_basepath=dftrun_basepath, force=False):
         dftrun_path = dftrun_basepath + self.unique_name + '/'
-        if not os.path.isdir(dftrun_path):
+        noexist = False
+        if (not os.path.isdir(dftrun_path)):
             os.makedirs(dftrun_path)
-        with open(dftrun_path + "dftrun.pkl", "wb") as fo:
-            pickle.dump(self.this_run, fo, protocol=2)
-        self.dftrun = dftrun_path + "dftrun.pkl"
+            noexist = True
+        if noexist or force:
+            with open(dftrun_path + "dftrun.pkl", "wb") as fo:
+                pickle.dump(self.this_run, fo, protocol=2)
+            self.dftrun = dftrun_path + "dftrun.pkl"
 
 
 class tmcActLearn(TMC):
