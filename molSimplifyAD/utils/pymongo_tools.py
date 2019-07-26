@@ -71,7 +71,7 @@ def insert(db, collection, tmc):
         merge_dftruns(dftrun1=_tmc.this_run,
                       dftrun2=tmc.this_run,
                       update_fields=tmc.update_fields)
-        _tmc.write_dftrun()
+        _tmc.write_dftrun(force=True)
     return inserted
 
 
