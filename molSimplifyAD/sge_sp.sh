@@ -1,7 +1,7 @@
 #$ -S bin/bash		#shell
 #$ -l h_rt=24:00:00	#runtime max
 #$ -l h_rss=8G		#memory req
-#$ -q gpus	        #gpus
+#$ -q gpus|gpusnew|gpusnewer	        #gpus
 #$ -l gpus=1            #
 #$ -pe smp 1 		#number parrallel jobs
 

@@ -377,19 +377,19 @@ class DFTRun(object):
     def check_coordination(self):
         try:
             this_metal = self.mol.findMetal()[0]
-            these_neighbours = self.mol.getBondedAtomsOct(this_metal)
+            these_neighbours = self.mol.getBondedAtomsSmart(this_metal)
             self.coord = len(these_neighbours)
         except:
             self.coord = 0
         try:
             this_metal = self.mop_mol.findMetal()[0]
-            these_neighbours = self.mop_mol.getBondedAtomsOct(this_metal)
+            these_neighbours = self.mop_mol.getBondedAtomsSmart(this_metal)
             self.mop_coord = len(these_neighbours)
         except:
             self.mop_coord = 0
         try:
             this_metal = self.init_mol.findMetal()[0]
-            these_neighbours = self.init_mol.getBondedAtomsOct(this_metal)
+            these_neighbours = self.init_mol.getBondedAtomsSmart(this_metal)
             self.init_coord = len(these_neighbours)
         except:
             self.init_coord = 0
