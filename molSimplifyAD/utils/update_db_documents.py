@@ -18,7 +18,7 @@ def main():
     args = arg_parser()
     if args.user == None or args.pwd == None:
         raise KeyError("Please use the format python update_db_documents.py -user <username> -pwd <password>.")
-    constraints = {"publication": "Duan_JCTC_2019", "converged": False}
+    constraints = {"author": "sgugler", "metal_spin_flag": 'ERROR'}
     update_fields = ["geo_flag", "ss_flag", "metal_spin_flag"]
     database = "tmc"
     collection = "oct"
@@ -31,7 +31,8 @@ def main():
     cursor = db[collection].find(constraints)
     tot = count_find(cursor)
     print("Number of complexes to be updated: ", tot)
-    cursor = db[collection].find(constraints)
+    cursor = db[collection].find(constraints,
+                                 no_cursor_timeout=True).batch_size(10)
     print("Are you sure to update %s with constraints %s in %s[%s]? (y/n)" % (str(update_fields), str(constraints),
                                                                               database, collection))
     _in = raw_input()
@@ -42,19 +43,26 @@ def main():
     confirmed = False
     for _tmcdoc in cursor:
         print("complex: ", _tmcdoc["unique_name"])
+        recovered = True
         try:
             _this_tmc = tmcMongo(document=_tmcdoc, tag=_tmcdoc["tag"], subtag=_tmcdoc["subtag"],
                                  publication=_tmcdoc["publication"], update_fields=update_fields)
+            print("complex id_doc:", _this_tmc.id_doc)
+        except ValueError:
+            print("The input document cannot recover a DFTrun object.")
+            recovered = False
 
+        if recovered:
             ####
+            ## Case 1.
             ## Simple modification. You have already know what to update and you **don't** want to update dftrun.
             # Change here. e.g. _this_tmc.document["publication"] = xxx
             ####
 
             ####
+            ## Case 2.
             ## Modify both the documents and dftrun.
             _this_run = copy.deepcopy(_this_tmc.this_run)
-            print("!!!!", _this_run.metal_spin_flag)
             current_folder = _this_run.scrpath.strip("optim.xyz")
             multiwfnpath = glob.glob(current_folder + "*.molden")
             if len(multiwfnpath) > 0:
@@ -65,7 +73,7 @@ def main():
                 if len(mulliken_spin_list) > 1:
                     _this_run.net_oxygen_spin = mulliken_spin_list[1]
             else:
-                print("No molden path found for this run (" + str(jobs) + ")")
+                print("No molden path found.")
             _this_run.get_check_flags()
             new_tmc = tmcMongo(this_run=_this_run, tag=_tmcdoc["tag"], subtag=_tmcdoc["subtag"],
                                publication=_tmcdoc["publication"], update_fields=update_fields)
@@ -84,10 +92,8 @@ def main():
                     print("Quit. Have a nice day.")
                     quit()
             __ = insert(db, collection, new_tmc)
-            count += 1
-            print(" In progress: %d / %d" % (count, tot))
-        except:
-            print("Something went wrong. Please check on complex: ", _tmcdoc["unique_name"])
+        count += 1
+        print(" In progress: %d / %d" % (count, tot))
     print("You have changed %d documents in %s[%s]" % (tot, database, collection))
 
 
