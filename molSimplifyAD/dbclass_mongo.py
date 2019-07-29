@@ -6,7 +6,7 @@ from datetime import datetime
 
 mongo_attr_from_run_undef = ["name", "metal", "ox", "spin", "liglist",
                              "alpha", "functional", "basis", "status", 'converged', 'charge',
-                             'terachem_version', "ligcharge", "dynamic_feature"]
+                             'terachem_version', "ligcharge", "dynamic_feature", "geo_check_dict"]
 mongo_attr_flags = ["geo_flag", "ss_flag", "metal_spin_flag"]
 mongo_attr_id = ["metal", "ox", "spin", "ligstr", "alpha", "functional", "basis", 'converged',
                  "energy", "geotype"]  ### keys that identify a complex in matching.
@@ -114,7 +114,7 @@ class TMC():
 
     def cal_RAC(self):
         try:
-            if "mol" in self.this_run.__dict__ and not self.this_run.status in [1, 2, 8, 9]:
+            if ("mol" in self.this_run.__dict__ and not self.this_run.status in [1, 2, 8, 9]) or self.this_run.alpha != 20.0:
                 self.this_run.get_descriptor_vector(useinitgeo=False)
             elif "init_mol" in self.this_run.__dict__:
                 self.this_run.get_descriptor_vector(useinitgeo=True)

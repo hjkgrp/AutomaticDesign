@@ -51,6 +51,7 @@ class GA_run_defintion:
                   first_row=False,
                   db_communicate=True,
                   active_learning_step=False,
+                  geo_check_dict=False,
                   **KWARGS):
         ## first time start-up function
         #                print('configuring status dictionaty')
@@ -59,7 +60,7 @@ class GA_run_defintion:
             monitor_distance = False
         self.config = {'DFT': DFT,
                        'rundir': rundir,
-                       'genetemplate':genetemplate,
+                       'genetemplate': genetemplate,
                        'runtype': runtype,
                        'optimize': optimize,
                        'use_singlets': use_singlets,
@@ -98,6 +99,7 @@ class GA_run_defintion:
                        'no_geo': no_geo,
                        'db_communicate': db_communicate,
                        'active_learning_step': active_learning_step,
+                       'geo_check_dict': geo_check_dict,
                        }
 
     def serialize(self):
@@ -190,7 +192,9 @@ def parseall(parser):
     parser.add_argument("-reps", help="repeat n resume operations ", nargs='?', const=1, default=False)
     parser.add_argument("-sleep", help="time (in seconds) to sleep beweetwn reps ", nargs='?', const=0, default=False)
     parser.add_argument("-push", help="finsh the whole mad run and push to db", nargs='?', const=True, default=False)
-    parser.add_argument("-push_act_learn", help="gather target value and classify flags from whole mad run and push to db", nargs='?', const=True, default=False)
+    parser.add_argument("-push_act_learn",
+                        help="gather target value and classify flags from whole mad run and push to db", nargs='?',
+                        const=True, default=False)
     parser.add_argument("-user", help="username of db", nargs='?', const=True, default=False)
     parser.add_argument("-pwd", help="username of db", nargs='?', const=True, default=False)
     parser.add_argument("-retrain", help="predictor", nargs='?', const=True, default=False)
@@ -296,14 +300,20 @@ def get_default_gene_template(queue_type='SGE'):
     template = resource_filename(Requirement.parse("molSimplifyAD"), "molSimplifyAD/gene_template.json")
     return template
 
+
 ########################
 def get_active_learning_templates():
     status_template = resource_filename(Requirement.parse("molSimplifyAD"), "molSimplifyAD/active_learning/status.json")
-    hyperopt = resource_filename(Requirement.parse("molSimplifyAD"), "molSimplifyAD/active_learning/hyperopt_template.py")
+    hyperopt = resource_filename(Requirement.parse("molSimplifyAD"),
+                                 "molSimplifyAD/active_learning/hyperopt_template.py")
     jobscript = resource_filename(Requirement.parse("molSimplifyAD"), "molSimplifyAD/active_learning/jobscript")
-    new_mad_input = resource_filename(Requirement.parse("molSimplifyAD"), "molSimplifyAD/active_learning/mad_initializer_template.txt")
-    active_learning_gene_template = resource_filename(Requirement.parse("molSimplifyAD"), "molSimplifyAD/active_learning/oxo_and_hat_genetemplate.json")
-    return status_template,hyperopt,jobscript,new_mad_input,active_learning_gene_template
+    new_mad_input = resource_filename(Requirement.parse("molSimplifyAD"),
+                                      "molSimplifyAD/active_learning/mad_initializer_template.txt")
+    active_learning_gene_template = resource_filename(Requirement.parse("molSimplifyAD"),
+                                                      "molSimplifyAD/active_learning/oxo_and_hat_genetemplate.json")
+    return status_template, hyperopt, jobscript, new_mad_input, active_learning_gene_template
+
+
 ########################
 def process_new_run_input(path):
     ### import and check new run file

@@ -1,6 +1,7 @@
 from molSimplifyAD.ga_init import *
 from molSimplifyAD.ga_io_control import *
 import os, datetime
+import yaml
 def create_new_run(args):
     ## create a new run, based on infile OR  defaults
     configuration = dict()
@@ -34,6 +35,11 @@ def create_new_run(args):
     else:
         shutil.copy(configuration["liglist"],configuration["rundir"]+'ligands_list.txt')
         configuration["liglist"] = process_ligands_file(configuration["liglist"])
+    ## load geo_check_dict
+    if not 'geo_check_dict' in configuration.keys():
+        configuration["geo_check_dict"] = False
+    else:
+        configuration["geo_check_dict"] = yaml.safe_load(open(configuration["geo_check_dict"]))
     ## need gene decription dictionary, first copy to rundir
     if not 'genetemplate' in configuration.keys():
         print 'Using default ligands at' +  get_default_gene_template()

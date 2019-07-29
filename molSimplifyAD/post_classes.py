@@ -49,7 +49,7 @@ class DFTRun(object):
         list_of_init_props = ['status', 'time', 'energy', 'alphaHOMO', 'alphaLUMO', 'betaHOMO', 'betaLUMO',
                               'initial_energy', 'charge', 'idn', 'spin', 'metal', 'lig1_ind', 'lig2_ind', 'lig3_ind',
                               'lig4_ind', 'lig5_ind', 'lig6_ind', 'lig1', 'lig2', 'lig3', 'lig4', 'lig5',
-                              'lig6', 'eq_MLB', 'ax1_MLB', 'ax2_MLB', 'liglist', 'metal_translation','hfx_flag',
+                              'lig6', 'eq_MLB', 'ax1_MLB', 'ax2_MLB', 'liglist', 'metal_translation', 'hfx_flag',
                               'init_eq_MLB', 'init_ax1_MLB', 'init_ax2_MLB', 'outpath', 'geopath', 'init_geopath',
                               'terachem_version', 'terachem_detailed_version', 'basis', 'alpha_level_shift',
                               'beta_level_shift', 'functional', 'rmsd', 'maxd', 'thermo_time', 'solvent_time',
@@ -61,13 +61,14 @@ class DFTRun(object):
                               'prog_num_coord_metal', 'prog_rmsd_max', 'prog_atom_dist_max', 'area',
                               'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
                               'prog_dist_del_all', 'prog_devi_linear_avrg', 'prog_devi_linear_max', 'octahedral',
-                              'mop_energy', 'chem_name','name_without_HFX', 'sp_energy', 'empty_sp_energy', 'tot_time', 'tot_step',
-                              'net_metal_spin', 'metal_spin_expected', 'del_metal_spin','sub_count',
-                              'e_delta','e_delta_tol','e_delta_hist',
-                              'grad_rms','grad_rms_tol','grad_rms_hist',
-                              'grad_max','grad_max_tol','grad_max_hist',
-                              'displace_rms', 'displace_rms_tol','displace_rms_hist',
-                              'displace_max', 'displace_max_tol','displace_max_hist',
+                              'mop_energy', 'chem_name', 'name_without_HFX', 'sp_energy', 'empty_sp_energy', 'tot_time',
+                              'tot_step', 'geo_check_dict',
+                              'net_metal_spin', 'metal_spin_expected', 'del_metal_spin', 'sub_count',
+                              'e_delta', 'e_delta_tol', 'e_delta_hist',
+                              'grad_rms', 'grad_rms_tol', 'grad_rms_hist',
+                              'grad_max', 'grad_max_tol', 'grad_max_hist',
+                              'displace_rms', 'displace_rms_tol', 'displace_rms_hist',
+                              'displace_max', 'displace_max_tol', 'displace_max_hist',
                               'e_hist']
         list_of_init_empty = ['descriptor_names', 'descriptors']
         list_of_init_false = ['solvent_cont', 'water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
@@ -103,6 +104,7 @@ class DFTRun(object):
             setattr(self, this_attribute, 0)
         for this_attribute in list_of_init_nan:
             setattr(self, this_attribute, np.nan)
+        self.set_geo_check_dict()
 
     def set_geo_check_func(self):
         # try:
@@ -110,6 +112,19 @@ class DFTRun(object):
         self.octahedral = isKeyword('octahedral')
         # except:
         #    self.octahedral = True
+
+    def set_geo_check_dict(self):
+        checks = ["dict_oct_check_st", "dict_oct_check_loose", "dict_oneempty_check_st", "dict_oneempty_check_loose"]
+        self.geo_check_dict = {}
+        try:
+            geo_check_dict = isKeyword("geo_check_dict")
+            for _key in checks:
+                if geo_check_dict and _key in geo_check_dict:
+                    self.geo_check_dict.update({_key: geo_check_dict[_key]})
+                else:
+                    self.geo_check_dict.update({_key: gloabls()[_key]})
+        except:
+            pass
 
     def obtain_mopac_mol(self):
         this_mol = mol3D()
@@ -152,15 +167,18 @@ class DFTRun(object):
             setattr(self, 'prog_%s' % key, self.dict_geo_check_prog[key])
 
     def check_oct_needs_final_only(self, debug=False):
-        globs = globalvars()
+        geo_check_dict = isKeyword("geo_check_dict")
+        if geo_check_dict and "dict_oct_check_st" in geo_check_dict:
+            dict_oct_check_st = geo_check_dict["dict_oct_check_st"]
+        if geo_check_dict and "dict_oneempty_check_st" in geo_check_dict:
+            dict_oneempty_check_st = geo_check_dict["dict_oneempty_check_st"]
+
         if self.octahedral:
-            flag_oct, flag_list, dict_oct_info = self.mol.IsOct(
-                dict_check=globs.geo_check_dictionary()["dict_oct_check_st"],
-                debug=debug) 
+            flag_oct, flag_list, dict_oct_info = self.mol.IsOct(dict_check=dict_oct_check_st,
+                                                                debug=debug)
         else:
-            flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(
-                dict_check=globs.geo_check_dictionary()["dict_oneempty_check_st"],
-                debug=debug)
+            flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(dict_check=dict_oneempty_check_st,
+                                                                      debug=debug)
         self.flag_oct = flag_oct
         self.flag_list = flag_list
         self.dict_geo_check = dict_oct_info
@@ -168,16 +186,19 @@ class DFTRun(object):
         return flag_oct, flag_list, dict_oct_info
 
     def check_oct_needs_init(self, debug=False):
-        globs = globalvars()
+        geo_check_dict = isKeyword("geo_check_dict")
+        if geo_check_dict and "dict_oct_check_st" in geo_check_dict:
+            dict_oct_check_st = geo_check_dict["dict_oct_check_st"]
+        if geo_check_dict and "dict_oneempty_check_st" in geo_check_dict:
+            dict_oneempty_check_st = geo_check_dict["dict_oneempty_check_st"]
+
         if self.octahedral:
             flag_oct, flag_list, dict_oct_info = self.mol.IsOct(self.init_mol,
-                                                                dict_check=globs.geo_check_dictionary()[
-                                                                    "dict_oct_check_st"],
+                                                                dict_check=dict_oct_check_st,
                                                                 debug=debug)
         else:
             flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(self.init_mol,
-                                                                      dict_check=globs.geo_check_dictionary()[
-                                                                          "dict_oneempty_check_st"],
+                                                                      dict_check=dict_oneempty_check_st,
                                                                       debug=debug)
         self.flag_oct = flag_oct
         self.flag_list = flag_list
@@ -227,20 +248,21 @@ class DFTRun(object):
         return (this_spin)
 
     def check_oct_on_prog(self, debug=False):
-        globs = globalvars()
+        geo_check_dict = isKeyword("geo_check_dict")
+        if geo_check_dict and "dict_oct_check_loose" in geo_check_dict:
+            dict_oct_check_loose = geo_check_dict["dict_oct_check_loose"]
+        if geo_check_dict and "dict_oneempty_check_loose" in geo_check_dict:
+            dict_oneempty_check_loose = geo_check_dict["dict_oneempty_check_loose"]
+
         if os.path.exists(self.init_geopath):
             self.obtain_init_mol3d()
             if self.octahedral:
                 _, _, dict_oct_info, flag_oct_loose, flag_list = self.progmol.Oct_inspection(self.init_mol,
-                                                                                             dict_check=
-                                                                                             globs.geo_check_dictionary()[
-                                                                                                 "dict_oct_check_loose"],
+                                                                                             dict_check=dict_oct_check_loose,
                                                                                              debug=debug)
             else:
                 _, _, dict_oct_info, flag_oct_loose, flag_list = self.progmol.Structure_inspection(self.init_mol,
-                                                                                                   dict_check=
-                                                                                                   globs.geo_check_dictionary()[
-                                                                                                       "dict_oneempty_check_loose"],
+                                                                                                   dict_check=dict_oneempty_check_loose,
                                                                                                    debug=debug)
             self.flag_oct_loose = flag_oct_loose
             self.flag_list_loose = flag_list
@@ -250,13 +272,11 @@ class DFTRun(object):
             print(" This should not happen as we should have initial geometry for our calculations. please check.")
             print("Using old loose check....")
             if self.octahedral:
-                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsOct(
-                    dict_check=globs.geo_check_dictionary()["dict_oct_check_loose"],
-                    debug=debug)
+                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsOct(dict_check=dict_oct_check_loose,
+                                                                              debug=debug)
             else:
-                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsStructure(
-                    dict_check=globs.geo_check_dictionary()["dict_oneempty_check_loose"],
-                    debug=debug)
+                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsStructure(dict_check=dict_oneempty_check_loose,
+                                                                                    debug=debug)
             self.flag_oct_loose = flag_oct_loose
             self.flag_list_loose = flag_list
             self.dict_geo_check_prog = dict_oct_info
@@ -349,7 +369,6 @@ class DFTRun(object):
         self.liglist_compact = rename_ligands(self.liglist)
         self.spin_cat = spin_cat
         self.alpha = alpha
-
 
     def test_prog(self):
         ok = False
@@ -1193,7 +1212,7 @@ class DFTRun(object):
         tot_step = -1
         tot_time = -1
         _time_tot = -1
-        convcrit_read = False # marker for tolerance lines (new optim only)
+        convcrit_read = False  # marker for tolerance lines (new optim only)
         e_delta = False
         grad_rms = False
         grad_max = False
@@ -1213,7 +1232,7 @@ class DFTRun(object):
         displace_max_hist = []
         if os.path.isfile(current_path):
             with open(current_path, 'r') as fin:
-                for i,line in enumerate(fin):
+                for i, line in enumerate(fin):
                     ll = line.split()
                     if line[:len('FINAL ENERGY:')] == 'FINAL ENERGY:':
                         tot_step += 1
@@ -1240,22 +1259,23 @@ class DFTRun(object):
                                 print
                                 '\n\n CHECK GEO OUTFILE FOR abnormal sec'
                     if not (line.find('Checking Convergence Criteria')) == -1:
-                       convcrit_read = i
+                        convcrit_read = i
                     if convcrit_read:
                         if i == convcrit_read + 2 and len(ll) > 2:
                             try:
                                 e_delta_tol, grad_rms_tol, grad_max_tol, displace_rms_tol, \
-                                displace_max_tol =  [float(ii) for ii in line.strip().split()[2:]]
+                                displace_max_tol = [float(ii) for ii in line.strip().split()[2:]]
                             except:
                                 pass
                         elif i == convcrit_read + 4:
-                            inds_to_read = [2, 3,5,7,9,11]
+                            inds_to_read = [2, 3, 5, 7, 9, 11]
 
                             convcrit_read = False
-                            if len(ll) > 2 :
+                            if len(ll) > 2:
                                 try:
                                     _e, e_delta, grad_rms, grad_max, displace_rms, \
-                                    displace_max =  [float(ii) for ii in [line.strip().split()[jj] for jj in inds_to_read]]
+                                    displace_max = [float(ii) for ii in
+                                                    [line.strip().split()[jj] for jj in inds_to_read]]
                                     e_hist.append(_e)
                                     e_delta_hist.append(e_delta)
                                     grad_rms_hist.append(grad_rms)
@@ -1376,7 +1396,6 @@ class DFTRun(object):
             with open(dynamic_feature_path, "r") as fo:
                 self.dynamic_feature = json.load(fo)
 
-
     def obtain_wavefunction(self):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)
@@ -1397,7 +1416,7 @@ class DFTRun(object):
             self.wavefunction_path.update({key: wavefunc_file})
         self.molden_path = path_dictionary["scr_path"] + self.name + '/' + self.name + ".molden"
 
-    def calculate_spin_on_metal(self): ### This function should be replaced by get_Mulliken in ga_tools.
+    def calculate_spin_on_metal(self):  ### This function should be replaced by get_Mulliken in ga_tools.
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)
         scrdir = path_dictionary["scr_path"] + self.name + '/'
@@ -1421,7 +1440,7 @@ class DFTRun(object):
                 self.del_metal_spin, self.metal_spin_flag = 0, 1
 
     def get_check_flags(self, ss_cutoff=1, ss_loose_cutoff=2,
-                        metalspin_cutoff=1, metalspin_loose_cutoff=2, sp_calc = False):
+                        metalspin_cutoff=1, metalspin_loose_cutoff=2, sp_calc=False):
         self.metal_spin_expected = self.spin - 1
         self.geo_flag, self.ss_flag, self.metal_spin_flag = np.nan, np.nan, np.nan
         if self.converged:
@@ -1438,7 +1457,7 @@ class DFTRun(object):
                     self.del_metal_spin = abs(self.metal_spin_expected - self.net_metal_spin)
                     self.metal_spin_flag = 1 if self.del_metal_spin < metalspin_cutoff else 0
                 else:
-                    self.metal_spin_flag = np.nan #assigned by default if flag cannot be computed
+                    self.metal_spin_flag = np.nan  # assigned by default if flag cannot be computed
                     self.del_metal_spin = np.nan
             else:
                 self.net_metal_spin, self.metal_spin_expected = 0, 0
@@ -1460,13 +1479,14 @@ class DFTRun(object):
                     if self.del_metal_spin > metalspin_loose_cutoff:
                         self.metal_spin_flag = 0
                 else:
-                    self.metal_spin_flag = np.nan #assigned by default if flag cannot be computed
+                    self.metal_spin_flag = np.nan  # assigned by default if flag cannot be computed
                     self.del_metal_spin = np.nan
             else:
                 self.net_metal_spin, self.metal_spin_expected = 0, 0
                 self.del_metal_spin, self.metal_spin_flag = 0, 1
         print("geo_flag: ", self.geo_flag, "ss_flag: ", self.ss_flag, "metal_spin_flag: ", self.metal_spin_flag)
         print("metal_spin_expected: ", self.metal_spin_expected, "metal_spin_actual: ", self.net_metal_spin)
+
 
 class Comp(object):
     """ This is a class for each unique composition and configuration"""
@@ -1511,9 +1531,9 @@ class Comp(object):
         self.split = 777
 
         ## run class dependent props:
-        list_of_init_props = ['chem_name','name_without_HFX', 'spin', 'charge', 'attempted', 'converged',
+        list_of_init_props = ['chem_name', 'name_without_HFX', 'spin', 'charge', 'attempted', 'converged',
                               'mop_converged', 'time', 'energy', 'sp_energy', 'empty_sp_energy',
-                              'flag_oct', 'flag_list','hfx_flag','geo_flag',
+                              'flag_oct', 'flag_list', 'hfx_flag', 'geo_flag',
                               'num_coord_metal', 'rmsd_max', 'atom_dist_max',
                               'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
                               'devi_linear_avrg', 'devi_linear_max',
@@ -1539,13 +1559,13 @@ class Comp(object):
                               'alpha_level_shift', 'beta_level_shift', 'job_gene',
                               "DFT_RUN", 'tot_time', 'tot_step', 'metal_translation',
                               'net_metal_spin', 'metal_spin_expected', 'del_metal_spin', 'metal_spin_flag',
-                              'sub_count','e_delta','e_delta_tol','e_delta_hist',
-                              'grad_rms','grad_rms_tol','grad_rms_hist',
-                              'grad_max','grad_max_tol','grad_max_hist',
-                              'displace_rms', 'displace_rms_tol','displace_rms_hist',
-                              'displace_max', 'displace_max_tol','displace_max_hist',
+                              'sub_count', 'e_delta', 'e_delta_tol', 'e_delta_hist',
+                              'grad_rms', 'grad_rms_tol', 'grad_rms_hist',
+                              'grad_max', 'grad_max_tol', 'grad_max_hist',
+                              'displace_rms', 'displace_rms_tol', 'displace_rms_hist',
+                              'displace_max', 'displace_max_tol', 'displace_max_hist',
                               'e_hist']
- 
+
         list_of_init_falses = ['attempted', 'converged',
                                'mop_converged']
         if isKeyword('ax_lig_dissoc'):
