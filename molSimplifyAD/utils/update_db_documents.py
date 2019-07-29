@@ -18,8 +18,8 @@ def main():
     args = arg_parser()
     if args.user == None or args.pwd == None:
         raise KeyError("Please use the format python update_db_documents.py -user <username> -pwd <password>.")
-    constraints = {"author": "sgugler", "metal_spin_flag": 'ERROR'}
-    update_fields = ["geo_flag", "ss_flag", "metal_spin_flag"]
+    constraints = {"author": "sgugler", "RACs": {}}
+    update_fields = ["RACs"]
     database = "tmc"
     collection = "oct"
     user = args.user
@@ -56,27 +56,30 @@ def main():
             ####
             ## Case 1.
             ## Simple modification. You have already know what to update and you **don't** want to update dftrun.
-            # Change here. e.g. _this_tmc.document["publication"] = xxx
+
+            # new_tmc = copy.deepcopy(_this_tmc)
+            # Change here. e.g. new_tmc.document["publication"] = xxx
             ####
 
             ####
             ## Case 2.
             ## Modify both the documents and dftrun.
-            _this_run = copy.deepcopy(_this_tmc.this_run)
-            current_folder = _this_run.scrpath.strip("optim.xyz")
-            multiwfnpath = glob.glob(current_folder + "*.molden")
-            if len(multiwfnpath) > 0:
-                multiwfnpath = multiwfnpath[0]
-                mulliken_spin_list = get_mulliken(multiwfnpath, _this_run.spin, _this_run.liglist[-1])
-                print(mulliken_spin_list)
-                _this_run.net_metal_spin = mulliken_spin_list[0]
-                if len(mulliken_spin_list) > 1:
-                    _this_run.net_oxygen_spin = mulliken_spin_list[1]
-            else:
-                print("No molden path found.")
-            _this_run.get_check_flags()
-            new_tmc = tmcMongo(this_run=_this_run, tag=_tmcdoc["tag"], subtag=_tmcdoc["subtag"],
-                               publication=_tmcdoc["publication"], update_fields=update_fields)
+
+            # _this_run = copy.deepcopy(_this_tmc.this_run)
+            # current_folder = _this_run.scrpath.strip("optim.xyz")
+            # multiwfnpath = glob.glob(current_folder + "*.molden")
+            # if len(multiwfnpath) > 0:
+            #     multiwfnpath = multiwfnpath[0]
+            #     mulliken_spin_list = get_mulliken(multiwfnpath, _this_run.spin, _this_run.liglist[-1])
+            #     print(mulliken_spin_list)
+            #     _this_run.net_metal_spin = mulliken_spin_list[0]
+            #     if len(mulliken_spin_list) > 1:
+            #         _this_run.net_oxygen_spin = mulliken_spin_list[1]
+            # else:
+            #     print("No molden path found.")
+            # _this_run.get_check_flags()
+            # new_tmc = tmcMongo(this_run=_this_run, tag=_tmcdoc["tag"], subtag=_tmcdoc["subtag"],
+            #                    publication=_tmcdoc["publication"], update_fields=update_fields)
             ###
 
             if not confirmed:
