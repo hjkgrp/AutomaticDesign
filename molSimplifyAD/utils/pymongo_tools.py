@@ -236,7 +236,7 @@ def push2db(database, collection, tag, subtag, publication=False,
 
 def push_complex_actlearn(step, all_complexes, database, collection,
                           user=False, pwd=False, host="localhost", port=27017,
-                          auth=False):
+                          auth=False, update_fields=False):
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
     print('db push is enabled, attempting commit to ', collection)
@@ -250,7 +250,8 @@ def push_complex_actlearn(step, all_complexes, database, collection,
                                status_flag=this_complex["status_flag"],
                                target=this_complex["target"],
                                descriptors=this_complex["descriptors"],
-                               this_run=this_complex["dftrun"]
+                               this_run=this_complex["dftrun"],
+                               update_fields=update_fields
                                )
         _s = time.time()
         repeated, _tmcdoc = check_repeated(db, collection, this_tmc)

@@ -17,7 +17,7 @@ from molSimplifyAD.ga_oct_check import *
 
 
 #######################
-def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary, post_all=False):
+def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary, post_all=False, sp_calc=False):
     ## function to choos if a job should
     # GA_run = get_current_GA()
     notin_list = ["sp_infiles", "thermo", "solvent", "water", "prfo", "fod"]
@@ -28,7 +28,7 @@ def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary, post_all
 
     postProc = False
     ## be post processed:
-    if (job not in live_job_dictionary.keys()) and (len(job.strip('\n')) != 0) and geoopt:
+    if (((job not in live_job_dictionary.keys()) and (len(job.strip('\n')) != 0) and geoopt) or ((job not in live_job_dictionary.keys()) and (len(job.strip('\n')) != 0) and sp_calc)):
         if isKeyword('post_all') or post_all:
             postProc = True
         elif job in converged_jobs_dictionary.keys():
@@ -537,8 +537,7 @@ def check_all_current_convergence(post_all=False):
                                 logger(base_path_dictionary['state_path'],
                                        str(datetime.datetime.now()) + ' Check on prog_geo: flag_oct: ' + str(flag_oct))
                                 logger(base_path_dictionary['state_path'],
-                                       str(
-                                           datetime.datetime.now()) + ' Current structure is supposed to be octahedral: ' + str(
+                                       str(datetime.datetime.now()) + ' Current structure is supposed to be octahedral: ' + str(
                                            this_run.octahedral))
                                 if not flag_oct:
                                     logger(base_path_dictionary['state_path'],
@@ -547,11 +546,16 @@ def check_all_current_convergence(post_all=False):
                                     logger(base_path_dictionary['state_path'],
                                            str(datetime.datetime.now()) + ' Metrics : ' + str(dict_oct_info))
                                 if this_run.progstatus == 0:
-                                    create_generic_infile(jobs, use_old_optimizer=use_old_optimizer, restart=True)
-                                    this_run.status = 2  ## prog geo is good
-                                    logger(base_path_dictionary['state_path'],
-                                           str(
-                                               datetime.datetime.now()) + ' job allowed to restart since good prog geo found ')
+                                    steps = count_number_of_geo_changes(this_run)
+                                    if steps < 2:
+                                        this_run.status = 6 # must have had SCF convergence issues, run did not converge and only had initial step
+                                        logger(base_path_dictionary['state_path'],
+                                       str(datetime.datetime.now()) + ' SCF convergence issues detected, removing job.')
+                                    else:
+                                        create_generic_infile(jobs, use_old_optimizer=use_old_optimizer, restart=True)
+                                        this_run.status = 2  ## prog geo is good
+                                        logger(base_path_dictionary['state_path'],
+                                            str(datetime.datetime.now()) + ' job allowed to restart since good prog geo found ')              
                                 else:
                                     logger(base_path_dictionary['state_path'], str(
                                         datetime.datetime.now()) + ' job not allowed to restart since prog geo is not good ')
@@ -703,7 +707,9 @@ def check_all_current_convergence(post_all=False):
                        + ' added ' + this_run.name + ' to all_runs with status ' + str(this_run.status))
 
             elif ("sp_infiles" in jobs and not isKeyword('optimize')) or (
-                    "sp_infiles" in jobs and isKeyword('oxocatalysis')):
+                    "sp_infiles" in jobs and isKeyword('oxocatalysis') and postprocessJob(job=jobs,
+                    live_job_dictionary=live_job_dictionary,converged_jobs_dictionary=converged_jobs,
+                    post_all=post_all,sp_calc=True)):
                 translate_dict = translate_job_name(jobs)
                 gene = translate_dict['gene']
                 gen = translate_dict['gen']
