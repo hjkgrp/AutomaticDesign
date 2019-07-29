@@ -229,7 +229,11 @@ class tmcMongo(TMC):
             noexist = True
         if noexist or force:
             with open(dftrun_path + "dftrun.pkl", "wb") as fo:
-                pickle.dump(self.this_run, fo, protocol=2)
+                try:
+                    pickle.dump(self.this_run, fo, protocol=2)
+                except KeyboardInterrupt:
+                    pickle.dump(self.this_run, fo, protocol=2)
+                    fo.flush()
             self.dftrun = dftrun_path + "dftrun.pkl"
 
 

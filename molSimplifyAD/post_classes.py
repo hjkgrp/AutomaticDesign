@@ -1427,6 +1427,7 @@ class DFTRun(object):
     def get_check_flags(self, ss_cutoff=1, ss_loose_cutoff=2,
                         metalspin_cutoff=1, metalspin_loose_cutoff=2, sp_calc = False):
         self.metal_spin_expected = self.spin - 1
+        self.geo_flag, self.ss_flag, self.metal_spin_flag = np.nan, np.nan, np.nan
         if self.converged:
             if not sp_calc:
                 self.geo_flag = self.flag_oct
