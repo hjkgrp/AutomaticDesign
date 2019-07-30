@@ -87,13 +87,17 @@ def train_model(predictor, X_train, X_test, y_train, y_test, epochs=1000, batch_
     print("Initializing weights...")
     model = initialize_model_weights(model)
     history = model.fit(X_train, y_train, epochs=epochs, verbose=1, batch_size=batch_size)
-    loss, metrics = model.evaluate(X_test, y_test)
-    print(("loss: ", loss))
-    if not 'clf' in predictor:
-        print(("mae: ", metrics))
-    else:
-        print("accuracy: ", metrics)
-    return model, history
+    results = model.evaluate(X_train, y_train)
+    res_dict_train = {}
+    for ii, key in enumerate(model.metrics_names):
+        res_dict_train.update({key: results[ii]})
+    print("train reulst: ", res_dict_train)
+    results = model.evaluate(X_test, y_test)
+    res_dict_test = {}
+    for ii, key in enumerate(model.metrics_names):
+        res_dict_test.update({key: results[ii]})
+    print("test reulst: ", res_dict_test)
+    return model, history, res_dict_train, res_dict_test
 
 
 def retrain(predictor, user, pwd,
@@ -104,15 +108,15 @@ def retrain(predictor, user, pwd,
     db = connect2db(user, pwd, host, port, database, auth)
     df, fnames, lname = extract_data_from_db(predictor, db, collection, constraints=constraints)
     X_train, X_test, y_train, y_test = normalize_data(df, fnames, lname, predictor, frac=frac)
-    model, history = train_model(predictor, X_train, X_test, y_train, y_test,
-                                 epochs=epochs, batch_size=batch_size)
+    model, history, res_dict_train, res_dict_test = train_model(predictor, X_train, X_test, y_train, y_test,
+                                                                epochs=epochs, batch_size=batch_size)
     model_dict = {}
     model_dict.update({"predictor": predictor})
     model_dict.update({"constraints": str(constraints)})
     model_dict.update({"history": history.history})
     model_dict.update({"hyperparams": {"epochs": epochs, "batch_size": batch_size}})
-    model_dict.update({"score_train": model.evaluate(X_train, y_train)[-1],
-                       "score_test": model.evaluate(X_test, y_test)[-1],
+    model_dict.update({"score_train": res_dict_train,
+                       "score_test": res_dict_test,
                        "target_train": y_train.tolist(),
                        "target_test": y_test.tolist(),
                        "pred_train": model.predict(X_train).tolist(),

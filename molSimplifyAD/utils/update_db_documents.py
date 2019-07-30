@@ -18,8 +18,8 @@ def main():
     args = arg_parser()
     if args.user == None or args.pwd == None:
         raise KeyError("Please use the format python update_db_documents.py -user <username> -pwd <password>.")
-    constraints = {"author": "sgugler", "RACs": {}}
-    update_fields = ["RACs"]
+    constraints = {"lig6": {"$ne": "x"}, "status": 0}
+    update_fields = ['gap']
     database = "tmc"
     collection = "oct"
     user = args.user
@@ -57,7 +57,11 @@ def main():
             ## Case 1.
             ## Simple modification. You have already know what to update and you **don't** want to update dftrun.
 
-            # new_tmc = copy.deepcopy(_this_tmc)
+            new_tmc = copy.deepcopy(_this_tmc)
+            try:
+                new_tmc.document["gap"] = new_tmc.document["alphaLUMO"] - new_tmc.document["alphaHOMO"]
+            except:
+                pass
             # Change here. e.g. new_tmc.document["publication"] = xxx
             ####
 
@@ -85,7 +89,10 @@ def main():
             if not confirmed:
                 for key in update_fields:
                     print("=======Key======: ", key)
-                    print("Current: ", _tmcdoc[key])
+                    if key in _tmcdoc:
+                        print("Current: ", _tmcdoc[key])
+                    else:
+                        print("Currently does not exist.")
                     print("Change to: ", new_tmc.document[key])
                 print("Is this expected? (y/n)")
                 _in = raw_input()
