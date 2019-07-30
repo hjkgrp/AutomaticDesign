@@ -11,7 +11,7 @@ mongo_attr_flags = ["geo_flag", "ss_flag", "metal_spin_flag"]
 mongo_attr_id = ["metal", "ox", "spin", "ligstr", "alpha", "functional", "basis", 'converged',
                  "energy", "geotype"]  ### keys that identify a complex in matching.
 mongo_attr_from_run_nan = ["energy", "ss_target", "ss_act", 'alphaHOMO', 'betaHOMO',
-                           'alphaLUMO', 'betaLUMO']
+                           'alphaLUMO', 'betaLUMO', 'gap']
 mongo_attr_other = ["date", "author", "geotype", "opt_geo", "init_geo", "prog_geo",
                     "RACs", "initRACs", "dftrun", "tag", "subtag", "unique_name",
                     "publication", "ligstr"]
@@ -114,7 +114,8 @@ class TMC():
 
     def cal_RAC(self):
         try:
-            if ("mol" in self.this_run.__dict__ and not self.this_run.status in [1, 2, 8, 9]) or self.this_run.alpha != 20.0:
+            if ("mol" in self.this_run.__dict__ and not self.this_run.status in [1, 2, 8,
+                                                                                 9]) or self.this_run.alpha != 20.0:
                 self.this_run.get_descriptor_vector(useinitgeo=False)
             elif "init_mol" in self.this_run.__dict__:
                 self.this_run.get_descriptor_vector(useinitgeo=True)

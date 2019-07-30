@@ -46,7 +46,7 @@ class DFTRun(object):
         self.name = name
         self.comment = ''
         self.file_merge_list = ['optim.xyz', 'bond_order.list', 'charge_mull.xls', 'grad.xyz', 'mullpop', 'spin.xls']
-        list_of_init_props = ['status', 'time', 'energy', 'alphaHOMO', 'alphaLUMO', 'betaHOMO', 'betaLUMO',
+        list_of_init_props = ['status', 'time', 'energy', 'alphaHOMO', 'alphaLUMO', 'betaHOMO', 'betaLUMO', 'gap',
                               'initial_energy', 'charge', 'idn', 'spin', 'metal', 'lig1_ind', 'lig2_ind', 'lig3_ind',
                               'lig4_ind', 'lig5_ind', 'lig6_ind', 'lig1', 'lig2', 'lig3', 'lig4', 'lig5',
                               'lig6', 'eq_MLB', 'ax1_MLB', 'ax2_MLB', 'liglist', 'metal_translation', 'hfx_flag',
@@ -1543,7 +1543,7 @@ class Comp(object):
                               'prog_dist_del_all',
                               'prog_devi_linear_avrg', 'prog_devi_linear_max',
                               'mop_energy', 'alphaHOMO', 'betaHOMO',
-                              'alphaLUMO', 'betaLUMO', 'area',
+                              'alphaLUMO', 'betaLUMO', 'area', 'gap',
                               'coord', 'mop_coord',
                               'ligrsmd', 'rmsd', 'maxd',
                               'angletest', 'thermo_cont', 'imag',
