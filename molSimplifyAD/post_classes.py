@@ -116,15 +116,13 @@ class DFTRun(object):
     def set_geo_check_dict(self):
         checks = ["dict_oct_check_st", "dict_oct_check_loose", "dict_oneempty_check_st", "dict_oneempty_check_loose"]
         self.geo_check_dict = {}
-        try:
-            geo_check_dict = isKeyword("geo_check_dict")
-            for _key in checks:
-                if geo_check_dict and _key in geo_check_dict:
-                    self.geo_check_dict.update({_key: geo_check_dict[_key]})
-                else:
-                    self.geo_check_dict.update({_key: gloabls()[_key]})
-        except:
-            pass
+        geo_check_dict = isKeyword("geo_check_dict")
+        for _key in checks:
+            if geo_check_dict and _key in geo_check_dict:
+                self.geo_check_dict.update({_key: geo_check_dict[_key]})
+            else:
+                self.geo_check_dict.update({_key: globals()[_key]})
+        print("geo_check_dict:", self.geo_check_dict)
 
     def obtain_mopac_mol(self):
         this_mol = mol3D()
@@ -169,15 +167,19 @@ class DFTRun(object):
     def check_oct_needs_final_only(self, debug=False):
         geo_check_dict = isKeyword("geo_check_dict")
         if geo_check_dict and "dict_oct_check_st" in geo_check_dict:
-            dict_oct_check_st = geo_check_dict["dict_oct_check_st"]
+            oct_st = geo_check_dict["dict_oct_check_st"]
+        else:
+            oct_st = dict_oct_check_st
         if geo_check_dict and "dict_oneempty_check_st" in geo_check_dict:
-            dict_oneempty_check_st = geo_check_dict["dict_oneempty_check_st"]
+            oneempty_st = geo_check_dict["dict_oneempty_check_st"]
+        else:
+            oneempty_st = dict_oneempty_check_st
 
         if self.octahedral:
-            flag_oct, flag_list, dict_oct_info = self.mol.IsOct(dict_check=dict_oct_check_st,
+            flag_oct, flag_list, dict_oct_info = self.mol.IsOct(dict_check=oct_st,
                                                                 debug=debug)
         else:
-            flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(dict_check=dict_oneempty_check_st,
+            flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(dict_check=oneempty_st,
                                                                       debug=debug)
         self.flag_oct = flag_oct
         self.flag_list = flag_list
@@ -188,17 +190,21 @@ class DFTRun(object):
     def check_oct_needs_init(self, debug=False):
         geo_check_dict = isKeyword("geo_check_dict")
         if geo_check_dict and "dict_oct_check_st" in geo_check_dict:
-            dict_oct_check_st = geo_check_dict["dict_oct_check_st"]
+            oct_st = geo_check_dict["dict_oct_check_st"]
+        else:
+            oct_st = dict_oct_check_st
         if geo_check_dict and "dict_oneempty_check_st" in geo_check_dict:
-            dict_oneempty_check_st = geo_check_dict["dict_oneempty_check_st"]
+            oneempty_st = geo_check_dict["dict_oneempty_check_st"]
+        else:
+            oneempty_st = dict_oneempty_check_st
 
         if self.octahedral:
             flag_oct, flag_list, dict_oct_info = self.mol.IsOct(self.init_mol,
-                                                                dict_check=dict_oct_check_st,
+                                                                dict_check=oct_st,
                                                                 debug=debug)
         else:
             flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(self.init_mol,
-                                                                      dict_check=dict_oneempty_check_st,
+                                                                      dict_check=oneempty_st,
                                                                       debug=debug)
         self.flag_oct = flag_oct
         self.flag_list = flag_list
@@ -250,19 +256,23 @@ class DFTRun(object):
     def check_oct_on_prog(self, debug=False):
         geo_check_dict = isKeyword("geo_check_dict")
         if geo_check_dict and "dict_oct_check_loose" in geo_check_dict:
-            dict_oct_check_loose = geo_check_dict["dict_oct_check_loose"]
+            oct_loose = geo_check_dict["dict_oct_check_loose"]
+        else:
+            oct_loose = dict_oct_check_loose
         if geo_check_dict and "dict_oneempty_check_loose" in geo_check_dict:
-            dict_oneempty_check_loose = geo_check_dict["dict_oneempty_check_loose"]
+            oneempty_loose = geo_check_dict["dict_oneempty_check_loose"]
+        else:
+            oneempty_loose = dict_oneempty_check_loose
 
         if os.path.exists(self.init_geopath):
             self.obtain_init_mol3d()
             if self.octahedral:
                 _, _, dict_oct_info, flag_oct_loose, flag_list = self.progmol.Oct_inspection(self.init_mol,
-                                                                                             dict_check=dict_oct_check_loose,
+                                                                                             dict_check=oct_loose,
                                                                                              debug=debug)
             else:
                 _, _, dict_oct_info, flag_oct_loose, flag_list = self.progmol.Structure_inspection(self.init_mol,
-                                                                                                   dict_check=dict_oneempty_check_loose,
+                                                                                                   dict_check=oneempty_loose,
                                                                                                    debug=debug)
             self.flag_oct_loose = flag_oct_loose
             self.flag_list_loose = flag_list
@@ -272,10 +282,10 @@ class DFTRun(object):
             print(" This should not happen as we should have initial geometry for our calculations. please check.")
             print("Using old loose check....")
             if self.octahedral:
-                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsOct(dict_check=dict_oct_check_loose,
+                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsOct(dict_check=oct_loose,
                                                                               debug=debug)
             else:
-                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsStructure(dict_check=dict_oneempty_check_loose,
+                flag_oct_loose, flag_list, dict_oct_info = self.progmol.IsStructure(dict_check=oneempty_loose,
                                                                                     debug=debug)
             self.flag_oct_loose = flag_oct_loose
             self.flag_list_loose = flag_list

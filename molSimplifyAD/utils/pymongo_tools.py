@@ -289,15 +289,15 @@ def push_models(model, model_dict, database, collection,
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
     this_model = modelMongo(model=model, **model_dict)
-    if not query_one(db, collection,
-                     constraints={"predictor": this_model.predictor, "len_tot": this_model.len_tot}) == None:
+    model_id = {"predictor": this_model.predictor, "len_tot": this_model.len_tot, "constraints": this_model.constraints}
+    if not query_one(db, collection, constraints=model_id) == None:
         print("A model of has already existed.")
         print("force_push?", this_model.force_push)
-    if this_model.force_push:
-        print("force_push is truned on. pushing...")
-        db[collection].insert_one(this_model.document)
     else:
         print("pushing...")
+        db[collection].insert_one(this_model.document)
+    if this_model.force_push:
+        print("force_push is truned on. pushing...")
         db[collection].insert_one(this_model.document)
     db[collection].create_index([("predictor", pymongo.ASCENDING),
                                  ("len_tot", pymongo.ASCENDING)
