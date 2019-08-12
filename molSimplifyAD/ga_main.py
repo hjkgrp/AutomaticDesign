@@ -639,7 +639,7 @@ class GA_generation:
 
     def job_dispatcher(self,loaded_model_list=False, train_matrices=False,
                        mean_info= False, var_info = False, run_list=False,
-                       collection="oct_new"):
+                       collection="oct"):
         jobpaths = list()
         emsg, ANN_results_dict = read_ANN_results_dictionary(self.current_path_dictionary["ANN_output"] + '/ANN_results.csv')
         current_outstanding = get_outstanding_jobs()

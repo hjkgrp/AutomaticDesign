@@ -1336,9 +1336,8 @@ class octahedral_complex:
 
     def assemble_constraints(self, ox, spin):
         id_keys = ["metal", "ox", "spin", "ligstr", "alpha"]
-        purified_ligands = [self.ligands[i] for i in range(6) if self.lig_occs[i] > 0]
-        print(purified_ligands)
-        _liglist, smicat = SMILES_converter(purified_ligands)
+        print('ligands: ', self.ligands)
+        _liglist, smicat = SMILES_converter(self.ligands)
         liglist = [ele.strip("'") for ele in _liglist.split()]
 
         query_constraints = {}
