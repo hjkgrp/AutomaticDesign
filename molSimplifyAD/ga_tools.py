@@ -1498,8 +1498,13 @@ def set_outstanding_jobs(list_of_jobs):
     path_dictionary = setup_paths()
     path = path_dictionary['job_path']
     ensure_dir(path)
+    # reorder jobs to float single-point cost jobs
+    # to the top:
+    sp_jobs = [j for j in list_of_jobs if ('water' in j) or ('solvent' in j) or ('single' in j)]
+    geo_jobs = [j for j in list_of_jobs if j not in sp_jobs]
+    reordered_jobs = sp_jobs + geo_jobs
     with open(path + '/outstanding_job_list.txt', 'w') as f:
-        for jobs in list_of_jobs:
+        for jobs in reordered_jobs:
             f.write(jobs.strip("\n") + "\n")
     print('written\n')
 

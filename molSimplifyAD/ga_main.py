@@ -84,6 +84,7 @@ class GA_generation:
         ### function to add a given complex to the pool
         ### arguments are positions in ligand names (1st elemet)
         ### of ligand list (not smiles)
+       
         if isinstance(ligs[0][0], basestring):
             ligands_list_inds = [i[0] for i in self.ligands_list]
         else:
@@ -101,52 +102,16 @@ class GA_generation:
         proc_inds = []
         found_smi = False
 
-        #for l in ligs:
-        #    if isinstance(l, basestring):
-        #        print('dictionary  lig: ' + str(l))
-        #        procd_ligs.append(l)
-        #        print(procd_ligs)
-        #    else:
-        #        print('smiles lig: ' + str(l[0]))
-        #        procd_ligs.append(l[0][0])
-        #        found_smi = True
+        for l in ligs:
+            if isinstance(l, basestring):
+                print('dictionary  lig: ' + str(l))
+                procd_ligs.append(l)
+                print(procd_ligs)
+            else:
+                print('smiles lig: ' + str(l[0]))
+                procd_ligs.append(l[0][0])
+                found_smi = True
         
-        if isinstance(ligs[0][0], basestring):
-            print('dictionary  lig: ' + str(ligs[0][0]))    
-            lig1 = ligs[0][0]
-        else: 
-            print('smiles lig: ' + str(ligs[0][0])) 
-            lig1 = ligs[0][0][0]
-        if isinstance(ligs[0][1], basestring):  
-            print('dictionary  lig: ' + str(ligs[0][1]))    
-            lig2 = ligs[0][1]   
-        else:   
-            print('smiles lig: ' + str(ligs[0][1])) 
-            lig2 = ligs[0][1][0]
-        if isinstance(ligs[0][2], basestring):   
-            print('dictionary  lig: ' + str(ligs[0][2]))    
-            lig3 = ligs[0][2]   
-        else:   
-            print('smiles lig: ' + str(ligs[0][2])) 
-            lig3 = ligs[0][2][0]
-        if isinstance(ligs[0][3], basestring):   
-            print('dictionary  lig: ' + str(ligs[0][3]))    
-            lig4 = ligs[0][3]   
-        else:   
-            print('smiles lig: ' + str(ligs[0][3])) 
-            lig4 = ligs[0][3][0]
-        if isinstance(ligs[1][0], basestring):   
-            print('dictionary  lig: ' + str(ligs[1][0]))    
-            lig5 = ligs[1][0]   
-        else:   
-            print('smiles lig: ' + str(ligs[1][0])) 
-            lig5 = ligs[1][0][0]
-        if isinstance(ligs[1][1], basestring):   
-            print('dictionary  lig: ' + str(ligs[1][1]))
-            lig6 = ligs[1][1]
-        else:
-            print('smiles lig: ' + str(ligs[1][1]))
-            lig6 = ligs[1][1][0]
         if found_smi:
             print('Warning, we cannot check SMILES for ligand uniqueness for SMILEs strings')
         else:
@@ -164,14 +129,14 @@ class GA_generation:
             print('Error: requested metal not available in list, aborting')
             exit()
 
-        #inds = [ligands_list_inds.index(i) for i in procd_ligs]
-        lig1_ind = ligands_list_inds.index(ligs[0][0])
-        lig2_ind = ligands_list_inds.index(ligs[0][1])
-        lig3_ind = ligands_list_inds.index(ligs[0][2])
-        lig4_ind = ligands_list_inds.index(ligs[0][3])
-        lig5_ind = ligands_list_inds.index(ligs[1][0])
-        lig6_ind = ligands_list_inds.index(ligs[1][1])
-        inds = [lig1_ind, lig2_ind, lig3_ind, lig4_ind, lig5_ind, lig6_ind]
+        inds = [ligands_list_inds.index(i) for i in procd_ligs]
+        #lig1_ind = ligands_list_inds.index(ligs[0][0])
+        #lig2_ind = ligands_list_inds.index(ligs[0][1])
+        #lig3_ind = ligands_list_inds.index(ligs[0][2])
+        #lig4_ind = ligands_list_inds.index(ligs[0][3])
+        #lig5_ind = ligands_list_inds.index(ligs[1][0])
+        #lig6_ind = ligands_list_inds.index(ligs[1][1])
+        #inds = [lig1_ind, lig2_ind, lig3_ind, lig4_ind, lig5_ind, lig6_ind]
         print('final ligand inds are ' + str(inds))
         metal_ind = metal_list_inds.index(metal)
         this_complex = octahedral_complex(self.ligands_list)
@@ -192,11 +157,11 @@ class GA_generation:
                 self.gene_compound_dictionary[counter] = this_complex
                 counter += 1
                 self.total_counter = self.total_counter + 1
-                print('adding eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) + ' + ' + str(ligs[1][1]))
+                print('adding eq: ' + str(procd_ligs[0]) + ' and ax ' + str(procd_ligs[4]) + ' + ' + str(procd_ligs[5]))
             else:
                 print(' this gene is a duplicate and is not added')
         else:#except:
-            print('cannot make eq: ' + str(ligs[0][0]) + ' and ax ' + str(ligs[1][0]) + ' + ' + str(ligs[1][1]))
+            print('cannot make eq: ' + str(procd_ligs[0]) + ' and ax ' + str(procd_ligs[4]) + ' + ' + str(procd_ligs[5]))
             sardines
 
     def write_state(self):
