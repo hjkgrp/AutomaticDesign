@@ -64,10 +64,10 @@ class modelMongo(MLModel):
 
     def construct_document(self):
         for attr in attr_mongo_in + attr_mongo_undef:
-            try:
+            if attr in self.__dict__:
                 self.document.update({attr: getattr(self, attr)})
-            except:
-                pass
+            else:
+                print("warning: %s does not exist." % attr)
 
     def write_model(self, model_basepath=model_basepath):
         if not self.recover_from_doc:
@@ -87,13 +87,12 @@ class modelActLearn(MLModel):
     def __init__(self, step, model=False, document=False):
         MLModel.__init__(self, model=model, document=document)
         self.step = step
-        self.construct_document()
         self.model = pickle.dumps(self.loaded_model)
+        self.construct_document()
 
     def construct_document(self):
         for attr in attr_actlearn:
-            if not attr in self.__dict__:
-                try:
-                    self.document.update({attr: getattr(self, attr)})
-                except:
-                    pass
+            if attr in self.__dict__:
+                self.document.update({attr: getattr(self, attr)})
+            else:
+                print("warning: %s does not exist." % attr)
