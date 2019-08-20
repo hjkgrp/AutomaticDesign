@@ -6,7 +6,8 @@ from datetime import datetime
 
 mongo_attr_from_run_undef = ["name", "metal", "ox", "spin", "liglist",
                              "alpha", "functional", "basis", "status", 'converged', 'charge',
-                             'terachem_version', "ligcharge", "dynamic_feature", "geo_check_dict"]
+                             'terachem_version', "ligcharge", "dynamic_feature", "geo_check_dict",
+                             "scrpath", "outpath"]
 mongo_attr_flags = ["geo_flag", "ss_flag", "metal_spin_flag"]
 mongo_attr_id = ["metal", "ox", "spin", "ligstr", "alpha", "functional", "basis", 'converged',
                  "energy", "geotype"]  ### keys that identify a complex in matching.
@@ -193,10 +194,8 @@ class tmcMongo(TMC):
 
     def construct_document(self):
         for attr in mongo_attr_from_run_undef + mongo_attr_from_run_nan + mongo_attr_other + mongo_attr_flags:
-            try:
+            if attr in self.__dict__:
                 self.document.update({attr: getattr(self, attr)})
-            except:
-                pass
         for ii, lig in enumerate(self.liglist):
             self.document.update({"lig%d" % (ii + 1): lig})
 
@@ -277,9 +276,7 @@ class tmcActLearn(TMC):
 
     def construct_document(self):
         for attr in mongo_attr_id + mongo_attr_actlearn + mongo_attr_flags:
-            try:
+            if attr in self.__dict__:
                 self.document.update({attr: getattr(self, attr)})
-            except:
-                pass
         for ii, lig in enumerate(self.liglist):
             self.document.update({"lig%d" % (ii + 1): lig})
