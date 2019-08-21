@@ -149,6 +149,7 @@ def check_all_current_convergence(post_all=False):
                 this_run.number = slot
                 this_run.gen = gen
                 this_run.job = jobs
+                this_run.geo_opt = True
 
                 ## check empty
                 if 'x' == liglist[-1]:  # last element of list

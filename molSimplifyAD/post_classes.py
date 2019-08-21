@@ -75,7 +75,7 @@ class DFTRun(object):
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
                               'islive', 'set_desc', 'sp_status', 'empty_sp_status', 'fod_cont', "wavefunction",
-                              "wavefunction_path", "molden_path", "dynamic_feature"]
+                              "wavefunction_path", "molden_path", "dynamic_feature", "geo_opt"]
         list_of_init_zero = ['ss_target', 'ss_act', 'coord', 'mop_coord', 'empty_ss_target',
                              'empty_ss_act']
         list_of_init_nan = ["geo_flag", "ss_flag", 'metal_spin_flag']
