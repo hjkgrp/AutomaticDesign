@@ -7,7 +7,7 @@ from datetime import datetime
 mongo_attr_from_run_undef = ["name", "metal", "ox", "spin", "liglist",
                              "alpha", "functional", "basis", "status", 'converged', 'charge',
                              'terachem_version', "ligcharge", "dynamic_feature", "geo_check_dict",
-                             "scrpath", "outpath", "geo_opt"]
+                             "scrpath", "outpath", "geo_opt", "geo_check_metrics", "geo_check_metrics_prog"]
 mongo_attr_flags = ["geo_flag", "ss_flag", "metal_spin_flag"]
 mongo_attr_id = ["metal", "ox", "spin", "ligstr", "alpha", "functional", "basis", 'converged',
                  "energy", "geotype"]  ### keys that identify a complex in matching.
@@ -102,7 +102,10 @@ class TMC():
         ## Get whether is a geometry optimization
         if "geo_opt" in self.this_run.__dict__:
             self.geo_opt = self.this_run.geo_opt
-
+        if "dict_geo_check" in self.this_run.__dict__:
+            self.geo_check_metrics = self.this_run.dict_geo_check
+        if "dict_geo_check_prog" in self.this_run.__dict__:
+            self.geo_check_metrics_prog = self.this_run.dict_geo_check_prog
 
     def cal_initRAC(self):
         try:

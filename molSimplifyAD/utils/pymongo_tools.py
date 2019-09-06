@@ -54,15 +54,16 @@ def query_lowestE_converged(db, collection, constraints):
     return tmcdoc
 
 
-def insert(db, collection, tmc):
+def insert(db, collection, tmc, debug=True):
     repeated, _tmcdoc = check_repeated(db, collection, tmc)
     inserted = False
     if not repeated:
         db[collection].insert_one(tmc.document)
         inserted = True
     else:
-        print("existed: ", _tmcdoc["unique_name"])
-        print("merging....")
+        if debug:
+            print("existed: ", _tmcdoc["unique_name"])
+            print("merging....")
         _tmc = tmcMongo(document=_tmcdoc, tag=_tmcdoc["tag"], subtag=_tmcdoc["subtag"],
                         publication=_tmcdoc["publication"])
         merge_documents(db, collection,
