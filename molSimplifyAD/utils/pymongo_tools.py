@@ -1,7 +1,9 @@
 import os
 import sys
 import pickle
+import subprocess
 import time
+import datetime
 import pandas as pd
 import pymongo
 from pandas.io.json import json_normalize
@@ -18,6 +20,19 @@ def check_repeated(db, collection, tmc):
     else:
         repeated = True
     return repeated, doc
+
+
+def dump_databse(database_name="tmc", outpath='/home/db_backup',
+                 user=False, pwd=False):
+    now = datetime.datetime.now()
+    run_cmd = 'mongodump -d %s -o %s -u %s -p %s' % (database_name, outpath, user, pwd)
+    q = subprocess.Popen(run_cmd, shell=True, stdout=subprocess.PIPE)
+    print("Dumping database....")
+    ll = q.communicate()[0].decode("utf-8")
+    print(ll)
+    print("Done.")
+    with open("/".join(outpath.split("/")[:-1]) + '/dump.log', "a") as fo:
+        fo.write("dumping database %s to path %s at time %s.\n" % (database_name, outpath, str(now)))
 
 
 def query_db(db, collection, constraints):
@@ -172,7 +187,9 @@ def ensure_collection(db, collection):
 
 def push2db(database, collection, tag, subtag, publication=False,
             user=False, pwd=False, host="localhost", port=27017, auth=False,
-            all_runs_pickle=False, update_fields=False, all_runs_list=False):
+            all_runs_pickle=False, update_fields=False, all_runs_list=False,
+            database_name="tmc",
+            outpath='/home/db_backup'):
     '''
     Push data to MongoDB.
 
@@ -233,11 +250,16 @@ def push2db(database, collection, tag, subtag, publication=False,
                                  ("geo_flag", pymongo.ASCENDING),
                                  ("ss_flag", pymongo.ASCENDING)
                                  ])
+    dump_databse(database_name=database_name,
+                 outpath=outpath,
+                 user=user, pwd=pwd)
 
 
 def push_complex_actlearn(step, all_complexes, database, collection,
                           user=False, pwd=False, host="localhost", port=27017,
-                          auth=False, update_fields=False):
+                          auth=False, update_fields=False,
+                          database_name="tmc",
+                          outpath='/home/db_backup'):
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
     print('db push is enabled, attempting commit to ', collection)
@@ -281,12 +303,17 @@ def push_complex_actlearn(step, all_complexes, database, collection,
     if not merged == 0:
         print("=====WARNING====")
         print("Duplicate complexes(%d) occure in the active learning mode. Should never happen." % merged)
+    dump_databse(database_name=database_name,
+                 outpath=outpath,
+                 user=user, pwd=pwd)
 
 
 def push_models(model, model_dict, database, collection,
                 user=False, pwd=False,
                 host="localhost", port=27017,
-                auth=False):
+                auth=False,
+                database_name="tmc",
+                outpath='/home/db_backup'):
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
     this_model = modelMongo(model=model, **model_dict)
@@ -303,12 +330,17 @@ def push_models(model, model_dict, database, collection,
     db[collection].create_index([("predictor", pymongo.ASCENDING),
                                  ("len_tot", pymongo.ASCENDING)
                                  ])
+    dump_databse(database_name=database_name,
+                 outpath=outpath,
+                 user=user, pwd=pwd)
 
 
 def push_models_actlearn(step, model, database, collection,
                          user=False, pwd=False,
                          host="localhost", port=27017,
-                         auth=False):
+                         auth=False,
+                         database_name="tmc",
+                         outpath='/home/db_backup'):
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
     actlearn_model = modelActLearn(step=step, model=model)
@@ -316,3 +348,6 @@ def push_models_actlearn(step, model, database, collection,
         print("A model of step %d has already existed.")
     else:
         db[collection].insert_one(actlearn_model.document)
+    dump_databse(database_name=database_name,
+                 outpath=outpath,
+                 user=user, pwd=pwd)
