@@ -474,7 +474,7 @@ def spin_dictionary():
 def get_ligand_charge_dictionary():
     ligand_charge_dictionary = {'acac': -1, 'acetonitrile': 0, 'ammonia': 0, 'bifuran': 0, 'bipy': 0, 'bipyrrole': 0,
                                 'bromide': -1,
-                                'carbonyl': 0, 'chloride': -1, 'cyanide': -1, 'cn': -1, 'cyanopyridine': 0, 'dmf': 0,
+                                'carbonyl': 0, 'co':0, 'chloride': -1, 'cyanide': -1, 'cn': -1, 'cyanopyridine': 0, 'dmf': 0,
                                 'en': 0, 'fluoride': -1,
                                 'formate': -1, 'furan': 0, 'hydroxyl': -1, 'isothiocyanate': -1, 'methanol': 0,
                                 'misc': 0, 'ncs': -1, 'nme3': 0,
