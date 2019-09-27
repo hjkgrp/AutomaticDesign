@@ -12,7 +12,11 @@ mongo_attr_flags = ["geo_flag", "ss_flag", "metal_spin_flag"]
 mongo_attr_id = ["metal", "ox", "spin", "ligstr", "alpha", "functional", "basis", 'converged',
                  "energy", "geotype"]  ### keys that identify a complex in matching.
 mongo_attr_from_run_nan = ["energy", "ss_target", "ss_act", 'alphaHOMO', 'betaHOMO',
-                           'alphaLUMO', 'betaLUMO', 'gap']
+                           'alphaLUMO', 'betaLUMO', 'gap', 'tot_step', 'tot_time',
+                           'e_hist', 'e_delta_hist', 'grad_rms_hist',
+                           'grad_max_hist', 'displace_rms_hist',
+                           'displace_rms_hist', 'displace_rms_hist',
+                           'trust_radius_hist', 'step_qual_hist', 'expected_delE_hist']
 mongo_attr_other = ["date", "author", "geotype", "opt_geo", "init_geo", "prog_geo",
                     "RACs", "initRACs", "dftrun", "tag", "subtag", "unique_name",
                     "publication", "ligstr"]
@@ -48,6 +52,7 @@ class TMC():
                 try:
                     self.recover_dftrun(document=document)
                 except:
+                    print("failing on: ", document["dftrun"])
                     raise ValueError("The input document cannot recover a DFTrun object.")
             else:
                 raise ValueError("Either a DFTrun object or a tmcMongo object is required as an input.")
@@ -158,9 +163,16 @@ class TMC():
         if not document:
             dftrun_file = self.document["dftrun"]
         else:
-            dftrun_file = document["dftrun"]
+            if "dftrun" in document.keys():
+                dftrun_file = document["dftrun"]
+            elif "unique_name" in document.keys() and os.path.isdir(dftrun_basepath + document["unique_name"]):
+                dftrun_file = dftrun_basepath + document["unique_name"] + '/dftrun.pkl'
+            else:
+                raise ValueError("Cannot find any DFTrun object binded to this document.")
         if os.path.isfile(dftrun_file):
             self.this_run = pickle.load(open(dftrun_file, "rb"))
+            for k in document:
+                setattr(self.this_run, k, document[k]) # use document values since those are more reliable.
         else:
             raise ValueError("Cannot recover the DFTrun object.")
 
@@ -241,7 +253,7 @@ class tmcMongo(TMC):
                 except KeyboardInterrupt:
                     pickle.dump(self.this_run, fo, protocol=2)
                     fo.flush()
-            self.dftrun = dftrun_path + "dftrun.pkl"
+        self.dftrun = dftrun_path + "dftrun.pkl"
 
 
 class tmcActLearn(TMC):
