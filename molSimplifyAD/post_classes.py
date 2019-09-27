@@ -1156,13 +1156,27 @@ class DFTRun(object):
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         archive_path = path_dictionary["archive_path"]
         scr_path = path_dictionary["scr_path"] + self.name + '/'
-        for dirpath, dir, files in os.walk(archive_path):
+        allpaths = sorted(os.listdir(archive_path))
+        for _dirpath in allpaths:
+            dirpath = archive_path + '/' + _dirpath
             if self.name in dirpath.split('/')[-1]:
                 _scr_path = dirpath + '/scr/'
-                archive_list.append(_scr_path)
+                if os.path.isfile(_scr_path + 'optim.xyz'):
+                    archive_list.append(_scr_path)
         archive_list.sort()
-        # archive_list.append(scr_path) ### We have already archive files first!!!
-        print('!!!!archive_list', archive_list)
+        archive_list.append(scr_path)  ### We have already archive files first!!!
+        ## Double check whether there is any repeated files. We had some inconsistent behaviors previously.
+        txt_list = []
+        removefiles = []
+        for ii, _file in enumerate(archive_list):
+            with open(_file + 'optim.xyz', 'r') as fo:
+                txt = "".join(fo.readlines()[-10:])
+            if txt in txt_list:
+                removefiles.append(_file)
+            else:
+                txt_list.append(txt)
+        for _file in removefiles:
+            archive_list.remove(_file)
         self.archive_list = archive_list
 
     def merge_scr_files(self):
@@ -1185,16 +1199,30 @@ class DFTRun(object):
     def combine_outfiles(self):
         archive_list = []
         path_dictionary = setup_paths()
-        path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
+        path_dictionary = advance_paths(path_dictionary, self.gen)
         archive_path = path_dictionary["archive_path"]
         out_path = path_dictionary["geo_out_path"] + self.name
-        for dirpath, dir, files in os.walk(archive_path):
+        allpaths = sorted(os.listdir(archive_path))
+        for _dirpath in allpaths:
+            dirpath = archive_path + '/' + _dirpath
             if self.name in dirpath.split('/')[-1]:
                 _scr_path = dirpath + '/' + self.name
-                archive_list.append(_scr_path)
+                if os.path.isfile(_scr_path):
+                    archive_list.append(_scr_path)
         archive_list.sort()
-        # archive_list.append(out_path) ### We have already archive files first!!!
-        print('!!!!archive_list', archive_list)
+        archive_list.append(out_path)
+        ## Double check whether there is any repeated files. We had some inconsistent behaviors previously.
+        txt_list = []
+        removefiles = []
+        for ii, _file in enumerate(archive_list):
+            with open(_file, 'r') as fo:
+                txt = "".join(fo.readlines()[-20:])
+            if txt in txt_list:
+                removefiles.append(_file)
+            else:
+                txt_list.append(txt)
+        for _file in removefiles:
+            archive_list.remove(_file)
         self.archive_list = archive_list
 
     def merge_geo_outfiles(self):
@@ -1222,6 +1250,7 @@ class DFTRun(object):
         tot_step = -1
         tot_time = -1
         _time_tot = -1
+        first_step = True
         convcrit_read = False  # marker for tolerance lines (new optim only)
         e_delta = False
         grad_rms = False
@@ -1234,12 +1263,11 @@ class DFTRun(object):
         displace_rms_tol = False
         displace_max_tol = False
         # convergence history
-        e_hist = []
-        e_delta_hist = []
-        grad_rms_hist = []
-        grad_max_hist = []
-        displace_rms_hist = []
-        displace_max_hist = []
+        keys_hist = ['e_hist', 'e_delta_hist', 'grad_rms_hist', 'grad_max_hist',
+                     'displace_rms_hist', 'displace_rms_hist', 'displace_rms_hist',
+                     'trust_radius_hist', 'step_qual_hist', 'expected_delE_hist']
+        for k in keys_hist:
+            locals().update({k: list()})
         if os.path.isfile(current_path):
             with open(current_path, 'r') as fin:
                 for i, line in enumerate(fin):
@@ -1262,7 +1290,7 @@ class DFTRun(object):
                                     flag = False
                             if flag:
                                 _time_tot += float(ll[-1])
-                        if 'sec' in ll and '_time_tot' in dir() and not 'Total processing time:' in line:
+                        if 'sec' in ll and '_time_tot' in locals().keys() and not 'Total processing time:' in line:
                             try:
                                 _time_tot += float(ll[ll.index('sec') - 1])
                             except:
@@ -1294,6 +1322,21 @@ class DFTRun(object):
                                     displace_max_hist.append(displace_max)
                                 except:
                                     pass
+                    if "Current Trust Radius" in line and first_step:
+                        trust_radius_hist.append(float(line.split()[-1]))
+                        first_step = False
+                    if 'trust radius' in line and not first_step:
+                        try:
+                            trust_radius_hist.append(float(line.split()[-1]))
+                        except ValueError:
+                            pass
+                    if 'Step Quality' in line:
+                        step_qual_hist.append(float(line.split()[-2]))
+                    if 'Expected Delta-E' in line:
+                        try:
+                            expected_delE_hist.append(float(line.split()[-1]))
+                        except ValueError: # Sometimes strange printout occurs... e.g., "Expected Delta-E: -6. -------------"
+                            pass
         else:
             print('!!combined output file not found!!')
         self.tot_time = tot_time
@@ -1313,12 +1356,8 @@ class DFTRun(object):
         self.displace_max_tol = displace_max_tol
 
         # bind histories
-        self.e_hist = e_hist
-        self.e_delta_hist = e_delta_hist
-        self.grad_rms_hist = grad_rms_hist
-        self.grad_max_hist = grad_max_hist
-        self.displace_rms_hist = displace_rms_hist
-        self.displace_max_hist = displace_max_hist
+        for k in keys_hist:
+            setattr(self, k, locals()[k])
 
     def get_descriptor_vector(self, loud=False, name=False, useinitgeo=False):
         ox_modifier = {self.metal: self.ox}
