@@ -1020,6 +1020,7 @@ def setup_paths():
         "sp_out_path": working_dir + "sp_outfiles/",
         "sp_in_path": working_dir + "sp_infiles/",
         "scr_path": working_dir + "scr/geo/",
+        "sp_scr_path": working_dir + 'scr/sp/',
         "queue_output": working_dir + "queue_output/",
         "job_path": working_dir + "jobs/",
         "done_path": working_dir + "completejobs/",
@@ -1049,8 +1050,6 @@ def setup_paths():
     ## set scr path to scr/sp for single points
     if not isKeyword('optimize'):
         path_dictionary.update({"scr_path": working_dir + "scr/geo/"})
-    if isKeyword('oxocatalysis'):
-        path_dictionary.update({"sp_scr_path": working_dir + "scr/sp/"})
     if isKeyword('solvent'):
         path_dictionary.update({"solvent_out_path": working_dir + "solvent_outfiles/"})
         path_dictionary.update({"solvent_in_path": working_dir + "solvent_infiles/"})
