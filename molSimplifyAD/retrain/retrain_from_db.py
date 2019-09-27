@@ -5,8 +5,35 @@ import sklearn.utils
 from molSimplifyAD.utils.pymongo_tools import convert2dataframe, connect2db, push_models
 from pkg_resources import resource_filename, Requirement
 from molSimplify.python_nn.tf_ANN import get_key, load_ANN_variables, load_keras_ann, initialize_model_weights
+from nets import ANN
+from model_optimization import optimize
 
 name_converter_dict = {"oxstate": "ox", "spinmult": "spin", "charge_lig": "ligcharge"}
+RACs180 = ['D_lc-I-0-ax', 'D_lc-I-0-eq', 'D_lc-I-1-ax', 'D_lc-I-1-eq', 'D_lc-I-2-ax', 'D_lc-I-2-eq', 'D_lc-I-3-ax',
+           'D_lc-I-3-eq', 'D_lc-S-0-ax', 'D_lc-S-0-eq', 'D_lc-S-1-ax', 'D_lc-S-1-eq', 'D_lc-S-2-ax', 'D_lc-S-2-eq',
+           'D_lc-S-3-ax', 'D_lc-S-3-eq', 'D_lc-T-0-ax', 'D_lc-T-0-eq', 'D_lc-T-1-ax', 'D_lc-T-1-eq', 'D_lc-T-2-ax',
+           'D_lc-T-2-eq', 'D_lc-T-3-ax', 'D_lc-T-3-eq', 'D_lc-Z-0-ax', 'D_lc-Z-0-eq', 'D_lc-Z-1-ax', 'D_lc-Z-1-eq',
+           'D_lc-Z-2-ax', 'D_lc-Z-2-eq', 'D_lc-Z-3-ax', 'D_lc-Z-3-eq', 'D_lc-chi-0-ax', 'D_lc-chi-0-eq',
+           'D_lc-chi-1-ax', 'D_lc-chi-1-eq', 'D_lc-chi-2-ax', 'D_lc-chi-2-eq', 'D_lc-chi-3-ax', 'D_lc-chi-3-eq',
+           'D_mc-I-0-all', 'D_mc-I-1-all', 'D_mc-I-2-all', 'D_mc-I-3-all', 'D_mc-S-0-all', 'D_mc-S-1-all',
+           'D_mc-S-2-all', 'D_mc-S-3-all', 'D_mc-T-0-all', 'D_mc-T-1-all', 'D_mc-T-2-all', 'D_mc-T-3-all',
+           'D_mc-Z-0-all', 'D_mc-Z-1-all', 'D_mc-Z-2-all', 'D_mc-Z-3-all', 'D_mc-chi-0-all', 'D_mc-chi-1-all',
+           'D_mc-chi-2-all', 'D_mc-chi-3-all', 'f-I-0-all', 'f-I-0-ax', 'f-I-0-eq', 'f-I-1-all', 'f-I-1-ax', 'f-I-1-eq',
+           'f-I-2-all', 'f-I-2-ax', 'f-I-2-eq', 'f-I-3-all', 'f-I-3-ax', 'f-I-3-eq', 'f-S-0-all', 'f-S-0-ax',
+           'f-S-0-eq', 'f-S-1-all', 'f-S-1-ax', 'f-S-1-eq', 'f-S-2-all', 'f-S-2-ax', 'f-S-2-eq', 'f-S-3-all',
+           'f-S-3-ax', 'f-S-3-eq', 'f-T-0-all', 'f-T-0-ax', 'f-T-0-eq', 'f-T-1-all', 'f-T-1-ax', 'f-T-1-eq',
+           'f-T-2-all', 'f-T-2-ax', 'f-T-2-eq', 'f-T-3-all', 'f-T-3-ax', 'f-T-3-eq', 'f-Z-0-all', 'f-Z-0-ax',
+           'f-Z-0-eq', 'f-Z-1-all', 'f-Z-1-ax', 'f-Z-1-eq', 'f-Z-2-all', 'f-Z-2-ax', 'f-Z-2-eq', 'f-Z-3-all',
+           'f-Z-3-ax', 'f-Z-3-eq', 'f-chi-0-all', 'f-chi-0-ax', 'f-chi-0-eq', 'f-chi-1-all', 'f-chi-1-ax', 'f-chi-1-eq',
+           'f-chi-2-all', 'f-chi-2-ax', 'f-chi-2-eq', 'f-chi-3-all', 'f-chi-3-ax', 'f-chi-3-eq', 'lc-I-0-ax',
+           'lc-I-0-eq', 'lc-I-1-ax', 'lc-I-1-eq', 'lc-I-2-ax', 'lc-I-2-eq', 'lc-I-3-ax', 'lc-I-3-eq', 'lc-S-0-ax',
+           'lc-S-0-eq', 'lc-S-1-ax', 'lc-S-1-eq', 'lc-S-2-ax', 'lc-S-2-eq', 'lc-S-3-ax', 'lc-S-3-eq', 'lc-T-0-ax',
+           'lc-T-0-eq', 'lc-T-1-ax', 'lc-T-1-eq', 'lc-T-2-ax', 'lc-T-2-eq', 'lc-T-3-ax', 'lc-T-3-eq', 'lc-Z-0-ax',
+           'lc-Z-0-eq', 'lc-Z-1-ax', 'lc-Z-1-eq', 'lc-Z-2-ax', 'lc-Z-2-eq', 'lc-Z-3-ax', 'lc-Z-3-eq', 'lc-chi-0-ax',
+           'lc-chi-0-eq', 'lc-chi-1-ax', 'lc-chi-1-eq', 'lc-chi-2-ax', 'lc-chi-2-eq', 'lc-chi-3-ax', 'lc-chi-3-eq',
+           'mc-I-0-all', 'mc-I-1-all', 'mc-I-2-all', 'mc-I-3-all', 'mc-S-0-all', 'mc-S-1-all', 'mc-S-2-all',
+           'mc-S-3-all', 'mc-T-0-all', 'mc-T-1-all', 'mc-T-2-all', 'mc-T-3-all', 'mc-Z-0-all', 'mc-Z-1-all',
+           'mc-Z-2-all', 'mc-Z-3-all', 'mc-chi-0-all', 'mc-chi-1-all', 'mc-chi-2-all', 'mc-chi-3-all']
 
 
 def name_converter(fnames):
@@ -46,13 +73,35 @@ def get_label(predictor):
     return lname
 
 
-def extract_data_from_db(predictor, db, collection, constraints):
+def extract_data_from_db(predictor, db, collection, constraints,
+                         feature_extra=False, target=False):
     print(("Collecting data with constraints: %s..." % constraints))
     df = convert2dataframe(db, collection, constraints=constraints, normalized=True)
-    fnames = get_vars(predictor)
-    lname = get_label(predictor)
-    print("features: ", fnames)
-    print("target: ", lname)
+    if feature_extra and target:
+        print("Using custom features RACs-180 + ", feature_extra)
+        print("Target property: ", target)
+        _fnames = RACs180 + feature_extra
+        _fnames = name_converter(_fnames)
+        fnames, el = [], []
+        for key in _fnames:
+            df = df[df[key] != "undef"]
+        for f in _fnames:
+            std = np.std(df[str(f)].dropna().values)
+            if std > 1e-6:
+                # print(f, std)
+                fnames.append(f)
+            else:
+                el.append(f)
+        print("features eliminated because of small (<1e-4) std: ", el, len(el))
+        lname = [target]
+    elif feature_extra or target:
+        raise KeyError("You have to have both or neither <feature_extra> and <target> in input files.")
+    else:
+        print("Using predictor-linked features and target.", predictor)
+        fnames = get_vars(predictor)
+        lname = get_label(predictor)
+    print("features: ", fnames, len(fnames))
+    print("target: ", lname, len(lname))
     df_use = df[fnames + lname]
     shape = df_use.shape[0]
     df_use = df_use.dropna()
@@ -82,10 +131,22 @@ def normalize_data(df, fnames, lname, predictor, frac=0.8):
     return X_train, X_test, y_train, y_test
 
 
-def train_model(predictor, X_train, X_test, y_train, y_test, epochs=1000, batch_size=32):
-    model = load_keras_ann(predictor)
-    print("Initializing weights...")
-    model = initialize_model_weights(model)
+def train_model(predictor, X_train, X_test, y_train, y_test,
+                epochs=1000, batch_size=32, hyperopt=False):
+    regression = False if 'clf' in predictor else True
+    if not hyperopt:
+        model = load_keras_ann(predictor)
+        print("Initializing weights for the final model training...")
+        model = initialize_model_weights(model)
+    else:
+        print('hyperopt...')
+        best_params = optimize(X=X_train, y=y_train, regression=regression)
+        print("done.")
+        print("best hyperparams: ", best_params)
+        model = ANN(best_params, input_len=X_train.shape[-1], regression=regression)
+        batch_size = best_params['batch_size']
+        epochs = best_params['epochs']
+        print("epochs: %d, batch_size: %d" % (epochs, batch_size))
     history = model.fit(X_train, y_train, epochs=epochs, verbose=1, batch_size=batch_size)
     results = model.evaluate(X_train, y_train)
     res_dict_train = {}
@@ -104,15 +165,23 @@ def retrain(predictor, user, pwd,
             database, collection, collection_model,
             host="localhost", port=27017, auth=True,
             constraints=False, frac=0.8, epochs=1000,
-            batch_size=32, force_push=False):
+            batch_size=32, force_push=False,
+            hyperopt=False, tag=False,
+            feature_extra=False, target=False):
     db = connect2db(user, pwd, host, port, database, auth)
-    df, fnames, lname = extract_data_from_db(predictor, db, collection, constraints=constraints)
+    df, fnames, lname = extract_data_from_db(predictor, db, collection,
+                                             constraints=constraints,
+                                             feature_extra=feature_extra,
+                                             target=target)
     X_train, X_test, y_train, y_test = normalize_data(df, fnames, lname, predictor, frac=frac)
     model, history, res_dict_train, res_dict_test = train_model(predictor, X_train, X_test, y_train, y_test,
-                                                                epochs=epochs, batch_size=batch_size)
+                                                                epochs=epochs,
+                                                                batch_size=batch_size,
+                                                                hyperopt=hyperopt)
     model_dict = {}
     model_dict.update({"predictor": predictor})
     model_dict.update({"constraints": str(constraints)})
+    model_dict.update({"hyperopt": hyperopt})
     model_dict.update({"history": history.history})
     model_dict.update({"hyperparams": {"epochs": epochs, "batch_size": batch_size}})
     model_dict.update({"score_train": res_dict_train,
@@ -124,8 +193,12 @@ def retrain(predictor, user, pwd,
                        "len_train": y_train.shape[0],
                        "len_test": y_test.shape[0],
                        "len_tot": y_train.shape[0] + y_test.shape[0],
+                       "features": fnames,
+                       "target": lname,
                        "force_push": force_push
                        })
+    if tag:
+        model_dict.update({"tag": tag})
     push_models(model, model_dict,
                 database, collection_model,
                 user=user, pwd=pwd,
@@ -144,7 +217,9 @@ def retrain_and_push(args_dict):
     args_dict = check_retrain_inputs(args_dict)
     default_args = {"host": "localhost", "port": 27017, "auth": True,
                     "constraints": False, "frac": 0.8, "epochs": 1000,
-                    "batch_size": 32, "force_push": False}
+                    "batch_size": 32, "force_push": False,
+                    "hyperopt": False, "tag": False,
+                    "feature_extra": False, "target": False}
     for key in args_dict:
         print(key, args_dict[key])
         globals().update({key: args_dict[key]})
@@ -155,4 +230,6 @@ def retrain_and_push(args_dict):
             database, collection, collection_model,
             host, port, auth,
             constraints, frac, epochs,
-            batch_size, force_push)
+            batch_size, force_push,
+            hyperopt, tag,
+            feature_extra, target)

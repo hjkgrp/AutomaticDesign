@@ -1,0 +1,1 @@
+{"database": "tmc", "collection_model": "models", "epochs": 1000, "collection": "oct", "constraints": {lig6": {"$ne": "x"}, "converged": True, "geo_flag": 1, "ss_flag": 1, "metal_spin_flag": 1}, "force_push": false, "feature_extra": ["ox", "spin", "ligcharge", "alpha"], "target": "alphaHOMO", "tag": "all", "hyperopt": True}
