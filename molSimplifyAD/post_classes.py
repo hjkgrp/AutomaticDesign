@@ -1201,12 +1201,12 @@ class DFTRun(object):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)
         archive_path = path_dictionary["archive_path"]
-        out_path = path_dictionary["geo_out_path"] + self.name
+        out_path = path_dictionary["geo_out_path"] + self.name + '.out'
         allpaths = sorted(os.listdir(archive_path))
         for _dirpath in allpaths:
             dirpath = archive_path + '/' + _dirpath
             if self.name in dirpath.split('/')[-1]:
-                _scr_path = dirpath + '/' + self.name
+                _scr_path = dirpath + '/' + self.name + '.out'
                 if os.path.isfile(_scr_path):
                     archive_list.append(_scr_path)
         archive_list.sort()
