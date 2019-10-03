@@ -1164,7 +1164,8 @@ class DFTRun(object):
                 if os.path.isfile(_scr_path + 'optim.xyz'):
                     archive_list.append(_scr_path)
         archive_list.sort()
-        archive_list.append(scr_path)  ### We have already archive files first!!!
+        if os.path.isdir(scr_path):
+            archive_list.append(scr_path)
         ## Double check whether there is any repeated files. We had some inconsistent behaviors previously.
         txt_list = []
         removefiles = []
@@ -1210,7 +1211,8 @@ class DFTRun(object):
                 if os.path.isfile(_scr_path):
                     archive_list.append(_scr_path)
         archive_list.sort()
-        archive_list.append(out_path)
+        if os.path.isfile(out_path):
+            archive_list.append(out_path)
         ## Double check whether there is any repeated files. We had some inconsistent behaviors previously.
         txt_list = []
         removefiles = []
