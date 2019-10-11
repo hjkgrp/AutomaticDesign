@@ -862,7 +862,7 @@ class octahedral_complex:
                 sys.exit()
 
             # if this_GA.config['symclass']=="strong":
-            properties = ['split', 'split_dist' 'homo', 'homo_dist', 'gap', 'gap_dist', 'oxo', 'oxo_dist',
+            properties = ['split', 'split_dist', 'homo', 'homo_dist', 'gap', 'gap_dist', 'oxo', 'oxo_dist',
                           'hat', 'hat_dist', 'oxo20', 'oxo20_dist', 'homo_empty', 'homo_empty_dist']
             with open(rundirpath + 'temp' + '/' + mol_name + '.report') as report_f:
                 for line in report_f:
@@ -931,7 +931,7 @@ class octahedral_complex:
         should_geo_exist = not (isKeyword('no_geo')) #will be false if DFT is off.
         #Initialize ANN results dictionary
         ANN_results = {}
-        properties = ['split','split_dist' 'homo','homo_dist','gap','gap_dist','oxo','oxo_dist',
+        properties = ['split','split_dist','homo','homo_dist','gap','gap_dist','oxo','oxo_dist',
                         'hat','hat_dist','oxo20','oxo20_dist','homo_empty','homo_empty_dist']
         if not (geo_exists) or not (should_geo_exist):
             print('generating '+ str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and'  + str(self.ax_ligands))
@@ -1093,7 +1093,7 @@ class octahedral_complex:
 
         # Initialize ANN results dictionary
         ANN_results = {}
-        properties = ['split','split_dist' 'homo','homo_dist','gap','gap_dist','oxo','oxo_dist',
+        properties = ['split','split_dist','homo','homo_dist','gap','gap_dist','oxo','oxo_dist',
         'hat','hat_dist','oxo20','oxo20_dist','homo_empty','homo_empty_dist']
         if not (geo_exists):
             print('generating '+ str(mol_name) + ' with ligands ' + str(liglist))
