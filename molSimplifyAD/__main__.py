@@ -40,7 +40,7 @@ def main():
         infile = args.infile
         if not args.user or not args.pwd:
             raise KeyError(
-                "Please use the format molsimplify -retrain <predictor> -infile <infile> -user <username> -pwd <password> to retrain a model.")
+                "Please use the format mad -retrain <predictor> -infile <infile> -user <username> -pwd <password> to retrain a model.")
         args_dict = deserialize_json(infile)
         args_dict.update({"predictor": predictor,
                           "user": args.user,

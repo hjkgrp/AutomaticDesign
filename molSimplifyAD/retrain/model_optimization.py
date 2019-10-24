@@ -19,7 +19,7 @@ def train_model_hyperopt(hyperspace, X, y, regression=True):
                               verbose=2)
     cb = [earlystop]
     history = model.fit(X_train, y_train,
-                        epochs=1000,
+                        epochs=10,
                         verbose=2,
                         batch_size=hyperspace['batch_size'],
                         validation_data=val_data,
@@ -34,17 +34,20 @@ def train_model_hyperopt(hyperspace, X, y, regression=True):
             'epochs': len(history.history[history.history.keys()[0]])}
 
 
-def optimize(X, y, regression=True):
+def optimize(X, y, regression=True, hyperopt_step=100, arch=False):
     np.random.seed(1234)
-    architectures = [(64,), (128,), (256,), (512,),
-                     (64, 64),
-                     (128, 128),
-                     (256, 256),
-                     (512, 512),
-                     (64, 64, 64),
-                     (128, 128, 128),
-                     (256, 256, 256),
-                     (512, 512, 512)]
+    if arch == False:
+        architectures = [(64,), (128,), (256,), (512,),
+                         (64, 64),
+                         (128, 128),
+                         (256, 256),
+                         (512, 512),
+                         (64, 64, 64),
+                         (128, 128, 128),
+                         (256, 256, 256),
+                         (512, 512, 512)]
+    else:
+        architectures = [arch]
     bzs = [16, 32, 64, 128, 256, 512]
     space = {'lr': hp.uniform('lr', 1e-5, 1e-3),
              'drop_rate': hp.uniform('drop_rate', 0, 0.5),
@@ -65,7 +68,7 @@ def optimize(X, y, regression=True):
                        space,
                        algo=tpe.suggest,
                        trials=trials,
-                       max_evals=200,
+                       max_evals=hyperopt_step,
                        rstate=np.random.RandomState(0)
                        )
     best_params.update({'hidden_size': architectures[best_params['hidden_size']],

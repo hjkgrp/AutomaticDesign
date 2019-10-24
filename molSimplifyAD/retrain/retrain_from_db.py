@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+from datetime import datetime
+from keras.models import load_model
 import sklearn.preprocessing
 import sklearn.utils
 from molSimplifyAD.utils.pymongo_tools import convert2dataframe, connect2db, push_models
@@ -7,6 +9,7 @@ from pkg_resources import resource_filename, Requirement
 from molSimplify.python_nn.tf_ANN import get_key, load_ANN_variables, load_keras_ann, initialize_model_weights
 from nets import ANN
 from model_optimization import optimize
+from calculate_pairing_prop import group_conditions, pairing
 
 name_converter_dict = {"oxstate": "ox", "spinmult": "spin", "charge_lig": "ligcharge"}
 RACs180 = ['D_lc-I-0-ax', 'D_lc-I-0-eq', 'D_lc-I-1-ax', 'D_lc-I-1-eq', 'D_lc-I-2-ax', 'D_lc-I-2-eq', 'D_lc-I-3-ax',
@@ -73,6 +76,30 @@ def get_label(predictor):
     return lname
 
 
+def get_model_arch(model):
+    arch = []
+    for layer in model.get_config()['layers']:
+        if layer['class_name'] == "Dense":
+            arch.append(layer['config']['units'])
+    arch = arch[:-1]
+    return arch
+
+
+def get_latest_model(predictor, db):
+    cursors = db.models.find({"predictor": predictor})
+    model, newest = False, False
+    for doc in cursors:
+        if model == False:
+            model = load_model(str(doc["model"]))
+            newest = doc['date']
+        else:
+            if newest < doc['date']:
+                model = load_model(str(doc["model"]))
+                newest = doc['date']
+    print('Latest model is trained at: ', newest)
+    return model
+
+
 def extract_data_from_db(predictor, db, collection, constraints,
                          feature_extra=False, target=False):
     print(("Collecting data with constraints: %s..." % constraints))
@@ -102,6 +129,9 @@ def extract_data_from_db(predictor, db, collection, constraints,
         lname = get_label(predictor)
     print("features: ", fnames, len(fnames))
     print("target: ", lname, len(lname))
+    if lname[0] in group_conditions.keys():
+        print("Paring runs to calculate the new property %s..." % lname)
+        df, _ = pairing(df, case=lname[0])
     df_use = df[fnames + lname]
     shape = df_use.shape[0]
     df_use = df_use.dropna()
@@ -131,17 +161,45 @@ def normalize_data(df, fnames, lname, predictor, frac=0.8):
     return X_train, X_test, y_train, y_test
 
 
-def train_model(predictor, X_train, X_test, y_train, y_test,
-                epochs=1000, batch_size=32, hyperopt=False):
+def train_model(predictor, db,
+                X_train, X_test, y_train, y_test,
+                epochs=1000, batch_size=32, hyperopt=False,
+                initialize_weight=True, hyperopt_step=100,
+                load_latest_model=False, fix_architecture=False):
     regression = False if 'clf' in predictor else True
-    if not hyperopt:
+    if not hyperopt:  # load molSimplify model and training parameters directly.
         model = load_keras_ann(predictor)
-        print("Initializing weights for the final model training...")
-        model = initialize_model_weights(model)
+        if initialize_weight:
+            print("Initializing weights for the final model training...")
+            model = initialize_model_weights(model)
+        best_params = {"epochs": epochs, "batch_size": batch_size}
     else:
-        print('hyperopt...')
-        best_params = optimize(X=X_train, y=y_train, regression=regression)
-        print("done.")
+        if fix_architecture:  # HyperOpt, with a fix architecture but flexible training parameters.
+            if not load_latest_model:  # Use molSimplify pretrained model architecture.
+                model = load_keras_ann(predictor)
+            else:  # Use the lastest model achitecture.
+                model = get_latest_model(predictor, db)
+            if not model == False:
+                if initialize_weight:
+                    print("Initializing weights for the final model training...")
+                    model = initialize_model_weights(model)
+                arch = get_model_arch(model)
+                print('HyperOpt with a FIXED architecture: ', arch)
+                best_params = optimize(X=X_train, y=y_train,
+                                       regression=regression,
+                                       hyperopt_step=hyperopt_step,
+                                       arch=arch)
+            else:
+                print("No existing model found in db.models matching the predictor: ", predictor)
+                print('HyperOpt EVERYTHING...')
+                best_params = optimize(X=X_train, y=y_train,
+                                       regression=regression,
+                                       hyperopt_step=hyperopt_step)
+        else:  # HyperOpt both model architecture and training parameters.
+            print('HyperOpt EVERYTHING...')
+            best_params = optimize(X=X_train, y=y_train,
+                                   regression=regression,
+                                   hyperopt_step=hyperopt_step)
         print("best hyperparams: ", best_params)
         model = ANN(best_params, input_len=X_train.shape[-1], regression=regression)
         batch_size = best_params['batch_size']
@@ -152,13 +210,13 @@ def train_model(predictor, X_train, X_test, y_train, y_test,
     res_dict_train = {}
     for ii, key in enumerate(model.metrics_names):
         res_dict_train.update({key: results[ii]})
-    print("train reulst: ", res_dict_train)
+    print("train result: ", res_dict_train)
     results = model.evaluate(X_test, y_test)
     res_dict_test = {}
     for ii, key in enumerate(model.metrics_names):
         res_dict_test.update({key: results[ii]})
     print("test reulst: ", res_dict_test)
-    return model, history, res_dict_train, res_dict_test
+    return model, history, res_dict_train, res_dict_test, best_params
 
 
 def retrain(predictor, user, pwd,
@@ -167,23 +225,31 @@ def retrain(predictor, user, pwd,
             constraints=False, frac=0.8, epochs=1000,
             batch_size=32, force_push=False,
             hyperopt=False, tag=False,
-            feature_extra=False, target=False):
+            feature_extra=False, target=False,
+            initialize_weight=True, hyperopt_step=100,
+            load_latest_model=False, fix_architecture=False):
     db = connect2db(user, pwd, host, port, database, auth)
     df, fnames, lname = extract_data_from_db(predictor, db, collection,
                                              constraints=constraints,
                                              feature_extra=feature_extra,
                                              target=target)
     X_train, X_test, y_train, y_test = normalize_data(df, fnames, lname, predictor, frac=frac)
-    model, history, res_dict_train, res_dict_test = train_model(predictor, X_train, X_test, y_train, y_test,
-                                                                epochs=epochs,
-                                                                batch_size=batch_size,
-                                                                hyperopt=hyperopt)
+    model, history, res_dict_train, res_dict_test, best_params = train_model(predictor, db,
+                                                                             X_train, X_test,
+                                                                             y_train, y_test,
+                                                                             epochs=epochs,
+                                                                             batch_size=batch_size,
+                                                                             hyperopt=hyperopt,
+                                                                             initialize_weight=initialize_weight,
+                                                                             hyperopt_step=hyperopt_step,
+                                                                             load_latest_model=load_latest_model,
+                                                                             fix_architecture=fix_architecture)
     model_dict = {}
     model_dict.update({"predictor": predictor})
     model_dict.update({"constraints": str(constraints)})
     model_dict.update({"hyperopt": hyperopt})
     model_dict.update({"history": history.history})
-    model_dict.update({"hyperparams": {"epochs": epochs, "batch_size": batch_size}})
+    model_dict.update({"hyperparams": best_params})
     model_dict.update({"score_train": res_dict_train,
                        "score_test": res_dict_test,
                        "target_train": y_train.tolist(),
@@ -195,10 +261,13 @@ def retrain(predictor, user, pwd,
                        "len_tot": y_train.shape[0] + y_test.shape[0],
                        "features": fnames,
                        "target": lname,
-                       "force_push": force_push
+                       "force_push": force_push,
+                       "tag": tag,
+                       "initialize_weight": initialize_weight,
+                       "hyperopt_step": hyperopt_step,
+                       "load_latest_model": load_latest_model,
+                       "fix_architecture": fix_architecture,
                        })
-    if tag:
-        model_dict.update({"tag": tag})
     push_models(model, model_dict,
                 database, collection_model,
                 user=user, pwd=pwd,
@@ -219,7 +288,9 @@ def retrain_and_push(args_dict):
                     "constraints": False, "frac": 0.8, "epochs": 1000,
                     "batch_size": 32, "force_push": False,
                     "hyperopt": False, "tag": False,
-                    "feature_extra": False, "target": False}
+                    "feature_extra": False, "target": False,
+                    "initialize_weight": True, "hyperopt_step": 100,
+                    "load_latest_model": False, "fix_architecture": False}
     for key in args_dict:
         print(key, args_dict[key])
         globals().update({key: args_dict[key]})
@@ -232,4 +303,6 @@ def retrain_and_push(args_dict):
             constraints, frac, epochs,
             batch_size, force_push,
             hyperopt, tag,
-            feature_extra, target)
+            feature_extra, target,
+            initialize_weight, hyperopt_step,
+            load_latest_model, fix_architecture)

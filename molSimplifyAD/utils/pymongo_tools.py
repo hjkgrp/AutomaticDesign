@@ -31,7 +31,7 @@ def dump_databse(database_name="tmc", outpath='/home/db_backup',
     ll = q.communicate()[0].decode("utf-8")
     print(ll)
     print("Done.")
-    with open("/".join(outpath.split("/")[:-1]) + '/dump.log', "a") as fo:
+    with open(outpath + '/dump.log', "a") as fo:
         fo.write("dumping database %s to path %s at time %s.\n" % (database_name, outpath, str(now)))
 
 
@@ -321,11 +321,11 @@ def push_models(model, model_dict, database, collection,
     if not query_one(db, collection, constraints=model_id) == None:
         print("A model of has already existed.")
         print("force_push?", this_model.force_push)
+        if this_model.force_push:
+            print("force_push is truned on. pushing...")
+            db[collection].insert_one(this_model.document)
     else:
         print("pushing...")
-        db[collection].insert_one(this_model.document)
-    if this_model.force_push:
-        print("force_push is truned on. pushing...")
         db[collection].insert_one(this_model.document)
     db[collection].create_index([("predictor", pymongo.ASCENDING),
                                  ("len_tot", pymongo.ASCENDING)
