@@ -49,6 +49,8 @@ def optimize(X, y, regression=True, hyperopt_step=100, arch=False):
     else:
         architectures = [arch]
     bzs = [16, 32, 64, 128, 256, 512]
+    ress = [True, False]
+    bypasses = [True, False]
     space = {'lr': hp.uniform('lr', 1e-5, 1e-3),
              'drop_rate': hp.uniform('drop_rate', 0, 0.5),
              'reg': hp.loguniform('reg', np.log(1e-5), np.log(5e-1)),
@@ -56,6 +58,8 @@ def optimize(X, y, regression=True, hyperopt_step=100, arch=False):
              'hidden_size': hp.choice('hidden_size', architectures),
              'beta_1': hp.uniform('beta_1', 0.75, 0.99),
              'decay': hp.loguniform('decay', np.log(1e-5), np.log(1e-1)),
+             'res': hp.choice('res', ress),
+             'bypass': hp.choice('bypass', bypasses),
              'amsgrad': True,
              'patience': 10,
              }
@@ -73,6 +77,8 @@ def optimize(X, y, regression=True, hyperopt_step=100, arch=False):
                        )
     best_params.update({'hidden_size': architectures[best_params['hidden_size']],
                         'batch_size': bzs[best_params['batch_size']],
+                        'res': ress[best_params['res']],
+                        'bypass': bypass[best_params['bypass']],
                         'amsgrad': True,
                         'patience': 10,
                         })
