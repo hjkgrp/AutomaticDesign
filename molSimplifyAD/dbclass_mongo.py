@@ -16,7 +16,8 @@ mongo_attr_from_run_nan = ["energy", "ss_target", "ss_act", 'alphaHOMO', 'betaHO
                            'e_hist', 'e_delta_hist', 'grad_rms_hist',
                            'grad_max_hist', 'displace_rms_hist',
                            'displace_rms_hist', 'displace_rms_hist',
-                           'trust_radius_hist', 'step_qual_hist', 'expected_delE_hist']
+                           'trust_radius_hist', 'step_qual_hist', 'expected_delE_hist',
+                           'water_cont', 'thermo_cont']
 mongo_attr_other = ["date", "author", "geotype", "opt_geo", "init_geo", "prog_geo",
                     "RACs", "initRACs", "dftrun", "tag", "subtag", "unique_name",
                     "publication", "ligstr"]
@@ -87,7 +88,6 @@ class TMC():
             self.ligstr = "_".join(self.this_run.liglist)
         for attr in mongo_attr_from_run_nan:
             setattr(self, attr, np.nan)
-        for attr in mongo_attr_from_run_nan:
             try:
                 setattr(self, attr, float(getattr(self.this_run, attr)))
             except:
