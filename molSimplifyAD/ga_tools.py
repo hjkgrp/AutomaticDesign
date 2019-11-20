@@ -433,7 +433,31 @@ def get_mulliken(moldenpath, spin, catlig=False):
             else:
                 return [net_metal_spin]
 
-
+#######################
+def get_mayer_valence(moldenpath):
+    print('getting mayer metrics')
+    ##### only call multiwfn if the mullpop is not there #####
+    subprocess.call("module load multiwfn/GUI", shell=True)
+    mayer_valence = np.nan
+    proc = subprocess.Popen("multiwfn " + moldenpath, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+    commands = ['9', '1']
+    newline = os.linesep
+    output = proc.communicate(newline.join(commands))
+    lines = output[0].split('\n')
+    start = False
+    for num, line in enumerate(lines):
+        if ('Total valences and free valences' in line):#('Bond order from mixed alpha&beta density matrix' in line) or ('The total bond order' in line):
+            start = True
+            continue
+        elif not start:
+            continue
+        if start:
+            print(line)
+            print(line.split())
+            if int(line.split()[1].split('(')[0]) == 1:
+                mayer_BV = float(line.split()[-2])-float(line.split()[-1])
+                break
+    return mayer_BV
 ########################
 def spin_dictionary():
     GA_run = get_current_GA()
