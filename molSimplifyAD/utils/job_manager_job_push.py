@@ -4,9 +4,7 @@ This script takes in jobs from the job manager and prepares them for the databas
 ** Important NOTE**
 You must be careful with how the ligands are named in order to be consistent with the database structure. 
 The job manager does not care how your jobs are named, and thus if you do not check this, you may push inconsistent data to the DB.
-
-You MUST adjust the subtag and tag that will be used in the db.
-
+Please make sure your tags are adjusted for the db
 '''
 
 import os, sys
@@ -14,24 +12,26 @@ import glob
 import time
 import pandas as pd
 import numpy as np
+import pymongo
+from pandas.io.json import json_normalize
+from pymongo import MongoClient
+from molSimplifyAD.dbclass_mongo import tmcMongo, tmcActLearn, mongo_attr_id, mongo_not_web
+from molSimplifyAD.mlclass_mongo import modelActLearn, modelMongo
 from bson.objectid import ObjectId
 from molSimplifyAD.post_classes import DFTRun
-from molSimplifyAD.dbclass_mongo import tmcMongo
 from molSimplify.Classes.mol3D import mol3D
-from molSimplifyAD.utils.pymongo_tools import connect2db, insert, query_db
+from molSimplifyAD.utils.pymongo_tools import connect2db, insert, query_db, dump_databse
 from molSimplifyAD.ga_tools import get_mulliken, rename_ligands
 from molSimplifyAD.process_scf import read_molden_file
 from molSimplify.job_manager.tools import *
 
 user = sys.argv[1]
 pwd = sys.argv[2]
-collection = False
-tag = False
-if (not collection) or (not tag):
-    raise ValueError('Need to provide a collection and tag.')
+collection = 'oct'
+database = 'tmc'
 write = False
 outfiles = find('*out')
-
+active_jobs = list_active_jobs()
 #### by default, the name of the complex will be assumed to be metal_ox_spin_lig1_lig2_lig3_lig4_lig5_lig6. By default HFX will be 20, unless resampling is done.
 def get_initgeo(filename):
     with open(filename, "r") as fo:
@@ -69,26 +69,30 @@ counter = 0
 count = 0
 merged = 0
 for i, outfile in enumerate(outfiles):
-    #if 'HFX' not in outfile:
-    #    continue
-    #else:
-    #    counter += 1
-    #    print('-----')
-    #    print(outfile)
-    #if counter > 10:
-    #    sard
+    if os.path.split(outfile.rsplit('_',1)[0])[-1] in active_jobs:
+        continue
     if 'nohup' in outfile:
         continue
     output = textfile(outfile)
-    spin = int(output.wordgrab(['Spin multiplicity:'],2)[0][0])
-    finalenergy,s_squared,s_squared_ideal,time,thermo_grad_error,implicit_solvation_energy,geo_opt_cycles = output.wordgrab(['FINAL',
+    print('----'+outfile+'----')
+    try:
+        spin = int(output.wordgrab(['Spin multiplicity:'],2)[0][0])
+    except:
+        print('Cannot read file. Skipping')
+        continue
+    finalenergy,s_squared,s_squared_ideal,job_time,thermo_grad_error,implicit_solvation_energy,geo_opt_cycles = output.wordgrab(['FINAL',
                                                                                         'S-SQUARED:',
                                                                                         'S-SQUARED:','processing',
                                                                                         'Maximum component of gradient is too large',
                                                                                         'C-PCM contribution to final energy:',
                                                                                         'Optimization Cycle'],
                                                                                         [2,2,4,3,0,4,3],last_line=True)
-    name = output.wordgrab(['XYZ coordinates'],2)[0][0].strip('.xyz').split('HFXresampling')[0]
+    name = output.wordgrab(['XYZ coordinates'],2)[0][0].strip('.xyz').split('HFXresampling')[0].rstrip('_')
+    if 'inscr' in name:
+        name = outfile.split('/')[-1]
+        name = name.replace('.out','')
+        name = name.split('HFXresampling')[0].rstrip('_')
+    print(name)
     metal = name.split('_')[0]
     ox = int(name.split('_')[1])
     lig1 = name.split('_')[3]
@@ -115,26 +119,36 @@ for i, outfile in enumerate(outfiles):
     this_run.terachem_version = output.wordgrab(['TeraChem'],2)[0][0]
     this_run.alpha_level_shift = output.wordgrab(['Alpha level shift'],-1)[0][0]
     this_run.beta_level_shift = output.wordgrab(['Beta level shift'],-1)[0][0]
+    this_run.basis = 'lacvps_ecp'
+    this_run.geo_opt = True
+    this_run.outpath = outfile
     if spin == 1:
         this_run.ss_target = 0
         this_run.ss_act = 0
     else:
-        this_run.ss_target = s_squared_ideal
-        this_run.ss_act = s_squared
+        try:
+            this_run.ss_target = float(s_squared_ideal)
+            this_run.ss_act = float(s_squared)
+        except:
+            this_run.ss_target = np.nan
+            this_run.ss_act = np.nan
     this_run.charge = int(output.wordgrab(['Total charge'],-1)[0][0])
     this_run.ligcharge = int(this_run.charge)-int(ox)
     new_opt = output.wordgrab(['Optimization Converged'],'whole_line')[0][0]
     old_opt = output.wordgrab(['Converged!'],'whole_line')[0][0]
     if (old_opt != None) or (new_opt != None):
-        if (time != None) and (finalenergy != None):
+        if (job_time != None) and (finalenergy != None):
             this_run.converged = True
-            this_run.tot_time = time
+            this_run.tot_time = job_time
             this_run.tot_step = geo_opt_cycles
         else:
             this_run.converged = False
     else:
         this_run.converged = False
+    if this_run.converged == False:
+        continue
     this_run.init_energy = float(output.wordgrab(['FINAL ENERGY'],'whole_line')[0][0][2]) #take the first set of this and take the 3rd value
+    this_run.energy = float(finalenergy)
     basepath = os.path.split(outfile)[0]
     scrpath = basepath+'/scr/'
     optimpath = scrpath+'optim.xyz'
@@ -166,16 +180,19 @@ for i, outfile in enumerate(outfiles):
     this_run.get_check_flags()
     this_run.flag_oct = flag_oct
     this_run.flag_list = flag_list
+    this_run.geo_check_dict = dict_oct_info
     this_run.dict_geo_check = dict_oct_info
+    this_run.geo_check_metrics = this_run.dict_geo_check
     this_run.write_geo_dict()
     this_run.obtain_rsmd()
     this_run.obtain_ML_dists()
+    wfn = False
     if this_run.converged:
         try:
             wfn = get_wavefunction(scrpath)
         except:
             wfn = False
-        this_run.wavefunction = wfn
+    this_run.wavefunction = wfn
     this_run.get_descriptor_vector()
     if this_run.converged:
         if this_run.geo_flag:
@@ -195,7 +212,7 @@ for i, outfile in enumerate(outfiles):
         print(reference_struct[0]['subtag'])
         subtag = reference_struct[0]['subtag']+'_additional'
     else:
-        subtag = 'job_manager_jobs'
+        subtag = 'no_reference_additional'
             
     print(this_run.geo_flag,this_run.metal_spin_flag,this_run.ss_flag,this_run.status,subtag)
     if write:
