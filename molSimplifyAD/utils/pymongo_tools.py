@@ -11,6 +11,7 @@ from pymongo import MongoClient
 from molSimplifyAD.dbclass_mongo import tmcMongo, tmcActLearn, mongo_attr_id, mongo_not_web
 from molSimplifyAD.mlclass_mongo import modelActLearn, modelMongo
 from molSimplifyAD.ga_tools import isKeyword
+from molSimplifyAD.dbclass_csd import CSDMongo
 
 
 def check_repeated(db, collection, tmc):
@@ -351,3 +352,29 @@ def push_models_actlearn(step, model, database, collection,
     dump_databse(database_name=database_name,
                  outpath=outpath,
                  user=user, pwd=pwd)
+
+
+def push_csd_complexes(database, tag, csdobj_list, collection="csd",
+                       user=False, pwd=False, host="localhost", port=27017, auth=False,
+                       update_fields=False, database_name="tmc", outpath='/home/db_backup'):
+    db = connect2db(user, pwd, host, port, database, auth)
+    ensure_collection(db, collection)
+    for csdobj in csdobj_list:
+        csdmongo = CSDMongo(csdobj, tag=tag, update_fields=update_fields)
+        _doc = query_one(db, collection, constraints={"refcode": csdmongo.document["refcode"]})
+        if not _doc == None:
+            print("A csd complex has already existed. merging with update_fields as: ", update_fields)
+            merge_documents(db, collection,
+                            doc1=_doc,
+                            doc2=csdmongo.document,
+                            update_fields=csdmongo.update_fields)
+        else:
+            db[collection].insert_one(csdmongo.document)
+    db[collection].create_index([("Refcode", pymongo.ASCENDING),
+                                 ("date", pymongo.ASCENDING)
+                                 ])
+    dump_databse(database_name=database_name,
+                 outpath=outpath,
+                 user=user, pwd=pwd)
+
+
