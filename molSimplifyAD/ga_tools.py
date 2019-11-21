@@ -333,25 +333,33 @@ def get_ox_states():  # could be made metal dependent like spin
 
 
 ########################
-def get_mulliken(moldenpath, spin, catlig=False):
+def get_mulliken(moldenpath, spin, catlig=False, external = False):
     net_metal_spin = "undef"
     got_metal = False
     x_flag = False
-    if isKeyword('oxocatalysis'):
-        oxocatalysis = True
-        oxo_net_spin = "undef"
-        got_oxo = False
+    modifier
+    if not external:
+        if isKeyword('oxocatalysis'):
+            oxocatalysis = True
+            oxo_net_spin = "undef"
+            got_oxo = False
+        else:
+            got_oxo = True
+            oxocatalysis = False
     else:
         got_oxo = True
         oxocatalysis = False
     if catlig:  # This only matters for oxocatalysis, where extra info is stored.
         if str(catlig) == "x":
+            oxocatalysis = True
             x_flag = True
             oxo_net_spin = 0
             got_oxo = True
         if str(catlig) in ["[O--]", "oxo"]:
+            oxocatalysis = True
             modifier = 1
         if str(catlig) in ["[OH-]", "hydroxyl"]:
+            oxocatalysis = True
             modifier = 2
     try:  # mullpop will first be parsed
         mullpop_path = os.path.dirname(moldenpath) + '/mullpop'
@@ -384,8 +392,7 @@ def get_mulliken(moldenpath, spin, catlig=False):
         ##### only call multiwfn if the mullpop is not there #####
         subprocess.call("module load multiwfn/GUI", shell=True)
         metalalpha, metalbeta, net_metal_spin, metalcharge = "undef", "undef", "undef", "undef"
-        if isKeyword('oxocatalysis'):
-            oxoalpha, oxobeta, oxo_net_spin, oxocharge = "undef", "undef", "undef", "undef"
+        oxoalpha, oxobeta, oxo_net_spin, oxocharge = "undef", "undef", "undef", "undef"
         proc = subprocess.Popen("multiwfn " + moldenpath, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         commands = ['7', '5', '1', 'y', 'n']
         newline = os.linesep
