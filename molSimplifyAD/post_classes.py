@@ -75,7 +75,7 @@ class DFTRun(object):
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
                               'islive', 'set_desc', 'sp_status', 'empty_sp_status', 'fod_cont', "wavefunction",
-                              "wavefunction_path", "molden_path", "dynamic_feature"]
+                              "wavefunction_path", "molden_path", "dynamic_feature",'geo_opt']
         list_of_init_zero = ['ss_target', 'ss_act', 'coord', 'mop_coord', 'empty_ss_target',
                              'empty_ss_act']
         list_of_init_nan = ["geo_flag", "ss_flag", 'metal_spin_flag']
@@ -85,12 +85,12 @@ class DFTRun(object):
                                        'oxygen_alpha', 'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
             if isKeyword('TS'):
                 print('---------------------------- ENTERED TS SECTION IN POST CLASSES ------------------------------')
-                list_of_init_props += ['terachem_version_HAT_TS', 'terachem_detailed_version_HAT_TS', 'basis_HAT_TS',
-                                       'tspin_HAT_TS', 'charge_HAT_TS', 'alpha_level_shift_HAT_TS',
-                                       'beta_level_shift_HAT_TS', 'energy_HAT_TS', 'time_HAT_TS', 'terachem_version_Oxo_TS',
-                                       'terachem_detailed_version_Oxo_TS', 'basis_Oxo_TS',
-                                       'tspin_Oxo_TS', 'charge_Oxo_TS', 'alpha_level_shift_Oxo_TS',
-                                       'beta_level_shift_Oxo_TS', 'energy_Oxo_TS', 'time_Oxo_TS']
+                list_of_init_props += list_of_init_props += ['terachem_version_HAT_TS', 'terachem_detailed_version_HAT_TS', 'basis_HAT_TS',
+                                   'tspin_HAT_TS', 'charge_HAT_TS', 'alpha_level_shift_HAT_TS',
+                                   'beta_level_shift_HAT_TS', 'energy_HAT_TS', 'time_HAT_TS', 'terachem_version_Oxo_TS',
+                                   'terachem_detailed_version_Oxo_TS', 'basis_Oxo_TS',
+                                   'tspin_Oxo_TS', 'charge_Oxo_TS', 'alpha_level_shift_Oxo_TS',
+                                   'beta_level_shift_Oxo_TS', 'energy_Oxo_TS', 'time_Oxo_TS']
                 list_of_init_zero += ['ss_act_HAT_TS', 'ss_target_HAT_TS', 'eigenvalue_HAT_TS', 'ss_act_Oxo_TS',
                                       'ss_target_Oxo_TS', 'eigenvalue_Oxo_TS']
                 list_of_init_false += ['init_energy_HAT_TS', 'init_energy_Oxo_TS', 'converged_HAT_TS', 'converged_Oxo_TS',
@@ -176,7 +176,7 @@ class DFTRun(object):
         if geo_check_dict and "dict_oct_check_st" in geo_check_dict:
             oct_st = geo_check_dict["dict_oct_check_st"]
         else:
-            oct_st = dict_oct_check_loose
+            oct_st = dict_oct_check_st
         if geo_check_dict and "dict_oneempty_check_st" in geo_check_dict:
             oneempty_st = geo_check_dict["dict_oneempty_check_st"]
         else:
@@ -1165,11 +1165,28 @@ class DFTRun(object):
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         archive_path = path_dictionary["archive_path"]
         scr_path = path_dictionary["scr_path"] + self.name + '/'
-        for dirpath, dir, files in os.walk(archive_path):
+        allpaths = sorted(os.listdir(archive_path))
+        for _dirpath in allpaths:
+            dirpath = archive_path + '/' + _dirpath
             if self.name in dirpath.split('/')[-1]:
                 _scr_path = dirpath + '/scr/'
-                archive_list.append(_scr_path)
+                if os.path.isfile(_scr_path + 'optim.xyz'):
+                    archive_list.append(_scr_path)
         archive_list.sort()
+        if os.path.isdir(scr_path) and os.path.isfile(scr_path+'optim.xyz'):
+            archive_list.append(scr_path)
+        ## Double check whether there is any repeated files. We had some inconsistent behaviors previously.
+        txt_list = []
+        removefiles = []
+        for ii, _file in enumerate(archive_list):
+            with open(_file + 'optim.xyz', 'r') as fo:
+                txt = "".join(fo.readlines()[-10:])
+            if txt in txt_list:
+                removefiles.append(_file)
+            else:
+                txt_list.append(txt)
+        for _file in removefiles:
+            archive_list.remove(_file)
         # archive_list.append(scr_path) ### We have already archive files first!!!
         print('!!!!archive_list', archive_list)
         self.archive_list = archive_list
@@ -1196,14 +1213,31 @@ class DFTRun(object):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)  ## this adds the /gen_x/ to the paths
         archive_path = path_dictionary["archive_path"]
-        out_path = path_dictionary["geo_out_path"] + self.name
-        for dirpath, dir, files in os.walk(archive_path):
+        out_path = path_dictionary["geo_out_path"] + self.name + '.out'
+        allpaths = sorted(os.listdir(archive_path))
+        for _dirpath in allpaths:
+            dirpath = archive_path + '/' + _dirpath
             if self.name in dirpath.split('/')[-1]:
-                _scr_path = dirpath + '/' + self.name
-                archive_list.append(_scr_path)
+                _scr_path = dirpath + '/' + self.name + '.out'
+                if os.path.isfile(_scr_path):
+                    archive_list.append(_scr_path)
         archive_list.sort()
+        if os.path.isfile(out_path):
+            archive_list.append(out_path)
+        ## Double check whether there is any repeated files. We had some inconsistent behaviors previously.
+        txt_list = []
+        removefiles = []
+        for ii, _file in enumerate(archive_list):
+            with open(_file, 'r') as fo:
+                txt = "".join(fo.readlines()[-20:])
+            if txt in txt_list:
+                removefiles.append(_file)
+            else:
+                txt_list.append(txt)
+        for _file in removefiles:
+            archive_list.remove(_file)
         # archive_list.append(out_path) ### We have already archive files first!!!
-        print('!!!!archive_list', archive_list)
+        # print('!!!!archive_list', archive_list)
         self.archive_list = archive_list
 
     def merge_geo_outfiles(self):
@@ -1231,6 +1265,7 @@ class DFTRun(object):
         tot_step = -1
         tot_time = -1
         _time_tot = -1
+        first_step = True
         convcrit_read = False  # marker for tolerance lines (new optim only)
         e_delta = False
         grad_rms = False
@@ -1243,12 +1278,11 @@ class DFTRun(object):
         displace_rms_tol = False
         displace_max_tol = False
         # convergence history
-        e_hist = []
-        e_delta_hist = []
-        grad_rms_hist = []
-        grad_max_hist = []
-        displace_rms_hist = []
-        displace_max_hist = []
+        keys_hist = ['e_hist', 'e_delta_hist', 'grad_rms_hist', 'grad_max_hist',
+                     'displace_rms_hist', 'displace_rms_hist', 'displace_rms_hist',
+                     'trust_radius_hist', 'step_qual_hist', 'expected_delE_hist']
+        for k in keys_hist:
+            locals().update({k: list()})
         if os.path.isfile(current_path):
             with open(current_path, 'r') as fin:
                 for i, line in enumerate(fin):
@@ -1271,7 +1305,7 @@ class DFTRun(object):
                                     flag = False
                             if flag:
                                 _time_tot += float(ll[-1])
-                        if 'sec' in ll and '_time_tot' in dir() and not 'Total processing time:' in line:
+                        if 'sec' in ll and '_time_tot' in locals().keys() and not 'Total processing time:' in line:
                             try:
                                 _time_tot += float(ll[ll.index('sec') - 1])
                             except:
@@ -1303,6 +1337,21 @@ class DFTRun(object):
                                     displace_max_hist.append(displace_max)
                                 except:
                                     pass
+                    if "Current Trust Radius" in line and first_step:
+                        trust_radius_hist.append(float(line.split()[-1]))
+                        first_step = False
+                    if 'trust radius' in line and not first_step:
+                        try:
+                            trust_radius_hist.append(float(line.split()[-1]))
+                        except ValueError:
+                            pass
+                    if 'Step Quality' in line:
+                        step_qual_hist.append(float(line.split()[-2]))
+                    if 'Expected Delta-E' in line:
+                        try:
+                            expected_delE_hist.append(float(line.split()[-1]))
+                        except ValueError: # Sometimes strange printout occurs... e.g., "Expected Delta-E: -6. -------------"
+                            pass
         else:
             print('!!combined output file not found!!')
         self.tot_time = tot_time
@@ -1322,12 +1371,8 @@ class DFTRun(object):
         self.displace_max_tol = displace_max_tol
 
         # bind histories
-        self.e_hist = e_hist
-        self.e_delta_hist = e_delta_hist
-        self.grad_rms_hist = grad_rms_hist
-        self.grad_max_hist = grad_max_hist
-        self.displace_rms_hist = displace_rms_hist
-        self.displace_max_hist = displace_max_hist
+        for k in keys_hist:
+            setattr(self, k, locals()[k])
 
     def get_descriptor_vector(self, loud=False, name=False, useinitgeo=False):
         ox_modifier = {self.metal: self.ox}
