@@ -15,6 +15,8 @@ convert_dict = {"metal": "tm_symbol",
 class CSDMongo():
     '''
     Class that parses useful information of a CSD complex in order to run a calculation.
+    Note that this class is designed to interface with CSD database (import CSD complexes to db.csd collection).
+    Results of DFT calculations are still restored in db.oct collection by tmcMongo class.
 
     '''
 
