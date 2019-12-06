@@ -337,7 +337,7 @@ def get_mulliken(moldenpath, spin, catlig=False, external = False):
     net_metal_spin = "undef"
     got_metal = False
     x_flag = False
-    modifier
+    modifier = 0
     if not external:
         if isKeyword('oxocatalysis'):
             oxocatalysis = True

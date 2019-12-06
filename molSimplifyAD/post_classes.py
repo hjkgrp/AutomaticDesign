@@ -37,7 +37,7 @@ class DFTRun(object):
     """ This is a class for each run"""
     numRuns = 0
 
-    def __init__(self, name, external = False):
+    def __init__(self, name, external=False):
         self.numRuns += 1
         self.dict_geo_check = dict()
         self.dict_geo_check_loose = dict()
@@ -69,13 +69,13 @@ class DFTRun(object):
                               'grad_max', 'grad_max_tol', 'grad_max_hist',
                               'displace_rms', 'displace_rms_tol', 'displace_rms_hist',
                               'displace_max', 'displace_max_tol', 'displace_max_hist',
-                              'e_hist']
+                              'e_hist', 'trust_radius_hist', 'step_qual_hist', 'expected_delE_hist']
         list_of_init_empty = ['descriptor_names', 'descriptors']
         list_of_init_false = ['solvent_cont', 'water_cont', 'thermo_cont', 'init_energy', 'mol', 'init_mol', 'progmol',
                               'attempted', 'logpath', 'geostatus', 'thermo_status', 'imag', 'geo_exists',
                               'progstatus', 'prog_exists', 'output_exists', 'converged', 'mop_converged',
                               'islive', 'set_desc', 'sp_status', 'empty_sp_status', 'fod_cont', "wavefunction",
-                              "wavefunction_path", "molden_path", "dynamic_feature",'geo_opt']
+                              "wavefunction_path", "molden_path", "dynamic_feature", 'geo_opt', 'iscsd', 'molden']
         list_of_init_zero = ['ss_target', 'ss_act', 'coord', 'mop_coord', 'empty_ss_target',
                              'empty_ss_act']
         list_of_init_nan = ["geo_flag", "ss_flag", 'metal_spin_flag']
@@ -85,15 +85,17 @@ class DFTRun(object):
                                        'oxygen_alpha', 'oxygen_beta', 'net_oxygen_spin', 'oxygen_mulliken_charge']
             if isKeyword('TS'):
                 print('---------------------------- ENTERED TS SECTION IN POST CLASSES ------------------------------')
-                list_of_init_props += list_of_init_props += ['terachem_version_HAT_TS', 'terachem_detailed_version_HAT_TS', 'basis_HAT_TS',
-                                   'tspin_HAT_TS', 'charge_HAT_TS', 'alpha_level_shift_HAT_TS',
-                                   'beta_level_shift_HAT_TS', 'energy_HAT_TS', 'time_HAT_TS', 'terachem_version_Oxo_TS',
-                                   'terachem_detailed_version_Oxo_TS', 'basis_Oxo_TS',
-                                   'tspin_Oxo_TS', 'charge_Oxo_TS', 'alpha_level_shift_Oxo_TS',
-                                   'beta_level_shift_Oxo_TS', 'energy_Oxo_TS', 'time_Oxo_TS']
+                list_of_init_props += ['terachem_version_HAT_TS', 'terachem_detailed_version_HAT_TS', 'basis_HAT_TS',
+                                       'tspin_HAT_TS', 'charge_HAT_TS', 'alpha_level_shift_HAT_TS',
+                                       'beta_level_shift_HAT_TS', 'energy_HAT_TS', 'time_HAT_TS',
+                                       'terachem_version_Oxo_TS',
+                                       'terachem_detailed_version_Oxo_TS', 'basis_Oxo_TS',
+                                       'tspin_Oxo_TS', 'charge_Oxo_TS', 'alpha_level_shift_Oxo_TS',
+                                       'beta_level_shift_Oxo_TS', 'energy_Oxo_TS', 'time_Oxo_TS']
                 list_of_init_zero += ['ss_act_HAT_TS', 'ss_target_HAT_TS', 'eigenvalue_HAT_TS', 'ss_act_Oxo_TS',
                                       'ss_target_Oxo_TS', 'eigenvalue_Oxo_TS']
-                list_of_init_false += ['init_energy_HAT_TS', 'init_energy_Oxo_TS', 'converged_HAT_TS', 'converged_Oxo_TS',
+                list_of_init_false += ['init_energy_HAT_TS', 'init_energy_Oxo_TS', 'converged_HAT_TS',
+                                       'converged_Oxo_TS',
                                        'attempted_HAT_TS', 'attempted_Oxo_TS']
         for this_attribute in list_of_init_props:
             setattr(self, this_attribute, 'undef')
@@ -107,7 +109,8 @@ class DFTRun(object):
             setattr(self, this_attribute, np.nan)
         if external:
             self.geo_check_dict = {}
-            checks = ["dict_oct_check_st", "dict_oct_check_loose", "dict_oneempty_check_st", "dict_oneempty_check_loose"]
+            checks = ["dict_oct_check_st", "dict_oct_check_loose", "dict_oneempty_check_st",
+                      "dict_oneempty_check_loose"]
             for _key in checks:
                 self.geo_check_dict.update({_key: globals()[_key]})
         else:
@@ -171,16 +174,19 @@ class DFTRun(object):
         for key in self.dict_geo_check_prog:
             setattr(self, 'prog_%s' % key, self.dict_geo_check_prog[key])
 
-    def check_oct_needs_final_only(self, debug=False):
-        geo_check_dict = isKeyword("geo_check_dict")
-        if geo_check_dict and "dict_oct_check_st" in geo_check_dict:
-            oct_st = geo_check_dict["dict_oct_check_st"]
+    def check_oct_needs_final_only(self, debug=False, external=False):
+        if not external:
+            geo_check_dict = isKeyword("geo_check_dict")
+            if geo_check_dict and "dict_oct_check_st" in geo_check_dict:
+                oct_st = geo_check_dict["dict_oct_check_st"]
+            else:
+                oct_st = dict_oct_check_st
+            if geo_check_dict and "dict_oneempty_check_st" in geo_check_dict:
+                oneempty_st = geo_check_dict["dict_oneempty_check_st"]
+            else:
+                oneempty_st = dict_oneempty_check_st
         else:
-            oct_st = dict_oct_check_st
-        if geo_check_dict and "dict_oneempty_check_st" in geo_check_dict:
-            oneempty_st = geo_check_dict["dict_oneempty_check_st"]
-        else:
-            oneempty_st = dict_oneempty_check_st
+            oct_st, oneempty_st = dict_oct_check_st, dict_oneempty_check_st
 
         if self.octahedral:
             flag_oct, flag_list, dict_oct_info = self.mol.IsOct(dict_check=oct_st,
@@ -194,16 +200,19 @@ class DFTRun(object):
         self.write_geo_dict()
         return flag_oct, flag_list, dict_oct_info
 
-    def check_oct_needs_init(self, debug=False):
-        geo_check_dict = isKeyword("geo_check_dict")
-        if geo_check_dict and "dict_oct_check_st" in geo_check_dict:
-            oct_st = geo_check_dict["dict_oct_check_st"]
+    def check_oct_needs_init(self, debug=False, external=False):
+        if not external:
+            geo_check_dict = isKeyword("geo_check_dict")
+            if geo_check_dict and "dict_oct_check_st" in geo_check_dict:
+                oct_st = geo_check_dict["dict_oct_check_st"]
+            else:
+                oct_st = dict_oct_check_st
+            if geo_check_dict and "dict_oneempty_check_st" in geo_check_dict:
+                oneempty_st = geo_check_dict["dict_oneempty_check_st"]
+            else:
+                oneempty_st = dict_oneempty_check_st
         else:
-            oct_st = dict_oct_check_st
-        if geo_check_dict and "dict_oneempty_check_st" in geo_check_dict:
-            oneempty_st = geo_check_dict["dict_oneempty_check_st"]
-        else:
-            oneempty_st = dict_oneempty_check_st
+            oct_st, oneempty_st = dict_oct_check_st, dict_oneempty_check_st
 
         if self.octahedral:
             flag_oct, flag_list, dict_oct_info = self.mol.IsOct(self.init_mol,
@@ -217,7 +226,6 @@ class DFTRun(object):
         self.flag_list = flag_list
         self.dict_geo_check = dict_oct_info
         self.write_geo_dict()
-        # print('!!!!!!linear:', self.devi_linear_avrg)
         return flag_oct, flag_list, dict_oct_info
 
     def get_metal_spin_from_molden(self, mwfpath='/home/jp/Multiwfn/Multiwfn'):
@@ -260,19 +268,23 @@ class DFTRun(object):
                 read_on = False
         return (this_spin)
 
-    def check_oct_on_prog(self, debug=False):
-        geo_check_dict = isKeyword("geo_check_dict")
-        if geo_check_dict and "dict_oct_check_loose" in geo_check_dict:
-            oct_loose = geo_check_dict["dict_oct_check_loose"]
+    def check_oct_on_prog(self, debug=False, external=False):
+        if not external:
+            geo_check_dict = isKeyword("geo_check_dict")
+            if geo_check_dict and "dict_oct_check_loose" in geo_check_dict:
+                oct_loose = geo_check_dict["dict_oct_check_loose"]
+            else:
+                oct_loose = dict_oct_check_loose
+            if geo_check_dict and "dict_oneempty_check_loose" in geo_check_dict:
+                oneempty_loose = geo_check_dict["dict_oneempty_check_loose"]
+            else:
+                oneempty_loose = dict_oneempty_check_loose
         else:
-            oct_loose = dict_oct_check_loose
-        if geo_check_dict and "dict_oneempty_check_loose" in geo_check_dict:
-            oneempty_loose = geo_check_dict["dict_oneempty_check_loose"]
-        else:
-            oneempty_loose = dict_oneempty_check_loose
+            oct_loose, oneempty_loose = dict_oct_check_loose, dict_oneempty_check_loose
 
-        if os.path.exists(self.init_geopath):
-            self.obtain_init_mol3d()
+        if os.path.exists(self.init_geopath) or self.init_mol:
+            if not self.init_mol:
+                self.obtain_init_mol3d()
             if self.octahedral:
                 _, _, dict_oct_info, flag_oct_loose, flag_list = self.progmol.Oct_inspection(self.init_mol,
                                                                                              dict_check=oct_loose,
@@ -913,11 +925,14 @@ class DFTRun(object):
                                     else:
                                         f.write(line)
                             try:
-                                conv_dict_check = (int(converged_jobs[path_dictionary['job_path'] + wfnrefhyd + '.in']) == 0)
+                                conv_dict_check = (
+                                        int(converged_jobs[path_dictionary['job_path'] + wfnrefhyd + '.in']) == 0)
                             except:
                                 conv_dict_check = False
-                            if os.path.exists(path_dictionary['optimial_geo_path'] + wfnrefhyd + '.xyz') and conv_dict_check:
-                                f.write('coordinates ' + path_dictionary['optimial_geo_path'] + wfnrefhyd + '.xyz' + ' \n')
+                            if os.path.exists(
+                                    path_dictionary['optimial_geo_path'] + wfnrefhyd + '.xyz') and conv_dict_check:
+                                f.write(
+                                    'coordinates ' + path_dictionary['optimial_geo_path'] + wfnrefhyd + '.xyz' + ' \n')
                             else:
                                 f.write('coordinates ' + path_dictionary[
                                     'initial_geo_path'] + new_name_upper + '.xyz' + ' \n')
@@ -1173,7 +1188,7 @@ class DFTRun(object):
                 if os.path.isfile(_scr_path + 'optim.xyz'):
                     archive_list.append(_scr_path)
         archive_list.sort()
-        if os.path.isdir(scr_path) and os.path.isfile(scr_path+'optim.xyz'):
+        if os.path.isdir(scr_path) and os.path.isfile(scr_path + 'optim.xyz'):
             archive_list.append(scr_path)
         ## Double check whether there is any repeated files. We had some inconsistent behaviors previously.
         txt_list = []
@@ -1282,7 +1297,7 @@ class DFTRun(object):
                      'displace_rms_hist', 'displace_rms_hist', 'displace_rms_hist',
                      'trust_radius_hist', 'step_qual_hist', 'expected_delE_hist']
         for k in keys_hist:
-            locals().update({k: list()})
+            setattr(self, k, list())
         if os.path.isfile(current_path):
             with open(current_path, 'r') as fin:
                 for i, line in enumerate(fin):
@@ -1329,28 +1344,28 @@ class DFTRun(object):
                                     _e, e_delta, grad_rms, grad_max, displace_rms, \
                                     displace_max = [float(ii) for ii in
                                                     [line.strip().split()[jj] for jj in inds_to_read]]
-                                    e_hist.append(_e)
-                                    e_delta_hist.append(e_delta)
-                                    grad_rms_hist.append(grad_rms)
-                                    grad_max_hist.append(grad_max)
-                                    displace_rms_hist.append(displace_rms)
-                                    displace_max_hist.append(displace_max)
+                                    self.e_hist.append(_e)
+                                    self.e_delta_hist.append(e_delta)
+                                    self.grad_rms_hist.append(grad_rms)
+                                    self.grad_max_hist.append(grad_max)
+                                    self.displace_rms_hist.append(displace_rms)
+                                    self.displace_max_hist.append(displace_max)
                                 except:
                                     pass
                     if "Current Trust Radius" in line and first_step:
-                        trust_radius_hist.append(float(line.split()[-1]))
+                        self.trust_radius_hist.append(float(line.split()[-1]))
                         first_step = False
                     if 'trust radius' in line and not first_step:
                         try:
-                            trust_radius_hist.append(float(line.split()[-1]))
+                            self.trust_radius_hist.append(float(line.split()[-1]))
                         except ValueError:
                             pass
                     if 'Step Quality' in line:
-                        step_qual_hist.append(float(line.split()[-2]))
+                        self.step_qual_hist.append(float(line.split()[-2]))
                     if 'Expected Delta-E' in line:
                         try:
-                            expected_delE_hist.append(float(line.split()[-1]))
-                        except ValueError: # Sometimes strange printout occurs... e.g., "Expected Delta-E: -6. -------------"
+                            self.expected_delE_hist.append(float(line.split()[-1]))
+                        except ValueError:  # Sometimes strange printout occurs... e.g., "Expected Delta-E: -6. -------------"
                             pass
         else:
             print('!!combined output file not found!!')
@@ -1369,10 +1384,6 @@ class DFTRun(object):
         self.grad_max_tol = grad_max_tol
         self.displace_rms_tol = displace_rms_tol
         self.displace_max_tol = displace_max_tol
-
-        # bind histories
-        for k in keys_hist:
-            setattr(self, k, locals()[k])
 
     def get_descriptor_vector(self, loud=False, name=False, useinitgeo=False):
         ox_modifier = {self.metal: self.ox}
@@ -1479,6 +1490,9 @@ class DFTRun(object):
             self.wavefunction.update({key: wf})
             self.wavefunction_path.update({key: wavefunc_file})
         self.molden_path = path_dictionary["scr_path"] + self.name + '/' + self.name + ".molden"
+        if os.path.isfile(self.molden_path):
+            with open(self.molden_path, "r") as fo:
+                self.molden = fo.read()
 
     def calculate_spin_on_metal(self):  ### This function should be replaced by get_Mulliken in ga_tools.
         path_dictionary = setup_paths()
