@@ -189,7 +189,6 @@ def ensure_collection(db, collection):
 def push2db(database, collection, tag, subtag, publication=False,
             user=False, pwd=False, host="localhost", port=27017, auth=False,
             all_runs_pickle=False, update_fields=False, all_runs_list=False,
-            database_name="tmc",
             outpath='/home/db_backup'):
     '''
     Push data to MongoDB.
@@ -251,7 +250,7 @@ def push2db(database, collection, tag, subtag, publication=False,
                                  ("geo_flag", pymongo.ASCENDING),
                                  ("ss_flag", pymongo.ASCENDING)
                                  ])
-    dump_databse(database_name=database_name,
+    dump_databse(database_name=database,
                  outpath=outpath,
                  user=user, pwd=pwd)
 
@@ -259,7 +258,6 @@ def push2db(database, collection, tag, subtag, publication=False,
 def push_complex_actlearn(step, all_complexes, database, collection,
                           user=False, pwd=False, host="localhost", port=27017,
                           auth=False, update_fields=False,
-                          database_name="tmc",
                           outpath='/home/db_backup'):
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
@@ -304,7 +302,7 @@ def push_complex_actlearn(step, all_complexes, database, collection,
     if not merged == 0:
         print("=====WARNING====")
         print("Duplicate complexes(%d) occure in the active learning mode. Should never happen." % merged)
-    dump_databse(database_name=database_name,
+    dump_databse(database_name=database,
                  outpath=outpath,
                  user=user, pwd=pwd)
 
@@ -313,7 +311,6 @@ def push_models(model, model_dict, database, collection,
                 user=False, pwd=False,
                 host="localhost", port=27017,
                 auth=False,
-                database_name="tmc",
                 outpath='/home/db_backup'):
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
@@ -331,7 +328,7 @@ def push_models(model, model_dict, database, collection,
     db[collection].create_index([("predictor", pymongo.ASCENDING),
                                  ("len_tot", pymongo.ASCENDING)
                                  ])
-    dump_databse(database_name=database_name,
+    dump_databse(database_name=database,
                  outpath=outpath,
                  user=user, pwd=pwd)
 
@@ -340,7 +337,6 @@ def push_models_actlearn(step, model, database, collection,
                          user=False, pwd=False,
                          host="localhost", port=27017,
                          auth=False,
-                         database_name="tmc",
                          outpath='/home/db_backup'):
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
@@ -349,14 +345,14 @@ def push_models_actlearn(step, model, database, collection,
         print("A model of step %d has already existed.")
     else:
         db[collection].insert_one(actlearn_model.document)
-    dump_databse(database_name=database_name,
+    dump_databse(database_name=database,
                  outpath=outpath,
                  user=user, pwd=pwd)
 
 
 def push_csd_complexes(database, tag, csdobj_list, collection="csd",
                        user=False, pwd=False, host="localhost", port=27017, auth=False,
-                       update_fields=False, database_name="tmc", outpath='/home/db_backup'):
+                       update_fields=False, outpath='/home/db_backup'):
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
     for csdobj in csdobj_list:
@@ -373,7 +369,7 @@ def push_csd_complexes(database, tag, csdobj_list, collection="csd",
     db[collection].create_index([("Refcode", pymongo.ASCENDING),
                                  ("date", pymongo.ASCENDING)
                                  ])
-    dump_databse(database_name=database_name,
+    dump_databse(database_name=database,
                  outpath=outpath,
                  user=user, pwd=pwd)
 
