@@ -20,7 +20,8 @@ mongo_attr_from_run_nan = ["energy", "ss_target", "ss_act", 'alphaHOMO', 'betaHO
                            'grad_max_hist', 'displace_rms_hist',
                            'displace_rms_hist', 'displace_rms_hist',
                            'trust_radius_hist', 'step_qual_hist', 'expected_delE_hist',
-                           'water_cont', 'thermo_cont']
+                           'water_cont', 'thermo_cont',
+                           'solventSP', 'vertIP', 'vertEA', 'functionalsSP']
 mongo_attr_other = ["date", "author", "geotype", "opt_geo", "init_geo", "prog_geo",
                     "RACs", "initRACs", "dftrun", "tag", "subtag", "unique_name",
                     "publication", "ligstr"]

@@ -7,13 +7,15 @@ from molSimplifyAD.ga_tools import get_mulliken, rename_ligands
 from molSimplifyAD.process_scf import read_molden_file
 from molSimplify.job_manager.tools import textfile, list_active_jobs, extract_optimized_geo
 from molSimplifyAD.job_manager_utils.bind_functions import bind_solvent, bind_water, bind_thermo, bind_vertIP, \
-    bind_ligdissociate
+    bind_ligdissociate, bind_vertEA, bind_functionals
 from molSimplifyAD.job_manager_utils.converting_tools import *
 
 associated_jobs = {'solvent': bind_solvent,
                    'watercont': bind_water,
                    'thermo': bind_thermo,
                    'vertIP': bind_vertIP,
+                   'vertEA': bind_vertEA,
+                   'functionals': bind_functionals,
                    'dissociation': bind_ligdissociate}
 
 

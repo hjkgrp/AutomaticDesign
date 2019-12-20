@@ -16,7 +16,7 @@ def bind_direct(this_run, jobname, basedir, case, keyinout, suffix=''):
             setattr(this_run, case_attr, v)
 
 
-def bind_with_search(this_run, jobname, basedir, case, keyinout):
+def bind_with_search(this_run, jobname, basedir, case, keyinout, ref=False):
     setattr(this_run, case, False)
     search_dir = basedir + "/" + "%s_%s" % (jobname, case)
     if os.path.isdir(search_dir):
@@ -25,13 +25,22 @@ def bind_with_search(this_run, jobname, basedir, case, keyinout):
             for file in sorted(files):
                 if file.split('.')[-1] == 'out':
                     outfile = dirpath + '/' + file
-                    key = file.strip('out').strip(jobname).strip('.')
+                    # key = file.strip('out').strip(jobname).strip('.')
+                    key = dirpath.split('/')[-1]
                     output = textfile(outfile)
                     energy = output.wordgrab([keyinout[0]], [keyinout[1]], last_line=True)[0]
-                    if not energy == None:
-                        getattr(this_run, case).update({key: energy})
+                    if isinstance(energy, str):
+                        energy = float(energy.split(':')[-1])
+                    if not ref:
+                        if not energy == None:
+                            getattr(this_run, case).update({key: energy})
+                        else:
+                            getattr(this_run, case).update({key: False})
                     else:
-                        getattr(this_run, case).update({key: False})
+                        if not energy == None:
+                            getattr(this_run, case).update({key: energy - this_run.energy})
+                        else:
+                            getattr(this_run, case).update({key: False})
 
 
 def bind_water(this_run, jobname, basedir):
@@ -50,15 +59,34 @@ def bind_thermo(this_run, jobname, basedir):
 
 def bind_solvent(this_run, jobname, basedir):
     bind_with_search(this_run, jobname, basedir,
-                     case="solvent",
-                     keyinout=['C-PCM contribution to final energy:', -2])
+                     case="solventSP",
+                     keyinout=['C-PCM contribution to final energy:', 4],
+                     ref=False)
 
 
 def bind_vertIP(this_run, jobname, basedir):
-    this_run.vertIP = False
+    bind_with_search(this_run, jobname, basedir,
+                     case="vertIP",
+                     keyinout=['FINAL ENERGY:', -2],
+                     ref=True)
+
+
+def bind_vertEA(this_run, jobname, basedir):
+    bind_with_search(this_run, jobname, basedir,
+                     case="vertEA",
+                     keyinout=['FINAL ENERGY:', -2],
+                     ref=True)
+
+
+def bind_functionals(this_run, jobname, basedir):
+    bind_with_search(this_run, jobname, basedir,
+                     case="functionalsSP",
+                     keyinout=['FINAL ENERGY:', -2],
+                     ref=True)
 
 
 def bind_ligdissociate(this_run, jobname, basedir):
     bind_with_search(this_run, jobname, basedir,
                      case="dissociation",
-                     keyinout=['FINAL ENERGY:', -2])
+                     keyinout=['FINAL ENERGY:', -2],
+                     ref=False)
