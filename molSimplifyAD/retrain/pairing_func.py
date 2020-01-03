@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from pairing_tools import *
+from .pairing_tools import *
 
 
 def process_split(dfgrp, g, **kwargs):

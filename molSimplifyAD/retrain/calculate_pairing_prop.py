@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-from pairing_func import process_split, process_adiabaticIP_redox
-from pairing_tools import keep_lowestE
+from .pairing_func import process_split, process_adiabaticIP_redox
+from .pairing_tools import keep_lowestE
 
 group_conditions = {"split": ['metal', 'ox', 'ligstr'],
                     "redox": ['metal', 'ligstr'],

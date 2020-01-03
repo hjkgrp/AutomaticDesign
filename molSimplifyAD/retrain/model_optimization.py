@@ -2,14 +2,18 @@ import numpy as np
 from functools import partial
 from hyperopt import hp, tpe, fmin, Trials, STATUS_OK
 from keras.callbacks import EarlyStopping
+import tensorflow as tf
 
-from nets import ANN
+from .nets import build_ANN, auc_callback, cal_auc
 
 
-def train_model_hyperopt(hyperspace, X, y, regression=True):
+def train_model_hyperopt(hyperspace, X, y,
+                         regression=True, epochs=1000):
     np.random.seed(1234)
+    if tf.__version__ >= tf.__version__ >= '2.0.0':
+        tf.compat.v1.disable_eager_execution()  ## disable eager in tf2.0 for faster training
     print("hyperspace: ", hyperspace)
-    model = ANN(hyperspace, X.shape[-1], regression=regression)
+    model = build_ANN(hyperspace, X.shape[-1], regression=regression)
     X_train, X_val = np.split(X, [int(0.8 * X.shape[0])])
     y_train, y_val = np.split(y, [int(0.8 * X.shape[0])])
     val_data = [X_val, y_val]
@@ -18,8 +22,10 @@ def train_model_hyperopt(hyperspace, X, y, regression=True):
                               patience=10,
                               verbose=2)
     cb = [earlystop]
+    if not regression:
+        cb += [auc_callback(training_data=(X_train, y_train), validation_data=(X_val, y_val))]
     history = model.fit(X_train, y_train,
-                        epochs=10,
+                        epochs=epochs,
                         verbose=2,
                         batch_size=hyperspace['batch_size'],
                         validation_data=val_data,
@@ -28,13 +34,16 @@ def train_model_hyperopt(hyperspace, X, y, regression=True):
     if regression:
         obj = results[1]
     else:
-        obj = -results[1]
+        val_auc = cal_auc(model, X_val, y_val)
+        obj = -val_auc
     return {'loss': obj,
             'status': STATUS_OK,
-            'epochs': len(history.history[history.history.keys()[0]])}
+            'epochs': len(history.history[list(history.history.keys())[0]])}
 
 
-def optimize(X, y, regression=True, hyperopt_step=100, arch=False):
+def optimize(X, y,
+             regression=True, hyperopt_step=100,
+             arch=False, epochs=1000):
     np.random.seed(1234)
     if arch == False:
         architectures = [(64,), (128,), (256,), (512,),
@@ -66,7 +75,8 @@ def optimize(X, y, regression=True, hyperopt_step=100, arch=False):
     objective_func = partial(train_model_hyperopt,
                              X=X,
                              y=y,
-                             regression=regression)
+                             regression=regression,
+                             epochs=epochs)
     trials = Trials()
     best_params = fmin(objective_func,
                        space,
@@ -78,10 +88,12 @@ def optimize(X, y, regression=True, hyperopt_step=100, arch=False):
     best_params.update({'hidden_size': architectures[best_params['hidden_size']],
                         'batch_size': bzs[best_params['batch_size']],
                         'res': ress[best_params['res']],
-                        'bypass': bypass[best_params['bypass']],
+                        'bypass': bypasses[best_params['bypass']],
                         'amsgrad': True,
                         'patience': 10,
                         })
-    returned = train_model_hyperopt(best_params, X, y, regression=regression)
+    # One extra model training on train/validation set to get the number of epoch for the final model training.
+    returned = train_model_hyperopt(best_params, X, y,
+                                    regression=regression, epochs=epochs)
     best_params.update({'epochs': returned['epochs']})
     return best_params

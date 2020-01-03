@@ -5,6 +5,7 @@ import subprocess
 import time
 import datetime
 import pandas as pd
+import numpy as np
 import pymongo
 from pandas.io.json import json_normalize
 from pymongo import MongoClient
@@ -176,7 +177,10 @@ def ensure_collection(db, collection):
         finish = False
         while not finish:
             print("Collection %s does not exist. Create a new collection? (y/n)" % collection)
-            _in = raw_input()
+            if sys.version_info[0] < 3:
+                _in = raw_input()
+            else:
+                _in = input()
             if _in == "y":
                 finish = True
             elif _in == "n":
@@ -212,7 +216,7 @@ def push2db(database, collection, tag, subtag, publication=False,
     ensure_collection(db, collection)
     print('db push is enabled, attempting commit with tag: %s, subtag: %s to %s' % (tag, subtag, collection))
     if not all_runs_pickle:
-        if all_runs_list:
+        if not all_runs_list == False:
             all_runs = all_runs_list
         else:
             _, all_runs, _ = check_all_current_convergence(post_all=True)
@@ -372,5 +376,3 @@ def push_csd_complexes(database, tag, csdobj_list, collection="csd",
     dump_databse(database_name=database,
                  outpath=outpath,
                  user=user, pwd=pwd)
-
-

@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 from datetime import datetime
 from keras.models import load_model
 import sklearn.preprocessing
@@ -7,9 +8,9 @@ import sklearn.utils
 from molSimplifyAD.utils.pymongo_tools import convert2dataframe, connect2db, push_models
 from pkg_resources import resource_filename, Requirement
 from molSimplify.python_nn.tf_ANN import get_key, load_ANN_variables, load_keras_ann, initialize_model_weights
-from nets import ANN
-from model_optimization import optimize
-from calculate_pairing_prop import group_conditions, pairing
+from .nets import build_ANN, cal_auc
+from .model_optimization import optimize
+from .calculate_pairing_prop import group_conditions, pairing
 
 name_converter_dict = {"oxstate": "ox", "spinmult": "spin", "charge_lig": "ligcharge"}
 RACs180 = ['D_lc-I-0-ax', 'D_lc-I-0-eq', 'D_lc-I-1-ax', 'D_lc-I-1-eq', 'D_lc-I-2-ax', 'D_lc-I-2-eq', 'D_lc-I-3-ax',
@@ -37,6 +38,8 @@ RACs180 = ['D_lc-I-0-ax', 'D_lc-I-0-eq', 'D_lc-I-1-ax', 'D_lc-I-1-eq', 'D_lc-I-2
            'mc-I-0-all', 'mc-I-1-all', 'mc-I-2-all', 'mc-I-3-all', 'mc-S-0-all', 'mc-S-1-all', 'mc-S-2-all',
            'mc-S-3-all', 'mc-T-0-all', 'mc-T-1-all', 'mc-T-2-all', 'mc-T-3-all', 'mc-Z-0-all', 'mc-Z-1-all',
            'mc-Z-2-all', 'mc-Z-3-all', 'mc-chi-0-all', 'mc-chi-1-all', 'mc-chi-2-all', 'mc-chi-3-all']
+if tf.__version__ >= tf.__version__ >= '2.0.0':
+    tf.compat.v1.disable_eager_execution()
 
 
 def name_converter(fnames):
@@ -132,7 +135,7 @@ def extract_data_from_db(predictor, db, collection, constraints,
     if lname[0] in group_conditions.keys():
         print("Paring runs to calculate the new property %s..." % lname)
         df, _ = pairing(df, case=lname[0])
-    df_use = df[fnames + lname]
+    df_use = df[fnames + lname + ['unique_name']]
     shape = df_use.shape[0]
     df_use = df_use.dropna()
     for key in df_use:
@@ -141,11 +144,16 @@ def extract_data_from_db(predictor, db, collection, constraints,
     return df_use, fnames, lname
 
 
-def normalize_data(df, fnames, lname, predictor, frac=0.8):
+def normalize_data(df, fnames, lname, predictor, frac=0.8, name=False):
     np.random.seed(1234)
     X = df[fnames].values
     y = df[lname].values
-    X, y = sklearn.utils.shuffle(X, y)
+    if name:
+        n = df['unique_name'].values
+        X, y, n = sklearn.utils.shuffle(X, y, n)
+        n_train, n_test = np.split(n, [int(frac * X.shape[0])])
+    else:
+        X, y = sklearn.utils.shuffle(X, y)
     X_train, X_test = np.split(X, [int(frac * X.shape[0])])
     y_train, y_test = np.split(y, [int(frac * X.shape[0])])
     x_scaler = sklearn.preprocessing.StandardScaler()
@@ -158,7 +166,10 @@ def normalize_data(df, fnames, lname, predictor, frac=0.8):
         y_train = y_scaler.transform(y_train)
         y_test = y_scaler.transform(y_test)
     print("mean in target train/test: %f/%f" % (np.mean(y_train), np.mean(y_test)))
-    return X_train, X_test, y_train, y_test
+    if name:
+        return X_train, X_test, y_train, y_test, n_train, n_test
+    else:
+        return X_train, X_test, y_train, y_test
 
 
 def train_model(predictor, db,
@@ -188,33 +199,39 @@ def train_model(predictor, db,
                 best_params = optimize(X=X_train, y=y_train,
                                        regression=regression,
                                        hyperopt_step=hyperopt_step,
-                                       arch=arch)
+                                       arch=arch,
+                                       epochs=epochs)
             else:
                 print("No existing model found in db.models matching the predictor: ", predictor)
                 print('HyperOpt EVERYTHING...')
                 best_params = optimize(X=X_train, y=y_train,
                                        regression=regression,
-                                       hyperopt_step=hyperopt_step)
+                                       hyperopt_step=hyperopt_step,
+                                       epochs=epochs)
         else:  # HyperOpt both model architecture and training parameters.
             print('HyperOpt EVERYTHING...')
             best_params = optimize(X=X_train, y=y_train,
                                    regression=regression,
-                                   hyperopt_step=hyperopt_step)
+                                   hyperopt_step=hyperopt_step,
+                                   epochs=epochs)
         print("best hyperparams: ", best_params)
-        model = ANN(best_params, input_len=X_train.shape[-1], regression=regression)
+        model = build_ANN(best_params, input_len=X_train.shape[-1], regression=regression)
         batch_size = best_params['batch_size']
         epochs = best_params['epochs']
         print("epochs: %d, batch_size: %d" % (epochs, batch_size))
-    history = model.fit(X_train, y_train, epochs=epochs, verbose=1, batch_size=batch_size)
+    history = model.fit(X_train, y_train, epochs=epochs, verbose=2, batch_size=batch_size)
     results = model.evaluate(X_train, y_train)
     res_dict_train = {}
     for ii, key in enumerate(model.metrics_names):
         res_dict_train.update({key: results[ii]})
-    print("train result: ", res_dict_train)
     results = model.evaluate(X_test, y_test)
     res_dict_test = {}
     for ii, key in enumerate(model.metrics_names):
         res_dict_test.update({key: results[ii]})
+    if not regression:
+        res_dict_train.update({"auc": cal_auc(model, X_train, y_train)})
+        res_dict_test.update({"auc": cal_auc(model, X_test, y_test)})
+    print("train result: ", res_dict_train)
     print("test reulst: ", res_dict_test)
     return model, history, res_dict_train, res_dict_test, best_params
 
@@ -229,11 +246,13 @@ def retrain(predictor, user, pwd,
             initialize_weight=True, hyperopt_step=100,
             load_latest_model=False, fix_architecture=False):
     db = connect2db(user, pwd, host, port, database, auth)
+    dbquery_time = datetime.now()
     df, fnames, lname = extract_data_from_db(predictor, db, collection,
                                              constraints=constraints,
                                              feature_extra=feature_extra,
                                              target=target)
-    X_train, X_test, y_train, y_test = normalize_data(df, fnames, lname, predictor, frac=frac)
+    X_train, X_test, y_train, y_test, n_train, n_test = normalize_data(df, fnames, lname, predictor,
+                                                                       frac=frac, name=True)
     model, history, res_dict_train, res_dict_test, best_params = train_model(predictor, db,
                                                                              X_train, X_test,
                                                                              y_train, y_test,
@@ -245,13 +264,16 @@ def retrain(predictor, user, pwd,
                                                                              load_latest_model=load_latest_model,
                                                                              fix_architecture=fix_architecture)
     model_dict = {}
-    model_dict.update({"predictor": predictor})
-    model_dict.update({"constraints": str(constraints)})
-    model_dict.update({"hyperopt": hyperopt})
-    model_dict.update({"history": history.history})
-    model_dict.update({"hyperparams": best_params})
-    model_dict.update({"score_train": res_dict_train,
-                       "score_test": res_dict_test,
+    model_dict.update({"predictor": predictor,
+                       "constraints": str(constraints),
+                       "hyperopt": hyperopt,
+                       "history": {k: [float(ele) for ele in history.history[k]] for k in history.history},
+                       "hyperparams": best_params,
+                       "dbquery_time": dbquery_time,
+                       "score_train": {k: float(res_dict_train[k]) for k in res_dict_train},
+                       "score_test": {k: float(res_dict_test[k]) for k in res_dict_test},
+                       "name_train": n_train.tolist(),
+                       "name_test": n_test.tolist(),
                        "target_train": y_train.tolist(),
                        "target_test": y_test.tolist(),
                        "pred_train": model.predict(X_train).tolist(),

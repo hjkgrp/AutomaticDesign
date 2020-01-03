@@ -9,8 +9,11 @@ from keras.models import load_model
 attr_actlearn = ["model", "step", ]
 attr_mongo_in = ["predictor", "hyperparams", "score_train", "score_test",
                  "target_train", "target_test", "pred_train", "pred_test",
+                 "name_train", "name_test",
                  "len_train", "len_test", "len_tot", "constraints",
-                 "history", "tag", "features", "target", "hyperopt"]
+                 "history", "tag", "features", "target", "hyperopt",
+                 "tag", "initialize_weight", "hyperopt_step", "load_latest_model",
+                 "fix_architecture"]
 attr_mongo_undef = ["model", "date", "author"]
 model_basepath = '/home/data/models/'
 
@@ -53,7 +56,7 @@ class modelMongo(MLModel):
                 try:
                     setattr(self, attr, kwargs[attr])
                 except:
-                    if attr in ["predictor", "history", "hyperparams", "constraints", "len_tot"]:
+                    if attr in ["predictor", "history", "hyperparams", "constraints", "len_tot", "features", "target"]:
                         raise KeyError("Error: Key %s does not exist in the input dictionary." % attr)
                     else:
                         print("Warning: Key %s does not exist in the input dictionary." % attr)
