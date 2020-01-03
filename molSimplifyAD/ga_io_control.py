@@ -68,7 +68,7 @@ class GA_run_defintion:
                        'all_spins': all_spins,
                        'thermo': thermo,
                        'solvent': solvent,
-                       'water':water,
+                       'water': water,
                        'liglist': liglist,
                        'symclass': symclass,
                        'HFXsample': HFXsample,
@@ -209,14 +209,14 @@ def parseall(parser):
 def checkinput(args):
     ## verfiy compatible arguments given
     if not args.new and not args.resume and not args.push and not args.push_act_learn and not args.retrain:
-        print  'Error: choose either -new to start a new run, or -resume to continue an existing one. Aborting.'
+        print('Error: choose either -new to start a new run, or -resume to continue an existing one. Aborting.')
         exit()
     if args.new:
         if not os.path.isfile(str(args.new)):
-            print 'Warning: cannot read input file/none given. Using default parameters'
+            print('Warning: cannot read input file/none given. Using default parameters')
             args.new = 'default'
     if args.new and args.resume:
-        print 'Warning: cannot create new run and resume in same step, resuming only'
+        print('Warning: cannot create new run and resume in same step, resuming only')
         args.new = False
     if args.resume:
         if isinstance(args.resume, basestring):
@@ -227,26 +227,26 @@ def checkinput(args):
             args.resume = args.resume + "/"
             print('Warning: modifying resume path to ' + args.resume)
         if not os.path.isdir(str(args.resume)):
-            print 'Warning: no resume directory given or does not exist, assume current dir: ' + os.getcwd()
+            print('Warning: no resume directory given or does not exist, assume current dir: ' + os.getcwd())
             args.resume = os.getcwd() + '/'
         print('looking for ' + args.resume + '.madconfig')
         if not os.path.isfile(args.resume + '.madconfig'):
-            print  'Error: no .madconfig file in ' + args.resume + ', aborting run'
+            print('Error: no .madconfig file in ' + args.resume + ', aborting run')
             exit()
     if args.reps:
         try:
             args.reps = int(args.reps)
-            print 'repeating ' + str(args.reps) + ' resume ops'
+            print('repeating ' + str(args.reps) + ' resume ops')
         except:
             args.reps = 1
-            print 'Warning: reps must be an integer, ignoring arugment'
+            print('Warning: reps must be an integer, ignoring arugment')
     if args.sleep:
         try:
             args.sleep = float(args.sleep)
-            print 'sleeping for ' + str(args.sleep) + ' between resumes '
+            print('sleeping for ' + str(args.sleep) + ' between resumes ')
         except:
             args.sleep = 0
-            print 'Warning: sleep period must be  numeric, ignoring arugment'
+            print('Warning: sleep period must be  numeric, ignoring arugment')
 
     return (args)
 

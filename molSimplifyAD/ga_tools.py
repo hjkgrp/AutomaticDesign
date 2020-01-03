@@ -213,9 +213,9 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
     list_of_props.append('lig5')
     if (not oxocatalysis):
         list_of_props.append('lig6')
-    list_of_prop_names = ['chem_name','name_without_HFX', 'converged', 'status', 'time', 'charge', 'spin',
-                          'energy', 'init_energy','net_metal_spin','del_metal_spin','metal_spin_expected',
-                          'ss_act', 'ss_target', 'ss_flag','hfx_flag','metal_spin_flag','geo_flag',
+    list_of_prop_names = ['chem_name', 'name_without_HFX', 'converged', 'status', 'time', 'charge', 'spin',
+                          'energy', 'init_energy', 'net_metal_spin', 'del_metal_spin', 'metal_spin_expected',
+                          'ss_act', 'ss_target', 'ss_flag', 'hfx_flag', 'metal_spin_flag', 'geo_flag',
                           'ax1_MLB', 'ax2_MLB', 'eq_MLB',
                           "alphaHOMO", "alphaLUMO", "betaHOMO", "betaLUMO",
                           'geopath', 'attempted',
@@ -233,8 +233,8 @@ def output_properties(comp=False, oxocatalysis=False, SASA=False, TS=False):
                           'terachem_version', 'terachem_detailed_version',
                           'basis', 'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
                           'mop_coord', 'sp_energy', 'empty_sp_energy', 'tot_time', 'tot_step', 'metal_translation',
-                          'e_delta','e_delta_tol', 'grad_rms','grad_rms_tol',
-                          'grad_max','grad_max_tol','displace_rms', 'displace_rms_tol',
+                          'e_delta', 'e_delta_tol', 'grad_rms', 'grad_rms_tol',
+                          'grad_max', 'grad_max_tol', 'displace_rms', 'displace_rms_tol',
                           'displace_max', 'displace_max_tol']
     if not comp:
         list_of_prop_names.append("sub_count")
@@ -333,7 +333,7 @@ def get_ox_states():  # could be made metal dependent like spin
 
 
 ########################
-def get_mulliken(moldenpath, spin, catlig=False, external = False):
+def get_mulliken(moldenpath, spin, catlig=False, external=False):
     net_metal_spin = "undef"
     got_metal = False
     x_flag = False
@@ -440,6 +440,7 @@ def get_mulliken(moldenpath, spin, catlig=False, external = False):
             else:
                 return [net_metal_spin]
 
+
 #######################
 def get_mayer_valence(moldenpath):
     print('getting mayer metrics')
@@ -453,7 +454,8 @@ def get_mayer_valence(moldenpath):
     lines = output[0].split('\n')
     start = False
     for num, line in enumerate(lines):
-        if ('Total valences and free valences' in line):#('Bond order from mixed alpha&beta density matrix' in line) or ('The total bond order' in line):
+        if (
+                'Total valences and free valences' in line):  # ('Bond order from mixed alpha&beta density matrix' in line) or ('The total bond order' in line):
             start = True
             continue
         elif not start:
@@ -462,9 +464,11 @@ def get_mayer_valence(moldenpath):
             print(line)
             print(line.split())
             if int(line.split()[1].split('(')[0]) == 1:
-                mayer_BV = float(line.split()[-2])-float(line.split()[-1])
+                mayer_BV = float(line.split()[-2]) - float(line.split()[-1])
                 break
     return mayer_BV
+
+
 ########################
 def spin_dictionary():
     GA_run = get_current_GA()
@@ -505,7 +509,8 @@ def spin_dictionary():
 def get_ligand_charge_dictionary():
     ligand_charge_dictionary = {'acac': -1, 'acetonitrile': 0, 'ammonia': 0, 'bifuran': 0, 'bipy': 0, 'bipyrrole': 0,
                                 'bromide': -1,
-                                'carbonyl': 0, 'co':0, 'chloride': -1, 'cyanide': -1, 'cn': -1, 'cyanopyridine': 0, 'dmf': 0,
+                                'carbonyl': 0, 'co': 0, 'chloride': -1, 'cyanide': -1, 'cn': -1, 'cyanopyridine': 0,
+                                'dmf': 0,
                                 'en': 0, 'fluoride': -1,
                                 'formate': -1, 'furan': 0, 'hydroxyl': -1, 'isothiocyanate': -1, 'methanol': 0,
                                 'misc': 0, 'ncs': -1, 'nme3': 0,
@@ -904,15 +909,15 @@ def check_HFX_linearity(all_runs, number_of_points_tolerance=3, max_deviation=5,
             for run_index in run_class_indices:
                 if not 'undef' in str(all_runs[runkey_list[run_index]].energy).lower():
                     x.append(float(all_runs[runkey_list[run_index]].alpha))
-                    y.append(float(all_runs[runkey_list[run_index]].energy) * 627.509)  
-                        # applied Hartree to kcal/mol conv to energy
+                    y.append(float(all_runs[runkey_list[run_index]].energy) * 627.509)
+                    # applied Hartree to kcal/mol conv to energy
                     converge_list.append(run_index)
                 else:
                     print('energy is undef for this runclass')
                     failed_list.append(run_index)
-            zipped_list = zip(x,y,converge_list)
-            zipped_list.sort(key=lambda t:t[0])
-            [sorted_x,sorted_y,sorted_converge_list] = zip(*zipped_list) #sort by HFX value
+            zipped_list = zip(x, y, converge_list)
+            zipped_list.sort(key=lambda t: t[0])
+            [sorted_x, sorted_y, sorted_converge_list] = zip(*zipped_list)  # sort by HFX value
             if len(sorted_x) < number_of_points_tolerance:
                 print('not enough points converged')
                 for run_index in run_class_indices:
@@ -936,18 +941,18 @@ def check_HFX_linearity(all_runs, number_of_points_tolerance=3, max_deviation=5,
                     # so we append them to respective lists.
                     ytests += list(y_test)
                     ypreds += list(y_pred)
-                print('error key',X_val_corresponding_to_error)
+                print('error key', X_val_corresponding_to_error)
                 ytests = np.array(ytests)
                 ypreds = np.array(ypreds)
                 error_array = abs(ytests - ypreds)
-                zipped_list = zip(X_val_corresponding_to_error,error_array)
-                zipped_list.sort(key=lambda t:t[0])
+                zipped_list = zip(X_val_corresponding_to_error, error_array)
+                zipped_list.sort(key=lambda t: t[0])
                 sorted_error_array = zipped_list[1]
                 temp_x = []
                 temp_y = []
                 original_inds = []
                 for j, val in enumerate(sorted_error_array):
-                    print('this is j',j)
+                    print('this is j', j)
                     if float(val) > max_deviation:  # These are outlying points
                         remove_list.append(sorted_converge_list[j])
                     else:
@@ -960,19 +965,20 @@ def check_HFX_linearity(all_runs, number_of_points_tolerance=3, max_deviation=5,
                     temp_x, temp_y = sorted_x, sorted_y
                 slope_signs = []
                 slope, intercept, r_value, p_value, std_err = stats.linregress(temp_x, temp_y)
-                print('THIS IS R2',r_value ** 2,'for',temp_x,temp_y)
+                print('THIS IS R2', r_value ** 2, 'for', temp_x, temp_y)
                 if (r_value ** 2) < R2_cutoff:
                     for j2 in range(len(temp_y) - 1):
-                        print('REGRESSING ',j2,j2+2)
-                        slope, intercept, r_value, p_value, std_err = stats.linregress(temp_x[j2:j2 + 2], temp_y[j2:j2 + 2])
-                        print(temp_x[j2:j2 + 2],temp_y[j2:j2 + 2],slope)
+                        print('REGRESSING ', j2, j2 + 2)
+                        slope, intercept, r_value, p_value, std_err = stats.linregress(temp_x[j2:j2 + 2],
+                                                                                       temp_y[j2:j2 + 2])
+                        print(temp_x[j2:j2 + 2], temp_y[j2:j2 + 2], slope)
                         print('-----')
                         slope_signs.append(np.sign(slope * 1000))
                     signchange = ((np.roll(slope_signs, 1) - slope_signs) != 0).astype(int)
-                    signchange[0] = 0 #Do not want circular behavior
+                    signchange[0] = 0  # Do not want circular behavior
                     idx_2_remove = np.where(signchange == 1)[0]
                     print('THIS IS SLOPES AND SIGNCHANGE and i2r', slope_signs, signchange, idx_2_remove)
-                    if len(idx_2_remove) == 1: #one point on either end
+                    if len(idx_2_remove) == 1:  # one point on either end
                         print('IDX2R is 1 long')
                         if (float(idx_2_remove[0]) / float(len(temp_y))) <= 0.5:
                             print('discontinuity on the left')
@@ -985,17 +991,17 @@ def check_HFX_linearity(all_runs, number_of_points_tolerance=3, max_deviation=5,
                         middle = False
                         pos_list = []
                         for k in idx_2_remove:
-                            check_position = float(int(k) - 1)/float(len(temp_y))
+                            check_position = float(int(k) - 1) / float(len(temp_y))
                             if (check_position < 0.65 and check_position > 0.45):
                                 print('discontinuity in the middle, removing all points')
-                                middle = True #The discontinuity is in the middle. Remove all points. 
+                                middle = True  # The discontinuity is in the middle. Remove all points.
                                 break
                             elif check_position < 0.45:
                                 pos_list.append('L')
                             else:
                                 pos_list.append('R')
                         if middle:
-                            for k in range(0,len(temp_y)):
+                            for k in range(0, len(temp_y)):
                                 remove_list.append(converge_list[int(k)])
                         else:
                             for k, pos in enumerate(pos_list):
@@ -1009,7 +1015,7 @@ def check_HFX_linearity(all_runs, number_of_points_tolerance=3, max_deviation=5,
                         print('all points slope the same, probably just curved')
                     else:
                         print('MORE than 2 discontinuities. Removing all...')
-                        for k in range(0,len(temp_y)):
+                        for k in range(0, len(temp_y)):
                             remove_list.append(converge_list[int(k)])
                 if len(set(converge_list) - set(remove_list)) > number_of_points_tolerance:
                     print('there are still enough points even after elim')
@@ -1395,7 +1401,7 @@ def read_dictionary(path):
 
 
 ########################
-def read_ANN_results_dictionary(path,full=False):
+def read_ANN_results_dictionary(path, full=False):
     emsg = False
     dictionary = dict()
     try:
@@ -1430,7 +1436,7 @@ def write_ANN_results_dictionary(path, dictionary):
     rundir = isKeyword('rundir')
     full_ANN_dict = rundir + '/ANN_output/full_ANN_results.csv'
     if os.path.exists(full_ANN_dict):
-        emsg, already_present_dict = read_ANN_results_dictionary(full_ANN_dict,full=True)
+        emsg, already_present_dict = read_ANN_results_dictionary(full_ANN_dict, full=True)
         with open(full_ANN_dict, 'a') as f:
             for i, val in enumerate(dictionary.keys()):
                 if val.strip().split(',')[0] not in already_present_dict.keys():
@@ -1440,7 +1446,7 @@ def write_ANN_results_dictionary(path, dictionary):
         with open(full_ANN_dict, 'w') as f:
             for i, val in enumerate(dictionary.keys()):
                 if i == 0:
-                    f.write(",".join(["name"] + dictionary[val].keys()+["chem_name"]) + '\n')
+                    f.write(",".join(["name"] + dictionary[val].keys() + ["chem_name"]) + '\n')
                 translated = translate_job_name(val)['chem_name']
                 f.write(",".join([val] + [str(k) for k in dictionary[val].values()] + [translated]) + '\n')
 
@@ -1582,15 +1588,18 @@ def find_converged_job_dictionary():
         converged_job_dictionary = dict()
     return converged_job_dictionary
 
+
 ########################
 def find_job_classification_dictionary():
     path_dictionary = setup_paths()
     job_classification_dictionary = dict()
     if os.path.exists(path_dictionary["job_path"] + "/job_classification_dictionary.csv"):
-        emsg, job_classification_dictionary = read_dictionary(path_dictionary["job_path"] + "/job_classification_dictionary.csv")
+        emsg, job_classification_dictionary = read_dictionary(
+            path_dictionary["job_path"] + "/job_classification_dictionary.csv")
     else:
         job_classification_dictionary = dict()
     return job_classification_dictionary
+
 
 ########################
 def update_converged_job_dictionary(jobs, status):
@@ -1601,16 +1610,19 @@ def update_converged_job_dictionary(jobs, status):
         print(' writing ' + str(jobs) + ' as status ' + str(status))
     write_dictionary(converged_job_dictionary, path_dictionary["job_path"] + "/converged_job_dictionary.csv")
 
+
 ########################
 def update_job_classification_dictionary(jobs, flag_status):
     #### This dictionary contains the results of the 3 flags: geo, ss, metal_spin. 
     #### 0 if all are good. 1 if convergence issues. 2 if geo is bad. 3 if ss is bad. 4 if metal spin is bad. First failed check is logged.
-    failure_mode_dict = {0:'good', 1:'convergence failure',2:'geo failure',3:'ss failure', 4: 'metal spin failure'}
+    failure_mode_dict = {0: 'good', 1: 'convergence failure', 2: 'geo failure', 3: 'ss failure',
+                         4: 'metal spin failure'}
     path_dictionary = setup_paths()
     job_classification_dictionary = find_job_classification_dictionary()
     job_classification_dictionary.update({jobs: flag_status})
     if flag_status != 0:
-        print(' writing ' + str(jobs) + ' to have flag_status ' + str(flag_status)+': '+str(failure_mode_dict[int(flag_status)]))
+        print(' writing ' + str(jobs) + ' to have flag_status ' + str(flag_status) + ': ' + str(
+            failure_mode_dict[int(flag_status)]))
     write_dictionary(job_classification_dictionary, path_dictionary["job_path"] + "/job_classification_dictionary.csv")
 
 
@@ -1658,18 +1670,18 @@ def purge_job_files(job, mad_home_dir=os.getcwd()):
     outfile_loc = os.path.join(os.getcwd(), 'geo_outfiles', 'gen_0')
     if os.path.isfile(os.path.join(outfile_loc, job + '.out')):
         os.rename(os.path.join(outfile_loc, job + '.out'), os.path.join(mad_home_dir, 'purged_job_files', job + '.out'))
-        print 'purging outfile: ' + job + '.out'
-        print 'from: ' + outfile_loc + ' to: ' + os.path.join(mad_home_dir, 'purged_job_files')
+        print('purging outfile: ' + job + '.out')
+        print('from: ' + outfile_loc + ' to: ' + os.path.join(mad_home_dir, 'purged_job_files'))
     infile_loc = os.path.join(os.getcwd(), 'infiles', 'gen_0')
     if os.path.isfile(os.path.join(infile_loc, job + '.in')):
         os.rename(os.path.join(infile_loc, job + '.in'), os.path.join(mad_home_dir, 'purged_job_files', job + '.out'))
-        print 'purging infile: ' + job + '.in'
-        print 'from: ' + infile_loc + ' to: ' + os.path.join(mad_home_dir, 'purged_job_files')
+        print('purging infile: ' + job + '.in')
+        print('from: ' + infile_loc + ' to: ' + os.path.join(mad_home_dir, 'purged_job_files'))
     scr_loc = os.path.join(os.getcwd(), 'scr', 'geo', 'gen_0')
     if os.path.isdir(os.path.join(scr_loc, job)):
         os.rename(os.path.join(scr_loc, job), os.path.join(mad_home_dir, 'purged_job_files', job))
-        print 'purging scr: ' + job
-        print 'from: ' + scr_loc + ' to: ' + os.path.join(mad_home_dir, 'purged_job_files')
+        print('purging scr: ' + job)
+        print('from: ' + scr_loc + ' to: ' + os.path.join(mad_home_dir, 'purged_job_files'))
     os.chdir(cwd)
 
 
@@ -1690,7 +1702,7 @@ def hard_reset_job(full_name, alpha='undef'):
     if alpha == 20:
         tools.add_to_outstanding_jobs(full_name)
         tools.create_generic_infile(full_name)
-        print full_name + 'added to outstanding job list and new infile created'
+        print(full_name + 'added to outstanding job list and new infile created')
 
 
 ########################
@@ -1923,3 +1935,13 @@ def rename_ligands(liglist):
         else:
             liglist_compact.append(lig)
     return liglist_compact
+
+
+#####################
+def find_files_by_name(path, key):
+    targets = []
+    files = os.listdir(path)
+    for f in files:
+        if os.path.isfile(path + '/' + f) and key in f:
+            targets.append(path + '/' + f)
+    return targets

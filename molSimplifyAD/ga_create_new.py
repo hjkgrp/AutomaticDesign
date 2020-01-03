@@ -7,29 +7,29 @@ def create_new_run(args):
     configuration = dict()
     ## load defaults
     if args.new =='default':
-        print 'Using default parameters and setting run dir to ' + os.getcwd() + '/GA_run/'
+        print('Using default parameters and setting run dir to ' + os.getcwd() + '/GA_run/')
         configuration["rundir"] = os.getcwd() +'/GA_run/'
     else:
         configuration = process_new_run_input(args.new)
     if 'rundir' not in configuration.keys():
-        print 'Using default run dir of ' + os.getcwd() + '/GA_run/'
+        print('Using default run dir of ' + os.getcwd() + '/GA_run/')
         configuration["rundir"] = os.getcwd() +'/GA_run/'
     if 'queue_type' not in configuration.keys():
-        print 'Using default queue_type of SGE'
+        print('Using default queue_type of SGE')
         configuration["queue_type"] = "SGE"
 
     ## ensure unique new rundir exists
     counter = 0
     org_name =configuration["rundir"]
     while os.path.isdir(configuration["rundir"]):
-        print 'Warning: '+configuration["rundir"]+' already exists, generating unique key...'
+        print('Warning: '+configuration["rundir"]+' already exists, generating unique key...')
         configuration["rundir"] =  org_name.rstrip('/') +'_'+ str(counter) + '/'
         counter+=1
     ensure_dir(configuration["rundir"])
 
     ## need to load in lig_list, first copy to rundir
     if not 'liglist' in configuration.keys():
-        print 'Using default ligands at' +  get_default_ligand_file()
+        print('Using default ligands at' +  get_default_ligand_file())
         shutil.copy(get_default_ligand_file(),configuration["rundir"]+'ligands_list.txt')
         configuration["liglist"] = process_ligands_file(get_default_ligand_file())
     else:
@@ -42,13 +42,13 @@ def create_new_run(args):
         configuration["geo_check_dict"] = yaml.safe_load(open(configuration["geo_check_dict"]))
     ## need gene decription dictionary, first copy to rundir
     if not 'genetemplate' in configuration.keys():
-        print 'Using default ligands at' +  get_default_gene_template()
+        print('Using default ligands at' +  get_default_gene_template())
         shutil.copy(get_default_gene_template(),configuration["rundir"]+'gene_template.json')
     else:
         shutil.copy(configuration["genetemplate"],configuration["rundir"]+'gene_template.json')
     if 'DFT' in configuration.keys():
         if configuration['DFT']:
-            print 'Using DFT, copying over launch script'
+            print('Using DFT, copying over launch script')
             check_list = ["molscontrol", "fod"]
             for keyw in check_list:
                 globals().update({keyw: False})

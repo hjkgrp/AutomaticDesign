@@ -12,7 +12,8 @@ class gene:
         self.fitness_function = str(fit_func)
 
     def _long(self):
-        return 'The gene {0} has a fitness {1} and appears {2} time(s).'.format(self.name, self.fitness,str(self.frequency))
+        return 'The gene {0} has a fitness {1} and appears {2} time(s).'.format(self.name, self.fitness,
+                                                                                str(self.frequency))
 
 
 # Find a gene by name in a given list.
@@ -89,7 +90,7 @@ def _human_readable_csv(base_path, generation, end_results):
     print(base_path, generation, end_results)
     print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ HR CSV $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
     from molSimplifyAD.get_distances import _find_distances
-    from molSimplifyAD.ga_main import *
+    # from molSimplifyAD.ga_main import * ## It is commented out because of python3 incompatability.
     gene_dist_dict, _, gene_prop_dict, gene_name_dict = _find_distances()
     print('----')
     print('THIS IS NAMEDICT', gene_name_dict)
@@ -100,7 +101,8 @@ def _human_readable_csv(base_path, generation, end_results):
         writer = csv.writer(fo)
         # print('didnt fail here')
         if int(generation) == 0:
-            writer.writerow(('Generation', 'Gene', 'Chem Name', 'Fitness', 'Property', 'Distance', 'Frequency','Fitness Function','Dist Parameter'))
+            writer.writerow(('Generation', 'Gene', 'Chem Name', 'Fitness', 'Property', 'Distance', 'Frequency',
+                             'Fitness Function', 'Dist Parameter'))
         else:
             writer.writerow(('\n'))
             # print('didnt fail here2')
@@ -152,11 +154,11 @@ def _get_freq_fitness(lastgen, npool):
     if not isKeyword('DFT'):
         full_gene_info = dict()
         ANN_prop_dict = dict()
-        #GA_run = get_current_GA()
+        # GA_run = get_current_GA()
         gene_template = get_gene_template()
         runtype = isKeyword("runtype")
         for generation in xrange(lastgen + 1):
-            print('------GENERATION IN XRANGE IS '+str(generation))
+            print('------GENERATION IN XRANGE IS ' + str(generation))
             ANN_dir = isKeyword('rundir') + "ANN_output/gen_" + str(generation) + "/ANN_results.csv"
             # print('here1')
             emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
@@ -180,7 +182,7 @@ def _get_freq_fitness(lastgen, npool):
                     this_prop = float(ANN_dict[keys][runtype])
                     this_dist = float(ANN_dict[keys][runtype + '_dist'])
                     ANN_prop_dict.update({this_gene: this_prop})
-                elif runtype in ['oxo','hat']:
+                elif runtype in ['oxo', 'hat']:
                     # print('got here 3')HR CSVHR CSV
                     if not (this_gene in ANN_prop_dict.keys()):
                         # print('got here 2')
@@ -196,10 +198,10 @@ def _get_freq_fitness(lastgen, npool):
                                 ANN_prop_dict.update({this_gene: 10000})
                             else:
                                 # ANN_prop_dict.update({this_gene: 10000})
-                                print('SKIPPED ANN PROP DICT ASSIGNMENT BC '+str(this_gene)+' '+str(spin))
+                                print('SKIPPED ANN PROP DICT ASSIGNMENT BC ' + str(this_gene) + ' ' + str(spin))
                         else:
                             ANN_prop_dict.update({this_gene: this_prop})
-                elif runtype in ['homo','gap']:
+                elif runtype in ['homo', 'gap']:
                     if (split_energy > 0 and int(spin) <= 3) or (split_energy < 0 and int(spin) > 3):
                         this_prop = float(ANN_dict[keys][runtype])
                         this_dist = float(ANN_dict[keys][runtype + '_dist'])
@@ -212,7 +214,7 @@ def _get_freq_fitness(lastgen, npool):
                         for run in runtype:
                             this_prop.append(float(ANN_dict[keys][run]))
                             this_dist.append(float(ANN_dict[keys][run + '_dist']))
-                        if spin_cat == isKeyword('spin_constraint'): #Constraining this to a single spin state.
+                        if spin_cat == isKeyword('spin_constraint'):  # Constraining this to a single spin state.
                             print('freq fitness multiple prop update')
                             ANN_prop_dict.update({this_gene: this_prop})
                         elif isKeyword('spin_constraint') and get_metals()[metal].lower() == 'cr' and ox == 5:
@@ -220,7 +222,7 @@ def _get_freq_fitness(lastgen, npool):
                             ANN_prop_dict.update({this_gene: [10000, 10000]})
                         else:
                             # ANN_prop_dict.update({this_gene: 10000})
-                            print('SKIPPED ANN PROP DICT ASSIGNMENT BC '+str(this_gene)+' IS SPIN '+str(spin))
+                            print('SKIPPED ANN PROP DICT ASSIGNMENT BC ' + str(this_gene) + ' IS SPIN ' + str(spin))
                     else:
                         # print('here4')
                         for run in runtype:
@@ -251,9 +253,9 @@ def _get_freq_fitness(lastgen, npool):
         print(ANN_prop_dict)
 
     generation = 0
-    print('------------!!!!! ASSIGNED GENERATION '+str(generation)+' !!!!!-------------')
+    print('------------!!!!! ASSIGNED GENERATION ' + str(generation) + ' !!!!!-------------')
     while (generation == 0 or generation < lastgen):
-        print('@@@@@@@@@@@@@@@@@@@@@@@@ GENERATION @@@@@@@@@@@@@@@@@@@@@@@@@@: '+str(generation))
+        print('@@@@@@@@@@@@@@@@@@@@@@@@ GENERATION @@@@@@@@@@@@@@@@@@@@@@@@@@: ' + str(generation))
         end_results = []
         current_gene_list = list()
         # print('_____________________________________________________________________Entered part 1.')
@@ -292,7 +294,7 @@ def _get_freq_fitness(lastgen, npool):
             list_of_lines = fi.readlines()
             for line in list_of_lines:
                 # geneName, fitness = line.split(",",1)
-                geneName, _ = line.split(",",1)
+                geneName, _ = line.split(",", 1)
                 prop = ANN_prop_dict[geneName]
                 if 'hinge' in str(isKeyword('scoring_function')):
                     fitness = find_prop_hinge_fitness(prop, isKeyword('property_parameter'))
@@ -316,7 +318,7 @@ def _get_freq_fitness(lastgen, npool):
         sum_results = []
         read_path = base_path + "gen_" + str(generation) + "/gene_fitness.csv"
         # fi = open(read_path, 'r')
-        with open(read_path,'r') as fi:
+        with open(read_path, 'r') as fi:
             data = fi.readlines()
             for line in data:
                 geneName = line.split(",")[0]
@@ -339,7 +341,7 @@ def _get_freq_fitness(lastgen, npool):
         # print('got to this point 7')
         _write_summary_csv(base_path, generation, sum_results)
         print('DONE WRITING NOW!')
-        
+
         # Fourth, recover actual splitting energies only in ANN case
         if not isKeyword('DFT'):
             if type(runtype) == list:
@@ -368,15 +370,16 @@ def _get_freq_fitness(lastgen, npool):
                     pass
             if count > 0:
                 if type(runtype) == list:
-                    mean_prop[0] = mean_prop[0]/float(count)
-                    mean_prop[1] = mean_prop[1]/float(count)
+                    mean_prop[0] = mean_prop[0] / float(count)
+                    mean_prop[1] = mean_prop[1] / float(count)
                 else:
                     mean_prop = mean_prop / float(count)
             ## write
             # print('this point...')
             _write_prop_csv(base_path, generation, mean_prop)
         generation += 1
-        print('Moving to generation: ',generation)
+        print('Moving to generation: ', generation)
+
 
 def format_freqeuncies():
     lastgen, npool = _get_gen_npool(isKeyword('rundir'))

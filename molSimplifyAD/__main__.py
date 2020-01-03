@@ -1,3 +1,5 @@
+import tensorflow as tf
+import keras
 from molSimplifyAD.ga_io_control import *
 from molSimplifyAD.ga_create_new import *
 from molSimplifyAD.ga_resume_run import *
