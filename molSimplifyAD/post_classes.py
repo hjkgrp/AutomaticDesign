@@ -11,7 +11,7 @@ import subprocess
 from molSimplifyAD.ga_tools import *
 from molSimplify.Classes.mol3D import mol3D
 from molSimplify.Classes import *
-from optgeo_extract import *
+from molSimplifyAD.optgeo_extract import *
 from molSimplify.Informatics.autocorrelation import *
 from molSimplify.Informatics.misc_descriptors import *
 from molSimplify.Informatics.coulomb_analyze import *

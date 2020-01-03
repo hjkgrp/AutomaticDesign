@@ -1320,7 +1320,7 @@ def read_molden_file(this_run):
     LUMObeta = False
     scrpath = this_run.scrpath.strip('optim.xyz')
     # print(scrpath)
-    moldenFile = glob.glob(scrpath + "*.molden")
+    moldenFile = find_files_by_name(scrpath, ".molden")
     if len(moldenFile) >= 1:
         sizelist = 0
         ind = 0

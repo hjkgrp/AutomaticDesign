@@ -1,7 +1,7 @@
 import os, sys
 import glob
 import numpy as np
-from molSimplifyAD.ga_tools import get_mulliken, rename_ligands
+from molSimplifyAD.ga_tools import get_mulliken, rename_ligands, find_files_by_name
 from molSimplifyAD.process_scf import read_molden_file
 
 
@@ -51,7 +51,7 @@ def collect_spin_info(this_run, spin, ss_act, ss_target):
         this_run.ss_act = 0
     else:
         try:
-            this_run.ss_target = float(ss_target)
+            this_run.ss_target = float(ss_target.strip(')'))
             this_run.ss_act = float(ss_act)
         except:
             this_run.ss_target = np.nan
@@ -69,7 +69,7 @@ def check_conv(this_run, tot_time, energy, output):
 
 
 def calculate_mulliken_spins(this_run):
-    multiwfnpath = glob.glob(this_run.scrpath_real + "*.molden")
+    multiwfnpath = find_files_by_name(this_run.scrpath_real, ".molden")
     if len(multiwfnpath) > 0:
         multiwfnpath = multiwfnpath[0]
         if this_run.iscsd:
@@ -118,7 +118,7 @@ def obtain_wavefunction_molden(this_run):
             wavefunc_file = False
         this_run.wavefunction.update({key: wf})
         this_run.wavefunction_path.update({key: wavefunc_file})
-    this_run.molden_path = glob.glob(this_run.scrpath_real + "*.molden")
+    this_run.molden_path = find_files_by_name(this_run.scrpath_real, ".molden")
     if this_run.molden_path:
         this_run.molden_path = this_run.molden_path[0]
         with open(this_run.molden_path, "r") as fo:

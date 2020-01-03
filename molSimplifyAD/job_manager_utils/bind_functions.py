@@ -59,7 +59,7 @@ def bind_thermo(this_run, jobname, basedir):
 
 def bind_solvent(this_run, jobname, basedir):
     bind_with_search(this_run, jobname, basedir,
-                     case="solventSP",
+                     case="solvent",
                      keyinout=['C-PCM contribution to final energy:', 4],
                      ref=False)
 

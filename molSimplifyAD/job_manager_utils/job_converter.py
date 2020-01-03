@@ -101,24 +101,31 @@ def process_geometry_optimizations(this_run, basedir, outfile, output):
     optimpath = scrpath + 'optim.xyz'
     this_run.scrpath = optimpath
     if this_run.converged:
-        this_run.init_energy = float(output.wordgrab(['FINAL ENERGY'], 'whole_line')[0][0][2])
-        extract_optimized_geo(optimpath)
-        this_run.geopath = scrpath + 'optimized.xyz'
-        read_molden_file(this_run)
-        obtain_wavefunction_molden(this_run)
-        this_run.init_mol = mol3D()
-        this_run.init_mol.readfromtxt(get_initgeo(optimpath))
-        this_run.mol = mol3D()
-        this_run.mol.readfromtxt(get_lastgeo(optimpath))
-        this_run.check_oct_needs_init(debug=False, external=True)
-        this_run.obtain_rsmd()
-        this_run.obtain_ML_dists()
-        this_run.get_check_flags()
-        this_run.get_optimization_time_step(current_path=outfile)
-        if this_run.geo_flag:
-            this_run.status = 0
+        if os.path.getsize(optimpath) > 45:
+            this_run.init_energy = float(output.wordgrab(['FINAL ENERGY'], 'whole_line')[0][0][2])
+            try:
+                extract_optimized_geo(optimpath)
+                this_run.geopath = scrpath + 'optimized.xyz'
+            except:
+                this_run.geopath = optimpath
+            read_molden_file(this_run)
+            obtain_wavefunction_molden(this_run)
+            this_run.init_mol = mol3D()
+            this_run.init_mol.readfromtxt(get_initgeo(optimpath))
+            this_run.mol = mol3D()
+            this_run.mol.readfromtxt(get_lastgeo(optimpath))
+            this_run.check_oct_needs_init(debug=False, external=True)
+            this_run.obtain_rsmd()
+            this_run.obtain_ML_dists()
+            this_run.get_check_flags()
+            this_run.get_optimization_time_step(current_path=outfile)
+            if this_run.geo_flag:
+                this_run.status = 0
+            else:
+                this_run.status = 1
         else:
-            this_run.status = 1
+            print("Warning: optim file %s is empty. Skipping this run." % optimpath)
+            this_run.converged = False
     else:
         this_run.status = 7
     return this_run
@@ -131,7 +138,7 @@ def jobmanager2mAD(job, active_jobs):
     if not (os.path.split(outfile.rsplit('_', 1)[0])[-1] in active_jobs) or ('nohup' in outfile):
         output = textfile(outfile)
         try:
-            spin = int(output.wordgrab(['Spin multiplicity:'], 2)[0][0])
+            spin = int(output.wordgrab(['Spin multiplicity:'], -1)[0][0])
         except:
             print('Cannot read file: ', outfile)
             return this_run
