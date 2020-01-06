@@ -6,7 +6,7 @@ from molSimplifyAD.utils.pymongo_tools import push2db, push_complex_actlearn
 def deserialize_inputs(filein):
     with open(filein, "r") as fo:
         args_dict = json.load(fo)
-    print("db push setup: ", args_dict)
+    print(("db push setup: ", args_dict))
     return args_dict
 
 
@@ -27,9 +27,9 @@ def check_dbinputs(args_dict,get_step=None):
     else:
         raise KeyError("missing necessary keys to push data. Required inputs are: ", keys_required)
     dict_vars += ["publication","update_fields"]
-    if "publication" in args_dict.keys() and (args_dict["publication"] != False):
+    if "publication" in list(args_dict.keys()) and (args_dict["publication"] != False):
         publication = args_dict["publication"]
-    if "update_fields" in args_dict.keys() and (args_dict["update_fields"] != False):
+    if "update_fields" in list(args_dict.keys()) and (args_dict["update_fields"] != False):
         update_fields = args_dict["update_fields"]
     for var in dict_vars:
         db_keyword_dict.update({str(var): locals()[var]})

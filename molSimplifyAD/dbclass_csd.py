@@ -37,7 +37,7 @@ class CSDMongo():
             self.document.update({attr: getattr(self, attr)})
         for attr in mongo_attr_inherent:
             attr_csd = attr
-            if attr in convert_dict.keys():
+            if attr in list(convert_dict.keys()):
                 attr_csd = convert_dict[attr]
             if attr_csd in self.csdobj.__dict__:
                 if not attr_csd == "graphs":
@@ -48,7 +48,7 @@ class CSDMongo():
                 raise ValueError("Attribute %s missing from csdobj input." % attr)
         for attr in mongo_attr_optional:
             attr_csd = attr
-            if attr in convert_dict.keys():
+            if attr in list(convert_dict.keys()):
                 attr_csd = convert_dict[attr]
             if attr_csd in self.csdobj.__dict__:
                 self.document.update({attr: getattr(self.csdobj, attr_csd)})

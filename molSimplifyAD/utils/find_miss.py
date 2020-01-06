@@ -22,15 +22,15 @@ with open('record.txt','r') as f:
                     if line.find('Creating') != -1:
                         base_line = line.strip()
                         job_num = base_line.split('/')[-1]
-            if not job_num in list_of_no_cuda.keys():
+            if not job_num in list(list_of_no_cuda.keys()):
                 list_of_no_cuda.update({job_num:[node, gpu,str(mtime),os.getcwd() +'/' + this_match[0]]})
             node_gpu = node+'_'+gpu
-            if not node_gpu in gpu_dict.keys():
+            if not node_gpu in list(gpu_dict.keys()):
                 gpu_dict.update({node_gpu:1})
             else:
                 gpu_dict[node_gpu] += 1
 with open('bad_gpu_jobs2.txt','w') as b:
-    for keys in list_of_no_cuda.keys():
+    for keys in list(list_of_no_cuda.keys()):
         tempvar = list_of_no_cuda[keys]
         b.write(str(keys)+','+','.join(tempvar)+'\n')
 print(gpu_dict)

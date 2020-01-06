@@ -28,10 +28,10 @@ def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary, post_all
 
     postProc = False
     ## be post processed:
-    if (((job not in live_job_dictionary.keys()) and (len(job.strip('\n')) != 0) and geoopt) or ((job not in live_job_dictionary.keys()) and (len(job.strip('\n')) != 0) and sp_calc)):
+    if (((job not in list(live_job_dictionary.keys())) and (len(job.strip('\n')) != 0) and geoopt) or ((job not in list(live_job_dictionary.keys())) and (len(job.strip('\n')) != 0) and sp_calc)):
         if isKeyword('post_all') or post_all:
             postProc = True
-        elif job in converged_jobs_dictionary.keys():
+        elif job in list(converged_jobs_dictionary.keys()):
             try:
                 this_outcome = int(converged_jobs_dictionary[job])
             except:
@@ -56,7 +56,7 @@ def check_all_current_convergence(post_all=False):
     ## conv'd jobs
     converged_jobs = find_converged_job_dictionary()
     ## sub'd jobs
-    joblist = submitted_job_dictionary.keys()
+    joblist = list(submitted_job_dictionary.keys())
     ## indb jobs
     dbjobs_dict = find_indb_jobs()
     dbjobs_list = list(dbjobs_dict.keys())
@@ -74,7 +74,7 @@ def check_all_current_convergence(post_all=False):
     ## allocate holder for result list
     final_results = dict()
     all_runs = dict()
-    print('found:  ' + str(len(joblist)) + ' jobs to check')
+    print(('found:  ' + str(len(joblist)) + ' jobs to check'))
     if isKeyword("optimize"):
         print('post processing geometry files')
         ### return codes:
@@ -104,16 +104,16 @@ def check_all_current_convergence(post_all=False):
             my_own_order = ['20', '25', '30', '15', '10', '05', '00']
             order = {key: i for i, key in enumerate(my_own_order)}
             joblist = sorted(joblist, key=lambda x: order[x.split("_")[-2]])
-        print('testing if  post-all is on: ', isKeyword('post_all'))
+        print(('testing if  post-all is on: ', isKeyword('post_all')))
         # print("jobslist: ", joblist)
         # print("dbjobs_dict: ", dbjobs_dict)
 
         for jobs in joblist:
-            print('\n\n' + jobs + '\n\n')
-            print("process? ", postprocessJob(job=jobs,
+            print(('\n\n' + jobs + '\n\n'))
+            print(("process? ", postprocessJob(job=jobs,
                                               live_job_dictionary=live_job_dictionary,
                                               converged_jobs_dictionary=converged_jobs,
-                                              post_all=post_all))
+                                              post_all=post_all)))
             if postprocessJob(job=jobs,
                               live_job_dictionary=live_job_dictionary,
                               converged_jobs_dictionary=converged_jobs,
@@ -247,9 +247,9 @@ def check_all_current_convergence(post_all=False):
                 if isKeyword('post_all'):
                     if os.path.exists(this_run.scrpath):
                         this_run.extract_geo()
-                        print('  geo extracted to  ' + this_run.geopath)
+                        print(('  geo extracted to  ' + this_run.geopath))
                     else:
-                        print(' cannot find scr:   ' + this_run.scrpath)
+                        print((' cannot find scr:   ' + this_run.scrpath))
                     ### Merge scr files and output files
                     this_run.merge_scr_files()
                     this_run.merge_geo_outfiles()
@@ -260,7 +260,7 @@ def check_all_current_convergence(post_all=False):
                     this_run.estimate_if_job_live()  # test if live
                     if this_run.islive:
                         this_run.status = 4  ## mark as live
-                        print('run: ' + this_run.name + " is live ? " + str(this_run.islive))
+                        print(('run: ' + this_run.name + " is live ? " + str(this_run.islive)))
                     else:
                         # if NOT live, test convergance
                         test_terachem_go_convergence(this_run)
@@ -276,7 +276,7 @@ def check_all_current_convergence(post_all=False):
                                 if len(mulliken_spin_list) > 1:
                                     this_run.net_oxygen_spin = mulliken_spin_list[1]
                             else:
-                                print("No molden path found for this run (" + str(jobs) + ")")
+                                print(("No molden path found for this run (" + str(jobs) + ")"))
 
                 ## get the initial mol
                 if os.path.isfile(this_run.init_geopath):
@@ -287,17 +287,17 @@ def check_all_current_convergence(post_all=False):
 
                 ## convert metal from index to str
 
-                print('metal is ' + str(metal))
-                print('base_name', this_run.name)
-                print('chem_name', this_run.chem_name)
-                print('job status: ', this_run.status)
+                print(('metal is ' + str(metal)))
+                print(('base_name', this_run.name))
+                print(('chem_name', this_run.chem_name))
+                print(('job status: ', this_run.status))
                 these_states = metal_spin_dictionary[metal][ox]
 
 
                 if this_run.status == 0:
                     # get HOMO/LUMO for successful run
                     read_molden_file(this_run)
-                    print('converged run, alpha is ' + str(this_run.alpha))
+                    print(('converged run, alpha is ' + str(this_run.alpha)))
                     run_success = False
                     # perfrom health checks on complex here
                     if (this_run.coord == 6 and this_run.octahedral == True) or (
@@ -308,12 +308,12 @@ def check_all_current_convergence(post_all=False):
                     # check run is complete?
                     if this_run.alpha == 20 or isKeyword('ax_lig_dissoc'):
                         if isKeyword('SASA'):  ## if we want SASA
-                            print('getting area for ' + this_run.name)
+                            print(('getting area for ' + this_run.name))
                             this_run.obtain_area()
 
                         if isKeyword('fod'):
                             this_run = check_fod_file(this_run)
-                            print("fod_cont:", this_run.fod_cont)
+                            print(("fod_cont:", this_run.fod_cont))
                             if this_run.fod_cont and run_success:
                                 remove_outstanding_jobs(this_run.fod_inpath)
                             elif run_success:
@@ -329,7 +329,7 @@ def check_all_current_convergence(post_all=False):
                             # print('type:', this_run.thermo_cont and run_success)
                             # sardines
                             if this_run.thermo_cont and run_success:
-                                print('thermo_cont avail for ' + this_run.name + ' ' + str(this_run.thermo_cont))
+                                print(('thermo_cont avail for ' + this_run.name + ' ' + str(this_run.thermo_cont)))
                                 if this_run.thermo_cont == "grad_error":
                                     # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n')
                                     # sardines
@@ -396,22 +396,22 @@ def check_all_current_convergence(post_all=False):
                                 liglist[-1] == 'oxo' or '[O--]' in liglist[-1][0] or '[O--]' in liglist[-1])):
                             print('TS on')
                             this_run = test_terachem_TS_convergence(this_run)
-                            print('Current TS status (HAT then Oxo for attempted): ', this_run.attempted_HAT_TS,
-                                  this_run.attempted_Oxo_TS)
+                            print(('Current TS status (HAT then Oxo for attempted): ', this_run.attempted_HAT_TS,
+                                  this_run.attempted_Oxo_TS))
                             if this_run.attempted_HAT_TS and this_run.attempted_Oxo_TS and run_success:
-                                if (this_run.PRFO_HAT_inpath not in live_job_dictionary.keys()) and (
-                                        this_run.PRFO_Oxo_inpath not in live_job_dictionary.keys()):
+                                if (this_run.PRFO_HAT_inpath not in list(live_job_dictionary.keys())) and (
+                                        this_run.PRFO_Oxo_inpath not in list(live_job_dictionary.keys())):
                                     print('Attempted both HAT and Oxo TSs, so going to remove')
                                     remove_outstanding_jobs(this_run.PRFO_HAT_inpath)
                                     remove_outstanding_jobs(this_run.PRFO_Oxo_inpath)
                                     this_run.status = 0
-                                elif (this_run.PRFO_HAT_inpath not in live_job_dictionary.keys()) and (
-                                        this_run.PRFO_Oxo_inpath in live_job_dictionary.keys()):
+                                elif (this_run.PRFO_HAT_inpath not in list(live_job_dictionary.keys())) and (
+                                        this_run.PRFO_Oxo_inpath in list(live_job_dictionary.keys())):
                                     print('HAT TS converged, but not Oxo TS... still running')
                                     remove_outstanding_jobs(this_run.PRFO_HAT_inpath)
                                     this_run.status = 18
-                                elif (this_run.PRFO_Oxo_inpath not in live_job_dictionary.keys()) and (
-                                        this_run.PRFO_HAT_inpath in live_job_dictionary.keys()):
+                                elif (this_run.PRFO_Oxo_inpath not in list(live_job_dictionary.keys())) and (
+                                        this_run.PRFO_HAT_inpath in list(live_job_dictionary.keys())):
                                     print('Oxo TS converged, but not HAT TS... still running')
                                     remove_outstanding_jobs(this_run.PRFO_Oxo_inpath)
                                     this_run.status = 17
@@ -450,16 +450,16 @@ def check_all_current_convergence(post_all=False):
                     ## test if we should launch other HFX fractions
                     ## check alpha HFX against dictionary of strings:
                     ahf = str(ahf)
-                    if ahf in HFXorderingdict.keys() and run_success:
+                    if ahf in list(HFXorderingdict.keys()) and run_success:
                         newHFX = HFXorderingdict[ahf][0]
                         refHFX = HFXorderingdict[ahf][1]
                         if this_run.coord == 6 and this_run.octahedral == True:  ## don't bother if failed
                             if not isKeyword('oxocatalysis'):
                                 HFX_job = this_run.write_HFX_inputs(newHFX, refHFX)
                                 if (HFX_job not in joblist) and (HFX_job not in outstanding_jobs) and (
-                                        HFX_job not in converged_jobs.keys()):
-                                    print('note: converting from HFX = ' + str(
-                                        this_run.alpha) + ' to ' + newHFX + ' with ref ' + refHFX)
+                                        HFX_job not in list(converged_jobs.keys())):
+                                    print(('note: converting from HFX = ' + str(
+                                        this_run.alpha) + ' to ' + newHFX + ' with ref ' + refHFX))
                                     logger(base_path_dictionary['state_path'],
                                            str(datetime.datetime.now()) + ' converting from HFX = ' + str(
                                                this_run.alpha) + ' to ' + newHFX + ' with ref ' + refHFX)
@@ -468,16 +468,16 @@ def check_all_current_convergence(post_all=False):
                                     (liglist[-1] == 'oxo' or '[O--]' in liglist[-1][0] or '[O--]' in liglist[-1])):
                                 HFX_job = this_run.write_HFX_inputs(newHFX, refHFX)
                                 if (HFX_job not in joblist) and (HFX_job not in outstanding_jobs) and (
-                                        HFX_job not in converged_jobs.keys()):
-                                    print('note: converting from HFX = ' + str(
-                                        this_run.alpha) + ' to ' + newHFX + ' with ref ' + refHFX)
+                                        HFX_job not in list(converged_jobs.keys())):
+                                    print(('note: converting from HFX = ' + str(
+                                        this_run.alpha) + ' to ' + newHFX + ' with ref ' + refHFX))
                                     logger(base_path_dictionary['state_path'],
                                            str(datetime.datetime.now()) + ' converting from HFX = ' + str(
                                                this_run.alpha) + ' to ' + newHFX + ' with ref ' + refHFX)
                                     add_to_outstanding_jobs(HFX_job)
                                 empty_sp = this_run.write_empty_inputs(refHFX)
                                 if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (
-                                        empty_sp not in converged_jobs.keys()):
+                                        empty_sp not in list(converged_jobs.keys())):
                                     print('note: converting from oxo structure to empty structure (SP)')
                                     logger(base_path_dictionary['state_path'], str(
                                         datetime.datetime.now()) + ' converting from oxo structure to empty structure (SP) for ' + base_name)
@@ -486,15 +486,15 @@ def check_all_current_convergence(post_all=False):
                                 if hydroxyl_upper:
                                     if (hydroxyl_upper not in joblist) and (
                                             hydroxyl_upper not in outstanding_jobs) and (
-                                            hydroxyl_upper not in converged_jobs.keys()):
+                                            hydroxyl_upper not in list(converged_jobs.keys())):
                                         print('note: converting from oxo structure to upper spin hydroxyl structure')
                                         logger(base_path_dictionary['state_path'], str(
                                             datetime.datetime.now()) + ' converting from oxo structure to upper spin hydroxyl structure for ' + base_name)
                                         add_to_outstanding_jobs(hydroxyl_upper)
                             if (isKeyword('TS') and isKeyword('oxocatalysis') and int(ahf) == 20 and (
                                     liglist[-1] == 'oxo' or '[O--]' in liglist[-1][0] or '[O--]' in liglist[-1])):
-                                print('preparing PRFO calculations for HAT and Oxo since axlig2 is ' + str(
-                                    liglist[-1]) + ' and ahf = 20')
+                                print(('preparing PRFO calculations for HAT and Oxo since axlig2 is ' + str(
+                                    liglist[-1]) + ' and ahf = 20'))
                                 empty_sp = this_run.write_empty_inputs(refHFX)
                                 HAT_TS, Oxo_TS = this_run.write_HAT_and_Oxo_TS(empty_sp)
                                 logger(base_path_dictionary['state_path'],
@@ -509,7 +509,7 @@ def check_all_current_convergence(post_all=False):
                         # Must do this because the empty sites are one step behind the 6-coordinates at different HFX
                         empty_sp = this_run.write_empty_inputs('00')
                         if (empty_sp not in joblist) and (empty_sp not in outstanding_jobs) and (
-                                empty_sp not in converged_jobs.keys()):
+                                empty_sp not in list(converged_jobs.keys())):
                             print('note: converting from oxo structure to empty structure (SP)')
                             logger(base_path_dictionary['state_path'], str(
                                 datetime.datetime.now()) + ' converting from oxo structure to empty structure (SP) for ' + base_name)
@@ -517,7 +517,7 @@ def check_all_current_convergence(post_all=False):
                         hydroxyl_upper = this_run.write_hydroxyl_inputs('00')
                         if hydroxyl_upper:
                             if (hydroxyl_upper not in joblist) and (hydroxyl_upper not in outstanding_jobs) and (
-                                    hydroxyl_upper not in converged_jobs.keys()):
+                                    hydroxyl_upper not in list(converged_jobs.keys())):
                                 print('note: converting from oxo structure to upper spin hydroxyl structure')
                                 logger(base_path_dictionary['state_path'], str(
                                     datetime.datetime.now()) + ' converting from oxo structure to upper spin hydroxyl structure for ' + base_name)
@@ -525,12 +525,12 @@ def check_all_current_convergence(post_all=False):
                 if not this_run.islive:
                     sub_number = submitted_job_dictionary[jobs]
                     if not this_run.converged:
-                        print(' job  ' + str(this_run.outpath) + ' not converged')
+                        print((' job  ' + str(this_run.outpath) + ' not converged'))
                         logger(base_path_dictionary['state_path'],
                                str(datetime.datetime.now()) + ' job  ' + str(this_run.outpath) + ' not converged')
                         this_run.extract_prog()
                         killed = this_run.molscontrol_status()
-                        print("whether job has been killed by molsconrtrol: ", killed)
+                        print(("whether job has been killed by molsconrtrol: ", killed))
                         this_run.archive(sub_number, converged=False)
                         if not killed:
                             if this_run.progstatus == 0:
@@ -580,7 +580,7 @@ def check_all_current_convergence(post_all=False):
                                         this_run.rmsd = "undef"
 
                                 except:
-                                    print("ERROR: scr not found for" + str(this_run.scrpath))
+                                    print(("ERROR: scr not found for" + str(this_run.scrpath)))
                         else:
                             this_run.status = 9
                             logger(base_path_dictionary['state_path'],
@@ -595,37 +595,37 @@ def check_all_current_convergence(post_all=False):
                 update_converged_job_dictionary(jobs, this_run.status)
 
                 if this_run.status in [0, 1, 11, 12, 13, 14, 15, 16, 17, 18, 19]:  ##  convergence is successful!
-                    print('removing job from OSL due to status  ' + str(this_run.status))
+                    print(('removing job from OSL due to status  ' + str(this_run.status)))
                     jobs_complete += 1
                     remove_outstanding_jobs(jobs)  # take out of queue
                     if isKeyword('fod'):
                         if this_run.status == 11:  ## need fod:
-                            print('addding fod based on ' + str(jobs))
+                            print(('addding fod based on ' + str(jobs)))
                             this_run.write_fod_input()
                             add_to_outstanding_jobs(this_run.fod_inpath)
                     if isKeyword('solvent'):
                         if this_run.status == 13:  ## need solvent:
-                            print('addding solvent based on ' + str(jobs))
+                            print(('addding solvent based on ' + str(jobs)))
                             this_run.write_solvent_input(dielectric=10.3)
                             add_to_outstanding_jobs(this_run.solvent_inpath)
                     if isKeyword('thermo'):
                         if this_run.status == 12:  ## needs thermo:
-                            print('addding thermo based on ' + str(jobs))
+                            print(('addding thermo based on ' + str(jobs)))
                             this_run.write_thermo_input()
                             add_to_outstanding_jobs(this_run.thermo_inpath)
                     if isKeyword('single_point'):
                         if this_run.status == 14:  ## needs sp:
-                            print('adding single point based on ' + str(jobs))
+                            print(('adding single point based on ' + str(jobs)))
                             this_run.write_bigbasis_input()
                             add_to_outstanding_jobs(this_run.sp_inpath)
                     if isKeyword('water'):
                         if this_run.status == 15:  ## need solvent:
-                            print('addding water based on ' + str(jobs))
+                            print(('addding water based on ' + str(jobs)))
                             this_run.write_water_input()
                             add_to_outstanding_jobs(this_run.water_inpath)
                     if isKeyword('ax_lig_dissoc'):
                         if this_run.status == 19:  ## need empty site calc
-                            print('adding empty site structure based on ' + str(jobs))
+                            print(('adding empty site structure based on ' + str(jobs)))
                             ligand_charge_dict = get_ligand_charge_dictionary()
                             ligand_size_dict = get_ligand_size_dictionary()
                             if gene_template['legacy']:
@@ -649,19 +649,19 @@ def check_all_current_convergence(post_all=False):
                             if len(mulliken_spin_list) > 1:
                                 this_run.net_oxygen_spin = mulliken_spin_list[1]
                         else:
-                            print("No molden path found for this run (" + str(jobs) + ")")
+                            print(("No molden path found for this run (" + str(jobs) + ")"))
                 if this_run.status in [2, 3, 5, 6, 8, 9, "undef"]:  ##  convergence is not successful!
 
                     if this_run.status == "undef":
                         this_run.status = 3
                     if this_run.status in [3, 5, 6, "undef"]:  ## unknown error, allow retry
-                        print(' no result found for job ' + str(jobs) + ' after ' + str(number_of_subs))
+                        print((' no result found for job ' + str(jobs) + ' after ' + str(number_of_subs)))
                         logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                                + " failure at job : " + str(jobs) + ' with status ' + str(this_run.status)
                                + ' after ' + str(number_of_subs) + ' subs, trying again... ')
 
                         if int(number_of_subs) > isKeyword('max_resubmit'):
-                            print(' giving up on job ' + str(jobs) + ' after ' + str(number_of_subs))
+                            print((' giving up on job ' + str(jobs) + ' after ' + str(number_of_subs)))
                             logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                                    + " giving up on job : " + str(jobs) + ' with status ' + str(this_run.status)
                                    + ' after ' + str(number_of_subs) + ' subs ')
@@ -701,8 +701,8 @@ def check_all_current_convergence(post_all=False):
                 # get features of this run before we save it
                 this_run.get_descriptor_vector()
                 all_runs.update({this_run.name: this_run})
-                print('added ' + this_run.name + ' to all_runs')
-                print('run status is  ' + str(this_run.status))
+                print(('added ' + this_run.name + ' to all_runs'))
+                print(('run status is  ' + str(this_run.status)))
                 base_path_dictionary = setup_paths()
                 logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                        + ' added ' + this_run.name + ' to all_runs with status ' + str(this_run.status))
@@ -736,8 +736,8 @@ def check_all_current_convergence(post_all=False):
                     name = "_".join(
                         [str(metal), str(ox), 'eq', str(liglist[0]), str(liglist[1]), str(liglist[2]), str(liglist[3]),
                          'ax1', str(liglist[4]), 'ax2', str(liglist[5]), 'ahf', str(int(alpha)).zfill(2), str(spin)])
-                if (jobs not in live_job_dictionary.keys()) and ((len(jobs.strip('\n')) != 0)):
-                    print('checking status of SP job ' + str(jobs))
+                if (jobs not in list(live_job_dictionary.keys())) and ((len(jobs.strip('\n')) != 0)):
+                    print(('checking status of SP job ' + str(jobs)))
                     this_run = test_terachem_sp_convergence(jobs)
                     this_run.chem_name = name
                     this_run.name_without_HFX = name_without_HFX
@@ -763,14 +763,14 @@ def check_all_current_convergence(post_all=False):
                     # print('THIS IS THE NAME GIVEN: ',this_run.name)
                     # print('THIS IS THE GENE GIVEN: ',this_run.gene)
                     all_runs.update({this_run.name: this_run})
-                    print('added ' + this_run.name + ' to all_runs')
-                    print('run status is  ' + str(this_run.status))
+                    print(('added ' + this_run.name + ' to all_runs'))
+                    print(('run status is  ' + str(this_run.status)))
                     base_path_dictionary = setup_paths()
                     logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                            + ' added ' + this_run.name + ' to all_runs with status ' + str(this_run.status))
                     update_converged_job_dictionary(jobs, this_run.status)  # record converged
-                    print("Did this SP run converge?  " + str(this_run.converged) + ' with status  ' + str(
-                        this_run.status))
+                    print(("Did this SP run converge?  " + str(this_run.converged) + ' with status  ' + str(
+                        this_run.status)))
                     if this_run.status == 0:  ##  convergence is successful!
                         read_molden_file(this_run)
                         print('removing job from OSL due to status 0 ')
@@ -792,9 +792,9 @@ def check_all_current_convergence(post_all=False):
                                 if len(mulliken_spin_list) > 1:
                                     this_run.net_oxygen_spin = mulliken_spin_list[1]
                             else:
-                                print('Moldens exist but are empty for this run (' + str(jobs) + ')')
+                                print(('Moldens exist but are empty for this run (' + str(jobs) + ')'))
                         else:
-                            print('Moldens exist but are empty for this run (' + str(jobs) + ')')
+                            print(('Moldens exist but are empty for this run (' + str(jobs) + ')'))
                     if isKeyword('oxocatalysis'):
                         this_run.get_check_flags(metalspin_cutoff=2, sp_calc=True)
                         log_status = 1  # default value
@@ -815,15 +815,15 @@ def check_all_current_convergence(post_all=False):
                                    jobs) + ' with status ' + str(this_run.status))
                         remove_outstanding_jobs(jobs)  # take out of pool
                     print('\n')
-                elif (jobs in live_job_dictionary.keys()):
-                    print(str(jobs) + ' is live\n')
+                elif (jobs in list(live_job_dictionary.keys())):
+                    print((str(jobs) + ' is live\n'))
                 print('END OF SP JOB \n *******************\n')
         print('matching DFT runs ... \n')
         active_learning_dictionaries = []
         if isKeyword('oxocatalysis'):
             all_runs = check_HFX_linearity(all_runs)
-            for runkey in all_runs.keys():
-                print('THIS IS THE HFXFLAG', all_runs[runkey].hfx_flag, all_runs[runkey].chem_name)
+            for runkey in list(all_runs.keys()):
+                print(('THIS IS THE HFXFLAG', all_runs[runkey].hfx_flag, all_runs[runkey].chem_name))
             final_results = process_runs_oxocatalysis(all_runs, spin_dictionary())
             oxo_dictionaries_for_db, hat_dictionaries_for_db = compile_and_filter_data(final_results, spin_dictionary())
             oxo_dictionaries_for_db = assign_train_flag(oxo_dictionaries_for_db)
@@ -836,13 +836,13 @@ def check_all_current_convergence(post_all=False):
         # for comparisons
         logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
                + " starting output logs ")
-        comp_output_path, comp_descriptor_path = write_output('comps', final_results.values(),
+        comp_output_path, comp_descriptor_path = write_output('comps', list(final_results.values()),
                                                               output_properties(comp=True,
                                                                                 oxocatalysis=isKeyword('oxocatalysis'),
                                                                                 SASA=isKeyword('SASA'),
                                                                                 TS=isKeyword('TS')))
         # for runs
-        run_output_path, run_descriptor_path = write_output('runs', all_runs.values(), output_properties(comp=False,
+        run_output_path, run_descriptor_path = write_output('runs', list(all_runs.values()), output_properties(comp=False,
                                                                                                          oxocatalysis=isKeyword(
                                                                                                              'oxocatalysis'),
                                                                                                          SASA=isKeyword(
@@ -864,14 +864,14 @@ def check_all_current_convergence(post_all=False):
         LS_jobs = dict()
         HS_jobs = dict()
         for jobs in joblist:
-            print('checking status of ' + str(jobs))
+            print(('checking status of ' + str(jobs)))
 
-            if (jobs not in live_job_dictionary.keys()) and ((len(jobs.strip('\n')) != 0)):
-                print('checking status of ' + str(jobs))
+            if (jobs not in list(live_job_dictionary.keys())) and ((len(jobs.strip('\n')) != 0)):
+                print(('checking status of ' + str(jobs)))
 
                 this_run = test_terachem_sp_convergence(jobs)
                 update_converged_job_dictionary(jobs, this_run.status)  # record converged
-                print("Did this run converge?  " + str(this_run.converged) + ' with status  ' + str(this_run.status))
+                print(("Did this run converge?  " + str(this_run.converged) + ' with status  ' + str(this_run.status)))
 
                 if this_run.status == 0:  ##  convergence is successful!
                     print('removing job from OSL due to status 0 ')
@@ -888,8 +888,8 @@ def check_all_current_convergence(post_all=False):
                            + " failure at job : " + str(jobs) + ' with status ' + str(this_run.status))
                     remove_outstanding_jobs(jobs)  # take out of pool
                 print('\n')
-            elif (jobs in live_job_dictionary.keys()):
-                print(str(jobs) + ' is live\n')
+            elif (jobs in list(live_job_dictionary.keys())):
+                print((str(jobs) + ' is live\n'))
             print('END OF JOB \n *******************\n')
         final_results = process_runs_sp(LS_jobs, HS_jobs)
         ## write a file of results
@@ -915,7 +915,7 @@ def check_all_current_convergence(post_all=False):
             writeprops(list_of_props, f)
 
         with open(isKeyword('rundir') + '/results_post.csv', 'a+') as f:
-            for reskeys in final_results.keys():
+            for reskeys in list(final_results.keys()):
                 values = atrextract(final_results[reskeys], list_of_props)
                 writeprops(values, f)
         print('\n**** end of file inspection **** \n')

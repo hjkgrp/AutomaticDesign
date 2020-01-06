@@ -29,7 +29,7 @@ def flProcess(flag_list):
     
     if flag_list == "None":
         flag_list = ["None"]
-    if isinstance(flag_list,basestring):
+    if isinstance(flag_list,str):
         flag_list = [flag_list]
     for fl in flag_list:
         formatted_list  += verbatimize(str(fl))+' '

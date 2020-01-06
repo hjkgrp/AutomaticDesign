@@ -66,7 +66,7 @@ def check_finished(debug=False):
 		for i in to_submit:
 			for counter,ii in enumerate([iii.rsplit(',',1)[0] for iii in converged_jobs]):
 				if i == ii:
-					print('job: '+i+' is reportng status: '+converged_jobs[counter].rsplit(',',1)[1])
+					print(('job: '+i+' is reportng status: '+converged_jobs[counter].rsplit(',',1)[1]))
 	if len(to_submit) == 0:
 		return 'Finished'
 	else:
@@ -79,5 +79,5 @@ if __name__ == '__main__':
 		os.chdir(i)
 		finished = check_finished()
 		os.chdir(home)
-		print('Status of '+i+': '+finished)
+		print(('Status of '+i+': '+finished))
 		

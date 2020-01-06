@@ -22,7 +22,7 @@ def _find_distances():
     for generation in range(lastgen + 1):
         ANN_dir = isKeyword('rundir') + "ANN_output/gen_" + str(generation) + "/ANN_results.csv"
         emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
-        for keys in ANN_dict.keys():
+        for keys in list(ANN_dict.keys()):
             #gene, _, _, metal, ox, eqlig, axlig1, axlig2, _, _, _, spin, spin_cat, ahf, _, _ = translate_job_name(keys)
             translate_dict = translate_job_name(keys)
             gene = translate_dict['gene']
@@ -52,7 +52,7 @@ def _find_distances():
                     # geneName = "_".join(keys.split('_')[4:10])
                     metal = get_metals()[metal]
                     chem_name = translate_dict['chem_name']
-                    if gene in gene_dist_dict.keys():
+                    if gene in list(gene_dist_dict.keys()):
                         pass
                     else:
                         gene_dist_dict.update({gene: this_dist})
@@ -70,10 +70,10 @@ def _find_distances():
                         # geneName = "_".join(keys_temp)
                         metal = get_metals()[metal]
                         # chem_name = translate_dict['chem_name']
-                        print(chem_name+' logged in dictionary')
+                        print((chem_name+' logged in dictionary'))
                         # print('genename is '+geneName)
-                        if gene in gene_dist_dict.keys():
-                            print('SKIPPING GENENAME '+str(gene))
+                        if gene in list(gene_dist_dict.keys()):
+                            print(('SKIPPING GENENAME '+str(gene)))
                             pass
                         else:
                             gene_dist_dict.update({gene: this_dist})
@@ -99,7 +99,7 @@ def _find_distances():
                 metal = get_metals()[metal]
                 chem_name = translate_dict['chem_name']
                 print(chem_name)
-                if gene in gene_dist_dict.keys():
+                if gene in list(gene_dist_dict.keys()):
                     pass
                 else:
                     gene_dist_dict.update({gene: this_dist})
@@ -116,7 +116,7 @@ def _find_distances():
                         geneName = "_".join(keys.split('_')[4:10])
                         metal = get_metals()[metal]
                         chem_name = translate_dict['chem_name']
-                        if geneName in gene_dist_dict.keys():
+                        if geneName in list(gene_dist_dict.keys()):
                             pass
                         else:
                             gene_dist_dict.update({geneName: this_dist})
@@ -128,7 +128,7 @@ def _find_distances():
                         geneName = "_".join(keys.split('_')[4:10])
                         metal = get_metals()[metal]
                         chem_name = translate_dict['chem_name']
-                        if geneName in gene_dist_dict.keys():
+                        if geneName in list(gene_dist_dict.keys()):
                             pass
                         else:
                             gene_dist_dict.update({geneName: [10000,10000]})
@@ -144,7 +144,7 @@ def _find_distances():
                     chem_name = translate_dict['chem_name']
                     # print(chem_name)
                     # print(this_prop, this_dist)
-                    if gene in gene_dist_dict.keys():
+                    if gene in list(gene_dist_dict.keys()):
                         pass
                     else:
                         gene_dist_dict.update({gene: this_dist})

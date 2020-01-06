@@ -43,7 +43,7 @@ def wake_up_routine():
         ## assess current fitness
         new_tree.check_results()
         new_tree.assess_fitness()
-        print(new_tree.status_dictionary["ready_to_advance"])
+        print((new_tree.status_dictionary["ready_to_advance"]))
         if current_gen <= maxgen and not isKeyword("runtype") == "redox":
             print('Current gen <= Maxgen in wakeup routine...')
             ## check if there is still

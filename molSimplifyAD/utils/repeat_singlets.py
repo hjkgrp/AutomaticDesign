@@ -33,7 +33,7 @@ live_job_dictionary = find_live_jobs()
 ## conv'd jobs
 converged_jobs = find_converged_job_dictionary()
 ## sub'd jobs
-joblist = submitted_job_dictionary.keys()
+joblist = list(submitted_job_dictionary.keys())
 ## outstanding jobs:
 outstanding_jobs = get_outstanding_jobs()
 
@@ -43,11 +43,11 @@ use_old_optimizer = get_optimizer()
 ## allocate holder for result list
 final_results = dict()
 all_runs = dict()
-print('found:  ' + str(len(joblist)) + ' jobs to check')
+print(('found:  ' + str(len(joblist)) + ' jobs to check'))
 
 
 joblist  =  list(set(joblist+outstanding_jobs))
-print('found:  ' + str(len(joblist)) + ' jobs to check')
+print(('found:  ' + str(len(joblist)) + ' jobs to check'))
 
 ## holder for jobs to delete
 delete_list = []
@@ -55,8 +55,8 @@ restart_list = []
 for jobs in joblist:
             ##upack job name
             gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(jobs)
-            if spin == 1 and not (jobs in live_job_dictionary.keys()):               
-                print('found singlet: ' + str(jobs))
+            if spin == 1 and not (jobs in list(live_job_dictionary.keys())):               
+                print(('found singlet: ' + str(jobs)))
                 this_run = DFTRun(base_name)
                 this_run.scrpath = path_dictionary["scr_path" ]  + base_name +"/optim.xyz"
                 this_run.gene = base_gene
@@ -117,8 +117,8 @@ for jobs in joblist:
                         delete_list.append(this_run)
 
                 
-print('found ' + str(len(restart_list)) + ' singles to reset')                 
-print('found ' + str(len(delete_list)) + ' jobs to purge')
+print(('found ' + str(len(restart_list)) + ' singles to reset'))                 
+print(('found ' + str(len(delete_list)) + ' jobs to purge'))
 time.sleep(10) 
 
 for runs in restart_list:
@@ -131,7 +131,7 @@ for runs in restart_list:
                         remove_outstanding_jobs(runs.job)
         if runs.job in converged_jobs:
                 this_status = converged_jobs[runs.job]
-                print('job for restart has a convergence status ' + str(this_status))
+                print(('job for restart has a convergence status ' + str(this_status)))
                 if this_status == '0':
                         if os.path.isfile(runs.geopath):
                                 made_new_input = True
@@ -140,39 +140,39 @@ for runs in restart_list:
                                         create_generic_infile(runs.job, restart=False, use_old_optimizer=use_old_optimizer, custom_geo_guess =  runs.job)
                                         new_infile = get_infile_from_job(runs.job)
                                         add_to_outstanding_jobs(runs.job)                                               
-                                        print('adding ' + new_infile + ' to outstanding list')
+                                        print(('adding ' + new_infile + ' to outstanding list'))
                                 else:
-                                        print('would restart ' + runs.job + ' at conv geo!')
+                                        print(('would restart ' + runs.job + ' at conv geo!'))
                                 
         if not made_new_input: # cannot make a better guess, use initial geo:
                 if not dry_run:
                         create_generic_infile(runs.job, restart=False, use_old_optimizer=use_old_optimizer, custom_geo_guess = False)
                         new_infile = get_infile_from_job(runs.job)
-                        print('adding ' + new_infile + ' to outstanding list')
+                        print(('adding ' + new_infile + ' to outstanding list'))
                         add_to_outstanding_jobs(runs.job)
                 else:
-                        print('would restart ' + runs.job + ' at INITIAL geo!')
+                        print(('would restart ' + runs.job + ' at INITIAL geo!'))
         if os.path.isfile(runs.outpath):
                 if not dry_run:
                         os.remove(runs.outpath)
                 else:
-                        print('would delete '+  runs.outpath)
+                        print(('would delete '+  runs.outpath))
         if os.path.isfile(runs.progpath):
                 if not dry_run:
                         os.remove(runs.progpath)
                 else:
-                        print('would delete '+  runs.progpath)
+                        print(('would delete '+  runs.progpath))
         if os.path.isfile(runs.comppath):
                 if not dry_run:
                         os.remove(runs.comppath)
                 else:
-                        print('would delete '+  runs.comppath)
+                        print(('would delete '+  runs.comppath))
         if not keep_scr:
                 if os.path.isdir(runs.scrfolder):
                         if not dry_run:
                                 shutil.rmtree(runs.scrfolder)
                         else:
-                                print('would delete FOLDER '+  runs.scrfolder)
+                                print(('would delete FOLDER '+  runs.scrfolder))
         if not dry_run: # delete jobs from converged and submitted:
                 purge_converged_jobs(runs.job)
                 purge_submitted_jobs(runs.job)
@@ -189,43 +189,43 @@ for runs in delete_list:
                 if not dry_run:
                         os.remove(runs.outpath)
                 else:
-                        print('would delete '+  runs.outpath)
+                        print(('would delete '+  runs.outpath))
         if os.path.isfile(runs.progpath):
                 if not dry_run:
                         os.remove(runs.progpath)
                 else:
-                        print('would delete '+  runs.progpath)
+                        print(('would delete '+  runs.progpath))
         if os.path.isfile(runs.comppath):
                 if not dry_run:
                         os.remove(runs.comppath)
                 else:
-                        print('would delete '+  runs.comppath)
+                        print(('would delete '+  runs.comppath))
         if os.path.isfile(runs.infiles):
                 if not dry_run:
                         os.remove(runs.infiles)
                 else:
-                        print('would delete '+ runs.infiles)
+                        print(('would delete '+ runs.infiles))
         if os.path.isfile(runs.spinpath) and isKeyword('oxocatalysis'):
                 if not dry_run:
                         os.remove(runs.spinpath)
                 else:
-                        print('would delete '+  runs.spinpath)
+                        print(('would delete '+  runs.spinpath))
         if os.path.isfile(runs.spoutpath) and isKeyword('oxocatalysis'):
                 if not dry_run:
                         os.remove(runs.spoutpath)
                 else:
-                        print('would delete '+ runs.spoutpath)
+                        print(('would delete '+ runs.spoutpath))
         if runs.ox < 4 and os.path.isfile(runs.init_geopath) and isKeyword('oxocatalysis'):
                 if not dry_run:
                         os.remove(runs.init_geopath)
                 else:
-                        print('would delete empty site geometry '+runs.init_geopath)
+                        print(('would delete empty site geometry '+runs.init_geopath))
         if not keep_scr:
                 if os.path.isdir(runs.scrfolder):
                         if not dry_run:
                                 shutil.rmtree(runs.scrfolder)
                         else:
-                                print('would delete FOLDER '+  runs.scrfolder)
+                                print(('would delete FOLDER '+  runs.scrfolder))
         if not dry_run: # delete jobs from converged and submitted:
                 purge_converged_jobs(runs.job)
                 purge_submitted_jobs(runs.job)               

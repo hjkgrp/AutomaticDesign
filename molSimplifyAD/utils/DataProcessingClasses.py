@@ -45,17 +45,17 @@ class run_results_processor:
         
     def process_duplicates(self):
         # This function takes the duplicated DFT runs and takes the ones with the lowest energy.
-        print('Initial dataframe shape: '+str(self.frame.shape))
+        print(('Initial dataframe shape: '+str(self.frame.shape)))
         self.frame = self.frame.drop_duplicates(subset=['name_without_HFX','alpha'],keep='first')
-        print('After dropping duplicates dataframe shape: '+str(self.frame.shape))
+        print(('After dropping duplicates dataframe shape: '+str(self.frame.shape)))
         
     def check_convergence(self):
         # This function eliminates the non converged jobs
         print('---- checking convergence now ----')
-        print('Initial dataframe shape: '+str(self.frame.shape))
+        print(('Initial dataframe shape: '+str(self.frame.shape)))
         dropped_frame = self.frame[self.frame['converged'] == False]
         self.frame = self.frame[self.frame['converged'] == True]
-        print('After dropping convergence dataframe shape: '+str(self.frame.shape))
+        print(('After dropping convergence dataframe shape: '+str(self.frame.shape)))
         return dropped_frame
     
     def geometry_check(self, custom_geo_dict = {}):
@@ -72,7 +72,7 @@ class run_results_processor:
                                          'devi_linear_avrg': 20, 'devi_linear_max': 28}
             else:
                 constraint_dictionary = self.geo_dict
-        print('Initial dataframe shape: '+str(self.frame.shape))
+        print(('Initial dataframe shape: '+str(self.frame.shape)))
         dropped_frame = self.frame[~((self.frame['num_coord_metal'].astype(float)==constraint_dictionary['num_coord_metal'])&
                                    (self.frame['dist_del_eq'].astype(float)<=constraint_dictionary['dist_del_eq'])&
                                    (self.frame['dist_del_all'].astype(float)<= constraint_dictionary['dist_del_all'])&
@@ -91,24 +91,24 @@ class run_results_processor:
                                    (self.frame['devi_linear_max'].astype(float)<= constraint_dictionary['devi_linear_max'])&
                                    (self.frame['rmsd_max'].astype(float)<= constraint_dictionary['rmsd_max']))
                                   ]
-        print('After dropping bad geo dataframe shape: '+str(self.frame.shape))
+        print(('After dropping bad geo dataframe shape: '+str(self.frame.shape)))
         print('----- Eliminated complexes due to geometric reason -----')
         return dropped_frame
     
     def homoleptic_geo_check(self,**kwargs): #### More stringent checks on homoleptic complexes
         print('---- checking homoleptic geometries now, making some checks more stringent ----')
-        print('Initial dataframe shape: '+str(self.frame.shape))
+        print(('Initial dataframe shape: '+str(self.frame.shape)))
         #### Made the dist_del_all check more stringent for homoleptic complexes
         dist_del_all_stringent = 0.5
         dist_del_eq_stringent = 0.2
         frame_copy = self.frame.copy().reset_index()
         remove_list = []
-        full_row_list = range(0,len(frame_copy))
+        full_row_list = list(range(0,len(frame_copy)))
         for i, row in frame_copy.iterrows():
             if row['lig1'] == row['lig2'] == row['lig3'] == row['lig4'] == row['lig5'] == row['lig6']:
                 if len(kwargs) > 0:
                     valid = True
-                    for key, value in kwargs.items():
+                    for key, value in list(kwargs.items()):
                         if row[key] > value:
                             valid = False
                             break
@@ -124,36 +124,36 @@ class run_results_processor:
         keep_list = list(set(full_row_list)-set(remove_list))
         dropped_frame = self.frame.iloc[remove_list]
         self.frame = self.frame.iloc[keep_list]
-        print('After dropping homoleptic bad geo dataframe shape: '+str(self.frame.shape))
+        print(('After dropping homoleptic bad geo dataframe shape: '+str(self.frame.shape)))
         print('----- Eliminated complexes due to more stringent checks on homoleptic complexes reason -----')
         return dropped_frame
         
     def spin_contamination_check(self, limit=1.0):
         print('---- checking spin contamination now ----')
-        print('Initial dataframe shape: '+str(self.frame.shape))
+        print(('Initial dataframe shape: '+str(self.frame.shape)))
         dropped_frame = self.frame[~(abs(self.frame['ss_act']-self.frame['ss_target'])<=limit)]
         self.frame = self.frame[(abs(self.frame['ss_act']-self.frame['ss_target'])<=limit)]
-        print('After dropping spin contamination problems dataframe shape: '+str(self.frame.shape))
+        print(('After dropping spin contamination problems dataframe shape: '+str(self.frame.shape)))
         print('----- Eliminated complexes due to spin contamination -----')
         return dropped_frame
     
     def empty_site_spin_contamination_check(self, limit=1.0): 
         print('---- checking spin contamination on empty site structures now ----')
-        print('Initial dataframe shape: '+str(self.frame.shape))
+        print(('Initial dataframe shape: '+str(self.frame.shape)))
         dropped_frame = self.frame[~((abs(self.frame['ss_act']-self.frame['ss_target'])<=limit)&
                                      (abs(self.frame['empty_ss_act']-self.frame['empty_ss_target'])<=limit))]
         self.frame = self.frame[(abs(self.frame['ss_act']-self.frame['ss_target'])<=limit)&
                                 (abs(self.frame['empty_ss_act']-self.frame['empty_ss_target'])<=limit)]
-        print('After dropping spin contamination problems dataframe shape: '+str(self.frame.shape))
+        print(('After dropping spin contamination problems dataframe shape: '+str(self.frame.shape)))
         print('----- Eliminated complexes due to empty site spin contamination -----')
         return dropped_frame
     
     def spin_on_metal_check(self, limit=1.0): #### make sure to make this mode dependent (check empty ss)
         print('---- checking spin on metal now ----')
-        print('Initial dataframe shape: '+str(self.frame.shape))
+        print(('Initial dataframe shape: '+str(self.frame.shape)))
         dropped_frame = self.frame[~(abs(self.frame['net_metal_spin'].astype(float)-self.frame['spin'].astype(float)+1)<=limit)]
         self.frame = self.frame[(abs(self.frame['net_metal_spin'].astype(float)-self.frame['spin'].astype(float)+1)<=limit)]
-        print('After dropping spin on metal problems dataframe shape: '+str(self.frame.shape))
+        print(('After dropping spin on metal problems dataframe shape: '+str(self.frame.shape)))
         print('----- Eliminated complexes due to spin deviation from metal reason -----')
         return dropped_frame
     
@@ -174,7 +174,7 @@ class run_results_processor:
     def limit_considered_symmetry(self, frame, symmetry=['trans','homoleptic']): # cis and five+1 limited due to ambiguity in RACs
         # This function takes in a frame, and only returns the allowed symmetries
         limited_frame = frame.copy()
-        print('originally, frame shape: '+str(limited_frame.shape))
+        print(('originally, frame shape: '+str(limited_frame.shape)))
         symm_list = []
         for i, row in limited_frame.iterrows():
             if (row['lig1']==row['lig2'])&(row['lig1']==row['lig3'])&(row['lig1']==row['lig4']): #eq symm
@@ -189,16 +189,16 @@ class run_results_processor:
         limited_frame['symm'] = symm_list
         dropped_frame = limited_frame[limited_frame['symm'].isin(symmetry)]
         dropped_frame.reset_index()
-        print('after dropping specific symmetries, frame shape: '+str(dropped_frame.shape))
+        print(('after dropping specific symmetries, frame shape: '+str(dropped_frame.shape)))
         return dropped_frame
 
     def limit_considered_ligands(self, frame, ligands=['ammonia','water','phosphine','uthiol','carbonyl','misc','acetonitrile']): #neutral ligands only
         # This function takes in a frame, and only returns the allowed ligands for dissociation (i.e. lig 6)
         limited_frame = frame.copy()
-        print('originally, frame shape: '+str(limited_frame.shape))
+        print(('originally, frame shape: '+str(limited_frame.shape)))
         dropped_frame = limited_frame[limited_frame['lig6'].isin(ligands)]
         dropped_frame.reset_index()
-        print('after dropping negatively charged ligands in lig6 position, frame shape: '+str(dropped_frame.shape))
+        print(('after dropping negatively charged ligands in lig6 position, frame shape: '+str(dropped_frame.shape)))
         return dropped_frame
     
     def get_LDE(self, frame = False, symmetry = False, ligands = False):
@@ -220,10 +220,10 @@ class run_results_processor:
             pair_frame = self.limit_considered_ligands(pair_frame, ligands=ligands)
         for i, row in pair_frame.iterrows():
             if i % 5000 == 0:
-                print('counter',i)
-            if ((row['lig1'] not in ligand_energy_dict.keys()) or (row['lig2'] not in ligand_energy_dict.keys()) or 
-                (row['lig3'] not in ligand_energy_dict.keys()) or (row['lig4'] not in ligand_energy_dict.keys()) or 
-                (row['lig5'] not in ligand_energy_dict.keys()) or (row['lig6'] not in ligand_energy_dict.keys())):
+                print(('counter',i))
+            if ((row['lig1'] not in list(ligand_energy_dict.keys())) or (row['lig2'] not in list(ligand_energy_dict.keys())) or 
+                (row['lig3'] not in list(ligand_energy_dict.keys())) or (row['lig4'] not in list(ligand_energy_dict.keys())) or 
+                (row['lig5'] not in list(ligand_energy_dict.keys())) or (row['lig6'] not in list(ligand_energy_dict.keys()))):
                 continue
             complex_name = (row['metal']+'_'+str(row['ox'])+'_'+row['lig1']+'_'+row['lig2']+'_'+
                    row['lig3']+'_'+row['lig4']+'_'+row['lig5']+'_'+row['lig6']+'_s_'+str(row['spin'])+'_'+
@@ -275,7 +275,7 @@ class run_results_processor:
                                      'tc': {2: [2, 6], 3: [1, 5]},
                                      'ru': {2: [1, 5], 3: [2, 6]},
                                      'rh': {3: [1, 5]}}
-            print('Using this pairing: ', metal_spin_dictionary)
+            print(('Using this pairing: ', metal_spin_dictionary))
         elif pair_type == 'ISHS':
             print('pairing IS HS, 2 e difference')
             metal_spin_dictionary = {'cr': {2: [3, 5]},
@@ -286,7 +286,7 @@ class run_results_processor:
                                      'tc': {2: [4, 6], 3: [3, 5]},
                                      'ru': {2: [3, 5], 3: [4, 6]},
                                      'rh': {3: [3, 5]}}
-            print('Using this pairing: ', metal_spin_dictionary)
+            print(('Using this pairing: ', metal_spin_dictionary))
         elif pair_type == 'LSIS':
             print('pairing LS IS, 2 e difference')
             metal_spin_dictionary = {'cr': {2: [1, 3], 3: [2, 4]},
@@ -297,7 +297,7 @@ class run_results_processor:
                                      'tc': {2: [2, 4], 3: [1, 3]},
                                      'ru': {2: [1, 3], 3: [2, 4]},
                                      'rh': {2: [2, 4], 3: [1, 3]}}
-            print('Using this pairing: ', metal_spin_dictionary)
+            print(('Using this pairing: ', metal_spin_dictionary))
         reference_frame = pair_frame.copy() # need this to find criteria that match
         name_list = []
         SSE_list = []
@@ -306,9 +306,9 @@ class run_results_processor:
         HFX_list = []
         for i, row in pair_frame.iterrows():
             if i % 5000 == 0:
-                print('counter',i)
+                print(('counter',i))
             ox_list = metal_spin_dictionary[row['metal']]
-            if row['ox'] in ox_list.keys():
+            if row['ox'] in list(ox_list.keys()):
                 spin_list = metal_spin_dictionary[row['metal']][row['ox']]
             else:
                 continue
@@ -355,20 +355,20 @@ class run_results_processor:
             no_pair_frame.to_csv(self.path_to_save+'/MissingPairInfo/'+str(self.name)+'_SSE_'+str(pair_type)+'_missing_pairs.csv',index=False)
         
         try:
-            print('This '+pair_type+' SSE frame contains the following data types:')
+            print(('This '+pair_type+' SSE frame contains the following data types:'))
             summarizeDataTypes(SSE_frame) #This function prints a data summary and does no other actions
         except:
-            print('Summary for '+pair_type+' SSE frame could not be printed')
+            print(('Summary for '+pair_type+' SSE frame could not be printed'))
             
         return SSE_frame, no_pair_frame
     
     def filter_df_by(self, **kwargs):
         filtered_frame = self.frame.copy()
         if len(kwargs) > 0:
-            for key, value in kwargs.items():
+            for key, value in list(kwargs.items()):
                 filtered_frame = filtered_frame[filtered_frame[str(key)]==value]
         elif self.filter_dict:
-            for key, value in self.filter_dict.items():
+            for key, value in list(self.filter_dict.items()):
                 print(key)
                 print(value)
                 filtered_frame = filtered_frame[filtered_frame[str(key)]==value]
@@ -391,13 +391,13 @@ class run_results_processor:
             
     def process_data(self, HFX=None, filter_ligands = True, metal_spin_limit = 1, spin_contam_limit = 1, homoleptic_geo_dict = {}, custom_geo_dict = {}):
         if filter_ligands:
-            print('Currently filtering specific ligands... Initial shape: '+str(self.frame.shape))
+            print(('Currently filtering specific ligands... Initial shape: '+str(self.frame.shape)))
             self.keep_specific_ligands(['ammonia','phosphine','water','uthiol','fluoride','chloride',
                                     'carbonyl','cyanide','misc','acetonitrile']) #if ligands are not these, will be eliminated
         if HFX != None:
-            print('HFX '+str(HFX)+' provided. Filtering df...')
+            print(('HFX '+str(HFX)+' provided. Filtering df...'))
             self.frame = self.filter_df_by(alpha=HFX)
-        print('Done filtering. Shape after filtering '+str(self.frame.shape))
+        print(('Done filtering. Shape after filtering '+str(self.frame.shape)))
         self.process_duplicates()
         convergence_drop = self.check_convergence()
         geo_drop = self.geometry_check(**custom_geo_dict)
@@ -436,7 +436,7 @@ class property_frame_processor:
         self.name = name
         if path_to_save:
             if os.path.exists(self.path_to_save+'/'+name+'_'+match_type+'.csv'):
-                decision = raw_input('this file already exists, press y to continue if overwriting.')
+                decision = input('this file already exists, press y to continue if overwriting.')
                 if decision != 'y':
                     print('User decided not to overwrite present files')
                     raise ValueError
@@ -562,7 +562,7 @@ class property_frame_processor:
         ytests = np.array(ytests)
         ypreds = np.array(ypreds)
         error_array = abs(ytests - ypreds)
-        zipped_list = zip(X_val_corresponding_to_error,error_array)
+        zipped_list = list(zip(X_val_corresponding_to_error,error_array))
         zipped_list.sort(key=lambda t:t[0])
         sorted_error_array = zip(*zipped_list)[1]
         temp_x = []
@@ -614,9 +614,9 @@ class property_frame_processor:
             else:
                 x = [int(alpha) for alpha in group['alpha'].tolist()]
                 y = group[str(prop)].tolist()
-                zipped_list = zip(x,y)
+                zipped_list = list(zip(x,y))
                 zipped_list.sort(key = lambda t:t[0])
-                [sorted_x,sorted_y] = zip(*zipped_list)
+                [sorted_x,sorted_y] = list(zip(*zipped_list))
                 #### sorted alpha and property, now doing LOOCV first 
                 temp_x, temp_y = self.do_LOOCV(sorted_x,sorted_y,off_line_tolerance=off_line_tolerance)
                 if len(temp_x) < 3:
@@ -716,7 +716,7 @@ class property_frame_processor:
         if prop_val:
             descriptor_names.append(prop_type)
             descriptors.append(prop_val)
-        RAC_dictionary = dict(zip(descriptor_names, descriptors))
+        RAC_dictionary = dict(list(zip(descriptor_names, descriptors)))
         return RAC_dictionary
         
     def generate_RACs(self, frame, prop_type=False): ### Takes in a set of complex names and makes the geo free RACs
@@ -771,14 +771,14 @@ def summarizeDataTypes(df):
             
         reduced_list = list(set(lst))
         if len(reduced_list) > 2 or len(reduced_list) == 0:
-            print lst
-            print reduced_list
+            print(lst)
+            print(reduced_list)
             raise Exception('Unexpected geometry with 3 unique ligands')
             
         if len(reduced_list) == 2:
             counted = count_and_combine_list(lst)
             entries = []
-            for i in counted.keys():
+            for i in list(counted.keys()):
                 entries.append(counted[i])
             entries.sort()
             
@@ -803,7 +803,7 @@ def summarizeDataTypes(df):
     
         results = {}
         for entry in lst:
-            if entry not in results.keys():
+            if entry not in list(results.keys()):
                 results[entry] = 1
             else:
                 results[entry] += 1
@@ -811,7 +811,7 @@ def summarizeDataTypes(df):
         
         
     if 'complex' not in df.columns:
-        print '---complex name not immediately found, attempting to name complex---'
+        print('---complex name not immediately found, attempting to name complex---')
         try:
             df['complex'] = (df['metal']+'_'+str(df['ox'])+'_'+df['lig1']+'_'+df['lig2']+'_'+
                        df['lig3']+'_'+df['lig4']+'_'+df['lig5']+'_'+df['lig6']+'_'+df['alpha'].apply(int).apply(str))
@@ -823,7 +823,7 @@ def summarizeDataTypes(df):
     metals = [i.split('_')[0] for i in complex_names]
     geometries = [identify_geometry(i) for i in complex_names]
     
-    print count_and_combine_list(metals)
-    print count_and_combine_list(geometries)
+    print(count_and_combine_list(metals))
+    print(count_and_combine_list(geometries))
             
     

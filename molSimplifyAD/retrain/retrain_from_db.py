@@ -99,7 +99,7 @@ def get_latest_model(predictor, db):
             if newest < doc['date']:
                 model = load_model(str(doc["model"]))
                 newest = doc['date']
-    print('Latest model is trained at: ', newest)
+    print(('Latest model is trained at: ', newest))
     return model
 
 
@@ -108,8 +108,8 @@ def extract_data_from_db(predictor, db, collection, constraints,
     print(("Collecting data with constraints: %s..." % constraints))
     df = convert2dataframe(db, collection, constraints=constraints, normalized=True)
     if feature_extra and target:
-        print("Using custom features RACs-180 + ", feature_extra)
-        print("Target property: ", target)
+        print(("Using custom features RACs-180 + ", feature_extra))
+        print(("Target property: ", target))
         _fnames = RACs180 + feature_extra
         _fnames = name_converter(_fnames)
         fnames, el = [], []
@@ -122,25 +122,25 @@ def extract_data_from_db(predictor, db, collection, constraints,
                 fnames.append(f)
             else:
                 el.append(f)
-        print("features eliminated because of small (<1e-4) std: ", el, len(el))
+        print(("features eliminated because of small (<1e-4) std: ", el, len(el)))
         lname = [target]
     elif feature_extra or target:
         raise KeyError("You have to have both or neither <feature_extra> and <target> in input files.")
     else:
-        print("Using predictor-linked features and target.", predictor)
+        print(("Using predictor-linked features and target.", predictor))
         fnames = get_vars(predictor)
         lname = get_label(predictor)
-    print("features: ", fnames, len(fnames))
-    print("target: ", lname, len(lname))
-    if lname[0] in group_conditions.keys():
-        print("Paring runs to calculate the new property %s..." % lname)
+    print(("features: ", fnames, len(fnames)))
+    print(("target: ", lname, len(lname)))
+    if lname[0] in list(group_conditions.keys()):
+        print(("Paring runs to calculate the new property %s..." % lname))
         df, _ = pairing(df, case=lname[0])
     df_use = df[fnames + lname + ['unique_name']]
     shape = df_use.shape[0]
     df_use = df_use.dropna()
     for key in df_use:
         df_use = df_use[df_use[key] != "undef"]
-    print("data reduce (%d ->  %d) because of NaN." % (shape, df_use.shape[0]))
+    print(("data reduce (%d ->  %d) because of NaN." % (shape, df_use.shape[0])))
     return df_use, fnames, lname
 
 
@@ -165,7 +165,7 @@ def normalize_data(df, fnames, lname, predictor, frac=0.8, name=False):
         y_scaler.fit(y_train)
         y_train = y_scaler.transform(y_train)
         y_test = y_scaler.transform(y_test)
-    print("mean in target train/test: %f/%f" % (np.mean(y_train), np.mean(y_test)))
+    print(("mean in target train/test: %f/%f" % (np.mean(y_train), np.mean(y_test))))
     if name:
         return X_train, X_test, y_train, y_test, n_train, n_test
     else:
@@ -195,14 +195,14 @@ def train_model(predictor, db,
                     print("Initializing weights for the final model training...")
                     model = initialize_model_weights(model)
                 arch = get_model_arch(model)
-                print('HyperOpt with a FIXED architecture: ', arch)
+                print(('HyperOpt with a FIXED architecture: ', arch))
                 best_params = optimize(X=X_train, y=y_train,
                                        regression=regression,
                                        hyperopt_step=hyperopt_step,
                                        arch=arch,
                                        epochs=epochs)
             else:
-                print("No existing model found in db.models matching the predictor: ", predictor)
+                print(("No existing model found in db.models matching the predictor: ", predictor))
                 print('HyperOpt EVERYTHING...')
                 best_params = optimize(X=X_train, y=y_train,
                                        regression=regression,
@@ -214,11 +214,11 @@ def train_model(predictor, db,
                                    regression=regression,
                                    hyperopt_step=hyperopt_step,
                                    epochs=epochs)
-        print("best hyperparams: ", best_params)
+        print(("best hyperparams: ", best_params))
         model = build_ANN(best_params, input_len=X_train.shape[-1], regression=regression)
         batch_size = best_params['batch_size']
         epochs = best_params['epochs']
-        print("epochs: %d, batch_size: %d" % (epochs, batch_size))
+        print(("epochs: %d, batch_size: %d" % (epochs, batch_size)))
     history = model.fit(X_train, y_train, epochs=epochs, verbose=2, batch_size=batch_size)
     results = model.evaluate(X_train, y_train)
     res_dict_train = {}
@@ -231,8 +231,8 @@ def train_model(predictor, db,
     if not regression:
         res_dict_train.update({"auc": cal_auc(model, X_train, y_train)})
         res_dict_test.update({"auc": cal_auc(model, X_test, y_test)})
-    print("train result: ", res_dict_train)
-    print("test reulst: ", res_dict_test)
+    print(("train result: ", res_dict_train))
+    print(("test reulst: ", res_dict_test))
     return model, history, res_dict_train, res_dict_test, best_params
 
 
@@ -314,10 +314,10 @@ def retrain_and_push(args_dict):
                     "initialize_weight": True, "hyperopt_step": 100,
                     "load_latest_model": False, "fix_architecture": False}
     for key in args_dict:
-        print(key, args_dict[key])
+        print((key, args_dict[key]))
         globals().update({key: args_dict[key]})
     for key in default_args:
-        if not key in args_dict.keys():
+        if not key in list(args_dict.keys()):
             globals().update({key: default_args[key]})
     retrain(predictor, user, pwd,
             database, collection, collection_model,

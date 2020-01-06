@@ -7,9 +7,9 @@ with open('eightJobs','r') as f:
                 l = os.path.basename(lines.split(',')[0])
                 this_slot = l.split('_')[3]
                 l = l.split('_')[6]
-                if not l in ligInds.keys():
+                if not l in list(ligInds.keys()):
                         ligInds.update({l:[this_slot]})
-                elif l in ligInds.keys():
+                elif l in list(ligInds.keys()):
                         ll=ligInds[l]
                         ll.append(this_slot)
                         ligInds.update({l:ll})
@@ -36,9 +36,9 @@ with open('goodJobs','r') as f:
                 l = os.path.basename(lines.split(',')[0])
                 this_slot = l.split('_')[3]
                 l = l.split('_')[6]
-                if not l in ligInds.keys():
+                if not l in list(ligInds.keys()):
                         ligInds.update({l:[this_slot]})
-                elif l in ligInds.keys():
+                elif l in list(ligInds.keys()):
                         ll=ligInds[l]
                         ll.append(this_slot)
                         ligInds.update({l:ll})

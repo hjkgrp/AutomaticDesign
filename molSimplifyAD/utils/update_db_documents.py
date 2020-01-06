@@ -18,7 +18,7 @@ def main():
     args = arg_parser()
     if args.user == None or args.pwd == None:
         raise KeyError("Please use the format python update_db_documents.py -user <username> -pwd <password>.")
-    constraints = {"lig6": {"$ne": "x"}, "status": 0}
+    constraints = {"lig6": {"$ne": "x"}, "status": 0, "gap": {"$exists": False}}
     update_fields = ['gap']
     database = "tmc"
     collection = "oct"
@@ -27,27 +27,27 @@ def main():
     db = connect2db(user, pwd,
                     host="localhost", port=27017,
                     database=database, auth=True)
-    print("Number of complexes in the collection:", db.oct.count())
+    print(("Number of complexes in the collection:", db.oct.count()))
     cursor = db[collection].find(constraints)
     tot = count_find(cursor)
-    print("Number of complexes to be updated: ", tot)
+    print(("Number of complexes to be updated: ", tot))
     cursor = db[collection].find(constraints,
                                  no_cursor_timeout=True).batch_size(10)
-    print("Are you sure to update %s with constraints %s in %s[%s]? (y/n)" % (str(update_fields), str(constraints),
-                                                                              database, collection))
-    _in = raw_input()
+    print(("Are you sure to update %s with constraints %s in %s[%s]? (y/n)" % (str(update_fields), str(constraints),
+                                                                              database, collection)))
+    _in = input()
     if not _in == "y":
         print("Quit. Have a nice day.")
         quit()
     count = 0
     confirmed = False
     for _tmcdoc in cursor:
-        print("complex: ", _tmcdoc["unique_name"])
+        print(("complex: ", _tmcdoc["unique_name"]))
         recovered = True
         try:
             _this_tmc = tmcMongo(document=_tmcdoc, tag=_tmcdoc["tag"], subtag=_tmcdoc["subtag"],
                                  publication=_tmcdoc["publication"], update_fields=update_fields)
-            print("complex id_doc:", _this_tmc.id_doc)
+            print(("complex id_doc:", _this_tmc.id_doc))
         except ValueError:
             print("The input document cannot recover a DFTrun object.")
             recovered = False
@@ -88,14 +88,14 @@ def main():
 
             if not confirmed:
                 for key in update_fields:
-                    print("=======Key======: ", key)
+                    print(("=======Key======: ", key))
                     if key in _tmcdoc:
-                        print("Current: ", _tmcdoc[key])
+                        print(("Current: ", _tmcdoc[key]))
                     else:
                         print("Currently does not exist.")
-                    print("Change to: ", new_tmc.document[key])
+                    print(("Change to: ", new_tmc.document[key]))
                 print("Is this expected? (y/n)")
-                _in = raw_input()
+                _in = input()
                 if _in == "y":
                     confirmed = True
                 else:
@@ -103,8 +103,8 @@ def main():
                     quit()
             __ = insert(db, collection, new_tmc)
         count += 1
-        print(" In progress: %d / %d" % (count, tot))
-    print("You have changed %d documents in %s[%s]" % (tot, database, collection))
+        print((" In progress: %d / %d" % (count, tot)))
+    print(("You have changed %d documents in %s[%s]" % (tot, database, collection)))
 
 
 if __name__ == '__main__':

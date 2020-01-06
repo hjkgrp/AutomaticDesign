@@ -127,7 +127,7 @@ class octahedral_complex:
         metal_key = metal_list[self.core]
         these_states = local_spin_dictionary[metal_key][self.ox]
         self.spin = numpy.random.choice(these_states)
-        print('This is the spin ' + str(self.spin) + ' for metal ' + str(metal_key) + ' and ox ' + str(self.ox))
+        print(('This is the spin ' + str(self.spin) + ' for metal ' + str(metal_key) + ' and ox ' + str(self.ox)))
 
     def _get_random_equitorial(self):
         ### choose the equitorial ligand
@@ -284,7 +284,7 @@ class octahedral_complex:
         x = find_ligand_idx('x')
         if self.symclass in ['weak', 'strong']:
             if not len(set(self.inds[0:4])) == 1:
-                print('Fails weak symclass check. ', self.inds[0:4], fixed_inds)
+                print(('Fails weak symclass check. ', self.inds[0:4], fixed_inds))
                 # print(len(set(self.inds[0:4])))
                 # print(self.inds)
                 for f_ind in fixed_inds:  ## Loop over the positions that must be fixed
@@ -373,12 +373,12 @@ class octahedral_complex:
             ind += lig_dent
 
     def examine(self):
-        print("name is " + self.name)
+        print(("name is " + self.name))
         if self.gene_template['legacy']:
-            print("eq", self.eq_ligands, self.eq_inds)
-            print("axial", self.ax_ligands, self.ax_inds)
+            print(("eq", self.eq_ligands, self.eq_inds))
+            print(("axial", self.ax_ligands, self.ax_inds))
         else:
-            print("ligands", self.ligands, self.inds)
+            print(("ligands", self.ligands, self.inds))
 
     def encode(self, gene):
         self.random_gen()
@@ -474,7 +474,7 @@ class octahedral_complex:
                     self.three_bidentate = True
                     break
                 else:
-                    print('impossible, ax_dent  = ' + str(ax_dent))
+                    print(('impossible, ax_dent  = ' + str(ax_dent)))
             else:
                 self.ax_ligands.append(self.ligands_list[indices][0])
                 self.ax_inds.append(indices)
@@ -502,24 +502,24 @@ class octahedral_complex:
         child = octahedral_complex(self.ligands_list)
         child.copy(self)  # copies this parent
 
-        print("swapping from", partner.name, " to ", self.name)
+        print(("swapping from", partner.name, " to ", self.name))
         self.examine()
         if self.gene_template['legacy']:
             if eq_swap:
-                print("swapping equitorial " + str(child.eq_inds) + ' -> ' + str(partner.eq_inds))
+                print(("swapping equitorial " + str(child.eq_inds) + ' -> ' + str(partner.eq_inds)))
                 child.replace_equitorial(partner.eq_inds)
             else:
-                print("swapping axial" + str(child.ax_inds) + ' -> ' + str(partner.ax_inds))
+                print(("swapping axial" + str(child.ax_inds) + ' -> ' + str(partner.ax_inds)))
                 child.replace_axial(partner.ax_inds)
         else:
             if eq_swap:
-                print("swapping equitorial " + str(child.inds[0:4]) + ' -> ' + str(partner.inds[0:4]))
+                print(("swapping equitorial " + str(child.inds[0:4]) + ' -> ' + str(partner.inds[0:4])))
                 child.replace_ligands(partner.inds[0:4] + child.inds[4:6])
-                child.enforce_consistency(range(0, 4))
+                child.enforce_consistency(list(range(0, 4)))
             else:
-                print("swapping axial" + str(child.inds[4:6]) + ' -> ' + str(partner.inds[4:6]))
+                print(("swapping axial" + str(child.inds[4:6]) + ' -> ' + str(partner.inds[4:6])))
                 child.replace_ligands(child.inds[0:4] + partner.inds[4:6])
-                child.enforce_consistency(range(4, 6))
+                child.enforce_consistency(list(range(4, 6)))
                 # range(4, 6) says that the axial should be swapped and held constant.
 
         child.examine()
@@ -529,7 +529,7 @@ class octahedral_complex:
     def exchange_metal(self, partner):
         child = octahedral_complex(self.ligands_list)
         child.copy(self)  # copies this parent
-        print("swapping from", partner.name, " to ", self.name)
+        print(("swapping from", partner.name, " to ", self.name))
         self.examine()
         child.replace_metal(partner.core)
         child._name_self()
@@ -538,7 +538,7 @@ class octahedral_complex:
     def exchange_ox(self, partner):
         child = octahedral_complex(self.ligands_list)
         child.copy(self)  # copies this parent
-        print("swapping from", partner.name, " to ", self.name)
+        print(("swapping from", partner.name, " to ", self.name))
         self.examine()
         child.replace_ox(partner.ox)
         child._name_self()
@@ -557,9 +557,9 @@ class octahedral_complex:
         fixed_inds = []
         if self.gene_template['legacy']:
             lig_to_mutate = random.randint(0, 4)  # Metal mutation allowed
-            print('I think this is 3x bidentate: ', self.three_bidentate, self.ax_dent)
+            print(('I think this is 3x bidentate: ', self.three_bidentate, self.ax_dent))
             print('in mutate')
-            print('lig to mutate is ' + str(lig_to_mutate))
+            print(('lig to mutate is ' + str(lig_to_mutate)))
             if (lig_to_mutate == 0):
                 print("mutating equitorial ligand")
                 rand_ind = numpy.random.randint(low=0, high=n)
@@ -573,7 +573,7 @@ class octahedral_complex:
                         if self.ligands_list[rand_ind][0] not in ['x', 'hydroxyl', 'oxo'] or (
                                 smiles and self.ligands_list[rand_ind][0][0] not in ['[O--]', '[OH-]']):
                             break
-                    print('MUTATED EQUATIORIAL IS ', self.ligands_list[rand_ind][0])
+                    print(('MUTATED EQUATIORIAL IS ', self.ligands_list[rand_ind][0]))
                 child.replace_equitorial([rand_ind])
             elif (lig_to_mutate == 1) or (lig_to_mutate == 2):
                 print('mutating axial ligand')
@@ -628,7 +628,7 @@ class octahedral_complex:
                         child.ax_dent = 2
                         child.three_bidentate = True
                         ready_flag = True
-                print("trying to add " + str(new_ax_list))
+                print(("trying to add " + str(new_ax_list)))
                 child.replace_axial(new_ax_list)
             elif (lig_to_mutate == 3):  ## metal mutation
                 print('mutating metal')
@@ -649,7 +649,7 @@ class octahedral_complex:
                 while not ready_for_assembly:
                     new_lig = np.random.randint(0, n)
                     new_dent = self.ligands_list[new_lig][1][0]
-                    print(new_lig, new_dent)
+                    print((new_lig, new_dent))
                     if pos_to_mutate >= 4:
                         if new_dent >= 2:
                             ready_for_assembly = False
@@ -829,8 +829,8 @@ class octahedral_complex:
         # Initialize ANN results dictionary
         ANN_results = {}
         if not (geo_exists):
-            print('generating ' + str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and' + str(
-                self.ax_ligands))
+            print(('generating ' + str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and' + str(
+                self.ax_ligands)))
             try:
                 # if True:
                 ### Add protection for brackets "()" in bash commands.
@@ -876,19 +876,19 @@ class octahedral_complex:
                             print(line)
                             prop_val = float(line.split(",")[1])
                             ANN_results.update({prop: float(line.split(",")[1])})
-                            print('ANN_' + prop + ' is ' + "{0:.2f}".format(prop_val))
-                if len(list(set(properties).difference(ANN_results.keys()))) > 0 and not isKeyword('DFT'):
+                            print(('ANN_' + prop + ' is ' + "{0:.2f}".format(prop_val)))
+                if len(list(set(properties).difference(list(ANN_results.keys())))) > 0 and not isKeyword('DFT'):
                     for i in properties:
-                        if i not in ANN_results.keys():
+                        if i not in list(ANN_results.keys()):
                             ANN_results.update(
                                 {i: float(10000)})  # Chosen to be arbitrarily large to reduce the fitness value to 0.
-                            print(str(
-                                i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0. The key was not present.')
+                            print((str(
+                                i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0. The key was not present.'))
                         else:
-                            print(str(i) + ' set to ' + str(ANN_results[i]) + ' since the key was present')
+                            print((str(i) + ' set to ' + str(ANN_results[i]) + ' since the key was present'))
 
             if isKeyword('oxocatalysis') and 'oxo' in liglist and isKeyword('DFT'):  # Subbing in 1.65 as Oxo BL
-                print('Modifying initial oxo geom file ' + mol_name + '.xyz to have oxo BL 1.65')
+                print(('Modifying initial oxo geom file ' + mol_name + '.xyz to have oxo BL 1.65'))
                 geo_ref_file = open(path_dictionary["initial_geo_path"] + '/' + mol_name + '.xyz', 'r')
                 lines = geo_ref_file.readlines()
                 geo_ref_file.close()
@@ -913,7 +913,7 @@ class octahedral_complex:
                         newf.writelines("scrdir " + scrpath + "\n")
                     os.remove(rundirpath + 'temp/' + mol_name + '.in')
             else:
-                print(self.ox, self.spin)
+                print((self.ox, self.spin))
                 self.write_jobfile(jobpath, runtype=rty)
 
             ### check if ligands in old optimizer list
@@ -932,15 +932,15 @@ class octahedral_complex:
                 for i in properties:
                     ANN_results.update(
                         {i: float(10000)})  # Chosen to be arbitrarily large to reduce the fitness value to 0.
-                    print(str(i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.')
+                    print((str(i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.'))
         should_geo_exist = not (isKeyword('no_geo'))  # will be false if DFT is off.
         # Initialize ANN results dictionary
         ANN_results = {}
         properties = ['split', 'split_dist', 'homo', 'homo_dist', 'gap', 'gap_dist', 'oxo', 'oxo_dist',
                       'hat', 'hat_dist', 'oxo20', 'oxo20_dist', 'homo_empty', 'homo_empty_dist']
         if not (geo_exists) or not (should_geo_exist):
-            print('generating ' + str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and' + str(
-                self.ax_ligands))
+            print(('generating ' + str(mol_name) + ' with ligands ' + str(self.eq_ligands) + ' and' + str(
+                self.ax_ligands)))
             try:
                 # if True:
                 ### Add protection for brackets "()" in bash commands.
@@ -986,19 +986,19 @@ class octahedral_complex:
                             print(line)
                             prop_val = float(line.split(",")[1])
                             ANN_results.update({prop: float(line.split(",")[1])})
-                            print('ANN_' + prop + ' is ' + "{0:.2f}".format(prop_val))
-                if len(list(set(properties).difference(ANN_results.keys()))) > 0 and not isKeyword('DFT'):
+                            print(('ANN_' + prop + ' is ' + "{0:.2f}".format(prop_val)))
+                if len(list(set(properties).difference(list(ANN_results.keys())))) > 0 and not isKeyword('DFT'):
                     for i in properties:
-                        if i not in ANN_results.keys():
+                        if i not in list(ANN_results.keys()):
                             ANN_results.update(
                                 {i: float(10000)})  # Chosen to be arbitrarily large to reduce the fitness value to 0.
-                            print(str(
-                                i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0. The key was not present.')
+                            print((str(
+                                i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0. The key was not present.'))
                         else:
-                            print(str(i) + ' set to ' + str(ANN_results[i]) + ' since the key was present')
+                            print((str(i) + ' set to ' + str(ANN_results[i]) + ' since the key was present'))
 
             if isKeyword('oxocatalysis') and 'oxo' in liglist and isKeyword('DFT'):  # Subbing in 1.65 as Oxo BL
-                print('Modifying initial oxo geom file ' + mol_name + '.xyz to have oxo BL 1.65')
+                print(('Modifying initial oxo geom file ' + mol_name + '.xyz to have oxo BL 1.65'))
                 geo_ref_file = open(path_dictionary["initial_geo_path"] + '/' + mol_name + '.xyz', 'r')
                 lines = geo_ref_file.readlines()
                 geo_ref_file.close()
@@ -1036,7 +1036,7 @@ class octahedral_complex:
                     for i in properties:
                         ANN_results.update(
                             {i: float(10000)})  # Chosen to be arbitrarily large to reduce the fitness value to 0.
-                        print(str(i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.')
+                        print((str(i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.'))
             else:
                 with open(jobpath, 'w') as newf:
                     newf.writelines('ANN Prediction Directly from Molecular Graph')
@@ -1044,8 +1044,8 @@ class octahedral_complex:
         else:
             flag_oct = 1
         sorted_ANN_results = {}
-        if len(ANN_results.keys()) > 0:
-            for key in sorted(ANN_results.iterkeys()):
+        if len(list(ANN_results.keys())) > 0:
+            for key in sorted(ANN_results.keys()):
                 sorted_ANN_results[key] = ANN_results[key]
         return jobpath, mol_name, sorted_ANN_results, flag_oct
 
@@ -1111,7 +1111,7 @@ class octahedral_complex:
         properties = ['split', 'split_dist', 'homo', 'homo_dist', 'gap', 'gap_dist', 'oxo', 'oxo_dist',
                       'hat', 'hat_dist', 'oxo20', 'oxo20_dist', 'homo_empty', 'homo_empty_dist']
         if not (geo_exists):
-            print('generating ' + str(mol_name) + ' with ligands ' + str(liglist))
+            print(('generating ' + str(mol_name) + ' with ligands ' + str(liglist)))
             # try:
             if True:
                 with open(ms_dump_path, 'a') as ms_pipe:
@@ -1157,18 +1157,18 @@ class octahedral_complex:
                             print(line)
                             prop_val = float(line.split(",")[1])
                             ANN_results.update({prop: float(line.split(",")[1])})
-                            print('ANN_' + prop + ' is ' + "{0:.2f}".format(prop_val))
-                if len(list(set(properties).difference(ANN_results.keys()))) > 0 and not isKeyword('DFT'):
+                            print(('ANN_' + prop + ' is ' + "{0:.2f}".format(prop_val)))
+                if len(list(set(properties).difference(list(ANN_results.keys())))) > 0 and not isKeyword('DFT'):
                     for i in properties:
-                        if i not in ANN_results.keys():
+                        if i not in list(ANN_results.keys()):
                             ANN_results.update(
                                 {i: float(10000)})  # Chosen to be arbitrarily large to reduce the fitness value to 0.
-                            print(str(
-                                i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0. The key was not present.')
+                            print((str(
+                                i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0. The key was not present.'))
                         else:
-                            print(str(i) + ' set to ' + str(ANN_results[i]) + ' since the key was present')
+                            print((str(i) + ' set to ' + str(ANN_results[i]) + ' since the key was present'))
             if isKeyword('oxocatalysis') and 'oxo' in liglist and isKeyword('DFT'):  # Subbing in 1.65 as Oxo BL
-                print('Modifying initial oxo geom file ' + mol_name + '.xyz to have oxo BL 1.65')
+                print(('Modifying initial oxo geom file ' + mol_name + '.xyz to have oxo BL 1.65'))
                 geo_ref_file = open(path_dictionary["initial_geo_path"] + '/' + mol_name + '.xyz', 'r')
                 lines = geo_ref_file.readlines()
                 geo_ref_file.close()
@@ -1188,7 +1188,7 @@ class octahedral_complex:
                 for i in properties:
                     ANN_results.update(
                         {i: float(10000)})  # Chosen to be arbitrarily large to reduce the fitness value to 0.
-                    print(str(i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.')
+                    print((str(i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.'))
 
             ## write the job file
             if os.path.isfile(rundirpath + 'temp/' + mol_name + '.in'):
@@ -1230,12 +1230,12 @@ class octahedral_complex:
                 for i in properties:
                     ANN_results.update(
                         {i: float(10000)})  # Chosen to be arbitrarily large to reduce the fitness value to 0.
-                    print(str(i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.')
+                    print((str(i) + ' set to 10000 in ANN_results, chosen so that the fitness goes to 0.'))
         else:
             flag_oct = 1
         sorted_ANN_results = {}
-        if len(ANN_results.keys()) > 0:
-            for key in sorted(ANN_results.iterkeys()):
+        if len(list(ANN_results.keys())) > 0:
+            for key in sorted(ANN_results.keys()):
                 sorted_ANN_results[key] = ANN_results[key]
         return jobpath, mol_name, sorted_ANN_results, flag_oct
 
@@ -1282,7 +1282,7 @@ class octahedral_complex:
             this_con = this_mol.cat
             ligs.append(this_lig)
             cons.append(this_con)
-            if name not in licores.keys():
+            if name not in list(licores.keys()):
                 cats0.append([0])
                 dent_i = len(cats0[-1])
                 smilesligs += 1
@@ -1292,7 +1292,7 @@ class octahedral_complex:
                 if 'pi' in licores[name][2]:
                     dent_i = 1
                 else:
-                    if isinstance(licores[name][2], (str, unicode)):
+                    if isinstance(licores[name][2], str):
                         dent_i = 1
                     else:
                         dent_i = int(len(licores[name][2]))
@@ -1305,7 +1305,7 @@ class octahedral_complex:
             #     toccs += dent_i
         # sort by descending denticity (needed for adjacent connection atoms)
         ligandsU, occsU, dentsU = ligs, occs0, dentl  # save unordered lists
-        indcs = range(0, len(ligs))  # assuming no ligalign
+        indcs = list(range(0, len(ligs)))  # assuming no ligalign
         lig_instances = [ligs[i] for i in indcs]  # sort ligands list
         dents = [dentl[i] for i in indcs]  # sort denticities list
         #### CURRENTLY ASSUMES EQ, AX1, AX2 in that ORDER, CANNOT HANDLE DENTICITIES OUT OF 1, 2, 4 #####
@@ -1360,7 +1360,7 @@ class octahedral_complex:
 
     def assemble_constraints(self, ox, spin):
         id_keys = ["metal", "ox", "spin", "ligstr", "alpha"]
-        print('ligands: ', self.ligands)
+        print(('ligands: ', self.ligands))
         _liglist, smicat = SMILES_converter(self.ligands)
         liglist = [ele.strip("'") for ele in _liglist.split()]
 

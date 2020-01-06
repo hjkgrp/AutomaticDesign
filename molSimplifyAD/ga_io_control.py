@@ -106,7 +106,7 @@ class GA_run_defintion:
 
     def serialize(self):
         ## serialize run info
-        print('serialziing to ' + str(self.config['rundir'] + '.madconfig'))
+        print(('serialziing to ' + str(self.config['rundir'] + '.madconfig')))
         with open(self.config['rundir'] + '.madconfig', 'w') as handle:
             json.dump(self.config, handle)
 
@@ -141,7 +141,7 @@ class switch_to_rundir:
 ########################
 def ensure_dir(dir_path):
     if not os.path.exists(dir_path):
-        print('creating' + dir_path)
+        print(('creating' + dir_path))
         os.makedirs(dir_path)
 
 
@@ -158,25 +158,25 @@ def process_ligands_file(path):
     ## load molsimplify ligand database
     licores = getlicores()
     if not os.path.exists(path):
-        print('Error: the file at ' + str(path) + ' does not exist.')
+        print(('Error: the file at ' + str(path) + ' does not exist.'))
         status = 1
         # return(status,ligands_list)
     with open(path, 'r') as f:
         lines = f.readlines()
         for this_line in lines:
             this_lig = this_line.strip('\n').split(' ')[0]
-            print('this lig', this_lig)
-            if this_lig in licores.keys():
+            print(('this lig', this_lig))
+            if this_lig in list(licores.keys()):
                 # print(this_lig +' is in dictionary')
                 this_db_lig = licores[this_lig]
                 this_dent = len(this_db_lig[2])
                 ligands_list.append([this_lig, [int(this_dent)]])
             else:
-                print('understanding ' + str(this_lig) + ' as SIMLES')
+                print(('understanding ' + str(this_lig) + ' as SIMLES'))
                 this_catom = this_line.strip('\n').split(' ')[1:]
                 this_dent = len(this_catom)
                 this_catom = str(this_catom)
-                print('SMILES connection atom selected as ' + this_catom + ' for SMILEs' + str(this_lig))
+                print(('SMILES connection atom selected as ' + this_catom + ' for SMILEs' + str(this_lig)))
                 ligands_list.append([[this_lig, this_catom], [int(this_dent)]])
 
     print(ligands_list)
@@ -219,31 +219,31 @@ def checkinput(args):
         print('Warning: cannot create new run and resume in same step, resuming only')
         args.new = False
     if args.resume:
-        if isinstance(args.resume, basestring):
+        if isinstance(args.resume, str):
             print('resume is string')
         if args.resume.endswith('/'):
             print('resume is ends right')
-        if isinstance(args.resume, basestring) and not args.resume.endswith('/'):
+        if isinstance(args.resume, str) and not args.resume.endswith('/'):
             args.resume = args.resume + "/"
-            print('Warning: modifying resume path to ' + args.resume)
+            print(('Warning: modifying resume path to ' + args.resume))
         if not os.path.isdir(str(args.resume)):
-            print('Warning: no resume directory given or does not exist, assume current dir: ' + os.getcwd())
+            print(('Warning: no resume directory given or does not exist, assume current dir: ' + os.getcwd()))
             args.resume = os.getcwd() + '/'
-        print('looking for ' + args.resume + '.madconfig')
+        print(('looking for ' + args.resume + '.madconfig'))
         if not os.path.isfile(args.resume + '.madconfig'):
-            print('Error: no .madconfig file in ' + args.resume + ', aborting run')
+            print(('Error: no .madconfig file in ' + args.resume + ', aborting run'))
             exit()
     if args.reps:
         try:
             args.reps = int(args.reps)
-            print('repeating ' + str(args.reps) + ' resume ops')
+            print(('repeating ' + str(args.reps) + ' resume ops'))
         except:
             args.reps = 1
             print('Warning: reps must be an integer, ignoring arugment')
     if args.sleep:
         try:
             args.sleep = float(args.sleep)
-            print('sleeping for ' + str(args.sleep) + ' between resumes ')
+            print(('sleeping for ' + str(args.sleep) + ' between resumes '))
         except:
             args.sleep = 0
             print('Warning: sleep period must be  numeric, ignoring arugment')
@@ -255,7 +255,7 @@ def checkinput(args):
 def get_default_ligand_file():
     ## returns default ligand input file
     ligand_list = resource_filename(Requirement.parse("molSimplifyAD"), "molSimplifyAD/default_ligands.txt")
-    print('default ligands at' + ligand_list)
+    print(('default ligands at' + ligand_list))
     return ligand_list
 
 
@@ -263,7 +263,7 @@ def get_default_ligand_file():
 def get_launch_script_file(queue_type='SGE', molscontrol=False):
     ## returns default ligand input file
     if queue_type.lower() not in ['sge', 'slurm']:
-        print('Queue_type is not valid, user provided: ', queue_type)
+        print(('Queue_type is not valid, user provided: ', queue_type))
     sp_file = resource_filename(Requirement.parse("molSimplifyAD"), "molSimplifyAD/" + queue_type.lower() + "_sp.sh")
     if not molscontrol:
         geo_file = resource_filename(Requirement.parse("molSimplifyAD"),
@@ -341,15 +341,15 @@ def process_new_run_input(path):
                                 elif val.lower() in ('true', 't'):
                                     val = True
                                 if key == 'rundir':
-                                    print('checking rundir, val is  ' + val)
+                                    print(('checking rundir, val is  ' + val))
                                     if not val.endswith("/"):
                                         val = val + "/"
-                                        print('Warning: modifying user path to ' + val)
+                                        print(('Warning: modifying user path to ' + val))
                         configuration[key] = val
                     elif (
                             'runtype' in line or 'parameter' in line):  # assuming that things with more than 2 splits are lists
                         if "[" not in line and "]" not in line:
-                            print('Ignoring unknown input line with wrong length : ' + str(line))
+                            print(('Ignoring unknown input line with wrong length : ' + str(line)))
                         else:
                             (key, val) = line.split(' ', 1)
                             num_brackets = int(val.count('['))
@@ -367,13 +367,13 @@ def process_new_run_input(path):
                                 if 'parameter' in line:
                                     val = [float(x) for x in val]
                             if type(val) != list:
-                                print('Ignoring unknown input line with wrong length : ' + str(line))
+                                print(('Ignoring unknown input line with wrong length : ' + str(line)))
                             else:
                                 configuration[key] = val
                     else:
-                        print('Ignoring unknown input line with wrong length : ' + str(line))
+                        print(('Ignoring unknown input line with wrong length : ' + str(line)))
         except:
-            print('Error: processing ' + str(path) + ' failed. Please enusre')
+            print(('Error: processing ' + str(path) + ' failed. Please enusre'))
             print(' the file contains one keyword (space) value per line.')
     return configuration
 

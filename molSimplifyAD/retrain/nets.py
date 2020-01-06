@@ -69,7 +69,7 @@ class auc_callback(Callback):
         roc = roc_auc_score(self.y, y_pred)
         y_pred_val = self.model.predict(self.x_val)
         roc_val = roc_auc_score(self.y_val, y_pred_val)
-        print('roc-auc: %s - roc-auc_val: %s' % (str(round(roc, 4)), str(round(roc_val, 4))))
+        print(('roc-auc: %s - roc-auc_val: %s' % (str(round(roc, 4)), str(round(roc_val, 4)))))
         return
 
     def on_batch_begin(self, batch, logs={}):

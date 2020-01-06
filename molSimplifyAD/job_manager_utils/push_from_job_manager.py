@@ -1,5 +1,5 @@
 from molSimplifyAD.utils.pymongo_tools import push2db
-from job_converter import loop_convert_jobs
+from .job_converter import loop_convert_jobs
 
 
 def push_job_manager_jobs(basedir, database, collection, tag, subtag,

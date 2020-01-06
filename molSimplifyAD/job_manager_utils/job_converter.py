@@ -25,8 +25,8 @@ def collect_base_jobs(path=False):
     basejobs = list()
     for dirpath, dirs, files in os.walk(path):
         for file in sorted(files):
-            if (file.split('.')[-1] == 'out') and (not any(c in file for c in associated_jobs.keys())) and (
-                    not any(c in dirpath for c in associated_jobs.keys())) and not 'nohup' in file:
+            if (file.split('.')[-1] == 'out') and (not any(c in file for c in list(associated_jobs.keys()))) and (
+                    not any(c in dirpath for c in list(associated_jobs.keys()))) and not 'nohup' in file:
                 basejobs.append([dirpath, file.split('.')[0]])
     return basejobs
 
@@ -43,7 +43,7 @@ def common_processing(jobname, basedir, output, outfile, spin):
     this_run.iscsd = iscsd
     this_run.charge = int(output.wordgrab(['Total charge'], -1)[0][0])
     if not this_run.iscsd:
-        print("jobname: ", jobname)
+        print(("jobname: ", jobname))
         bind_complex_info(this_run, jobname, spin)
     else:
         init_mol = mol3D()
@@ -124,7 +124,7 @@ def process_geometry_optimizations(this_run, basedir, outfile, output):
             else:
                 this_run.status = 1
         else:
-            print("Warning: optim file %s is empty. Skipping this run." % optimpath)
+            print(("Warning: optim file %s is empty. Skipping this run." % optimpath))
             this_run.converged = False
     else:
         this_run.status = 7
@@ -140,13 +140,13 @@ def jobmanager2mAD(job, active_jobs):
         try:
             spin = int(output.wordgrab(['Spin multiplicity:'], -1)[0][0])
         except:
-            print('Cannot read file: ', outfile)
+            print(('Cannot read file: ', outfile))
             return this_run
         this_run = common_processing(jobname, basedir, output, outfile, spin)
         issp = isSP(outfile)
         if not issp:
             this_run = process_geometry_optimizations(this_run, basedir, outfile, output)
-            for a in associated_jobs.keys():
+            for a in list(associated_jobs.keys()):
                 associated_jobs[a](this_run, jobname, basedir)
         else:
             this_run = process_single_points(this_run, basedir, output)

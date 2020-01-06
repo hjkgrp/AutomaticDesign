@@ -38,7 +38,7 @@ def main():
         push_run_act_learn(args)
     elif args.retrain:
         predictor = args.retrain
-        print("Model retraining on :", predictor)
+        print(("Model retraining on :", predictor))
         infile = args.infile
         if not args.user or not args.pwd:
             raise KeyError(
@@ -47,7 +47,7 @@ def main():
         args_dict.update({"predictor": predictor,
                           "user": args.user,
                           "pwd": args.pwd})
-        print("with arguments as: ", args_dict)
+        print(("with arguments as: ", args_dict))
         retrain_and_push(args_dict)
 
 

@@ -15,7 +15,7 @@ hartree2ev = 27.2114
 
 
 def check_existence(metal, ox):
-    if not metal in metal_spin_dictionary.keys():
+    if not metal in list(metal_spin_dictionary.keys()):
         raise KeyError("metal %s does not exist in metal_spin_dictionary." % metal)
     if not ox in metal_spin_dictionary[metal]:
         raise KeyError("ox %d does not exist in metal_spin_dictionary[%s]." % (ox, metal))

@@ -23,10 +23,10 @@ with open(pathToConvergedJobs,'r') as f: # this is the file with the converged j
             if thisSlot in slotsToResub:
                 # check that it is status 6:
                 if thisLineStatus == 6:
-                    print('removing '+line.strip()+ ' from converged')
+                    print(('removing '+line.strip()+ ' from converged'))
                     OutstandingLinesToAdd.append(line.split(",")[0]) # store these for later
                 else:
-                    print('error '+line+ ' would be removed but has stats ' + str(thisLineStatus))
+                    print(('error '+line+ ' would be removed but has stats ' + str(thisLineStatus)))
                     sys.exit() # check it is six
             else: # this is not the lines you were looking for
                 newf.write(line)

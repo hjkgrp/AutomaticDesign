@@ -9,7 +9,7 @@ from molSimplifyAD.ga_io_control import *
 
 def ensure_dir(dir_path):
     if not os.path.exists(dir_path):
-        print('creating' + dir_path)
+        print(('creating' + dir_path))
         os.makedirs(dir_path)
 
 
@@ -51,7 +51,7 @@ def get_infile_from_job(job):
     if os.path.isfile(target_inpath):
         infile = target_inpath
     else:
-        print('no infile found for job ' + job + ' , creating a new one ')
+        print(('no infile found for job ' + job + ' , creating a new one '))
         create_generic_infile(job, use_old_optimizer=use_old_optimizer, restart=True)
     track_elec_prop = isKeyword('track_elec_prop')
     if track_elec_prop and (not check_txt_infile(target_inpath, 'ml_prop yes')):
@@ -59,7 +59,7 @@ def get_infile_from_job(job):
     if (not check_txt_infile(target_inpath, 'scrdir')):
         print('---scrdir is not in the input file! Adding---')
         add_scrdir_infiles(target_inpath, scr_path)
-        print(open(target_inpath).read())
+        print((open(target_inpath).read()))
     return target_inpath
 
 
@@ -462,7 +462,7 @@ def get_mayer_valence(moldenpath):
             continue
         if start:
             print(line)
-            print(line.split())
+            print((line.split()))
             if int(line.split()[1].split('(')[0]) == 1:
                 mayer_BV = float(line.split()[-2]) - float(line.split()[-1])
                 break
@@ -545,8 +545,8 @@ def isKeyword(keyword):
     # returned in its base form - Aditya (10/10/2018)                                #
     ##################################################################################
     GA_run = get_current_GA()
-    if isinstance(keyword, basestring):
-        keyword = unicode(keyword, 'utf-8')
+    if isinstance(keyword, str):
+        keyword = str(keyword, 'utf-8')
         try:
             return GA_run.config[str(keyword)]
         except:
@@ -556,7 +556,7 @@ def isKeyword(keyword):
         return_list = []
         try:
             for i in range(total_len):
-                temp_key = unicode(str(keyword[i]), 'utf-8')
+                temp_key = str(str(keyword[i]), 'utf-8')
                 return_list.append(GA_run.config[temp_key])
             return return_list
         except:
@@ -568,7 +568,7 @@ def isKeyword(keyword):
 ########################
 def isall_post():
     GA_run = get_current_GA()
-    if unicode('post_all', 'utf-8') in GA_run.config.keys():
+    if str('post_all', 'utf-8') in list(GA_run.config.keys()):
         return GA_run.config["post_all"]
     else:
         return False
@@ -577,7 +577,7 @@ def isall_post():
 ########################
 def get_optimizer():
     GA_run = get_current_GA()
-    if unicode('old_optimizer', 'utf-8') in GA_run.config.keys():
+    if str('old_optimizer', 'utf-8') in list(GA_run.config.keys()):
         return GA_run.config["old_optimizer"]
     else:
         print('old_optimizer not set, using default as False')
@@ -889,8 +889,8 @@ def check_HFX_linearity(all_runs, number_of_points_tolerance=3, max_deviation=5,
     from sklearn.model_selection import train_test_split, cross_val_score, LeaveOneOut
     import scipy.stats as stats
     list_of_names_withoutHFX = []
-    runkey_list = all_runs.keys()
-    print('LENGTH OF RUNKEY LIST', runkey_list)
+    runkey_list = list(all_runs.keys())
+    print(('LENGTH OF RUNKEY LIST', runkey_list))
     for runkey in runkey_list:
         this_run = all_runs[runkey]
         translate_dict = translate_job_name(this_run.name)
@@ -915,9 +915,9 @@ def check_HFX_linearity(all_runs, number_of_points_tolerance=3, max_deviation=5,
                 else:
                     print('energy is undef for this runclass')
                     failed_list.append(run_index)
-            zipped_list = zip(x, y, converge_list)
+            zipped_list = list(zip(x, y, converge_list))
             zipped_list.sort(key=lambda t: t[0])
-            [sorted_x, sorted_y, sorted_converge_list] = zip(*zipped_list)  # sort by HFX value
+            [sorted_x, sorted_y, sorted_converge_list] = list(zip(*zipped_list))  # sort by HFX value
             if len(sorted_x) < number_of_points_tolerance:
                 print('not enough points converged')
                 for run_index in run_class_indices:
@@ -941,22 +941,22 @@ def check_HFX_linearity(all_runs, number_of_points_tolerance=3, max_deviation=5,
                     # so we append them to respective lists.
                     ytests += list(y_test)
                     ypreds += list(y_pred)
-                print('error key', X_val_corresponding_to_error)
+                print(('error key', X_val_corresponding_to_error))
                 ytests = np.array(ytests)
                 ypreds = np.array(ypreds)
                 error_array = abs(ytests - ypreds)
-                zipped_list = zip(X_val_corresponding_to_error, error_array)
+                zipped_list = list(zip(X_val_corresponding_to_error, error_array))
                 zipped_list.sort(key=lambda t: t[0])
                 sorted_error_array = zipped_list[1]
                 temp_x = []
                 temp_y = []
                 original_inds = []
                 for j, val in enumerate(sorted_error_array):
-                    print('this is j', j)
+                    print(('this is j', j))
                     if float(val) > max_deviation:  # These are outlying points
                         remove_list.append(sorted_converge_list[j])
                     else:
-                        print('here at ', j)
+                        print(('here at ', j))
                         original_inds.append(sorted_converge_list[j])
                         temp_x.append(sorted_x[j])
                         temp_y.append(sorted_y[j])
@@ -965,19 +965,19 @@ def check_HFX_linearity(all_runs, number_of_points_tolerance=3, max_deviation=5,
                     temp_x, temp_y = sorted_x, sorted_y
                 slope_signs = []
                 slope, intercept, r_value, p_value, std_err = stats.linregress(temp_x, temp_y)
-                print('THIS IS R2', r_value ** 2, 'for', temp_x, temp_y)
+                print(('THIS IS R2', r_value ** 2, 'for', temp_x, temp_y))
                 if (r_value ** 2) < R2_cutoff:
                     for j2 in range(len(temp_y) - 1):
-                        print('REGRESSING ', j2, j2 + 2)
+                        print(('REGRESSING ', j2, j2 + 2))
                         slope, intercept, r_value, p_value, std_err = stats.linregress(temp_x[j2:j2 + 2],
                                                                                        temp_y[j2:j2 + 2])
-                        print(temp_x[j2:j2 + 2], temp_y[j2:j2 + 2], slope)
+                        print((temp_x[j2:j2 + 2], temp_y[j2:j2 + 2], slope))
                         print('-----')
                         slope_signs.append(np.sign(slope * 1000))
                     signchange = ((np.roll(slope_signs, 1) - slope_signs) != 0).astype(int)
                     signchange[0] = 0  # Do not want circular behavior
                     idx_2_remove = np.where(signchange == 1)[0]
-                    print('THIS IS SLOPES AND SIGNCHANGE and i2r', slope_signs, signchange, idx_2_remove)
+                    print(('THIS IS SLOPES AND SIGNCHANGE and i2r', slope_signs, signchange, idx_2_remove))
                     if len(idx_2_remove) == 1:  # one point on either end
                         print('IDX2R is 1 long')
                         if (float(idx_2_remove[0]) / float(len(temp_y))) <= 0.5:
@@ -1114,7 +1114,7 @@ def setup_paths():
         path_dictionary.update({"PRFO_in_path_Oxo": working_dir + "prfo_infiles/oxo/"})
         path_dictionary.update({"PRFO_out_path_Oxo": working_dir + "prfo_outfiles/oxo/"})
         path_dictionary.update({"PRFO_scr_path_Oxo": working_dir + "scr/prfo/oxo/"})
-    for keys in path_dictionary.keys():
+    for keys in list(path_dictionary.keys()):
         ensure_dir(path_dictionary[keys])
     return path_dictionary
 
@@ -1123,7 +1123,7 @@ def setup_paths():
 
 def advance_paths(path_dictionary, generation):
     new_dict = dict()
-    for keys in path_dictionary.keys():
+    for keys in list(path_dictionary.keys()):
         if not (keys in ["molsimp_path", "DLPNO_path", "good_reports", "other_reports", "bad_reports", "pdb_path"]):
             new_dict[keys] = path_dictionary[keys] + "gen_" + str(generation) + "/"
             ensure_dir(new_dict[keys])
@@ -1157,7 +1157,7 @@ def write_dictionary(dictionary, path, force_append=False):
         write_control = 'w'
     try:
         with open(path, write_control) as f:
-            for keys in dictionary.keys():
+            for keys in list(dictionary.keys()):
                 f.write(str(keys).strip("\n") + ',' + str(dictionary[keys]) + '\n')
     except:
         emsg = "Error, could not write state space: " + path
@@ -1431,24 +1431,24 @@ def write_ANN_results_dictionary(path, dictionary):
     with open(path, 'w') as f:
         for i, val in enumerate(dictionary.keys()):
             if i == 0:
-                f.write(",".join(["name"] + dictionary[val].keys()) + '\n')
-            f.write(",".join([val] + [str(k) for k in dictionary[val].values()]) + '\n')
+                f.write(",".join(["name"] + list(dictionary[val].keys())) + '\n')
+            f.write(",".join([val] + [str(k) for k in list(dictionary[val].values())]) + '\n')
     rundir = isKeyword('rundir')
     full_ANN_dict = rundir + '/ANN_output/full_ANN_results.csv'
     if os.path.exists(full_ANN_dict):
         emsg, already_present_dict = read_ANN_results_dictionary(full_ANN_dict, full=True)
         with open(full_ANN_dict, 'a') as f:
             for i, val in enumerate(dictionary.keys()):
-                if val.strip().split(',')[0] not in already_present_dict.keys():
+                if val.strip().split(',')[0] not in list(already_present_dict.keys()):
                     translated = translate_job_name(val)['chem_name']
-                    f.write(",".join([val] + [str(k) for k in dictionary[val].values()] + [translated]) + '\n')
+                    f.write(",".join([val] + [str(k) for k in list(dictionary[val].values())] + [translated]) + '\n')
     else:
         with open(full_ANN_dict, 'w') as f:
             for i, val in enumerate(dictionary.keys()):
                 if i == 0:
-                    f.write(",".join(["name"] + dictionary[val].keys() + ["chem_name"]) + '\n')
+                    f.write(",".join(["name"] + list(dictionary[val].keys()) + ["chem_name"]) + '\n')
                 translated = translate_job_name(val)['chem_name']
-                f.write(",".join([val] + [str(k) for k in dictionary[val].values()] + [translated]) + '\n')
+                f.write(",".join([val] + [str(k) for k in list(dictionary[val].values())] + [translated]) + '\n')
 
 
 ########################
@@ -1497,10 +1497,10 @@ def find_indb_jobs():
 def add_to_outstanding_jobs(job):
     current_outstanding = get_outstanding_jobs()
     if job in current_outstanding:
-        print('*** att skipping ' + str(job) + ' since it is in list')
+        print(('*** att skipping ' + str(job) + ' since it is in list'))
     else:
         current_outstanding.append(job)
-        print('*** att adding ' + str(job) + ' since it is not in list')
+        print(('*** att adding ' + str(job) + ' since it is not in list'))
     set_outstanding_jobs(current_outstanding)
 
 
@@ -1511,7 +1511,7 @@ def check_job_converged_dictionary(job):
     try:
         this_status = int(converged_job_dictionary[job])
     except:
-        print('could not find status for  ' + str(job) + '\n')
+        print(('could not find status for  ' + str(job) + '\n'))
         pass
     return this_status
 
@@ -1547,15 +1547,15 @@ def set_outstanding_jobs(list_of_jobs):
 
 ########################
 def remove_outstanding_jobs(job):
-    print('removing job: ' + job)
+    print(('removing job: ' + job))
     path_dictionary = setup_paths()
     path = path_dictionary["job_path"]
     current_outstanding = get_outstanding_jobs()
     if job in current_outstanding:
-        print(str(job) + ' removed since it is in list')
+        print((str(job) + ' removed since it is in list'))
         current_outstanding.remove(job)
     else:
-        print(str(job) + ' not removed since it is not in list')
+        print((str(job) + ' not removed since it is not in list'))
     with open(path + '/outstanding_job_list.txt', 'w') as f:
         for jobs in current_outstanding:
             f.write(jobs + "\n")
@@ -1563,19 +1563,19 @@ def remove_outstanding_jobs(job):
 
 ########################
 def purge_converged_jobs(job):
-    print('removing job: ' + job)
+    print(('removing job: ' + job))
     path_dictionary = setup_paths()
     path = path_dictionary["job_path"]
 
     converged_job_dictionary = find_converged_job_dictionary()
     this_status = 'unknown'
-    if job in converged_job_dictionary.keys():
+    if job in list(converged_job_dictionary.keys()):
         this_status = int(converged_job_dictionary[job])
-        print(' removing job with status  ' + str(this_status) + '\n')
+        print((' removing job with status  ' + str(this_status) + '\n'))
         converged_job_dictionary.pop(job)
         write_dictionary(converged_job_dictionary, path_dictionary["job_path"] + "/converged_job_dictionary.csv")
     else:
-        print(str(job) + ' not removed since it is not in conv keys')
+        print((str(job) + ' not removed since it is not in conv keys'))
 
 
 ########################
@@ -1607,7 +1607,7 @@ def update_converged_job_dictionary(jobs, status):
     converged_job_dictionary = find_converged_job_dictionary()
     converged_job_dictionary.update({jobs: status})
     if status != 0:
-        print(' writing ' + str(jobs) + ' as status ' + str(status))
+        print((' writing ' + str(jobs) + ' as status ' + str(status)))
     write_dictionary(converged_job_dictionary, path_dictionary["job_path"] + "/converged_job_dictionary.csv")
 
 
@@ -1621,8 +1621,8 @@ def update_job_classification_dictionary(jobs, flag_status):
     job_classification_dictionary = find_job_classification_dictionary()
     job_classification_dictionary.update({jobs: flag_status})
     if flag_status != 0:
-        print(' writing ' + str(jobs) + ' to have flag_status ' + str(flag_status) + ': ' + str(
-            failure_mode_dict[int(flag_status)]))
+        print((' writing ' + str(jobs) + ' to have flag_status ' + str(flag_status) + ': ' + str(
+            failure_mode_dict[int(flag_status)])))
     write_dictionary(job_classification_dictionary, path_dictionary["job_path"] + "/job_classification_dictionary.csv")
 
 
@@ -1639,19 +1639,19 @@ def find_submitted_jobs():
 
 ########################
 def purge_submitted_jobs(job):
-    print('removing job: ' + job)
+    print(('removing job: ' + job))
     path_dictionary = setup_paths()
     path = path_dictionary["job_path"]
 
     submitted_job_dictionary = find_submitted_jobs()
 
-    if job in submitted_job_dictionary.keys():
+    if job in list(submitted_job_dictionary.keys()):
         this_status = int(submitted_job_dictionary[job])
-        print(' removing job with sub number  ' + str(this_status) + '\n')
+        print((' removing job with sub number  ' + str(this_status) + '\n'))
         submitted_job_dictionary.pop(job)
         write_dictionary(submitted_job_dictionary, path_dictionary["job_path"] + "/submitted_jobs.csv")
     else:
-        print(str(job) + ' not removed since it is not in subm keys')
+        print((str(job) + ' not removed since it is not in subm keys'))
 
 
 ########################
@@ -1670,18 +1670,18 @@ def purge_job_files(job, mad_home_dir=os.getcwd()):
     outfile_loc = os.path.join(os.getcwd(), 'geo_outfiles', 'gen_0')
     if os.path.isfile(os.path.join(outfile_loc, job + '.out')):
         os.rename(os.path.join(outfile_loc, job + '.out'), os.path.join(mad_home_dir, 'purged_job_files', job + '.out'))
-        print('purging outfile: ' + job + '.out')
-        print('from: ' + outfile_loc + ' to: ' + os.path.join(mad_home_dir, 'purged_job_files'))
+        print(('purging outfile: ' + job + '.out'))
+        print(('from: ' + outfile_loc + ' to: ' + os.path.join(mad_home_dir, 'purged_job_files')))
     infile_loc = os.path.join(os.getcwd(), 'infiles', 'gen_0')
     if os.path.isfile(os.path.join(infile_loc, job + '.in')):
         os.rename(os.path.join(infile_loc, job + '.in'), os.path.join(mad_home_dir, 'purged_job_files', job + '.out'))
-        print('purging infile: ' + job + '.in')
-        print('from: ' + infile_loc + ' to: ' + os.path.join(mad_home_dir, 'purged_job_files'))
+        print(('purging infile: ' + job + '.in'))
+        print(('from: ' + infile_loc + ' to: ' + os.path.join(mad_home_dir, 'purged_job_files')))
     scr_loc = os.path.join(os.getcwd(), 'scr', 'geo', 'gen_0')
     if os.path.isdir(os.path.join(scr_loc, job)):
         os.rename(os.path.join(scr_loc, job), os.path.join(mad_home_dir, 'purged_job_files', job))
-        print('purging scr: ' + job)
-        print('from: ' + scr_loc + ' to: ' + os.path.join(mad_home_dir, 'purged_job_files'))
+        print(('purging scr: ' + job))
+        print(('from: ' + scr_loc + ' to: ' + os.path.join(mad_home_dir, 'purged_job_files')))
     os.chdir(cwd)
 
 
@@ -1702,7 +1702,7 @@ def hard_reset_job(full_name, alpha='undef'):
     if alpha == 20:
         tools.add_to_outstanding_jobs(full_name)
         tools.create_generic_infile(full_name)
-        print(full_name + 'added to outstanding job list and new infile created')
+        print((full_name + 'added to outstanding job list and new infile created'))
 
 
 ########################
@@ -1736,7 +1736,7 @@ def write_descriptor_csv(list_of_runs, file_handle, append=False):
         file_handle.write('runs,')
         n_cols = len(list_of_runs[0].descriptor_names)
         if not append:
-            print('first element has ' + str(n_cols) + ' columns')
+            print(('first element has ' + str(n_cols) + ' columns'))
             if n_cols == 0:
                 print('reshuffling vector so that first element does have no names')
                 for i, runs in enumerate(list_of_runs):
@@ -1789,16 +1789,16 @@ def write_output(name, list_of_things_with_props, list_of_props, base_path_dicti
                 data = f.readlines()
             f.close()
             present_jobs_dict = dict((key, value.split(',')[0]) for (key, value) in enumerate(data))
-            print('PRESENT JOBS DICT~', present_jobs_dict)
+            print(('PRESENT JOBS DICT~', present_jobs_dict))
             for thing in list_of_things_with_props:
                 values = atrextract(thing, list_of_props)
                 string_to_write = propline(values)
-                if string_to_write.split(',')[0] in present_jobs_dict.keys():
-                    print('made it into if statement', string_to_write.split(',')[0])
+                if string_to_write.split(',')[0] in list(present_jobs_dict.keys()):
+                    print(('made it into if statement', string_to_write.split(',')[0]))
                     idx = int(present_jobs_dict[str(string_to_write.split(',')[0])])
                     data[idx] = string_to_write
                 else:
-                    print('made it into else statement', string_to_write.split(',')[0])
+                    print(('made it into else statement', string_to_write.split(',')[0]))
                     data.append(string_to_write)
             with open(output_path, 'w') as g:
                 g.writelines(data)
@@ -1828,7 +1828,7 @@ def write_output(name, list_of_things_with_props, list_of_props, base_path_dicti
 def write_run_reports(all_runs):
     print('writing outpickle and reports! patience is a virtue')
     path_dictionary = setup_paths()
-    for runClass in all_runs.values():
+    for runClass in list(all_runs.values()):
         if runClass.status in [0, 1, 2, 7, 8, 12, 13, 14] and runClass.alpha == 20.0:
             if runClass.status in [0]:
                 runClass.reportpath = path_dictionary["good_reports"] + runClass.name + ".pdf"
@@ -1864,7 +1864,7 @@ def process_run_post(filepost, filedescriptors):
     for kw in keywords_needed:
         if not kw in header:
             flag = False
-            print('---column %s does not exist. dataframe spliting is aborted---' % kw)
+            print(('---column %s does not exist. dataframe spliting is aborted---' % kw))
     if flag:
         df2 = pd.read_csv(filedescriptors)
         df2 = df2.rename(index=str, columns={'runs': 'name'})
@@ -1924,7 +1924,7 @@ def rename_ligands(liglist):
     liglist_compact = []
     for idx, lig in enumerate(liglist):
         moll = openbabel.OBMol()
-        if lig in lig_dict.keys():
+        if lig in list(lig_dict.keys()):
             liglist_compact.append(lig_dict[lig])
         elif len(lig) > 20:
             if obConversion.ReadString(moll, lig):

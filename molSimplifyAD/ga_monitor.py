@@ -9,7 +9,7 @@ from molSimplifyAD.process_scf import *
 #
 def launch_job(job, sub_num):
     ## code to submit to queue
-    print('lauching ' + job + ' sub number: ' + str(sub_num))
+    print(('lauching ' + job + ' sub number: ' + str(sub_num)))
     basename = os.path.basename(job).strip('.in')
     if sub_num > 1:
         print(' start rescue')
@@ -102,7 +102,7 @@ def is_job_live(job_id):
     for lines in ll:
         if (str(lines).find('Following jobs do not exist:') != -1) or (
                 str(lines).find("slurm_load_jobs error: Invalid job id") != -1) or (len(ll) <= 2):
-            print('job ' + str(job_id) + ' is not live')
+            print(('job ' + str(job_id) + ' is not live'))
             verdict = False
     if not isKeyword('queue_type').lower() == "sge":
         if len(ll) == 1:
@@ -122,7 +122,7 @@ def submit_outstanding_jobs():
     submitted_job_dictionary = find_submitted_jobs()
     ## live jobs:
     live_job_dictionary = find_live_jobs()
-    number_live_jobs = len(live_job_dictionary.keys())
+    number_live_jobs = len(list(live_job_dictionary.keys()))
     ## set of jobs to dispatch
     joblist = get_outstanding_jobs()
     if isKeyword('oxocatalysis'):
@@ -143,33 +143,33 @@ def submit_outstanding_jobs():
     resub_count = 0
     lmax = isKeyword('max_jobs')  # number of live jobs
     if number_live_jobs < lmax:
-        print('space in queue for ' + str(lmax - number_live_jobs) + ' new jobs')
+        print(('space in queue for ' + str(lmax - number_live_jobs) + ' new jobs'))
         for jobs in joblist:
-            print('job is ' + jobs)
+            print(('job is ' + jobs))
             jobs = jobs.strip("\n")
-            if (not (jobs in live_job_dictionary.keys())) and (len(jobs.strip('\n')) != 0) and (
+            if (not (jobs in list(live_job_dictionary.keys()))) and (len(jobs.strip('\n')) != 0) and (
                     number_live_jobs < lmax):  ## check the job isn't live
-                print(jobs, 'is not live....')
+                print((jobs, 'is not live....'))
                 #                print('has it been previously submitted: ' + str(submitted_job_dictionary.keys()))
-                if not (jobs in submitted_job_dictionary.keys()):
+                if not (jobs in list(submitted_job_dictionary.keys())):
                     ## launch
                     submitted_job_dictionary.update({jobs: 1})
                     ## submit job to queue
                     job_id = launch_job(jobs, 1)
                     sub_count += 1
                     number_live_jobs += 1
-                    print('updating LJD with :', job_id, jobs)
+                    print(('updating LJD with :', job_id, jobs))
                     live_job_dictionary.update({jobs: job_id})
                 else:  # job is a resubmission
                     number_of_attempts = submitted_job_dictionary[jobs]
-                    print('number of attempts = ' + str(number_of_attempts))
+                    print(('number of attempts = ' + str(number_of_attempts)))
                     if (int(number_of_attempts) <= isKeyword('max_resubmit')):
                         ## relaunch  
                         submitted_job_dictionary.update({jobs: (int(number_of_attempts) + 1)})
                         job_id = launch_job(jobs, int(number_of_attempts) + 1)
                         number_live_jobs += 1
                         resub_count += 1
-                        print('(resub: ' + str(resub_count) + ' )updating LJD with :' + str(job_id) + ' ' + str(jobs))
+                        print(('(resub: ' + str(resub_count) + ' )updating LJD with :' + str(job_id) + ' ' + str(jobs)))
                         live_job_dictionary.update({jobs: job_id})
 
                     else:  # give up on this job
@@ -206,15 +206,15 @@ def check_queue_for_live_jobs():
 
     ## set of jobs requested by the algorithm
     counter = 0
-    for jobs in live_job_dictionary.keys():
+    for jobs in list(live_job_dictionary.keys()):
         this_job_id = live_job_dictionary[jobs]
         this_status = is_job_live(this_job_id)
         if this_status:
             counter += 1
-            print('recording as live:', jobs, this_job_id)
+            print(('recording as live:', jobs, this_job_id))
             live_job_dictionary.update({jobs: this_job_id})
         else:
-            if jobs in live_job_dictionary.keys():
+            if jobs in list(live_job_dictionary.keys()):
                 del live_job_dictionary[jobs]
     write_dictionary(live_job_dictionary,
                      path_dictionary["job_path"] + "/live_jobs.csv")

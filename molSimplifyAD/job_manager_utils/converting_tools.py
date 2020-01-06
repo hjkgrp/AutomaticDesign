@@ -78,7 +78,7 @@ def calculate_mulliken_spins(this_run):
         else:
             mulliken_spin_list = get_mulliken(
                 multiwfnpath, this_run.spin, this_run.liglist[-1], external=True)
-        print("mulliken spins: ", mulliken_spin_list)
+        print(("mulliken spins: ", mulliken_spin_list))
         this_run.net_metal_spin = mulliken_spin_list[0]
         if len(mulliken_spin_list) > 1:
             this_run.net_oxygen_spin = mulliken_spin_list[1]

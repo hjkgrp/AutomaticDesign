@@ -63,7 +63,7 @@ def get_wavefunction(scrpath):
 db = connect2db(user=user, pwd=pwd,
                 host='localhost', port=27017,
                 database='tmc', auth=True)
-print("# of complexes: ", db.oct.count())
+print(("# of complexes: ", db.oct.count()))
 counter = 0
 
 count = 0
@@ -74,7 +74,7 @@ for i, outfile in enumerate(outfiles):
     if 'nohup' in outfile:
         continue
     output = textfile(outfile)
-    print('----'+outfile+'----')
+    print(('----'+outfile+'----'))
     try:
         spin = int(output.wordgrab(['Spin multiplicity:'],2)[0][0])
     except:
@@ -208,26 +208,26 @@ for i, outfile in enumerate(outfiles):
         with open(dbinfo[0]) as f:
             dbval = f.readlines()[0]
         reference_struct = query_db(db,'oct',{'_id':ObjectId(str(dbval))})
-        print(reference_struct.count())
-        print(reference_struct[0]['subtag'])
+        print((reference_struct.count()))
+        print((reference_struct[0]['subtag']))
         subtag = reference_struct[0]['subtag']+'_additional'
     else:
         subtag = 'no_reference_additional'
             
-    print(this_run.geo_flag,this_run.metal_spin_flag,this_run.ss_flag,this_run.status,subtag)
+    print((this_run.geo_flag,this_run.metal_spin_flag,this_run.ss_flag,this_run.status,subtag))
     if write:
         this_tmc = tmcMongo(this_run=this_run, tag=tag, subtag=subtag)
         _s = time.time()
         inserted = insert(db, collection, this_tmc)
-        print("elapse: ", time.time() - _s)
+        print(("elapse: ", time.time() - _s))
         if inserted:
             count += 1
         else:
             merged += 1
 
 #### Do this after looping over all outfiles.
-print("add %d entries in the %s['%s']." % (count, database, collection))
-print("merge %d entries in the %s['%s']." % (merged, database, collection))
+print(("add %d entries in the %s['%s']." % (count, database, collection)))
+print(("merge %d entries in the %s['%s']." % (merged, database, collection)))
 print("creating index...")
 if write:
     db[collection].create_index([("metal", pymongo.ASCENDING),

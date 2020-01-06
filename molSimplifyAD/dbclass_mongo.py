@@ -1,4 +1,5 @@
 import os
+import sys
 import getpass
 import pickle
 import numpy as np
@@ -58,7 +59,7 @@ class TMC():
                 try:
                     self.recover_dftrun(document=document)
                 except:
-                    print("failing on: ", document["dftrun"])
+                    print(("failing on: ", document["dftrun"]))
                     raise ValueError("The input document cannot recover a DFTrun object.")
             else:
                 raise ValueError("Either a DFTrun object or a tmcMongo object is required as an input.")
@@ -151,7 +152,7 @@ class TMC():
     def get_id_keys(self):
         if 'iscsd' in self.this_run.__dict__ and self.this_run.iscsd == True:
             self.id_keys = csd_attr_id
-            print("csd complex: ", self.this_run.iscsd, self.this_run.refcode)
+            print(("csd complex: ", self.this_run.iscsd, self.this_run.refcode))
             self.refcode = self.this_run.refcode
         else:
             self.id_keys = mongo_attr_id
@@ -170,21 +171,24 @@ class TMC():
     def get_update_fields(self, update_fields):
         if update_fields:
             for field in update_fields:
-                if field in self.document.keys():
+                if field in list(self.document.keys()):
                     self.update_fields.append(field)
 
     def recover_dftrun(self, document=False):
         if not document:
             dftrun_file = self.document["dftrun"]
         else:
-            if "dftrun" in document.keys():
+            if "dftrun" in list(document.keys()):
                 dftrun_file = document["dftrun"]
-            elif "unique_name" in document.keys() and os.path.isdir(dftrun_basepath + document["unique_name"]):
+            elif "unique_name" in list(document.keys()) and os.path.isdir(dftrun_basepath + document["unique_name"]):
                 dftrun_file = dftrun_basepath + document["unique_name"] + '/dftrun.pkl'
             else:
                 raise ValueError("Cannot find any DFTrun object binded to this document.")
         if os.path.isfile(dftrun_file):
-            self.this_run = pickle.load(open(dftrun_file, "rb"))
+            if sys.version_info[0] < 3:
+                self.this_run = pickle.load(open(dftrun_file, "rb"))
+            else:
+                self.this_run = pickle.load(open(dftrun_file, "rb"), encoding="latin1")
             for k in document:
                 setattr(self.this_run, k, document[k])  # use document values since those are more reliable.
         else:

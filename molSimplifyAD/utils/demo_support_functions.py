@@ -84,7 +84,7 @@ def data_normalize(data, train_mean, train_var):
         if var < 1e-16:
             delete_ind.append(idx)
     if len(delete_ind)>0:
-        print('Note: There are %d features with a variance smaller than 1e-16.' % len(delete_ind))
+        print(('Note: There are %d features with a variance smaller than 1e-16.' % len(delete_ind)))
         print('Please double check your input data if this number is not what you expect...')
         data = np.delete(data, delete_ind, axis=1)
         train_mean = np.delete(train_mean, delete_ind, axis=0)
@@ -113,7 +113,7 @@ def find_gene_geo(new_tree,mad_path,target_gene):
     if len(matches)>0:
         return(matches[0])
     else:
-        print('No match, error!  cannot find geo for gene ' + target_gene)
+        print(('No match, error!  cannot find geo for gene ' + target_gene))
         return(False)
 def get_info_from_ga(mad_path):
     ## function to load object from a specified mad path
@@ -133,7 +133,7 @@ def translate_gene_names_into_chemistry(mad_path,genes):
     os.chdir(mad_path)
     
     for g in genes:
-        print('translating gene into words : ' + g)
+        print(('translating gene into words : ' + g))
         
         
     GA_run = GA_run_defintion()
@@ -147,11 +147,11 @@ def get_live_genes_sorted(new_tree):
     ## find genes that still live and have fitnessess 
     live_genes = dict()
     for gene in set(new_tree.genes.values()):
-        if gene in new_tree.gene_fitness_dictionary.keys():
+        if gene in list(new_tree.gene_fitness_dictionary.keys()):
             live_genes.update({gene:new_tree.gene_fitness_dictionary[gene]})
 
     ## order them by fitness
-    live_genes = sorted(live_genes.items(), key=operator.itemgetter(1),reverse=True)
+    live_genes = sorted(list(live_genes.items()), key=operator.itemgetter(1),reverse=True)
     return(live_genes)
 
 def visualize_best_genes(new_tree,mad_path,live_genes):
@@ -178,17 +178,17 @@ def update_data(new_tree,data,live_genes):
     ## update fitness
     mod_dat = copy.deepcopy(data)
     #print('have ' + str(len(new_tree.gene_fitness_dictionary.keys()))+' keys in tree')
-    for gene in new_tree.gene_fitness_dictionary.keys():
+    for gene in list(new_tree.gene_fitness_dictionary.keys()):
         if gene in mod_dat["gene"].values:
             mod_dat.loc[mod_dat["gene"]==gene,"fitness"] = float(new_tree.gene_fitness_dictionary[gene])
             #print(gene,mod_dat.loc[mod_dat["gene"]==gene,"fitness"])
         else:
-            print('gene ' + str(gene) + ' not in tree!')
+            print(('gene ' + str(gene) + ' not in tree!'))
     live_genes_to_match = [ live_genes[i][0] for i in range(0,len(live_genes))]
     
         
     live_db_inds = mod_dat.index[mod_dat["gene"].isin(live_genes_to_match)]
-    all_inds = mod_dat.index[mod_dat["gene"].isin(new_tree.gene_fitness_dictionary.keys())]
+    all_inds = mod_dat.index[mod_dat["gene"].isin(list(new_tree.gene_fitness_dictionary.keys()))]
     return(mod_dat,live_db_inds,all_inds)
 def get_run_info(mad_path):
     gens = []

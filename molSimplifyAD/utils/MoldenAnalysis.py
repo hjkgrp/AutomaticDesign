@@ -24,31 +24,31 @@ class MoldenInfo:
                 betaidx = len(self.qc.get_mo_labels())-1
                 break
             store_a = new
-        print('alphaHOMO',self.qc.mo_spec[alphaidx]['energy'])
-        print('betaHOMO',self.qc.mo_spec[betaidx]['energy'])
+        print(('alphaHOMO',self.qc.mo_spec[alphaidx]['energy']))
+        print(('betaHOMO',self.qc.mo_spec[betaidx]['energy']))
         self.alphaidx = alphaidx
         self.betaidx = betaidx
 
     def get_MO_energies(self):
         self.list_of_alpha_energies = {i:self.qc.mo_spec[i]['energy'] for i, val in enumerate(self.qc.mo_spec) if self.qc.mo_spec[i]['spin']=='alpha'}
         self.list_of_beta_energies = {i:self.qc.mo_spec[i]['energy'] for i, val in enumerate(self.qc.mo_spec) if self.qc.mo_spec[i]['spin']=='beta'}
-        self.list_of_alpha_energies.update((x, y*27.2114) for x, y in self.list_of_alpha_energies.items())
-        self.list_of_beta_energies.update((x, y*27.2114) for x, y in self.list_of_beta_energies.items())
+        self.list_of_alpha_energies.update((x, y*27.2114) for x, y in list(self.list_of_alpha_energies.items()))
+        self.list_of_beta_energies.update((x, y*27.2114) for x, y in list(self.list_of_beta_energies.items()))
 
     def plot_MO_energies(self):
-        plt.scatter(self.list_of_alpha_energies.keys(), self.list_of_alpha_energies.values())
+        plt.scatter(list(self.list_of_alpha_energies.keys()), list(self.list_of_alpha_energies.values()))
         plt.xlabel('MO Number')
         plt.ylabel('Total MO Energy [eV]')
         plt.ylim((-20,0)) #There are many more energy levels, just cutting plot off at -20 eV
         plt.show()
 
     def plot_dchar_vs_energies(self):
-        energy_vals = [self.d_character_dict[i]['energy'] for i in self.d_character_dict.keys()]
-        dchar_vals = [self.d_character_dict[i]['dchar'] for i in self.d_character_dict.keys()]
+        energy_vals = [self.d_character_dict[i]['energy'] for i in list(self.d_character_dict.keys())]
+        dchar_vals = [self.d_character_dict[i]['dchar'] for i in list(self.d_character_dict.keys())]
         maxval = max(energy_vals)
         limited_energy = [i for i in energy_vals if i >= maxval-5]
         limited_dchar = [x for x, y in zip(dchar_vals, energy_vals) if y >= maxval-5]
-        print(np.mean(limited_dchar))
+        print((np.mean(limited_dchar)))
         plt.scatter(limited_energy, limited_dchar)
         plt.xlabel('Total MO Energy [eV]')
         plt.ylabel('Percent d-character')
@@ -91,7 +91,7 @@ class MoldenInfo:
             d_orb = full_coeffs.copy()
             d_orb = np.array([x if ind in idxlist else 0 for ind, x in enumerate(d_orb)])
             MO_char = np.dot(d_orb, np.dot(self.ao_overlap_matrix, d_orb.T))
-            if i in char_dict.keys():
+            if i in list(char_dict.keys()):
                 print('Already in dictionary...')
             else:
                 char_dict[i] = {'dchar': MO_char, 'energy': self.qc.mo_spec[i]['energy']*27.2114}
@@ -113,8 +113,8 @@ class MoldenInfo:
         self.get_d_orbital_coeffs()
         MO_char_alpha = np.dot(self.d_orbital_coeffs_alpha, np.dot(self.ao_overlap_matrix,self.d_orbital_coeffs_alpha.T))
         MO_char_beta = np.dot(self.d_orbital_coeffs_beta, np.dot(self.ao_overlap_matrix,self.d_orbital_coeffs_beta.T))
-        print('Alpha d-character: ',MO_char_alpha)
-        print('Beta d-character: ', MO_char_beta)
+        print(('Alpha d-character: ',MO_char_alpha))
+        print(('Beta d-character: ', MO_char_beta))
         return MO_char_alpha, MO_char_beta
 
     def get_mullpop_and_charge(self):
@@ -146,10 +146,10 @@ class MoldenInfo:
         self.oxygencharge = self.pop['charge'][-1]
         self.totalspin = sum(self.pop_alpha['population']-self.pop_beta['population'])
         self.totalcharge = sum(self.pop['charge'])
-        print('Spin: ',self.totalspin)
-        print('Charge: ',self.totalcharge)
-        print(self.pop['charge'])
-        print('Metal: ',self.metalcharge, 'Oxygen: ',self.oxygencharge)
+        print(('Spin: ',self.totalspin))
+        print(('Charge: ',self.totalcharge))
+        print((self.pop['charge']))
+        print(('Metal: ',self.metalcharge, 'Oxygen: ',self.oxygencharge))
         return self.totalspin, self.totalcharge, self.metalcharge, self.metalpopalpha, self.metalpopbeta, self.oxygencharge, self.oxygenpopalpha, self.oxygenpopbeta
             
 

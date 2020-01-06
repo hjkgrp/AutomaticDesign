@@ -117,17 +117,17 @@ def process_runs_sp(LS_runs, HS_runs):
     final_results = dict()
     matched = False
     number_of_matches = 0
-    for genes in LS_runs.keys():
+    for genes in list(LS_runs.keys()):
         matched = 0
         LS_run = LS_runs[genes]
         this_name = LS_run.name
         this_gene = genes
-        if this_gene in HS_runs.keys():
+        if this_gene in list(HS_runs.keys()):
             HS_run = HS_runs[this_gene]
             matched = True
             number_of_matches += 1
         if matched:
-            print('matched ID: ' + str(this_gene) + ' files ' + str(HS_run.name) + ' and ' + str(LS_run.name))
+            print(('matched ID: ' + str(this_gene) + ' files ' + str(HS_run.name) + ' and ' + str(LS_run.name)))
             final_results[this_gene] = Comp(this_gene)
             final_results[this_gene].gene = this_gene
             final_results[this_gene].set_properties(LS_run)
@@ -147,7 +147,7 @@ def process_runs_sp(LS_runs, HS_runs):
             final_results[this_gene].max_spin_error = max(abs(float(HS_run.ss_target) - float(HS_run.ss_act)),
                                                           abs(float(LS_run.ss_target - LS_run.ss_act)))
         else:
-            print('unmatched ID: ' + str(this_gene) + ' files ' + str(LS_run.name) + ' has no partner')
+            print(('unmatched ID: ' + str(this_gene) + ' files ' + str(LS_run.name) + ' has no partner'))
     return final_results
 
 
@@ -169,7 +169,7 @@ def process_runs_geo(all_runs, local_spin_dictionary, local_metal_list=False):
     number_of_matches = 0
     gene_template = get_gene_template()
     print('processing all converged runs')
-    for runkeys in all_runs.keys():
+    for runkeys in list(all_runs.keys()):
         if gene_template['legacy']:
             skip = False
             duplication = False
@@ -217,10 +217,10 @@ def process_runs_geo(all_runs, local_spin_dictionary, local_metal_list=False):
                 [str(this_metal), 'eq', str(lig1_name), str(lig2_name), str(lig3_name), str(lig4_name), 'ax1',
                  str(lig5_name), 'ax2', str(lig6_name), 'ahf', str(int(this_run.alpha)).zfill(2)])
             # this_name = "_".join([this_metal,'eq',str(eqlig_name),'ax1',str(axlig1_name),'ax2',str(axlig2_name),'ahf',str(int(this_run.alpha)).zfill(2)])
-            print('** name is ' + str(this_name))
+            print(('** name is ' + str(this_name)))
             ### add alpha value to list owned by this_comp:
 
-            if this_name not in final_results.keys():
+            if this_name not in list(final_results.keys()):
                 print('new name')
                 ## need to create a new holder to store this gene
                 this_comp = Comp(this_name)
@@ -234,7 +234,7 @@ def process_runs_geo(all_runs, local_spin_dictionary, local_metal_list=False):
             this_ox = int(this_run.ox)
             metal_spins = local_spin_dictionary[this_metal][this_ox]
             if this_run.spin not in metal_spins:
-                print('ERROR! not in metal spins : ' + str(this_run) + ' not in ' + str(metal_spins))
+                print(('ERROR! not in metal spins : ' + str(this_run) + ' not in ' + str(metal_spins)))
             else:
                 if this_run.spin == metal_spins[0]:  # First element of list
                     spin_cat = 'LS'
@@ -242,12 +242,12 @@ def process_runs_geo(all_runs, local_spin_dictionary, local_metal_list=False):
                     spin_cat = 'HS'
                 else:
                     spin_cat = 'IS'  # Intermediate Spin
-            print('spin ind is found to be ' + str(this_run.spin) + ' interpretted as ' + str(spin_cat))
+            print(('spin ind is found to be ' + str(this_run.spin) + ' interpretted as ' + str(spin_cat)))
             ## check if this a duplicate:
             this_attribute = "_".join(['ox', str(this_ox), spin_cat, 'converged'])
             if getattr(this_comp, this_attribute):
                 duplication = True
-                print('run duplication at  ' + str(this_name))
+                print(('run duplication at  ' + str(this_name)))
                 if this_ox == 2:
                     this_ox2RN = this_run.number
                     old_ox2RN = this_comp.ox2RN
@@ -276,7 +276,7 @@ def process_runs_geo(all_runs, local_spin_dictionary, local_metal_list=False):
                     [this_metal, str(lig1_name), str(lig2_name), str(lig3_name), str(lig4_name), str(lig5_name),
                      str(lig6_name)])
                 this_comp.job_gene = this_run.gene
-                print('----gene:---', this_comp.gene, this_comp.job_gene)
+                print(('----gene:---', this_comp.gene, this_comp.job_gene))
                 if this_run.converged and this_run.coord == 6:
                     this_comp.convergence += 1
                 if this_run.flag_oct == 1 and not this_comp.set_desc:
@@ -304,9 +304,9 @@ def process_runs_geo(all_runs, local_spin_dictionary, local_metal_list=False):
 
                 for props in output_properties(comp=False, oxocatalysis=False):
                     this_attribute = "_".join(['ox', str(this_ox), spin_cat, props])
-                    print('looking for ' + str(props) + ' as ' + this_attribute + ' from run class')
+                    print(('looking for ' + str(props) + ' as ' + this_attribute + ' from run class'))
                     if hasattr(this_run, props):
-                        print('found, ' + str(getattr(this_run, props)))
+                        print(('found, ' + str(getattr(this_run, props))))
                         setattr(this_comp, this_attribute, getattr(this_run, props))
                 this_attribute = "_".join(['ox', str(this_ox), spin_cat, "DFT_RUN"])
                 setattr(this_comp, this_attribute, this_run)
@@ -318,7 +318,7 @@ def process_runs_geo(all_runs, local_spin_dictionary, local_metal_list=False):
         else:
             this_run = all_runs[runkeys]
             this_gene = this_run.gene
-            if this_gene in final_results.keys():
+            if this_gene in list(final_results.keys()):
                 this_comp = final_results[this_gene]
             else:
                 this_comp = Comp(this_gene)
@@ -328,9 +328,9 @@ def process_runs_geo(all_runs, local_spin_dictionary, local_metal_list=False):
                 final_results.update({this_gene: this_comp})
             for props in output_properties(comp=False, oxocatalysis=False):
                 this_attribute = "_".join(['ox', str(this_run.ox), this_run.spin_cat, props])
-                print('looking for ' + str(props) + ' as ' + this_attribute + ' from run class')
+                print(('looking for ' + str(props) + ' as ' + this_attribute + ' from run class'))
                 if hasattr(this_run, props):
-                    print('found, ' + str(getattr(this_run, props)))
+                    print(('found, ' + str(getattr(this_run, props))))
                     setattr(this_comp, this_attribute, getattr(this_run, props))
             if this_run.flag_oct == 1 and not this_comp.set_desc:
                 #                try:
@@ -362,7 +362,7 @@ def process_runs_oxocatalysis(all_runs, local_spin_dictionary, local_metal_list=
     number_of_matches = 0
     print(local_spin_dictionary)
     print('processing all converged runs')
-    for runkeys in all_runs.keys():
+    for runkeys in list(all_runs.keys()):
         skip = False
         duplication = False
         this_run = all_runs[runkeys]
@@ -412,12 +412,12 @@ def process_runs_oxocatalysis(all_runs, local_spin_dictionary, local_metal_list=
             [str(this_metal), 'eq', str(lig1_name), str(lig2_name), str(lig3_name), str(lig4_name), 'ax1',
              str(lig5_name), 'ahf', str(int(alpha)).zfill(2)])
         ### add alpha value to list owned by this_comp:
-        print('** name is ' + str(this_name))
+        print(('** name is ' + str(this_name)))
 
         metal_spins = local_spin_dictionary[this_metal][this_ox]
 
         if int(this_run.spin) not in metal_spins:
-            print('ERROR! not in metal spins : ' + str(this_run) + ' not in ' + str(metal_spins))
+            print(('ERROR! not in metal spins : ' + str(this_run) + ' not in ' + str(metal_spins)))
             continue
         else:
             spin_ind = metal_spins.index(this_run.spin)
@@ -427,8 +427,8 @@ def process_runs_oxocatalysis(all_runs, local_spin_dictionary, local_metal_list=
             spin_cat = 'HS'
         else:
             spin_cat = 'IS'
-        print('spin ind is found to be ' + str(this_run.spin) + ' interpretted as ' + str(spin_cat))
-        if this_name not in final_results.keys():
+        print(('spin ind is found to be ' + str(this_run.spin) + ' interpretted as ' + str(spin_cat)))
+        if this_name not in list(final_results.keys()):
             ## need to create a new holder to store this gene
             this_comp = Comp(this_name)
             this_comp.set_properties(this_run)
@@ -442,7 +442,7 @@ def process_runs_oxocatalysis(all_runs, local_spin_dictionary, local_metal_list=
             this_comp.gene = "_".join(
                 [this_metal, str(lig1_name), str(lig2_name), str(lig3_name), str(lig4_name), str(lig5_name)])
             this_comp.job_gene = this_run.gene
-            print('----gene:----', this_comp.gene, this_comp.job_gene)
+            print(('----gene:----', this_comp.gene, this_comp.job_gene))
             if this_run.converged and this_run.flag_oct == 1:
                 this_comp.convergence += 1
             if this_run.flag_oct == 1 and not this_comp.set_desc:
@@ -459,9 +459,9 @@ def process_runs_oxocatalysis(all_runs, local_spin_dictionary, local_metal_list=
                     this_comp.get_descriptor_vector(loud=False, name=this_name)
             for props in output_properties(comp=False, oxocatalysis=True):
                 this_attribute = "_".join(['ox', str(this_ox), spin_cat, str(lig6_name), props])
-                print('looking for ' + str(props) + ' as ' + this_attribute + ' from run class')
+                print(('looking for ' + str(props) + ' as ' + this_attribute + ' from run class'))
                 if hasattr(this_run, props):
-                    print('found, ' + str(getattr(this_run, props)))
+                    print(('found, ' + str(getattr(this_run, props))))
                     setattr(this_comp, this_attribute, getattr(this_run, props))
             this_attribute = "_".join(['ox', str(this_ox), spin_cat, str(lig6_name), "DFT_RUN"])
             # print('attribute: ',this_attribute)
@@ -533,8 +533,8 @@ def compile_and_filter_data(final_results, local_spin_dictionary, local_metal_li
         comp_class = final_results[key]
         alpha = int(getattr(comp_class, 'alpha'))
         current_metal = str(getattr(comp_class, 'metal')).lower()
-        for oxidation_state in oxo_empty_spin_match[current_metal.lower()].keys():
-            for spin_state in oxo_empty_spin_match[current_metal.lower()][int(oxidation_state)].keys():
+        for oxidation_state in list(oxo_empty_spin_match[current_metal.lower()].keys()):
+            for spin_state in list(oxo_empty_spin_match[current_metal.lower()][int(oxidation_state)].keys()):
                 oxo = np.nan
                 reason_flag_oxo = 100
                 oxo_prefix = 'ox_' + str(oxidation_state) + '_' + str(spin_state) + '_oxo_'
@@ -554,7 +554,7 @@ def compile_and_filter_data(final_results, local_spin_dictionary, local_metal_li
                         additional_descriptor_names = ['ox', 'spin', 'alpha', 'charge_lig']
                         oxo_descriptors += additional_descriptors
                         oxo_descriptor_names += additional_descriptor_names
-                        oxo_descriptor_dictionary = dict(zip(oxo_descriptor_names, oxo_descriptors))
+                        oxo_descriptor_dictionary = dict(list(zip(oxo_descriptor_names, oxo_descriptors)))
                         if int(getattr(comp_class, oxo_prefix + 'flag_oct')) == 1:
                             if int(getattr(comp_class, oxo_prefix + 'ss_flag')) == 1:
                                 if int(getattr(comp_class, oxo_prefix + 'metal_spin_flag')) == 1:
@@ -593,15 +593,15 @@ def compile_and_filter_data(final_results, local_spin_dictionary, local_metal_li
                         {'dftrun': oxo_representative_run_class, 'descriptors': oxo_descriptor_dictionary,
                          'target': oxo, 'status_flag': reason_flag_oxo})
         print('moving on to HAT NOW!')
-        for oxidation_state in oxo_hyd_spin_match[current_metal.lower()].keys():
-            for spin_state in oxo_hyd_spin_match[current_metal.lower()][int(oxidation_state)].keys():
+        for oxidation_state in list(oxo_hyd_spin_match[current_metal.lower()].keys()):
+            for spin_state in list(oxo_hyd_spin_match[current_metal.lower()][int(oxidation_state)].keys()):
                 HAT = np.nan
                 reason_flag_hat = 100
                 oxo_prefix = 'ox_' + str(oxidation_state) + '_' + str(spin_state) + '_oxo_'
                 matching_hyd_spin = oxo_hyd_spin_match[current_metal.lower()][int(oxidation_state)][spin_state]
                 hyd_prefix = 'ox_' + str(oxidation_state - 1) + '_' + str(matching_hyd_spin) + '_hydroxyl_'
                 if getattr(comp_class, oxo_prefix + 'chem_name') != "undef":
-                    print(getattr(comp_class, oxo_prefix + 'chem_name'))
+                    print((getattr(comp_class, oxo_prefix + 'chem_name')))
                     HAT_representative_run_class = getattr(comp_class, oxo_prefix + 'DFT_RUN')
                     HAT_descriptor_dictionary = {}
                     if getattr(comp_class, oxo_prefix + 'converged'):
@@ -614,7 +614,7 @@ def compile_and_filter_data(final_results, local_spin_dictionary, local_metal_li
                         additional_descriptor_names = ['ox', 'spin', 'alpha', 'charge_lig']
                         HAT_descriptors += additional_descriptors
                         HAT_descriptor_names += additional_descriptor_names
-                        HAT_descriptor_dictionary = dict(zip(HAT_descriptor_names, HAT_descriptors))
+                        HAT_descriptor_dictionary = dict(list(zip(HAT_descriptor_names, HAT_descriptors)))
                         if int(getattr(comp_class, oxo_prefix + 'flag_oct')) == 1:
                             if int(getattr(comp_class, oxo_prefix + 'ss_flag')) == 1:
                                 if int(getattr(comp_class, oxo_prefix + 'metal_spin_flag')) == 1:
@@ -646,7 +646,7 @@ def compile_and_filter_data(final_results, local_spin_dictionary, local_metal_li
                             reason_flag_hat = 2
                     else:
                         reason_flag_hat = 1
-                    print('THIS IS THE HAT REASON FLAG', reason_flag_hat)
+                    print(('THIS IS THE HAT REASON FLAG', reason_flag_hat))
                     try:
                         HAT = (float(getattr(comp_class, hyd_prefix + 'energy')) -
                                float(getattr(comp_class, oxo_prefix + 'energy')) +
@@ -694,10 +694,10 @@ def assign_train_flag(list_of_dict_to_assign, group_HFX=True, frac=0.8):
                                            x == unique_complex]
                     complexes_grouped_by_HFX.append(np.array(grouped_hfx_indices))
                     checked_name_list.add(unique_complex)
-                    print('added ', unique_complex, 'to checked_names')
-                    print(complexes_grouped_by_HFX, 'complexes grouped by HFX')
-                    print(grouped_hfx_indices, 'grouped_HFX_inds')
-                    print('corr name', corresponding_name_list)
+                    print(('added ', unique_complex, 'to checked_names'))
+                    print((complexes_grouped_by_HFX, 'complexes grouped by HFX'))
+                    print((grouped_hfx_indices, 'grouped_HFX_inds'))
+                    print(('corr name', corresponding_name_list))
             ### shuffle acts on the list itself.
             shuffle(complexes_grouped_by_HFX)
             shuffled_grouped_complexes = np.array(complexes_grouped_by_HFX)
@@ -707,7 +707,7 @@ def assign_train_flag(list_of_dict_to_assign, group_HFX=True, frac=0.8):
                 return list_of_dict_to_assign
             print(complexes_grouped_by_HFX)
             print(shuffled_grouped_complexes)
-            print(shuffled_grouped_complexes.shape)
+            print((shuffled_grouped_complexes.shape))
             #### This is first split into train and test
             test_split = np.split(shuffled_grouped_complexes, [int(frac * shuffled_grouped_complexes.shape[0])])
             #### Train is further split into train and val (90% train, 10% val).
@@ -724,9 +724,9 @@ def assign_train_flag(list_of_dict_to_assign, group_HFX=True, frac=0.8):
         train = np.concatenate(train_val_split[0].flatten()).ravel()
         test = np.concatenate(test_split[1].flatten()).ravel()
         val = np.concatenate(train_val_split[1].flatten()).ravel()
-        print('train', train)
-        print('test', test)
-        print('val', val)
+        print(('train', train))
+        print(('test', test))
+        print(('val', val))
         for train_example in train:
             list_of_dict_to_assign[train_example]['is_training'] = 'train'
         for test_example in test:
@@ -751,11 +751,11 @@ def check_solvent_file(this_run):
             for i, lines in enumerate(sol_data):
                 if str(lines).find('FINAL ENERGY') != -1:
                     found_solvent_energy = True
-                    print('found solvent energy ' + this_run.name)
+                    print(('found solvent energy ' + this_run.name))
                 if str(lines).find('C-PCM contribution ') != -1:
                     solvent_contribution = str(lines.split()[4]).split(':')[1]
                     found_solvent_cont = True
-                    print('found solvent contri ' + this_run.name)
+                    print(('found solvent contri ' + this_run.name))
                 if str(lines).find('Total processing time') != -1:
                     this_run.solvent_time = str(lines.split()[3])
 
@@ -779,11 +779,11 @@ def check_water_file(this_run):
             for i, lines in enumerate(sol_data):
                 if str(lines).find('FINAL ENERGY') != -1:
                     found_water_energy = True
-                    print('found water-solvent energy ' + this_run.name)
+                    print(('found water-solvent energy ' + this_run.name))
                 if str(lines).find('C-PCM contribution ') != -1:
                     water_contribution = str(lines.split()[4]).split(':')[1]
                     found_water_cont = True
-                    print('found water-solvent contri ' + this_run.name)
+                    print(('found water-solvent contri ' + this_run.name))
                 if str(lines).find('Total processing time') != -1:
                     this_run.water_time = str(lines.split()[3])
 
@@ -822,15 +822,15 @@ def check_thermo_file(this_run):
                 if str(lines).find('Thermal vibrational free energy') != -1:
                     vib_correction = str(lines.split()[-2])
                     found_vib_correction = True
-                    print('found vib correction ' + this_run.name)
+                    print(('found vib correction ' + this_run.name))
                 if str(lines).find('imaginary frequencies') != -1:
                     this_run.imag = str(lines.split()[0])
-                    print('found imag ' + this_run.name)
+                    print(('found imag ' + this_run.name))
                     print(lines)
                 if str(lines).find('Maximum component of gradient is too large') != -1:
                     this_run.thermo_status = "GRAD_TOO_LARGE"
                     found_grad_error = True
-                    print('found GRAD error ' + this_run.name)
+                    print(('found GRAD error ' + this_run.name))
                     print(lines)
                 if str(lines).find('Total processing time') != -1:
                     this_run.thermo_time = str(lines.split()[3])
@@ -954,7 +954,7 @@ def read_terachem_PRFO_output(this_run):
     if (found_data_Oxo) and (found_time_Oxo) and (found_conv_Oxo):
         this_run.converged_Oxo_TS = True
         print('Oxo TS converged.')
-        print('THIS IS THE PRFO OXO PATH', this_run.PRFO_Oxo_outpath)
+        print(('THIS IS THE PRFO OXO PATH', this_run.PRFO_Oxo_outpath))
     return (this_run)
 
 
@@ -1035,7 +1035,7 @@ def check_mopac(this_run):
     ## function to test mopac convergence
     #  @param this_run a run class
     #  @return this_run populated run class
-    print(this_run.moppath)
+    print((this_run.moppath))
     if os.path.exists(this_run.moppath):
         print('mopac file exists')
         with open(this_run.moppath) as f:
@@ -1087,37 +1087,37 @@ def test_terachem_go_convergence(this_run):
     print('we have access go to test_terachem_go function')
     if not this_run.logpath:
         this_run.logpath = isKeyword('rundir')
-    print('logging to ' + this_run.logpath)
+    print(('logging to ' + this_run.logpath))
     if os.path.exists(this_run.geopath):
         this_run.geo_exists = True
-        print('geo exists ' + this_run.geopath)
+        print(('geo exists ' + this_run.geopath))
     else:
         this_run.comment += 'no geo found\n'
-        print(' no  geo exists ' + this_run.geopath)
+        print((' no  geo exists ' + this_run.geopath))
         if os.path.exists(this_run.scrpath):
             this_run.extract_geo()
-            print('  geo extracted to  ' + this_run.geopath)
+            print(('  geo extracted to  ' + this_run.geopath))
         else:
-            print(' cannot find scr:   ' + this_run.scrpath)
+            print((' cannot find scr:   ' + this_run.scrpath))
 
     if os.path.exists(this_run.outpath):
         read_terachem_go_output(this_run)
     else:
         this_run.comment += ' no outfile found\n'
-    print('has run converged : ' + str(this_run.converged))
+    print(('has run converged : ' + str(this_run.converged)))
     if this_run.converged:
         logger(this_run.logpath, str(this_run.name) + ' run converged ' + ' and now testing geo ' + this_run.geopath)
         # check the geo
         if os.path.exists(this_run.geopath):
 
-            print(this_run.geopath + ' found')
+            print((this_run.geopath + ' found'))
             # get mol3D file
             this_run.obtain_mol3d()
             # check if inidicators are good
             # check coordinattion
             this_run.check_coordination()
             logger(this_run.logpath, str(this_run.name) + ' cooridination is ' + str(this_run.coord))
-            print(str(this_run.name) + ' cooridination is ' + str(this_run.coord))
+            print((str(this_run.name) + ' cooridination is ' + str(this_run.coord)))
 
             ## check intial conditions:
             if os.path.exists(this_run.init_geopath):
@@ -1178,7 +1178,7 @@ def test_terachem_go_convergence(this_run):
             # ML distances, geo
             this_run.obtain_ML_dists()
 
-        print('this flag oct is ' + str(this_run.flag_oct))
+        print(('this flag oct is ' + str(this_run.flag_oct)))
         if this_run.converged and this_run.flag_oct == 1:
             this_run.status = 0
         else:
@@ -1197,26 +1197,26 @@ def test_terachem_TS_convergence(this_run):
     print('we have access to the test_terachem_TS function')
     if os.path.exists(this_run.PRFO_HAT_geopath):
         this_run.geo_exists_HAT_TS = True
-        print('HAT TS exists ' + this_run.PRFO_HAT_geopath)
+        print(('HAT TS exists ' + this_run.PRFO_HAT_geopath))
     else:
         this_run.comment += 'no HAT TS geo found\n'
-        print('no HAT TS geo exists ' + this_run.PRFO_HAT_geopath)
+        print(('no HAT TS geo exists ' + this_run.PRFO_HAT_geopath))
         if os.path.exists(this_run.PRFO_HAT_scrpath):
             this_run.extract_TS_geo('HAT')
-            print('HAT TS Geo extracted to ' + this_run.PRFO_HAT_geopath)
+            print(('HAT TS Geo extracted to ' + this_run.PRFO_HAT_geopath))
         else:
-            print('Cannot find HAT optim file at ' + this_run.PRFO_HAT_scrpath)
+            print(('Cannot find HAT optim file at ' + this_run.PRFO_HAT_scrpath))
     if os.path.exists(this_run.PRFO_Oxo_geopath):
         this_run.geo_exists_Oxo_TS = True
-        print('Oxo TS exists ' + this_run.PRFO_Oxo_geopath)
+        print(('Oxo TS exists ' + this_run.PRFO_Oxo_geopath))
     else:
         this_run.comment += 'no Oxo TS geo found\n'
-        print('no Oxo TS geo exists ' + this_run.PRFO_Oxo_geopath)
+        print(('no Oxo TS geo exists ' + this_run.PRFO_Oxo_geopath))
         if os.path.exists(this_run.PRFO_Oxo_scrpath):
             this_run.extract_TS_geo('Oxo')
-            print('Oxo TS Geo extracted to ' + this_run.PRFO_Oxo_geopath)
+            print(('Oxo TS Geo extracted to ' + this_run.PRFO_Oxo_geopath))
         else:
-            print('Cannot find Oxo optim file at ' + this_run.PRFO_Oxo_scrpath)
+            print(('Cannot find Oxo optim file at ' + this_run.PRFO_Oxo_scrpath))
     if os.path.exists(this_run.PRFO_HAT_outpath):
         print('HAT TS outpath exists..... reading it now.')
         this_run = read_terachem_PRFO_output(this_run)
@@ -1341,7 +1341,7 @@ def read_molden_file(this_run):
     # print(moldenFile)
     safe = False
     print(moldenFile)
-    print('\n checking ' + moldenFile)
+    print(('\n checking ' + moldenFile))
     if os.path.exists(moldenFile):
         print('Moldenpath exists')
         ### file is found, check if converged
@@ -1375,10 +1375,10 @@ def read_molden_file(this_run):
     if not HOMObeta:
         HOMObeta = numpy.nan
     # if safe:
-    print('setting alpha HOMO to ' + str(HOMOalpha))
-    print('setting alpha LUMO to ' + str(LUMOalpha))
-    print('setting beta HOMO to ' + str(HOMObeta))
-    print('setting beta LUMO to ' + str(LUMObeta))
+    print(('setting alpha HOMO to ' + str(HOMOalpha)))
+    print(('setting alpha LUMO to ' + str(LUMOalpha)))
+    print(('setting beta HOMO to ' + str(HOMObeta)))
+    print(('setting beta LUMO to ' + str(LUMObeta)))
     this_run.alphaHOMO = HOMOalpha
     this_run.alphaLUMO = LUMOalpha
     this_run.betaHOMO = HOMObeta

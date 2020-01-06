@@ -49,7 +49,7 @@ def extract_file_check(filepath, targetpath):
         ## analyzingif the file is empty:
         number_of_elements = len(ret_dict['elements'])
         if number_of_elements < 1:
-            print("File " + filepath + ' is empty')
+            print(("File " + filepath + ' is empty'))
             return_status = 2  ## empty file
         else:
             with open(targetpath, 'w') as f:
@@ -60,5 +60,5 @@ def extract_file_check(filepath, targetpath):
                     f.write(' '.join(s for s in writebuffer) + '\n')
             return_status = 0  ## success
     else:
-        print('Error. File ' + filepath + ' does not exist. Aborting import.')
+        print(('Error. File ' + filepath + ' does not exist. Aborting import.'))
     return (return_status)

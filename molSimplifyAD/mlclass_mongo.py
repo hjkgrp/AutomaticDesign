@@ -59,8 +59,8 @@ class modelMongo(MLModel):
                     if attr in ["predictor", "history", "hyperparams", "constraints", "len_tot", "features", "target"]:
                         raise KeyError("Error: Key %s does not exist in the input dictionary." % attr)
                     else:
-                        print("Warning: Key %s does not exist in the input dictionary." % attr)
-        if "force_push" in kwargs.keys() and kwargs["force_push"]:
+                        print(("Warning: Key %s does not exist in the input dictionary." % attr))
+        if "force_push" in list(kwargs.keys()) and kwargs["force_push"]:
             self.force_push = True
         else:
             self.force_push = False
@@ -74,7 +74,7 @@ class modelMongo(MLModel):
             if attr in self.__dict__:
                 self.document.update({attr: getattr(self, attr)})
             else:
-                print("warning: %s does not exist." % attr)
+                print(("warning: %s does not exist." % attr))
 
     def write_model(self, model_basepath=model_basepath):
         if not self.recover_from_doc:
@@ -102,4 +102,4 @@ class modelActLearn(MLModel):
             if attr in self.__dict__:
                 self.document.update({attr: getattr(self, attr)})
             else:
-                print("warning: %s does not exist." % attr)
+                print(("warning: %s does not exist." % attr))

@@ -46,7 +46,7 @@ if not os.path.isdir(rundir):
     os.makedirs(rundir)
 shutil.copy(lig_list, rundir + lig_list)
 ll = process_ligands_file(rundir + lig_list)
-print('ligands are: ', ll)
+print(('ligands are: ', ll))
 GA_run = GA_run_defintion()
 GA_run.configure(gen=0, runtype='split', optimize=True, DFT=True, 
 				rundir=rundir, liglist=ll, queue_type='SGE',
@@ -58,7 +58,7 @@ GA_run.serialize()
 configuration = GA_run.config
 sp_file, geo_file, thermo_file, solvent_file, water_file, _, _ = get_launch_script_file(configuration["queue_type"])
 shutil.copy(sp_file, GA_run.config["rundir"] + 'launch_script_sp.sh')
-if 'optimize' in configuration.keys():
+if 'optimize' in list(configuration.keys()):
     shutil.copy(geo_file, configuration["rundir"] + 'launch_script_geo.sh')
 _lig_list = read_ligand_list(filein=lig_list)
 complex_list = read_csv_to_complex_list(filein=csv_file,
@@ -67,7 +67,7 @@ with switch_to_rundir(rundir):
     path_dictionary = setup_paths()
     full_tree = GA_generation('full')
     GA_run.config.update({'gen_num': 0})
-    print(os.getcwd())
+    print((os.getcwd()))
     full_tree.configure_gen(**GA_run.config)
     full_tree.write_state()
     full_tree.read_state()
@@ -75,9 +75,9 @@ with switch_to_rundir(rundir):
         ax_lig1 = ll[tmcomplex['axidx1']][0]
         ax_lig2 = ll[tmcomplex['axidx2']][0]
         eq_lig = ll[tmcomplex['eqidx']][0]
-        print('eqlig:', eq_lig)
-        print('axlig1:', ax_lig1)
-        print('axlig2:', ax_lig2)
+        print(('eqlig:', eq_lig))
+        print(('axlig1:', ax_lig1))
+        print(('axlig2:', ax_lig2))
         full_tree.populate_metal_ox_lig_combo(tmcomplex['metal'], tmcomplex['oxstate'],
                                               [[eq_lig], [ax_lig1, ax_lig2]])
     full_tree.write_state()

@@ -10,7 +10,7 @@ if write_path[0] != '/':
     print('need absolute path to write to')
     sard
 write_path = write_path.rstrip('/')
-print('FINALWRITEPATH',write_path)
+print(('FINALWRITEPATH',write_path))
 dataset = pd.read_csv(csv_file)
 for i, row in dataset.iterrows():
     #print(row['chem_name'])
@@ -50,8 +50,8 @@ for i, row in dataset.iterrows():
                     break
                 else:
                     print('other spin path NOT found')
-        print(row['chem_name'])
-        print(row['spin'])
+        print((row['chem_name']))
+        print((row['spin']))
         print(possible_wfn_paths)
     else:
         final_wfn_path = possible_wfn_paths[0]
@@ -86,6 +86,6 @@ for i, row in dataset.iterrows():
                 g.writelines('coordinates '+destination+adjusted_name+'.xyz\n')
                 g.writelines('end\n')
         else:
-            print('not writing infile, but would normally write to '+ destination+adjusted_name+'.in')
+            print(('not writing infile, but would normally write to '+ destination+adjusted_name+'.in'))
 
 print('done.')

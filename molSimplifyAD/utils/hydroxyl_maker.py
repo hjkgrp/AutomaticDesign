@@ -21,7 +21,7 @@ live_job_dictionary = find_live_jobs()
 converged_jobs = find_converged_job_dictionary()
 metal_spin_dictionary = spin_dictionary()
 metals_list = get_metals()
-for job in converged_jobs.keys():
+for job in list(converged_jobs.keys()):
     path_dictionary = setup_paths()
     gene, gen, _, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, _, ahf, basename,_= translate_job_name(job)
     if int(ahf)!= 20:
@@ -29,7 +29,7 @@ for job in converged_jobs.keys():
     metal = metals_list[metal]
     flag = True
     if spin not in metal_spin_dictionary[metal][ox]:
-        print('skipped '+str(basename)+' because spin '+str(spin)+' not in '+str(metal)+'('+str(ox)+') dictionary.\n')
+        print(('skipped '+str(basename)+' because spin '+str(spin)+' not in '+str(metal)+'('+str(ox)+') dictionary.\n'))
         flag = False
         continue
     if int(ahf) == 20 and axlig2 == 'oxo' and flag == True: #Only generate the hydroxo if the oxo converged
@@ -41,7 +41,7 @@ for job in converged_jobs.keys():
             gene_list[-1] = str(spin_value)
             current_gene = "_".join(gene_list)
             if not os.path.exists(path_dictionary["geo_out_path"]+current_gene+'.out'):
-                print(current_gene+'.out does not exist. Continuing')
+                print((current_gene+'.out does not exist. Continuing'))
                 continue
             with open(path_dictionary["geo_out_path"]+current_gene+'.out') as f:
                 data = f.readlines()
@@ -66,8 +66,8 @@ for job in converged_jobs.keys():
                 modgeo1 = '_'.join(modgeo1)+'.xyz'
                 modgeo2 = '_'.join(modgeo2)+'.xyz'
                 if found_conv and os.path.exists(path_dictionary["optimial_geo_path"]+geo):
-                    print('Geo is '+str(geo))
-                    print('Mod geos are '+str(modgeo1)+' '+str(modgeo2))
+                    print(('Geo is '+str(geo)))
+                    print(('Mod geos are '+str(modgeo1)+' '+str(modgeo2)))
                     mymol = mol3D()
                     mymol.readfromxyz(path_dictionary["optimial_geo_path"]+geo)
                     metalval = mymol.findMetal()
@@ -92,34 +92,34 @@ for job in converged_jobs.keys():
                         if not os.path.exists(path_dictionary["initial_geo_path"]+modgeo1) and (upperspin in metal_spin_dictionary[metal][hydroxyl_ox]):
                             mymol.writexyz(path_dictionary["initial_geo_path"]+modgeo1)
                         elif (upperspin not in metal_spin_dictionary[metal][hydroxyl_ox]):
-                            print(str(upperspin)+' spin not in dictionary for '+str(metal)+'('+str(ox)+')')
+                            print((str(upperspin)+' spin not in dictionary for '+str(metal)+'('+str(ox)+')'))
                         else:
-                            print(str(modgeo1)+' already exists!')
+                            print((str(modgeo1)+' already exists!'))
                         if not os.path.exists(path_dictionary["initial_geo_path"]+modgeo2) and (lowerspin in metal_spin_dictionary[metal][hydroxyl_ox]):
                             mymol.writexyz(path_dictionary["initial_geo_path"]+modgeo2)
                         elif (lowerspin not in metal_spin_dictionary[metal][hydroxyl_ox]):
-                            print(str(upperspin)+' spin not in dictionary for '+str(metal)+'('+str(ox)+')')
+                            print((str(upperspin)+' spin not in dictionary for '+str(metal)+'('+str(ox)+')'))
                         else:
-                            print(str(modgeo2)+' already exists!')
+                            print((str(modgeo2)+' already exists!'))
                     else:
                         if not os.path.exists(path_dictionary["initial_geo_path"]+modgeo1) and (upperspin in metal_spin_dictionary[metal][hydroxyl_ox]):
-                            print('Would have written geom '+str(modgeo1))
+                            print(('Would have written geom '+str(modgeo1)))
                         elif (lowerspin not in metal_spin_dictionary[metal][hydroxyl_ox]):
-                            print(str(lowerspin)+' spin not in dictionary for '+str(metal)+'('+str(ox)+')')
+                            print((str(lowerspin)+' spin not in dictionary for '+str(metal)+'('+str(ox)+')'))
                         else:
-                            print(str(modgeo1)+' already exists!')
+                            print((str(modgeo1)+' already exists!'))
                         if not os.path.exists(path_dictionary["initial_geo_path"]+modgeo2) and (lowerspin in metal_spin_dictionary[metal][hydroxyl_ox]):
-                            print('Would have written geom '+str(modgeo2))
+                            print(('Would have written geom '+str(modgeo2)))
                         elif (lowerspin not in metal_spin_dictionary[metal][hydroxyl_ox]):
-                            print(str(lowerspin)+' spin not in dictionary for '+str(metal)+'('+str(ox)+')')
+                            print((str(lowerspin)+' spin not in dictionary for '+str(metal)+'('+str(ox)+')'))
                         else:
-                            print(str(modgeo2)+' already exists!')
+                            print((str(modgeo2)+' already exists!'))
                 infile1 = modgeo1.strip('.xyz')+'.in'
                 infile2 = modgeo2.strip('.xyz')+'.in'
-                print('UPPER INFILE EXISTS:',os.path.exists(path_dictionary["job_path"]+infile1))
-                print('LOWER INFILE EXISTS:',os.path.exists(path_dictionary["job_path"]+infile2))
-                print('UPPER IN METAL SPIN DICT:',upperspin in metal_spin_dictionary[metal][hydroxyl_ox])
-                print('LOWER IN METAL SPIN DICT:',lowerspin in metal_spin_dictionary[metal][hydroxyl_ox])
+                print(('UPPER INFILE EXISTS:',os.path.exists(path_dictionary["job_path"]+infile1)))
+                print(('LOWER INFILE EXISTS:',os.path.exists(path_dictionary["job_path"]+infile2)))
+                print(('UPPER IN METAL SPIN DICT:',upperspin in metal_spin_dictionary[metal][hydroxyl_ox]))
+                print(('LOWER IN METAL SPIN DICT:',lowerspin in metal_spin_dictionary[metal][hydroxyl_ox]))
                 #if not (os.path.exists(path_dictionary["job_path"]+infile1) and os.path.exists(path_dictionary["initial_geo_path"]+modgeo1)) and (upperspin in metal_spin_dictionary[metal][hydroxyl_ox]):
                 if not (os.path.exists(path_dictionary["job_path"]+infile1)) and (upperspin in metal_spin_dictionary[metal][hydroxyl_ox]):
                     if not os.path.exists(joblist):
@@ -127,13 +127,13 @@ for job in converged_jobs.keys():
                             with open(joblist,'w') as listf:
                                 listf.write(str(path_dictionary["job_path"]+infile1)+'\n')
                         else:
-                            print('Would have added '+str(path_dictionary["job_path"]+infile1))
+                            print(('Would have added '+str(path_dictionary["job_path"]+infile1)))
                     else:
                         if not dry_run:
                             with open(joblist,'a') as listf:
                                 listf.write(str(path_dictionary["job_path"]+infile1)+'\n')
                         else:
-                            print('Would have added '+str(path_dictionary["job_path"]+infile1))
+                            print(('Would have added '+str(path_dictionary["job_path"]+infile1)))
                     if not dry_run:
                         with open(path_dictionary["job_path"]+basename+'.in','r') as sourcef:
                             sourcelines = sourcef.readlines()
@@ -161,13 +161,13 @@ for job in converged_jobs.keys():
                                     if not ("scr" in line) and (not "end" in line) and (not "spinmult" in line):
                                         print(line)
                                     elif "spinmult" in line:
-                                        print("spinmult "+infile1.strip('.in').split('_')[-1]+'\n')
+                                        print(("spinmult "+infile1.strip('.in').split('_')[-1]+'\n'))
                                     elif "method" in line:                                                                             
                                         if int(upperspin) == 1:                                              
                                             print("method b3lyp\n")                                                               
                                         else:                                                                                          
                                             print(line)                                                                           
-                                print('scrdir scr/geo/gen_0/'+infile1.strip('.in')+'\n')                                           
+                                print(('scrdir scr/geo/gen_0/'+infile1.strip('.in')+'\n'))                                           
                         sourcef.close()
                         print('-------------------------------------------------------------')
                 #if not (os.path.exists(path_dictionary["job_path"]+infile2) and os.path.exists(path_dictionary["initial_geo_path"]+modgeo2)) and (lowerspin in metal_spin_dictionary[metal][hydroxyl_ox]):
@@ -177,13 +177,13 @@ for job in converged_jobs.keys():
                             with open(joblist,'w') as listf:
                                 listf.write(str(path_dictionary["job_path"]+infile2)+'\n')
                         else:
-                            print('Would have added '+str(path_dictionary["job_path"]+infile2))
+                            print(('Would have added '+str(path_dictionary["job_path"]+infile2)))
                     else:
                         if not dry_run:
                             with open(joblist,'a') as listf:
                                 listf.write(str(path_dictionary["job_path"]+infile2)+'\n')
                         else:
-                            print('Would have added '+str(path_dictionary["job_path"]+infile2))
+                            print(('Would have added '+str(path_dictionary["job_path"]+infile2)))
                     if not dry_run:
                         with open(path_dictionary["job_path"]+basename+'.in','r') as sourcef:
                             sourcelines = sourcef.readlines()
@@ -211,12 +211,12 @@ for job in converged_jobs.keys():
                                     if not ("scr" in line) and (not "end" in line) and (not "spinmult" in line):
                                         print(line)
                                     elif "spinmult" in line:
-                                        print("spinmult "+infile2.strip('.in').split('_')[-1]+'\n')
+                                        print(("spinmult "+infile2.strip('.in').split('_')[-1]+'\n'))
                                     elif "method" in line:                                                                             
                                         if int(lowerspin) == 1:                                              
                                             print("method b3lyp\n")                                                               
                                         else:                                                                                          
                                             print(line)                                                                           
-                                print('scrdir scr/geo/gen_0/'+infile2.strip('.in')+'\n')                                           
+                                print(('scrdir scr/geo/gen_0/'+infile2.strip('.in')+'\n'))                                           
                         sourcef.close()
                         print('-------------------------------------------------------------')

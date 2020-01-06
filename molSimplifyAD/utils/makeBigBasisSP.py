@@ -29,7 +29,7 @@ live_job_dictionary = find_live_jobs()
 ## conv'd jobs
 converged_jobs = find_converged_job_dictionary()
 ## sub'd jobs
-joblist = submitted_job_dictionary.keys()
+joblist = list(submitted_job_dictionary.keys())
 ## outstanding jobs:
 outstanding_jobs = get_outstanding_jobs()
 
@@ -38,11 +38,11 @@ GA_run = get_current_GA()
 ## allocate holder for result list
 final_results = dict()
 all_runs = dict()
-print('found:  ' + str(len(joblist)) + ' jobs to check')
+print(('found:  ' + str(len(joblist)) + ' jobs to check'))
 
 
 joblist  =  list(set(joblist+outstanding_jobs))
-print('found:  ' + str(len(joblist)) + ' jobs to check')
+print(('found:  ' + str(len(joblist)) + ' jobs to check'))
 
 ## holder for jobs to delete
 
@@ -50,10 +50,10 @@ done_something =  False
 for jobs in joblist:
             ##upack job name
             gene, gen, slot, metal, ox, eqlig, axlig1, axlig2, eqlig_ind, axlig1_ind, axlig2_ind, spin, spin_cat, ahf, base_name, base_gene = translate_job_name(jobs)
-            if jobs in converged_jobs.keys():
+            if jobs in list(converged_jobs.keys()):
                 this_status = converged_jobs[jobs]
-            if this_status  == '0' and not (jobs in live_job_dictionary.keys()) and ahf==20 and not done_something:               
-                print('found successful job at 20%HFX : ' + str(jobs))
+            if this_status  == '0' and not (jobs in list(live_job_dictionary.keys())) and ahf==20 and not done_something:               
+                print(('found successful job at 20%HFX : ' + str(jobs)))
                 this_run = DFTRun(base_name)
                 this_run.scrpath = path_dictionary["scr_path" ]  + base_name +"/optim.xyz"
                 this_run.gene = base_gene

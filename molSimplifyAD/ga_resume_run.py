@@ -12,7 +12,7 @@ def resume_run(args):
     print(args)
     ## change to  run directory
     with switch_to_rundir(args.resume):
-        print(os.getcwd())
+        print((os.getcwd()))
         if args.reps:
             reps = args.reps
         else:
@@ -30,7 +30,7 @@ def resume_run(args):
                 print('NB: ALL post OFF')
                 GA_run.serialize()
             path_dictionary = setup_paths()
-            print(GA_run.config)
+            print((GA_run.config))
             if isKeyword('DFT'):
                 print('DFT ON')
                 ## update which jobs are live
@@ -67,5 +67,5 @@ def resume_run(args):
                     pass
             its += 1
             if args.sleep:
-                print('sleeping for ' + str(args.sleep))
+                print(('sleeping for ' + str(args.sleep)))
                 time.sleep(args.sleep)

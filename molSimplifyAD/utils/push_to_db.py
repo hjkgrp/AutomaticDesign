@@ -33,21 +33,21 @@ session = Session()
 ## get results from final convergence
 final_results, all_runs =  check_final_convergence()
 ## commit to DB
-print('Warning: db push is enabled, attempting commit with tag ' + str(isKeyword('tag')))
+print(('Warning: db push is enabled, attempting commit with tag ' + str(isKeyword('tag'))))
 time.sleep(5)
 suc = 0
 fail = 0
-for run_c in all_runs.values():
+for run_c in list(all_runs.values()):
     try:
         suc += 1
         molSimplifyAD.dbclass.add_to_db(session,run_c,isKeyword('tag'))
     except:
         fail += 1
-        print('db add failed for ' + str(run_c.name))
-print('converted ' + str(suc) + ' cases, failed for ' + str(fail))
+        print(('db add failed for ' + str(run_c.name)))
+print(('converted ' + str(suc) + ' cases, failed for ' + str(fail)))
 print('sql-commit in 10 seconds...')
 time.sleep(10)
-print('using sql credentials ' + engine_path)
+print(('using sql credentials ' + engine_path))
 ## commit
 session.commit()
 print('commited!')

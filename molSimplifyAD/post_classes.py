@@ -132,32 +132,32 @@ class DFTRun(object):
                 self.geo_check_dict.update({_key: geo_check_dict[_key]})
             else:
                 self.geo_check_dict.update({_key: globals()[_key]})
-        print("geo_check_dict:", self.geo_check_dict)
+        print(("geo_check_dict:", self.geo_check_dict))
 
     def obtain_mopac_mol(self):
         this_mol = mol3D()
         if os.path.exists(self.mop_geopath):
             this_mol.readfromxyz(self.mop_geopath)
-            print('looking for mopac mol at ' + self.mop_geopath)
+            print(('looking for mopac mol at ' + self.mop_geopath))
             self.mop_mol = this_mol
 
     def obtain_mol3d(self):
         this_mol = mol3D()
         if os.path.exists(self.geopath):
             this_mol.readfromxyz(self.geopath)
-            print('looking for mol at ' + self.geopath)
+            print(('looking for mol at ' + self.geopath))
         elif os.path.exists(self.progpath):
             this_mol.readfromxyz(self.progpath)
-            print('looking for mol at ' + self.progpath)
+            print(('looking for mol at ' + self.progpath))
 
         self.mol = this_mol
 
     def obtain_init_mol3d(self):
         this_mol = mol3D()
-        print('looking for init mol at ' + self.init_geopath)
+        print(('looking for init mol at ' + self.init_geopath))
         if os.path.exists(self.init_geopath):
             this_mol.readfromxyz(self.init_geopath)
-            print('found  init mol at ' + self.init_geopath)
+            print(('found  init mol at ' + self.init_geopath))
         self.init_mol = this_mol
 
     def extract_prog(self):
@@ -230,7 +230,7 @@ class DFTRun(object):
 
     def get_metal_spin_from_molden(self, mwfpath='/home/jp/Multiwfn/Multiwfn'):
         ## call molden
-        print(mwfpath + ' ' + self.moldenpath)
+        print((mwfpath + ' ' + self.moldenpath))
         proc = subprocess.Popen(mwfpath + ' ' + self.moldenpath, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                 shell=True)
         commands = ['7', '5', '1', 'y', 'n']
@@ -239,8 +239,8 @@ class DFTRun(object):
         lines = output[0].split('\n')
         read_on = False
         nats = self.mol.natoms
-        print('nats is ' + str(nats))
-        print('metal is  ' + str(self.metal))
+        print(('nats is ' + str(nats)))
+        print(('metal is  ' + str(self.metal)))
         lc = 0
         this_spin = 'UNK'
         print('Mulliken analyzer for unrestricted molden file.')
@@ -260,8 +260,8 @@ class DFTRun(object):
                     this_atom = this_atom.strip('()').lower()
                     if this_atom == self.metal:
                         this_spin_pop = str(line.strip().split()[3])
-                        print('Yay, found the metal: ' + this_atom + ' with spin ' + str(
-                            this_spin_pop) + ' expect ' + str(self.spin - 1))
+                        print(('Yay, found the metal: ' + this_atom + ' with spin ' + str(
+                            this_spin_pop) + ' expect ' + str(self.spin - 1)))
                         this_spin = this_spin_pop
                 lc += 1
             if lc > nats + 1:
@@ -793,7 +793,7 @@ class DFTRun(object):
             [item for item in lines[:-lines_to_remove]])  # Removing the top axial ligand where oxo is
         new_ref_file.close()
         geo_ref_file.close()
-        print('NEW REF is THIS:', new_ref, 'Referenced THIS:', geo_ref)
+        print(('NEW REF is THIS:', new_ref, 'Referenced THIS:', geo_ref))
         self.empty_sp_inpath = path_dictionary['sp_in_path'] + new_name + '.in'
         ### write files
         if not os.path.exists(self.empty_sp_inpath):
@@ -848,7 +848,7 @@ class DFTRun(object):
         path_dictionary = setup_paths()
         path_dictionary = advance_paths(path_dictionary, self.gen)
         new_name_upper, reference_name = renameOxoHydroxyl(self.job)
-        print('NEW UPPER HYD REF is THIS:', new_name_upper, 'Referenced THIS:', reference_name)
+        print(('NEW UPPER HYD REF is THIS:', new_name_upper, 'Referenced THIS:', reference_name))
         if new_name_upper:
             new_name_upper = new_name_upper.strip('.in')
         reference_name = reference_name.strip('.in')
@@ -877,7 +877,7 @@ class DFTRun(object):
         if new_name_upper:
             if int(
                     refHFX) != 20:  # This is for writing the guess wavefunction from the previous empty site (following order listed above) No guess if 20.
-                print('ref', refHFX)
+                print(('ref', refHFX))
                 print(new_name_upper)
                 hydlist = new_name_upper.split('_')
                 hydrefval = hydrefdict[hydlist[-2]]
@@ -886,7 +886,7 @@ class DFTRun(object):
             if not os.path.exists(path_dictionary["initial_geo_path"] + new_name_upper + '.xyz'):
                 mymol.writexyz(path_dictionary["initial_geo_path"] + new_name_upper + '.xyz')
             else:
-                print('Path already exists for ' + new_name_upper + '.xyz')
+                print(('Path already exists for ' + new_name_upper + '.xyz'))
             if int(new_name_upper[-1]) == 1 and int(refHFX) != 20:
                 guess_string = 'guess ' + isKeyword('rundir') + 'scr/geo/gen_' + str(
                     self.gen) + '/' + wfnrefhyd + '/c0\n'
@@ -963,7 +963,7 @@ class DFTRun(object):
 
         HAT_exists = os.path.isfile(HAT_geopath)
         if not HAT_exists:
-            print('Generating HAT TS structure for ' + self.name)
+            print(('Generating HAT TS structure for ' + self.name))
             if True:
                 print('here1')
                 with open(ms_dump_path, 'a') as ms_pipe:
@@ -1016,7 +1016,7 @@ class DFTRun(object):
 
         Oxo_exists = os.path.isfile(Oxo_geopath)
         if not Oxo_exists:
-            print('Generating Oxo TS structure for ' + self.name)
+            print(('Generating Oxo TS structure for ' + self.name))
             try:
                 with open(ms_dump_path, 'a') as ms_pipe:
                     with open(ms_error_path, 'a') as ms_error_pipe:
@@ -1073,7 +1073,7 @@ class DFTRun(object):
         ## set files  for DLNPO calcs
         path_dictionary = setup_paths()
         print(path_dictionary)
-        print(path_dictionary['DLPNO_path'])
+        print((path_dictionary['DLPNO_path']))
         reference_name = stripName(self.job)
         geo_ref = self.geopath
         geo_name = reference_name + '.xyz'
@@ -1140,39 +1140,39 @@ class DFTRun(object):
         if not os.path.isdir(archive_path):
 
             ensure_dir(archive_path)
-            print('archiving to ' + archive_path)
+            print(('archiving to ' + archive_path))
             # copy files:
             if not converged:
                 if os.path.isfile(self.progpath):
-                    print('archiving  ' + self.progpath)
+                    print(('archiving  ' + self.progpath))
                     shutil.copy(self.progpath, archive_path + self.name + '.xyz')
                 else:
-                    print('archiving did NOT find  ' + self.progpath)
+                    print(('archiving did NOT find  ' + self.progpath))
             else:
                 if os.path.isfile(self.geopath):
-                    print('archiving  ' + self.geopath)
+                    print(('archiving  ' + self.geopath))
                     shutil.copy(self.geopath, archive_path + self.name + '.xyz')
                 else:
-                    print('archiving did NOT find  ' + self.geopath)
+                    print(('archiving did NOT find  ' + self.geopath))
             scrfolder = os.path.dirname(self.scrpath)
             if os.path.isdir(scrfolder):
-                print('archiving  ' + scrfolder)
+                print(('archiving  ' + scrfolder))
                 shutil.copytree(scrfolder, archive_path + 'scr/')
                 ## remove the scr after archiving.
                 # shutil.rmtree(scrfolder)
             else:
-                print('archiving did NOT find  ' + scrfolder)
+                print(('archiving did NOT find  ' + scrfolder))
             if os.path.isfile(self.outpath):
-                print('archiving  ' + self.outpath)
+                print(('archiving  ' + self.outpath))
                 shutil.copy(self.outpath, archive_path + self.name + '.out')
             else:
-                print('archiving did NOT find  ' + self.outpath)
+                print(('archiving did NOT find  ' + self.outpath))
         if isKeyword('thermo'):
             if os.path.isfile(self.thermo_outpath):
-                print('archiving  ' + self.thermo_outpath)
+                print(('archiving  ' + self.thermo_outpath))
                 shutil.copy(self.thermo_outpath, archive_path + self.name + '_thermo.out')
             else:
-                print('archiving did NOT find  ' + self.thermo_outpath)
+                print(('archiving did NOT find  ' + self.thermo_outpath))
 
     def combine_scr_results(self):
         archive_list = []
@@ -1203,7 +1203,7 @@ class DFTRun(object):
         for _file in removefiles:
             archive_list.remove(_file)
         # archive_list.append(scr_path) ### We have already archive files first!!!
-        print('!!!!archive_list', archive_list)
+        print(('!!!!archive_list', archive_list))
         self.archive_list = archive_list
 
     def merge_scr_files(self):
@@ -1271,7 +1271,7 @@ class DFTRun(object):
                     txt = fin.readlines()
                     fo.writelines(txt)
             else:
-                print('---%s does not exist---' % infile)
+                print(('---%s does not exist---' % infile))
         fo.close()
         self.get_optimization_time_step(current_path)
 
@@ -1320,11 +1320,11 @@ class DFTRun(object):
                                     flag = False
                             if flag:
                                 _time_tot += float(ll[-1])
-                        if 'sec' in ll and '_time_tot' in locals().keys() and not 'Total processing time:' in line:
+                        if 'sec' in ll and '_time_tot' in list(locals().keys()) and not 'Total processing time:' in line:
                             try:
                                 _time_tot += float(ll[ll.index('sec') - 1])
                             except:
-                                print
+                                print()
                                 '\n\n CHECK GEO OUTFILE FOR abnormal sec'
                     if not (line.find('Checking Convergence Criteria')) == -1:
                         convcrit_read = i
@@ -1447,7 +1447,7 @@ class DFTRun(object):
                 self.obtain_mol3d()
                 init_posi = self.init_mol.getAtomCoords(self.init_mol.findMetal()[0])
                 final_posi = self.mol.getAtomCoords(self.mol.findMetal()[0])
-                print('!!!', init_posi, final_posi)
+                print(('!!!', init_posi, final_posi))
                 self.metal_translation = numpy.linalg.norm(numpy.array(final_posi) - numpy.array(init_posi))
             except:
                 self.metal_translation = -1
@@ -1481,7 +1481,7 @@ class DFTRun(object):
         for key in wavefunc_keys:
             wavefunc_file = scrdir + key
             if os.path.isfile(wavefunc_file):
-                print("found %s. Writting into DFTrun..." % key)
+                print(("found %s. Writting into DFTrun..." % key))
                 with open(wavefunc_file, "rb") as fo:
                     wf = fo.read()
             else:
@@ -1562,8 +1562,8 @@ class DFTRun(object):
             else:
                 self.net_metal_spin, self.metal_spin_expected = 0, 0
                 self.del_metal_spin, self.metal_spin_flag = 0, 1
-        print("geo_flag: ", self.geo_flag, "ss_flag: ", self.ss_flag, "metal_spin_flag: ", self.metal_spin_flag)
-        print("metal_spin_expected: ", self.metal_spin_expected, "metal_spin_actual: ", self.net_metal_spin)
+        print(("geo_flag: ", self.geo_flag, "ss_flag: ", self.ss_flag, "metal_spin_flag: ", self.metal_spin_flag))
+        print(("metal_spin_expected: ", self.metal_spin_expected, "metal_spin_actual: ", self.net_metal_spin))
 
 
 class Comp(object):

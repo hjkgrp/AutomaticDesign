@@ -12,7 +12,7 @@ def train_model_hyperopt(hyperspace, X, y,
     np.random.seed(1234)
     if tf.__version__ >= tf.__version__ >= '2.0.0':
         tf.compat.v1.disable_eager_execution()  ## disable eager in tf2.0 for faster training
-    print("hyperspace: ", hyperspace)
+    print(("hyperspace: ", hyperspace))
     model = build_ANN(hyperspace, X.shape[-1], regression=regression)
     X_train, X_val = np.split(X, [int(0.8 * X.shape[0])])
     y_train, y_val = np.split(y, [int(0.8 * X.shape[0])])

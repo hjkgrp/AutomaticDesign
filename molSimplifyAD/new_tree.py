@@ -10,6 +10,6 @@ GA_run.serialize()
 GA_run_new = GA_run_defintion()
 GA_run_new.deserialize(rundir + '.gaconfig')
 GA_run_new.create_scripts()
-print(GA_run_new.config.keys())
+print((list(GA_run_new.config.keys())))
 t1   = initialize_GA_calc(rundir)
 

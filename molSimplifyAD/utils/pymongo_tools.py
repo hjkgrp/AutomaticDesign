@@ -79,7 +79,7 @@ def insert(db, collection, tmc, debug=True):
         inserted = True
     else:
         if debug:
-            print("existed: ", _tmcdoc["unique_name"])
+            print(("existed: ", _tmcdoc["unique_name"]))
             print("merging....")
         _tmc = tmcMongo(document=_tmcdoc, tag=_tmcdoc["tag"], subtag=_tmcdoc["subtag"],
                         publication=_tmcdoc["publication"])
@@ -101,7 +101,7 @@ def merge_documents(db, collection, doc1, doc2, update_fields):
 
 
 def merge_dftruns(dftrun1, dftrun2, update_fields):
-    for attr, val in dftrun2.__dict__.items():
+    for attr, val in list(dftrun2.__dict__.items()):
         if not attr in dftrun1.__dict__ or attr in update_fields:
             setattr(dftrun1, attr, val)
 
@@ -176,11 +176,11 @@ def ensure_collection(db, collection):
     if not collection in colls:
         finish = False
         while not finish:
-            print("Collection %s does not exist. Create a new collection? (y/n)" % collection)
+            print(("Collection %s does not exist. Create a new collection? (y/n)" % collection))
             if sys.version_info[0] < 3:
-                _in = raw_input()
-            else:
                 _in = input()
+            else:
+                _in = eval(input())
             if _in == "y":
                 finish = True
             elif _in == "n":
@@ -214,7 +214,7 @@ def push2db(database, collection, tag, subtag, publication=False,
     from molSimplifyAD.ga_check_jobs import check_all_current_convergence
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
-    print('db push is enabled, attempting commit with tag: %s, subtag: %s to %s' % (tag, subtag, collection))
+    print(('db push is enabled, attempting commit with tag: %s, subtag: %s to %s' % (tag, subtag, collection)))
     if not all_runs_pickle:
         if not all_runs_list == False:
             all_runs = all_runs_list
@@ -222,25 +222,25 @@ def push2db(database, collection, tag, subtag, publication=False,
             _, all_runs, _ = check_all_current_convergence(post_all=True)
     else:
         all_runs = pickle.load(open(all_runs_pickle, "rb"))
-        print("DFTruns loaded from %s." % all_runs_pickle)
-    print("number of DFTruns exists: ", len(all_runs))
+        print(("DFTruns loaded from %s." % all_runs_pickle))
+    print(("number of DFTruns exists: ", len(all_runs)))
     count = 0
     merged = 0
-    for this_run in all_runs.values():
-        print("adding complex: ", this_run.name)
-        print("converged:", this_run.converged, "geo_flag:", this_run.geo_flag,
-              "ss_flag: ", this_run.ss_flag, "metal_spin_flag: ", this_run.metal_spin_flag)
+    for this_run in list(all_runs.values()):
+        print(("adding complex: ", this_run.name))
+        print(("converged:", this_run.converged, "geo_flag:", this_run.geo_flag,
+              "ss_flag: ", this_run.ss_flag, "metal_spin_flag: ", this_run.metal_spin_flag))
         this_tmc = tmcMongo(this_run=this_run, tag=tag, subtag=subtag,
                             publication=publication, update_fields=update_fields)
         _s = time.time()
         insetred = insert(db, collection, this_tmc)
-        print("elapse: ", time.time() - _s)
+        print(("elapse: ", time.time() - _s))
         if insetred:
             count += 1
         else:
             merged += 1
-    print("add %d entries in the %s['%s']." % (count, database, collection))
-    print("merge %d entries in the %s['%s']." % (merged, database, collection))
+    print(("add %d entries in the %s['%s']." % (count, database, collection)))
+    print(("merge %d entries in the %s['%s']." % (merged, database, collection)))
     print("creating index...")
     db[collection].create_index([("metal", pymongo.ASCENDING),
                                  ("ox", pymongo.ASCENDING),
@@ -265,12 +265,12 @@ def push_complex_actlearn(step, all_complexes, database, collection,
                           outpath='/home/db_backup'):
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
-    print('db push is enabled, attempting commit to ', collection)
-    print("number of complexes to push: ", len(all_complexes))
+    print(('db push is enabled, attempting commit to ', collection))
+    print(("number of complexes to push: ", len(all_complexes)))
     count = 0
     merged = 0
     for this_complex in all_complexes:
-        print("adding complex: ", this_complex["dftrun"].name)
+        print(("adding complex: ", this_complex["dftrun"].name))
         this_tmc = tmcActLearn(step=step,
                                is_training=this_complex["is_training"],
                                status_flag=this_complex["status_flag"],
@@ -286,9 +286,9 @@ def push_complex_actlearn(step, all_complexes, database, collection,
             count += 1
         else:
             merged += 1
-        print("elapse: ", time.time() - _s)
-    print("add %d entries in the %s['%s']." % (count, database, collection))
-    print("merge %d entries in the %s['%s']." % (merged, database, collection))
+        print(("elapse: ", time.time() - _s))
+    print(("add %d entries in the %s['%s']." % (count, database, collection)))
+    print(("merge %d entries in the %s['%s']." % (merged, database, collection)))
     print("creating index...")
     db[collection].create_index([("step", pymongo.ASCENDING),
                                  ("is_training", pymongo.ASCENDING),
@@ -305,7 +305,7 @@ def push_complex_actlearn(step, all_complexes, database, collection,
                                  ])
     if not merged == 0:
         print("=====WARNING====")
-        print("Duplicate complexes(%d) occure in the active learning mode. Should never happen." % merged)
+        print(("Duplicate complexes(%d) occure in the active learning mode. Should never happen." % merged))
     dump_databse(database_name=database,
                  outpath=outpath,
                  user=user, pwd=pwd)
@@ -322,7 +322,7 @@ def push_models(model, model_dict, database, collection,
     model_id = {"predictor": this_model.predictor, "len_tot": this_model.len_tot, "constraints": this_model.constraints}
     if not query_one(db, collection, constraints=model_id) == None:
         print("A model of has already existed.")
-        print("force_push?", this_model.force_push)
+        print(("force_push?", this_model.force_push))
         if this_model.force_push:
             print("force_push is truned on. pushing...")
             db[collection].insert_one(this_model.document)
@@ -363,7 +363,7 @@ def push_csd_complexes(database, tag, csdobj_list, collection="csd",
         csdmongo = CSDMongo(csdobj, tag=tag, update_fields=update_fields)
         _doc = query_one(db, collection, constraints={"refcode": csdmongo.document["refcode"]})
         if not _doc == None:
-            print("A csd complex has already existed. merging with update_fields as: ", update_fields)
+            print(("A csd complex has already existed. merging with update_fields as: ", update_fields))
             merge_documents(db, collection,
                             doc1=_doc,
                             doc2=csdmongo.document,

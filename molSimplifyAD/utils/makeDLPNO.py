@@ -15,7 +15,7 @@ from molSimplifyAD.post_classes import *
 from molSimplifyAD.ga_oct_check import *
 #######################
 def makeDLNPO(DLPNO_jobs):
-    print('\n making infiles for ' + str(len(DLPNO_jobs)) + '\n')
+    print(('\n making infiles for ' + str(len(DLPNO_jobs)) + '\n'))
     ## set up environment:        
     path_dictionary = setup_paths()
     base_path_dictionary = setup_paths()
@@ -26,7 +26,7 @@ def makeDLNPO(DLPNO_jobs):
     ## conv'd jobs
     converged_jobs = find_converged_job_dictionary()
     ## sub'd jobs
-    joblist = submitted_job_dictionary.keys()
+    joblist = list(submitted_job_dictionary.keys())
     ## outstanding jobs:
     outstanding_jobs = get_outstanding_jobs()
     
@@ -34,7 +34,7 @@ def makeDLNPO(DLPNO_jobs):
     GA_run = get_current_GA()
     ## allocate holder for result list
     for jobs in DLPNO_jobs:
-        if  (jobs not in live_job_dictionary.keys()) and (len(jobs.strip('\n'))!=0) and (jobs  in converged_jobs.keys()):
+        if  (jobs not in list(live_job_dictionary.keys())) and (len(jobs.strip('\n'))!=0) and (jobs  in list(converged_jobs.keys())):
             ## upack job name
             gene,gen,slot,metal,ox,eqlig,axlig1,axlig2,eqlig_ind,axlig1_ind,axlig2_ind,spin,spin_cat,ahf,base_name,base_gene = translate_job_name(jobs)
             ## create run
@@ -76,7 +76,7 @@ def makeDLNPO(DLPNO_jobs):
                     this_run.estimate_if_job_live() # test if live
                     if this_run.islive :
                             this_run.status = 4 ## mark as live
-                            print('run: ' + this_run.name +" is live ? " + str(this_run.islive))
+                            print(('run: ' + this_run.name +" is live ? " + str(this_run.islive)))
                     else:
                         # if NOT live, test convergance
                         test_terachem_go_convergence(this_run)
@@ -87,7 +87,7 @@ def makeDLNPO(DLPNO_jobs):
             # convert metal from index to str
             metal = metal_list[metal]
 
-            print('metal is ' +str(metal))
+            print(('metal is ' +str(metal)))
             these_states = metal_spin_dictionary[metal][ox]
             if this_run.status == 0:
                 # perfrom health checks on complex here
@@ -111,5 +111,5 @@ if os.path.exists(target):
             list_of_jobs.append(lines.strip('\n'))
     makeDLNPO(list_of_jobs)
 else:
-    print('file '+ target + ' not found' )
+    print(('file '+ target + ' not found' ))
      

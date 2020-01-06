@@ -29,10 +29,10 @@ def pairing(df, case, **kwargs):
         raise ValueError("Case %s does not exist!" % case)
     df = keep_lowestE(df, **kwargs)
     gb = df.groupby(condition)
-    tot = len(gb.groups.keys())
+    tot = len(list(gb.groups.keys()))
     dfall, missingall = False, {}
     count_success, count_failed, count_nopair = 0, 0, 0
-    for g in gb.groups.keys():
+    for g in list(gb.groups.keys()):
         dfgrp = gb.get_group(g)
         success, dfreturn, missing_dict = func(dfgrp, g, **kwargs)
         if success:
@@ -47,6 +47,6 @@ def pairing(df, case, **kwargs):
         else:
             count_nopair += 1
         if (count_success + count_failed + count_nopair) % 100 == 0:
-            print("%d / %d..." % (count_success + count_failed + count_nopair, tot))
-    print("success: ", count_success, "failed: ", count_failed, "nopair: ", count_nopair, "total: ", tot)
+            print(("%d / %d..." % (count_success + count_failed + count_nopair, tot)))
+    print(("success: ", count_success, "failed: ", count_failed, "nopair: ", count_nopair, "total: ", tot))
     return dfall, missingall

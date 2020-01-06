@@ -62,24 +62,24 @@ def rename_ligands(liglist):
                 "c1ccncc1": "pyr",
                 }
     for idx, lig in enumerate(liglist):
-        if lig in lig_dict.keys():
+        if lig in list(lig_dict.keys()):
             liglist[idx] = lig_dict[lig]
     return liglist
 
 
 update_fields = ['alphaHOMO', 'betaHOMO','alphaLUMO', 'betaLUMO', 'status']
-print("update_fields: ", update_fields)
+print(("update_fields: ", update_fields))
 df = pd.read_csv("spectro_all_RACs_format.csv")
 db = connect2db(user='crduan', pwd='duanchenru521',
                 host='localhost', port=27017,
                 database='tmc', auth=True)
-print("# of complexes: ", db.oct.count())
+print(("# of complexes: ", db.oct.count()))
 basepath = "/home/crduan/Binary_Classifier/molecule/"
 count, merged = 0, 0
 for idx, row in df.iterrows():
     if row["mad"] == "oldgen":
         print("=================")
-        print(row["job_name"])
+        print((row["job_name"]))
         filepath = basepath + row["metal"] + '/' + "_".join(row["job_name"].split("_")[:-2]) + '/geometry/'
         outpath = filepath + "_".join(row["job_name"].split("_")[:3]) + "_" + "_".join(
             row["job_name"].split("_")[-2:]) + "_geometry__runlast.out"
@@ -160,13 +160,13 @@ for idx, row in df.iterrows():
 
         this_tmc = tmcMongo(this_run=this_run, tag="spectro", subtag="oldgen",
                             publication="Duan_JCTC_2019", update_fields=update_fields)
-        print(this_tmc.document['status'], this_tmc.document['alphaHOMO'])
+        print((this_tmc.document['status'], this_tmc.document['alphaHOMO']))
         _s = time.time()
         insetred = insert(db, "oct", this_tmc)
-        print("elapse: ", time.time() - _s)
+        print(("elapse: ", time.time() - _s))
         if insetred:
             count += 1
         else:
             merged += 1
-print("add %d entries in the %s['%s']." % (count, "tmc", "oct"))
-print("merge %d entries in the %s['%s']." % (merged, "tmc", "oct"))
+print(("add %d entries in the %s['%s']." % (count, "tmc", "oct")))
+print(("merge %d entries in the %s['%s']." % (merged, "tmc", "oct")))
