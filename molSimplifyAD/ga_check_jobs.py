@@ -28,7 +28,8 @@ def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary, post_all
 
     postProc = False
     ## be post processed:
-    if (((job not in list(live_job_dictionary.keys())) and (len(job.strip('\n')) != 0) and geoopt) or ((job not in list(live_job_dictionary.keys())) and (len(job.strip('\n')) != 0) and sp_calc)):
+    if (((job not in list(live_job_dictionary.keys())) and (len(job.strip('\n')) != 0) and geoopt) or (
+            (job not in list(live_job_dictionary.keys())) and (len(job.strip('\n')) != 0) and sp_calc)):
         if isKeyword('post_all') or post_all:
             postProc = True
         elif job in list(converged_jobs_dictionary.keys()):
@@ -36,7 +37,7 @@ def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary, post_all
                 this_outcome = int(converged_jobs_dictionary[job])
             except:
                 this_outcome = 3
-            if not this_outcome in [0, 1, 3, 6, 8]:  # dead jobs
+            if not this_outcome in [0, 1, 3, 6, 8, 10]:  # dead jobs
                 postProc = True
         else:
             postProc = True
@@ -89,6 +90,7 @@ def check_all_current_convergence(post_all=False):
         ## 7  -> allowed submissions exceeded  (in ga_monitor)
         ## 8  -> prog geo was found, but was a bad geo
         ## 9  -> killed by molscontrol during the first submission
+        ## 10  -> bad_init_geo. will not submit
         ## 11 -> job requests fod
         ## 12 -> job requests thermo
         ## 13 -> job requests solvent
@@ -111,9 +113,9 @@ def check_all_current_convergence(post_all=False):
         for jobs in joblist:
             print(('\n\n' + jobs + '\n\n'))
             print(("process? ", postprocessJob(job=jobs,
-                                              live_job_dictionary=live_job_dictionary,
-                                              converged_jobs_dictionary=converged_jobs,
-                                              post_all=post_all)))
+                                               live_job_dictionary=live_job_dictionary,
+                                               converged_jobs_dictionary=converged_jobs,
+                                               post_all=post_all)))
             if postprocessJob(job=jobs,
                               live_job_dictionary=live_job_dictionary,
                               converged_jobs_dictionary=converged_jobs,
@@ -293,7 +295,6 @@ def check_all_current_convergence(post_all=False):
                 print(('job status: ', this_run.status))
                 these_states = metal_spin_dictionary[metal][ox]
 
-
                 if this_run.status == 0:
                     # get HOMO/LUMO for successful run
                     read_molden_file(this_run)
@@ -303,7 +304,6 @@ def check_all_current_convergence(post_all=False):
                     if (this_run.coord == 6 and this_run.octahedral == True) or (
                             this_run.coord == 5 and this_run.octahedral == False):
                         run_success = True
-
 
                     # check run is complete?
                     if this_run.alpha == 20 or isKeyword('ax_lig_dissoc'):
@@ -397,7 +397,7 @@ def check_all_current_convergence(post_all=False):
                             print('TS on')
                             this_run = test_terachem_TS_convergence(this_run)
                             print(('Current TS status (HAT then Oxo for attempted): ', this_run.attempted_HAT_TS,
-                                  this_run.attempted_Oxo_TS))
+                                   this_run.attempted_Oxo_TS))
                             if this_run.attempted_HAT_TS and this_run.attempted_Oxo_TS and run_success:
                                 if (this_run.PRFO_HAT_inpath not in list(live_job_dictionary.keys())) and (
                                         this_run.PRFO_Oxo_inpath not in list(live_job_dictionary.keys())):
@@ -538,7 +538,8 @@ def check_all_current_convergence(post_all=False):
                                 logger(base_path_dictionary['state_path'],
                                        str(datetime.datetime.now()) + ' Check on prog_geo: flag_oct: ' + str(flag_oct))
                                 logger(base_path_dictionary['state_path'],
-                                       str(datetime.datetime.now()) + ' Current structure is supposed to be octahedral: ' + str(
+                                       str(
+                                           datetime.datetime.now()) + ' Current structure is supposed to be octahedral: ' + str(
                                            this_run.octahedral))
                                 if not flag_oct:
                                     logger(base_path_dictionary['state_path'],
@@ -549,14 +550,16 @@ def check_all_current_convergence(post_all=False):
                                 if this_run.progstatus == 0:
                                     steps = count_number_of_geo_changes(this_run)
                                     if steps < 2:
-                                        this_run.status = 6 # must have had SCF convergence issues, run did not converge and only had initial step
+                                        this_run.status = 6  # must have had SCF convergence issues, run did not converge and only had initial step
                                         logger(base_path_dictionary['state_path'],
-                                       str(datetime.datetime.now()) + ' SCF convergence issues detected, removing job.')
+                                               str(
+                                                   datetime.datetime.now()) + ' SCF convergence issues detected, removing job.')
                                     else:
                                         create_generic_infile(jobs, use_old_optimizer=use_old_optimizer, restart=True)
                                         this_run.status = 2  ## prog geo is good
                                         logger(base_path_dictionary['state_path'],
-                                            str(datetime.datetime.now()) + ' job allowed to restart since good prog geo found ')              
+                                               str(
+                                                   datetime.datetime.now()) + ' job allowed to restart since good prog geo found ')
                                 else:
                                     logger(base_path_dictionary['state_path'], str(
                                         datetime.datetime.now()) + ' job not allowed to restart since prog geo is not good ')
@@ -650,7 +653,7 @@ def check_all_current_convergence(post_all=False):
                                 this_run.net_oxygen_spin = mulliken_spin_list[1]
                         else:
                             print(("No molden path found for this run (" + str(jobs) + ")"))
-                if this_run.status in [2, 3, 5, 6, 8, 9, "undef"]:  ##  convergence is not successful!
+                if this_run.status in [2, 3, 5, 6, 8, 9, "undef", 10]:  ##  convergence is not successful!
 
                     if this_run.status == "undef":
                         this_run.status = 3
@@ -679,6 +682,12 @@ def check_all_current_convergence(post_all=False):
                                + " resubmitting job : " + str(jobs) + ' with status ' + str(this_run.status)
                                + ' after ' + str(number_of_subs) + ' subs since prog geo was good')
                         add_to_outstanding_jobs(jobs)
+                    elif this_run.status == 10:
+                        print((' bad inito geo for job ' + str(jobs) + " disable submission..."))
+                        logger(base_path_dictionary['state_path'], str(datetime.datetime.now())
+                               + " failure at job : " + str(jobs) + ' with status ' + str(this_run.status)
+                               + "giving up...")
+                        remove_outstanding_jobs(jobs)
                 if isKeyword('oxocatalysis'):
                     this_run.get_check_flags(metalspin_cutoff=2)
                     log_status = 1  # default value
@@ -709,8 +718,10 @@ def check_all_current_convergence(post_all=False):
 
             elif ("sp_infiles" in jobs and not isKeyword('optimize')) or (
                     "sp_infiles" in jobs and isKeyword('oxocatalysis') and postprocessJob(job=jobs,
-                    live_job_dictionary=live_job_dictionary,converged_jobs_dictionary=converged_jobs,
-                    post_all=post_all,sp_calc=True)):
+                                                                                          live_job_dictionary=live_job_dictionary,
+                                                                                          converged_jobs_dictionary=converged_jobs,
+                                                                                          post_all=post_all,
+                                                                                          sp_calc=True)):
                 translate_dict = translate_job_name(jobs)
                 gene = translate_dict['gene']
                 gen = translate_dict['gen']
@@ -842,13 +853,14 @@ def check_all_current_convergence(post_all=False):
                                                                                 SASA=isKeyword('SASA'),
                                                                                 TS=isKeyword('TS')))
         # for runs
-        run_output_path, run_descriptor_path = write_output('runs', list(all_runs.values()), output_properties(comp=False,
-                                                                                                         oxocatalysis=isKeyword(
-                                                                                                             'oxocatalysis'),
-                                                                                                         SASA=isKeyword(
-                                                                                                             'SASA'),
-                                                                                                         TS=isKeyword(
-                                                                                                             'TS')))
+        run_output_path, run_descriptor_path = write_output('runs', list(all_runs.values()),
+                                                            output_properties(comp=False,
+                                                                              oxocatalysis=isKeyword(
+                                                                                  'oxocatalysis'),
+                                                                              SASA=isKeyword(
+                                                                                  'SASA'),
+                                                                              TS=isKeyword(
+                                                                                  'TS')))
         # print('-------')
         # print(final_results)
         if isKeyword('post_all'):
