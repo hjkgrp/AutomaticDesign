@@ -139,6 +139,8 @@ class DFTRun(object):
         if os.path.exists(self.mop_geopath):
             this_mol.readfromxyz(self.mop_geopath)
             print('looking for mopac mol at ' + self.mop_geopath)
+            if isKeyword("atom_specific_cutoffs"):
+                this_mol.createMolecularGraph(oct=True, atom_specific_cutoffs=True)
             self.mop_mol = this_mol
 
     def obtain_mol3d(self):
@@ -150,6 +152,9 @@ class DFTRun(object):
             this_mol.readfromxyz(self.progpath)
             print('looking for mol at ' + self.progpath)
 
+        if isKeyword("atom_specific_cutoffs"):
+            print('using atom specific cutoffs!')
+            this_mol.createMolecularGraph(oct=True, atom_specific_cutoffs=True)
         self.mol = this_mol
 
     def obtain_init_mol3d(self):
@@ -158,6 +163,9 @@ class DFTRun(object):
         if os.path.exists(self.init_geopath):
             this_mol.readfromxyz(self.init_geopath)
             print('found  init mol at ' + self.init_geopath)
+        if isKeyword("atom_specific_cutoffs"):
+            print('using atom specific cutoffs for init!')
+            this_mol.createMolecularGraph(oct=True, atom_specific_cutoffs=True)
         self.init_mol = this_mol
 
     def extract_prog(self):
@@ -165,6 +173,8 @@ class DFTRun(object):
         if os.path.exists(self.progpath):
             self.progmol = mol3D()
             self.progmol.readfromxyz(self.progpath)
+            if isKeyword("atom_specific_cutoffs"):
+                self.progmol.createMolecularGraph(oct=True, atom_specific_cutoffs=True)
 
     def write_geo_dict(self):
         for key in self.dict_geo_check:
@@ -405,6 +415,8 @@ class DFTRun(object):
         this_prog_mol = mol3D()
         if os.path.exists(self.progpath):
             this_prog_mol.readfromxyz(self.progpath)
+            if isKeyword("atom_specific_cutoffs"):
+                init_mol.createMolecularGraph(oct=True, atom_specific_cutoffs=True)
         try:
             natoms = this_prog_mol.natoms
         except:

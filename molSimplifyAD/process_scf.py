@@ -1122,8 +1122,7 @@ def test_terachem_go_convergence(this_run):
             ## check intial conditions:
             if os.path.exists(this_run.init_geopath):
                 this_run.obtain_init_mol3d()
-                flag_oct, flag_list, dict_oct_info = this_run.check_oct_needs_init()
-
+                flag_oct, flag_list, dict_oct_info = this_run.check_oct_needs_init(debug=True)
                 logger(this_run.logpath,
                        str(datetime.datetime.now()) + ' Check on coverged_geo with init: flag_oct: ' + str(flag_oct))
                 logger(this_run.logpath,
