@@ -53,6 +53,7 @@ class GA_run_defintion:
                   db_communicate=True,
                   active_learning_step=False,
                   geo_check_dict=False,
+                  atom_specific_cutoffs=False,
                   **KWARGS):
         ## first time start-up function
         #                print('configuring status dictionaty')
@@ -102,6 +103,7 @@ class GA_run_defintion:
                        'db_communicate': db_communicate,
                        'active_learning_step': active_learning_step,
                        'geo_check_dict': geo_check_dict,
+                       'atom_specific_cutoffs': atom_specific_cutoffs
                        }
 
     def serialize(self):
