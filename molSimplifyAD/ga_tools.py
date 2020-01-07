@@ -545,8 +545,8 @@ def isKeyword(keyword):
     # returned in its base form - Aditya (10/10/2018)                                #
     ##################################################################################
     GA_run = get_current_GA()
-    if isinstance(keyword, str):
-        keyword = str(keyword, 'utf-8')
+    if isinstance(keyword, basetring):
+        keyword = unicode(keyword, 'utf-8')
         try:
             return GA_run.config[str(keyword)]
         except:
@@ -556,7 +556,7 @@ def isKeyword(keyword):
         return_list = []
         try:
             for i in range(total_len):
-                temp_key = str(str(keyword[i]), 'utf-8')
+                temp_key = unicode(str(keyword[i]), 'utf-8')
                 return_list.append(GA_run.config[temp_key])
             return return_list
         except:
@@ -568,7 +568,7 @@ def isKeyword(keyword):
 ########################
 def isall_post():
     GA_run = get_current_GA()
-    if str('post_all', 'utf-8') in list(GA_run.config.keys()):
+    if unicode('post_all', 'utf-8') in list(GA_run.config.keys()):
         return GA_run.config["post_all"]
     else:
         return False
@@ -577,7 +577,7 @@ def isall_post():
 ########################
 def get_optimizer():
     GA_run = get_current_GA()
-    if str('old_optimizer', 'utf-8') in list(GA_run.config.keys()):
+    if unicode('old_optimizer', 'utf-8') in list(GA_run.config.keys()):
         return GA_run.config["old_optimizer"]
     else:
         print('old_optimizer not set, using default as False')
