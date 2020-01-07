@@ -545,7 +545,7 @@ def isKeyword(keyword):
     # returned in its base form - Aditya (10/10/2018)                                #
     ##################################################################################
     GA_run = get_current_GA()
-    if isinstance(keyword, basetring):
+    if isinstance(keyword, basestring):
         keyword = unicode(keyword, 'utf-8')
         try:
             return GA_run.config[str(keyword)]
