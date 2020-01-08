@@ -178,7 +178,7 @@ def ensure_collection(db, collection):
         while not finish:
             print(("Collection %s does not exist. Create a new collection? (y/n)" % collection))
             if sys.version_info[0] < 3:
-                _in = input()
+                _in = raw_input()
             else:
                 _in = eval(input())
             if _in == "y":
