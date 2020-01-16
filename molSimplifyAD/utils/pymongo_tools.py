@@ -7,6 +7,7 @@ import datetime
 import pandas as pd
 import numpy as np
 import pymongo
+import itertools
 from pandas.io.json import json_normalize
 from pymongo import MongoClient
 from molSimplifyAD.dbclass_mongo import tmcMongo, tmcActLearn, mongo_attr_id, mongo_not_web
@@ -35,6 +36,48 @@ def dump_databse(database_name="tmc", outpath='/home/db_backup',
     print("Done.")
     with open(outpath + '/dump.log', "a") as fo:
         fo.write("dumping database %s to path %s at time %s.\n" % (database_name, outpath, str(now)))
+
+
+def query_db_easy(user, pwd, collection='oct', constraints={}, max_entries=None, dropcols=[], host='localhost', port=27017, database='tmc', auth=True, loud=True):
+    '''
+    Query the database for `max_entries` entries using constraints in `constraints`. Queries the octahedral transition metal complex database by default.
+
+    Example usage: results_dataframe = query_db_easy(username, password, constraints={"geo_flag": 1}, max_entries=100, dropcols=['dftrun'], loud=False)
+    Returns: Pandas dataframe with database query results.
+    Example constraints string: constraints = {"metal": {"$in": ['fe', 'co']}, "tot_time": {"$gt": 0}, "ox": 2}
+    '''
+    
+    start_time = time.time()
+    db = connect2db(user=user, pwd=pwd, host=host, port=port, database=database, auth=auth)
+    
+    if collection==None:
+        raise ValueError('Argument `collection` not specified; you can use the following collections: %s' % db.list_collection_names())
+    if loud:
+        if constraints=={}:
+            print("Warning: argument `constraints` is {} by defaultl. No constraints are being applied.")
+        if max_entries==None:
+            print("Warning: argument `max_entries` is None by default, so no limit has been set on the number of entries to pull.")
+        if dropcols==[]:
+            print("Warning: argument `dropcols` is [] by default, so no columns will be dropped.")
+    
+    est_num_docs = db.oct.count_documents(constraints)
+    num_docs = est_num_docs if max_entries==None else min(est_num_docs, max_entries)
+    if loud:
+        print "Estimated number of entries to be pulled: %s" % num_docs
+        print "Estimated pull time: %s sec" % (2.36e-4*num_docs) # Empirical fit, as of 2020-01-16
+        print "Estimated pull size: %s MB" % (3.53e-2*num_docs) # Empirical fit, as of 2020-01-16
+
+    if dropcols == []:
+        cursor = db[collection].find(constraints)
+    else:
+        excluded_fields = {dropcol: 0 for dropcol in dropcols}
+        cursor = db[collection].find(constraints, excluded_fields)
+    cursor_iterator = itertools.islice(cursor, max_entries)
+    results = pd.DataFrame(cursor_iterator)
+    if loud:
+        print "Pull finished. Number of entries: %s" % len(results)
+        print "Time for pull: %s sec" % (time.time() - start_time)
+    return results
 
 
 def query_db(db, collection, constraints):
