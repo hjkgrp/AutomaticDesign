@@ -693,7 +693,7 @@ class GA_generation:
                                         # print(scaled_row)
                                         normalized_train.append(scaled_row)
                                     normalized_train = np.array(normalized_train)
-                                    latent_train = np.squeeze(np.array(get_outputs([normalized_train, 0])))
+                                    latent_train_df = np.squeeze(np.array(get_outputs([normalized_train, 0])))
                                     latent_excitation =np.array([np.squeeze(np.array(get_outputs([norm_excitation, 0])))])
                                     if avg_train_train_dist == None:
                                         train_dist_array = distance_matrix(latent_train_df,latent_train_df)
@@ -702,7 +702,7 @@ class GA_generation:
                                             nearest_10_NN.append(np.sort(np.squeeze(row))[1:11]) #nearest 10NN
                                         nearest_10_NN = np.array(nearest_10_NN)
                                         avg_train_train_dist = np.mean(nearest_10_NN)
-                                    latent_vector_to_train = np.sort(np.squeeze(np.array(distance_matrix(latent_excitation,latent_train))))
+                                    latent_vector_to_train = np.sort(np.squeeze(np.array(distance_matrix(latent_excitation,latent_train_df))))
                                     min_dist = np.mean(latent_vector_to_train[1:11])/avg_train_train_dist
                                     ### This currently gets the normalized 10NN latent distances, but the distance calculation is slow. Should store latent vectors...
                                     ANN_results.update({run_list[model_num]+'_dist':float(min_dist)})
