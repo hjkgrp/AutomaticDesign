@@ -7,7 +7,8 @@ from molSimplify.job_manager.tools import textfile
 def bind_direct(this_run, jobname, basedir, case, keyinout, suffix=''):
     case_attr = case + suffix
     setattr(this_run, case_attr, False)
-    outfile = basedir + "/" + "%s_%s" % (jobname, case) + "/" + "%s_%s.out" % (jobname, case)
+    outfile = basedir + "/" + "%s_%s" % (jobname, case) + "/" + "%s_%s.out" % (
+        jobname, case)  ## we know the name of outfile
     if os.path.isfile(outfile):
         setattr(this_run, case_attr, np.nan)
         output = textfile(outfile)
@@ -23,7 +24,8 @@ def bind_with_search(this_run, jobname, basedir, case, keyinout, ref=False):
         setattr(this_run, case, dict())
         for dirpath, dirs, files in os.walk(search_dir):
             for file in sorted(files):
-                if file.split('.')[-1] == 'out':
+                if file.split('.')[-1] == 'out' and not any(
+                        "_v%d.out" % x in file for x in range(10)):  # search for outfiles
                     outfile = dirpath + '/' + file
                     # key = file.strip('out').strip(jobname).strip('.')
                     key = dirpath.split('/')[-1]

@@ -9,7 +9,7 @@ import numpy as np
 import pymongo
 from pandas.io.json import json_normalize
 from pymongo import MongoClient
-from molSimplifyAD.dbclass_mongo import tmcMongo, tmcActLearn, mongo_attr_id, mongo_not_web
+from molSimplifyAD.dbclass_mongo import tmcMongo, tmcActLearn, mongo_attr_id, mongo_not_web, SP_keys
 from molSimplifyAD.mlclass_mongo import modelActLearn, modelMongo
 from molSimplifyAD.ga_tools import isKeyword
 from molSimplifyAD.dbclass_csd import CSDMongo
@@ -95,15 +95,25 @@ def insert(db, collection, tmc, debug=True):
 
 def merge_documents(db, collection, doc1, doc2, update_fields):
     for key in doc2:
-        if not key in doc1 or key in update_fields:
+        if not key in doc1:
             doc1.update({key: doc2[key]})
+        elif key in update_fields:
+            if key in SP_keys and type(doc1[key]) == dict and type(doc2[key]) == dict:
+                doc1[key].update(doc2[key])
+            else:
+                doc1.update({key: doc2[key]})
     db[collection].replace_one({"_id": doc1["_id"]}, doc1)
 
 
 def merge_dftruns(dftrun1, dftrun2, update_fields):
     for attr, val in list(dftrun2.__dict__.items()):
-        if not attr in dftrun1.__dict__ or attr in update_fields:
+        if not attr in dftrun1.__dict__:
             setattr(dftrun1, attr, val)
+        elif attr in update_fields:
+            if attr in SP_keys and type(getattr(dftrun1, attr)) == dict and type(getattr(dftrun2, attr)) == dict:
+                getattr(dftrun1, attr).update(getattr(dftrun2, attr))
+            else:
+                setattr(dftrun1, attr, val)
 
 
 def convert2dataframe(db, collection,
@@ -202,7 +212,7 @@ def push2db(database, collection, tag, subtag, publication=False,
     :param user: username.
     :param pwd: password.
     :param host: IP address of the MongoDB.
-    :param port: port to connect. 
+    :param port: port to connect.
     :param auth: whether authentication is required to connect to the MongoDB.
     :param all_runs_pickle: whether to push from a pickle file of a list of DFTrun objects. If False, will run
     check_all_current_convergence() in your mAD folder.
@@ -229,7 +239,7 @@ def push2db(database, collection, tag, subtag, publication=False,
     for this_run in list(all_runs.values()):
         print(("adding complex: ", this_run.name))
         print(("converged:", this_run.converged, "geo_flag:", this_run.geo_flag,
-              "ss_flag: ", this_run.ss_flag, "metal_spin_flag: ", this_run.metal_spin_flag))
+               "ss_flag: ", this_run.ss_flag, "metal_spin_flag: ", this_run.metal_spin_flag))
         this_tmc = tmcMongo(this_run=this_run, tag=tag, subtag=subtag,
                             publication=publication, update_fields=update_fields)
         _s = time.time()
