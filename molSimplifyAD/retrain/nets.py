@@ -24,10 +24,6 @@ def r2_val(y_true, y_pred):
         return tf.py_func(r2_score, (y_true, y_pred), tf.double)
 
 
-# def auc(y_true, y_pred):
-#     return tf.py_func(roc_auc_score, (y_true, y_pred), tf.double)
-
-
 def precision(y_true, y_pred):
     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
     predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
@@ -49,11 +45,12 @@ def f1(y_true, y_pred):
 
 
 class auc_callback(Callback):
-    def __init__(self, training_data, validation_data):
+    def __init__(self, training_data, validation_data, ind=None):
         self.x = training_data[0]
         self.y = training_data[1]
         self.x_val = validation_data[0]
         self.y_val = validation_data[1]
+        self.ind = ind
 
     def on_train_begin(self, logs={}):
         return
@@ -65,11 +62,17 @@ class auc_callback(Callback):
         return
 
     def on_epoch_end(self, epoch, logs={}):
-        y_pred = self.model.predict(self.x)
+        if not self.ind == None:
+            y_pred = self.model.predict(self.x)[self.ind]
+            y_pred_val = self.model.predict(self.x_val)[self.ind]
+            ii = self.ind
+        else:
+            y_pred = self.model.predict(self.x)
+            y_pred_val = self.model.predict(self.x_val)
+            ii = 0
         roc = roc_auc_score(self.y, y_pred)
-        y_pred_val = self.model.predict(self.x_val)
         roc_val = roc_auc_score(self.y_val, y_pred_val)
-        print(('roc-auc: %s - roc-auc_val: %s' % (str(round(roc, 4)), str(round(roc_val, 4)))))
+        print(('%d: roc-auc: %s - roc-auc_val: %s' % (ii, str(round(roc, 4)), str(round(roc_val, 4)))))
         return
 
     def on_batch_begin(self, batch, logs={}):
@@ -79,21 +82,25 @@ class auc_callback(Callback):
         return
 
 
-def cal_auc(model, x, y):
-    return (roc_auc_score(y, model.predict(x)))
+def cal_auc(model, x, y, ind=None):
+    if not ind == None:
+        return roc_auc_score(y, model.predict(x)[ind])
+    else:
+        print(np.array(y).shape)
+        return roc_auc_score(y, model.predict(x))
 
 
-def build_ANN(hyperspace, input_len, regression=True):
+def build_ANN(hyperspace, input_len, lname, regression=True):
     if tf.__version__ >= tf.__version__ >= '2.0.0':
         print("====Tensorflow version >= 2.0.0====")
         model = ANN_tf2(hyperspace, input_len, regression=regression)
     else:
         print("====Tensorflow version < 2.0.0====")
-        model = ANN(hyperspace, input_len, regression=regression)
+        model = ANN(hyperspace, input_len, lname, regression=regression)
     return model
 
 
-def ANN(hyperspace, input_len, regression=True):
+def ANN(hyperspace, input_len, lname, regression=True):
     np.random.seed(1234)
     inputlayer = Input(shape=(input_len,), name='input')
     layers = [inputlayer]
@@ -113,16 +120,22 @@ def ANN(hyperspace, input_len, regression=True):
             layers.append(Add(name='sum-' + str(ii))([layers[base_lookback], layers[-1]]))
         if hyperspace['bypass']:
             layers.append(Concatenate(name='concatenate-' + str(ii))([inputlayer, layers[-1]]))
-    layers.append(Dense(1, name='dense-last')(layers[-1]))
-    outlayer = BatchNormalization(name='bn-last')(layers[-1])
-    if not regression:
-        outlayer = Activation('sigmoid')(outlayer)
-        loss_type = 'binary_crossentropy'
-        metrics = ['accuracy', precision, recall, f1]
-    else:
-        loss_type = 'mse'
-        metrics = ['mae', mape, scaled_mae, r2_val]
-    model = Model(inputs=[inputlayer], outputs=[outlayer])
+    last_dense, outlayer, loss_weights, loss_type = [], [], [], []
+    for ii, ln in enumerate(lname):
+        outlayer.append(0)
+        last_dense.append(Dense(1, name='dense-last-%d' % ii)(layers[-1]))
+        if not regression:
+            outlayer[ii] = BatchNormalization(name='bn-last-%d' % ii)(last_dense[ii])
+            outlayer[ii] = Activation('sigmoid', name='output-%d-%s' % (ii, ln))(outlayer[ii])
+            _loss_type = 'binary_crossentropy'
+            metrics = ['accuracy', precision, recall, f1]
+        else:
+            outlayer[ii] = BatchNormalization(name='output-%d-%s' % (ii, ln))(last_dense[ii])
+            _loss_type = 'mse'
+            metrics = ['mae', scaled_mae, r2_val]
+        loss_weights.append(1.0)
+        loss_type.append(_loss_type)
+    model = Model(inputs=[inputlayer], outputs=outlayer)
     model.compile(loss=loss_type,
                   optimizer=Adam(lr=hyperspace['lr'],
                                  beta_1=hyperspace['beta_1'],
@@ -130,7 +143,9 @@ def ANN(hyperspace, input_len, regression=True):
                                  decay=hyperspace['decay'],
                                  amsgrad=hyperspace['amsgrad']
                                  ),
-                  metrics=metrics)
+                  metrics=metrics,
+                  loss_weights=loss_weights,
+                  )
     return model
 
 
@@ -174,6 +189,30 @@ def ANN_tf2(hyperspace, input_len, regression=True):
                                                      amsgrad=hyperspace['amsgrad']
                                                      ),
                   metrics=metrics)
+    return model
+
+
+def compile_model(model, hyperspace, lname, regression):
+    last_dense, outlayer, loss_weights, loss_type = [], [], [], []
+    for ii, ln in enumerate(lname):
+        if not regression:
+            _loss_type = 'binary_crossentropy'
+            metrics = ['accuracy', precision, recall, f1]
+        else:
+            _loss_type = 'mse'
+            metrics = ['mae', scaled_mae, r2_val]
+        loss_weights.append(1.0)
+        loss_type.append(_loss_type)
+    model.compile(loss=loss_type,
+                  optimizer=Adam(lr=hyperspace['lr'],
+                                 beta_1=hyperspace['beta_1'],
+                                 beta_2=0.999,
+                                 decay=hyperspace['decay'],
+                                 amsgrad=hyperspace['amsgrad']
+                                 ),
+                  metrics=metrics,
+                  loss_weights=loss_weights,
+                  )
     return model
 
 
