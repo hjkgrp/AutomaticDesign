@@ -5,13 +5,13 @@ import csv
 import os
 from molSimplifyAD.ga_tools import *
 #from molSimplifyAD.ga_tools import get_run_dir
-from molSimplifyAD.ga_get_general import _get_gen_npool
+from molSimplifyAD.ga_get_general import get_gen_npool
 
 
 ##Finds the ANN distances, writes them to a dictionary and then to a file
-def _find_distances():
+def find_distances():
     # print('in find distances')
-    lastgen, npool = _get_gen_npool(isKeyword('rundir'))
+    lastgen, npool = get_gen_npool(isKeyword('rundir'))
     gene_dist_dict = dict()
     gene_prop_dict = dict()
     gene_name_dict = dict()
@@ -165,8 +165,8 @@ def _find_distances():
     return gene_dist_dict, npool, gene_prop_dict, gene_name_dict
 
 
-def _mean_distances(gene_dist_dict):
-    lastgen, npool = _get_gen_npool(isKeyword('rundir'))
+def mean_distances(gene_dist_dict):
+    lastgen, npool = get_gen_npool(isKeyword('rundir'))
     mean_dist_dict = dict()
     dist_dict = gene_dist_dict
     print(dist_dict)
@@ -196,7 +196,7 @@ def _mean_distances(gene_dist_dict):
         mean_dist_dict.update({curr_gen: mean_dist})
     fi.close()
 
-    write_path = isKeyword('rundir') + "statespace/_mean_distances.csv"
+    write_path = isKeyword('rundir') + "statespace/mean_distances.csv"
     with open(write_path, 'w') as fi:
         emsg = write_dictionary(mean_dist_dict, write_path)
         if emsg:
@@ -205,7 +205,7 @@ def _mean_distances(gene_dist_dict):
 
 # Uses the same directory as get_general, which is get_run_dir() from ga_tools
 def format_distances():
-    gene_dist_dict, npool, _, _ = _find_distances()
+    gene_dist_dict, npool, _, _ = find_distances()
     print('DONE with find distances')
-    _mean_distances(gene_dist_dict)
+    mean_distances(gene_dist_dict)
     print('DONE with mean distances')
