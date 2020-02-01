@@ -5,7 +5,7 @@ import yaml
 from pkg_resources import resource_filename, Requirement
 
 
-class GA_run_defintion:
+class GA_run_definition:
     ## this function controls run-specific parameters
     def __init__(self):
         ## blank initialization
@@ -54,10 +54,8 @@ class GA_run_defintion:
                   active_learning_step=False,
                   geo_check_dict=False,
                   atom_specific_cutoffs=False,
+                  job_manager=False,
                   **KWARGS):
-        ## first time start-up function
-        #                print('configuring status dictionaty')
-        #                print('setting rundir to '+rundir)
         if DFT:
             monitor_distance = False
         self.config = {'DFT': DFT,
@@ -103,12 +101,13 @@ class GA_run_defintion:
                        'db_communicate': db_communicate,
                        'active_learning_step': active_learning_step,
                        'geo_check_dict': geo_check_dict,
-                       'atom_specific_cutoffs': atom_specific_cutoffs
+                       'atom_specific_cutoffs': atom_specific_cutoffs,
+                       'job_manager': job_manager
                        }
 
     def serialize(self):
         ## serialize run info
-        print(('serialziing to ' + str(self.config['rundir'] + '.madconfig')))
+        print(('serializing to ' + str(self.config['rundir'] + '.madconfig')))
         with open(self.config['rundir'] + '.madconfig', 'w') as handle:
             json.dump(self.config, handle)
 
@@ -122,7 +121,7 @@ class GA_run_defintion:
                 ob = json.load(instream)
                 self.gene_template = ob
         else:
-            self.gene_template = {'legacy': True, 'ox': True, 'spin': False}
+            self.gene_template = {'legacy': False, 'ox': True, 'spin': False}
 
 
 ########################
