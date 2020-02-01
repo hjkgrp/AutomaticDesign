@@ -1,0 +1,11 @@
+mAD is a package for genetic algorithm enabled chemical space exploration, specifically for the realm of octahedral inorganic transition metal chemistry.
+
+mAD is arranged as follows:
+	1. __main__ contains the main starting points that mAD can begin from. This can be either creating a new mAD run, continuing a previous mAD run or moving things to a database.
+	2. From here, there are two places we can go --> 
+		a) ga_create_new.py
+			i) mAD creates a new run by this file. In particular, the folder hierarchy is setup here, and the GA is initialized. By definition, the GA is initialized with random transition metal complexes, which is why mAD requires specialized scripts in order to generate a run with a specific set of transition metal complexes.
+		b) ga_resume_run.py
+			i) This is where mAD goes to resume an existing mAD run.
+				1) This is the first place where there is differentiation of DFT vs. ANN modes. 
+				2) The wakeup routine gets called in order to see what should 
