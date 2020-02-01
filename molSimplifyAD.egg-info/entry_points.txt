@@ -1,0 +1,3 @@
+[console_scripts]
+mad = molSimplifyAD.__main__:main
+
