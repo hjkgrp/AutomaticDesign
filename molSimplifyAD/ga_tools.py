@@ -22,10 +22,9 @@ def get_run_dir():
 
 ########################
 def get_current_GA():
-    GA_run = GA_run_defintion()
+    GA_run = GA_run_definition()
     GA_run.deserialize('.madconfig')
     return GA_run
-
 
 ########################
 def get_infile_from_job(job):
@@ -1031,22 +1030,6 @@ def check_HFX_linearity(all_runs, number_of_points_tolerance=3, max_deviation=5,
                         all_runs[runkey_list[run_index]].hfx_flag = False
     return all_runs
 
-
-########################
-
-def get_sql_path():
-    ## function to bd string
-    ## if available
-    try:
-        GA_run = get_current_GA()
-        if GA_run.config["sqlpath"]:
-            return GA_run.config["sqlpath"]
-        else:
-            return False
-    except:
-        return False
-
-
 ########################
 
 
@@ -1083,8 +1066,6 @@ def setup_paths():
         "fod_output_path": working_dir + "fod_outfiles/",
     }
 
-    #    shutil.copyfile(get_source_dir()+'wake.sh',get_run_dir()+'wake.sh')
-    ## set scr path to scr/sp for single points
     if not isKeyword('optimize'):
         path_dictionary.update({"scr_path": working_dir + "scr/geo/"})
     if isKeyword('solvent'):
@@ -1096,9 +1077,6 @@ def setup_paths():
     if isKeyword('thermo'):
         path_dictionary.update({"thermo_out_path": working_dir + "thermo_outfiles/"})
         path_dictionary.update({"thermo_in_path": working_dir + "thermo_infiles/"})
-    GA_run = get_current_GA()
-    # if "DLPNO" in GA_run.config.keys():
-    #    if GA_run.config["DLPNO"]:
     if isKeyword('DLPNO'):
         path_dictionary.update({"DLPNO_path": working_dir + "DLPNO_files/"})
     if isKeyword('TS'):
@@ -1114,6 +1092,8 @@ def setup_paths():
         path_dictionary.update({"PRFO_in_path_Oxo": working_dir + "prfo_infiles/oxo/"})
         path_dictionary.update({"PRFO_out_path_Oxo": working_dir + "prfo_outfiles/oxo/"})
         path_dictionary.update({"PRFO_scr_path_Oxo": working_dir + "scr/prfo/oxo/"})
+    if isKeyword('job_manager'):
+        path_dictionary.update({"job_manager":working_dir+'job_manager/'})
     for keys in list(path_dictionary.keys()):
         ensure_dir(path_dictionary[keys])
     return path_dictionary
@@ -1133,7 +1113,7 @@ def advance_paths(path_dictionary, generation):
 ########################
 
 def get_ligands():
-    GA_run = GA_run_defintion()
+    GA_run = GA_run_definition()
     GA_run.deserialize('.madconfig')
     ligands_list = GA_run.config['liglist']
     return ligands_list
@@ -1141,10 +1121,29 @@ def get_ligands():
 
 ########################
 def get_gene_template():
-    GA_run = GA_run_defintion()
+    GA_run = GA_run_definition()
     GA_run.deserialize('.madconfig')
     gene_template = GA_run.gene_template
     return gene_template
+
+########################
+def write_job_manager_jobscript(jobpath, name):
+    # probably we will want this script to be customizable, so that it can be used for any code...
+    with open(jobpath,'w') as f:
+        f.writelines('#$ -S /bin/bash\n')
+        f.writelines('#$ -N '+str(name)+'\n')
+        f.writelines('#$ -cwd\n')
+        f.writelines('#$ -R y\n')
+        f.writelines('#$ -l h_rt=24:00:00\n')
+        f.writelines('#$ -l h_rss=8G\n')
+        f.writelines('#$ -q gpus|gpusnew|gpusnewer\n')
+        f.writelines('#$ -l gpus=1\n')
+        f.writelines('#$ -pe smp 1\n')
+        f.writelines('# -fin '+str(name)+'.in\n')
+        f.writelines('# -fin '+str(name)+'.xyz\n')
+        f.writelines('# -fout scr/\n')
+        f.writelines('export OMP_NUM_THREADS=1\n')
+        f.writelines('terachem '+str(name)+'.in > $SGE_O_WORKDIR/'+str(name)+'.out\n')
 
 
 ########################
