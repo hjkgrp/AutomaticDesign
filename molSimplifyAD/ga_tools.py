@@ -19,6 +19,14 @@ def get_run_dir():
     rdir = GA_run.config['rundir']
     return rdir
 
+########################
+def get_jobs_in_job_manager(gen):
+    path_dictionary = setup_paths()
+    path_dictionary = advance_paths(path_dictionary, gen)
+    joblist = []
+    for foldername in os.listdir(path_dictionary['job_manager']):
+        joblist.append(foldername)
+    return joblist
 
 ########################
 def get_current_GA():
@@ -1109,6 +1117,46 @@ def advance_paths(path_dictionary, generation):
             ensure_dir(new_dict[keys])
     return new_dict
 
+########################
+
+def setup_configure_file(gen, argument_dict=False):
+    # This function sets up the configure file used by the job manager.
+    # By default, this function will write the global configure file.
+    # If handed specific argument_dict, it can also write local configure files.
+    # The format of argument_dict should be a key-value pair, where the key
+    # is the path to the folder where the local configure will go, and the value
+    # is the set of keywords to be used: {'/some/path/to/file/':['ax_lig_dissoc','hfx_resample']}.
+    if isKeyword('job_manager'):
+        # This is where we prepare the configure file for the job manager.
+        # If derivative jobs such as single points need to be HFX resampled,
+        # then they must have a local configure file. This sets up the global
+        # configure file.
+        if argument_dict == False:
+            configure_kw = ['geo_check:oct\n']
+            if isKeyword('ax_lig_dissoc'):
+                configure_kw += ['dissociation\n']
+            if isKeyword('solvent'):
+                configure_kw += ['solvent\n']
+            if isKeyword('HFXsample'):
+                configure_kw += ['hfx_resample\n']
+            if isKeyword('max_jobs') != False:
+                configure_kw += ['max_jobs:'+str(isKeyword('max_jobs'))+'\n']
+            if isKeyword('oxocatalysis'):
+                configure_kw += ['dispersion:d3\n']
+            if isKeyword('max_resubmit') != False:
+                configure_kw += ['max_resub:'+str(isKeyword('max_resubmit'))+'\n']
+            path_dictionary = setup_paths()
+            #path_dictionary = advance_paths(path_dictionary,gen)
+            with open(path_dictionary['job_manager']+'configure','w') as f:
+                for line in configure_kw:
+                    f.writelines(line)
+        else:
+            for key, value in argument_dict.items():
+                with open(str(key),'w') as f:
+                    for list_val in value: # value here is a list of the keywords
+                        f.writelines(list_val.replace('\n','')+'\n') # handles whether or not \ns are provided
+    else:
+        raise ValueError('The job manager is not toggled on. Configure not being written.')
 
 ########################
 
