@@ -1397,10 +1397,17 @@ class octahedral_complex:
 
     def generate_from_db(self, tmcdoc, mol_name, path_dictionary, charge, spinmult):
         numatoms = len(tmcdoc["init_geo"].split('\n')) - 1
-        init_geopath = path_dictionary["initial_geo_path"] + mol_name + '.xyz'
-        opt_geopath = path_dictionary["optimial_geo_path"] + mol_name + '.xyz'
-        scrpath = path_dictionary["scr_path"] + mol_name
-        outpath = path_dictionary["geo_out_path"] + mol_name + '.out'
+        if isKeyword('job_manager'):
+            init_geopath = path_dictionary["job_manager"] + mol_name + '.xyz'
+            scrpath = path_dictionary["job_manager"]+'scr/'
+            opt_geopath = path_dictionary["job_manager"]+'scr/optimized.xyz'
+            outpath = path_dictionary["job_manager"] + mol_name + '.out'
+        else:
+            init_geopath = path_dictionary["initial_geo_path"] + mol_name + '.xyz'
+            opt_geopath = path_dictionary["optimial_geo_path"] + mol_name + '.xyz'
+            scrpath = path_dictionary["scr_path"] + mol_name
+            outpath = path_dictionary["geo_out_path"] + mol_name + '.out'
+        ensure_dir(scrpath)
         with open(init_geopath, "w") as fo:
             fo.write("%d\n" % numatoms)
             fo.write("====Geometry adopted from the database====\n")
@@ -1409,7 +1416,6 @@ class octahedral_complex:
             fo.write("%d\n" % numatoms)
             fo.write("====Geometry adopted from the database====\n")
             fo.write(tmcdoc["opt_geo"])
-        ensure_dir(scrpath)
         with open(scrpath + '/optim.xyz', "w") as fo:
             fo.write("%d\n" % numatoms)
             fo.write("====Geometry adopted from the database====\n")
