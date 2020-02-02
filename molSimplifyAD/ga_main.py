@@ -15,6 +15,7 @@ import shutil
 # from molSimplify.Classes.globalvars import *
 from molSimplify.python_nn.tf_ANN import *
 from scipy.spatial import distance_matrix
+from molSimplify.job_manager.tools import list_active_jobs
 # ############################
 from molSimplifyAD.job_manager_utils.job_converter import *
 from molSimplifyAD.ga_tools import *
@@ -258,6 +259,22 @@ class GA_generation:
         ## if doing a DFT run, we need to check the filestytem for updates
         if self.status_dictionary["DFT"]:
             if isKeyword('job_manager'):
+                setup_configure_file(self.status_dictionary['gen'])
+                list_of_active_jobs = list_active_jobs()
+                print(list_of_active_jobs)
+                jobs_in_job_manager = get_jobs_in_job_manager(self.status_dictionary['gen'])
+                # the list of jobs in job manager are going to be all the base jobs. Live jobs
+                # may have additional things added on. Thus we must check if any of the jobs are 
+                # still in action (base or derivative).
+                still_running = 0
+                for jobname in jobs_in_job_manager:
+                    for live_jobname in list_of_active_jobs:
+                        if jobname in live_jobname:
+                            still_running += 1
+                        if still_running > 0:
+                            break
+                if still_running>0:
+                    return
                 run_dict = loop_convert_jobs()
                 all_runs = dict()
                 for this_run in run_dict.values():
