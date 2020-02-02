@@ -1205,12 +1205,29 @@ class octahedral_complex:
                         newf.writelines("scrdir " + scrpath + "\n")
                 if isKeyword('job_manager'):
                     shutil.copy(rundirpath + 'temp/' + mol_name + '.in',folder_for_job + mol_name +'.in')
+                    with open(folder_for_job + mol_name +'.in','r') as f:
+                        data = f.readlines()
+                        restricted = False
+                        for i, row in enumerate(data):
+                            if 'spin' in row:
+                                if int(row.split()[1]) == 1:
+                                    restricted = True
+                    if restricted:
+                        with open(folder_for_job + mol_name +'.in','w') as f:
+                            for i, row in enumerate(data):
+                                if 'method' in row:
+                                    f.writelines('method b3lyp\n')
+                                else:
+                                    f.writelines(row)
                     write_job_manager_jobscript(folder_for_job + mol_name +'_jobscript',mol_name)
                     translate_dict = translate_job_name(mol_name)
                     metal_list = get_metals()
                     full_name = "_".join([metal_list[translate_dict['metal']],str(translate_dict['ox']),str(translate_dict['spin']),"_".join([val for val in translate_dict['liglist']]),str(int(translate_dict['ahf'])).zfill(2)])
+                    with open(folder_for_job+'chemical_name','w') as f:
+                        f.writelines('name: '+str(mol_name)+'\n')
+                        f.writelines('gene: '+str(translate_dict['gene'])+' --> '+str(full_name))
                     with open(folder_for_job+full_name,'w') as f:
-                        f.writelines(str(translate_dict['gene'])+' --> '+str(full_name))
+                        f.writelines('')
                 os.remove(rundirpath + 'temp/' + mol_name + '.in')
             else:
                 raise FileNotFoundError(rundirpath + 'temp/' + mol_name + '.in' + 'does not exist.')
