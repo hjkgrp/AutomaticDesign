@@ -12,8 +12,8 @@ attr_mongo_in = ["predictor", "hyperparams", "score_train", "score_test",
                  "name_train", "name_test",
                  "len_train", "len_test", "len_tot", "constraints",
                  "history", "tag", "features", "target", "hyperopt",
-                 "tag", "initialize_weight", "hyperopt_step", "load_latest_model",
-                 "fix_architecture"]
+                 "initialize_weight", "hyperopt_step", "load_latest_model",
+                 "fix_architecture", "direct_retrain"]
 attr_mongo_undef = ["model", "date", "author"]
 model_basepath = '/home/data/models/'
 

@@ -4,7 +4,7 @@ import subprocess
 
 def run_bash(filein):
     print(("Converting: ", filein))
-    run_cmd = '2to3 -x unicode -x basestring -x raw_input -w %s' % filein
+    run_cmd = '2to3 -x unicode -x basestring -x raw_input -p -w %s' % filein
     q = subprocess.Popen(run_cmd, shell=True, stdout=subprocess.PIPE)
     ll = q.communicate()[0].decode("utf-8")
 
