@@ -38,7 +38,8 @@ def dump_databse(database_name="tmc", outpath='/home/db_backup',
         fo.write("dumping database %s to path %s at time %s.\n" % (database_name, outpath, str(now)))
 
 
-def query_db_easy(user, pwd, collection='oct', constraints={}, max_entries=None, dropcols=[], host='localhost', port=27017, database='tmc', auth=True, loud=True):
+def query_db_easy(user, pwd, collection='oct', constraints={}, max_entries=None, dropcols=[], host='localhost',
+                  port=27017, database='tmc', auth=True, loud=True):
     '''
     Query the database for `max_entries` entries using constraints in `constraints`. Queries the octahedral transition metal complex database by default.
 
@@ -46,26 +47,28 @@ def query_db_easy(user, pwd, collection='oct', constraints={}, max_entries=None,
     Returns: Pandas dataframe with database query results.
     Example constraints string: constraints = {"metal": {"$in": ['fe', 'co']}, "tot_time": {"$gt": 0}, "ox": 2}
     '''
-    
+
     start_time = time.time()
     db = connect2db(user=user, pwd=pwd, host=host, port=port, database=database, auth=auth)
-    
-    if collection==None:
-        raise ValueError('Argument `collection` not specified; you can use the following collections: %s' % db.list_collection_names())
+
+    if collection == None:
+        raise ValueError(
+            'Argument `collection` not specified; you can use the following collections: %s' % db.list_collection_names())
     if loud:
-        if constraints=={}:
+        if constraints == {}:
             print("Warning: argument `constraints` is {} by defaultl. No constraints are being applied.")
-        if max_entries==None:
-            print("Warning: argument `max_entries` is None by default, so no limit has been set on the number of entries to pull.")
-        if dropcols==[]:
+        if max_entries == None:
+            print(
+                "Warning: argument `max_entries` is None by default, so no limit has been set on the number of entries to pull.")
+        if dropcols == []:
             print("Warning: argument `dropcols` is [] by default, so no columns will be dropped.")
-    
+
     est_num_docs = db.oct.count_documents(constraints)
-    num_docs = est_num_docs if max_entries==None else min(est_num_docs, max_entries)
+    num_docs = est_num_docs if max_entries == None else min(est_num_docs, max_entries)
     if loud:
         print "Estimated number of entries to be pulled: %s" % num_docs
-        print "Estimated pull time: %s sec" % (2.36e-4*num_docs) # Empirical fit, as of 2020-01-16
-        print "Estimated pull size: %s MB" % (3.53e-2*num_docs) # Empirical fit, as of 2020-01-16
+        print "Estimated pull time: %s sec" % (2.36e-4 * num_docs)  # Empirical fit, as of 2020-01-16
+        print "Estimated pull size: %s MB" % (3.53e-2 * num_docs)  # Empirical fit, as of 2020-01-16
 
     if dropcols == []:
         cursor = db[collection].find(constraints)
@@ -414,9 +417,10 @@ def push_csd_complexes(database, tag, csdobj_list, collection="csd",
     ensure_collection(db, collection)
     for csdobj in csdobj_list:
         csdmongo = CSDMongo(csdobj, tag=tag, update_fields=update_fields)
-        _doc = query_one(db, collection, constraints={"refcode": csdmongo.document["refcode"]})
+        _doc = query_one(db, collection, constraints={"refcode_plus": csdmongo.document["refcode_plus"]})
         if not _doc == None:
-            print(("A csd complex has already existed. merging with update_fields as: ", update_fields))
+            print("A csd complex (%s) has already existed. merging with update_fields as: " % (
+                csdmongo.document["refcode_plus"]), update_fields)
             merge_documents(db, collection,
                             doc1=_doc,
                             doc2=csdmongo.document,

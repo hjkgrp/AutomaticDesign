@@ -4,12 +4,10 @@ import numpy as np
 from datetime import datetime
 
 mongo_attr_other = ["date", "author", "tag"]
-mongo_attr_inherent = ["refcode", "geometry", "graphs", "has_csd_user_charges",
-                       "e_counts", "odd_even_e_counts", "metal"]  ### check the names with Michael!!
+mongo_attr_inherent = ["refcode", "refcode_plus", "geometry", "mol2_string", "has_csd_user_charges",
+                       "e_counts", "odd_even_e_counts", "metal", "charge"]  ### check the names with Michael!!
 mongo_attr_optional = ["charge", "spin", "ox"]
-convert_dict = {"metal": "tm_symbol",
-                "charge": "total_csd_user_charge_on_tmc",
-                "refcode": "xyz_name"}
+convert_dict = {"charge": "complex_formal_charge_csd", }
 
 
 class CSDMongo():
@@ -43,7 +41,7 @@ class CSDMongo():
                 if not attr_csd == "graphs":
                     self.document.update({attr: getattr(self.csdobj, attr_csd)})
                 else:
-                    self.document.update({attr: getattr(self.csdobj, attr_csd).tolist()}) ## for 2d np.array
+                    self.document.update({attr: getattr(self.csdobj, attr_csd).tolist()})  ## for 2d np.array
             else:
                 raise ValueError("Attribute %s missing from csdobj input." % attr)
         for attr in mongo_attr_optional:
