@@ -5,7 +5,8 @@ from molSimplifyAD.post_classes import DFTRun
 from molSimplify.Classes.mol3D import mol3D
 from molSimplifyAD.ga_tools import get_mulliken, rename_ligands
 from molSimplifyAD.process_scf import read_molden_file
-from molSimplify.job_manager.tools import textfile, list_active_jobs, extract_optimized_geo
+from molSimplify.job_manager.tools import list_active_jobs, extract_optimized_geo
+from molSimplify.job_manager.classes import resub_history, textfile
 from molSimplifyAD.job_manager_utils.bind_functions import bind_solvent, bind_water, bind_thermo, bind_vertIP, \
     bind_ligdissociate, bind_vertEA, bind_functionals
 from molSimplifyAD.job_manager_utils.converting_tools import *
@@ -35,13 +36,18 @@ def common_processing(jobname, basedir, output, outfile, spin):
     this_run = DFTRun(jobname, external=True)
     this_run.name = jobname
     this_run.octahedral = True
-    energy, ss_act, ss_target, tot_time, thermo_grad_error, solvent_cont, tot_step = output.wordgrab(
+    energy, ss_act, ss_target, tot_time, thermo_grad_error, solvent_cont, tot_step, d3_energy = output.wordgrab(
         ['FINAL', 'S-SQUARED:', 'S-SQUARED:', 'processing', 'Maximum component of gradient is too large',
-         'C-PCM contribution to final energy:', 'Optimization Cycle'],
-        [2, 2, 4, 3, 0, 4, 3], last_line=True)
+         'C-PCM contribution to final energy:', 'Optimization Cycle', 'DFTD Dispersion Correction:'],
+        [2, 2, 4, 3, 0, 4, 3, -2], last_line=True)
     iscsd = isCSD(jobname)
     this_run.iscsd = iscsd
     this_run.charge = int(output.wordgrab(['Total charge'], -1)[0][0])
+    if not d3_energy == None:
+        this_run.d3opt_flag = True
+    else:
+        this_run.d3_energy = np.nan
+        this_run.d3opt_flag = False
     if not this_run.iscsd:
         print(("jobname: ", jobname))
         bind_complex_info(this_run, jobname, spin)

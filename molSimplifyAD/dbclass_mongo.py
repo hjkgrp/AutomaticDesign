@@ -10,7 +10,7 @@ mongo_attr_from_run_undef = ["name", "metal", "ox", "spin", "liglist",
                              'terachem_version', "ligcharge", "dynamic_feature", "geo_check_dict",
                              "scrpath", "outpath", "geo_opt", "geo_check_metrics", "geo_check_metrics_prog",
                              'wavefunction', 'molden', 'iscsd']
-mongo_attr_flags = ["geo_flag", "ss_flag", "metal_spin_flag"]
+mongo_attr_flags = ["geo_flag", "ss_flag", "metal_spin_flag", "d3opt_flag"]
 mongo_attr_id = ["metal", "ox", "spin", "ligstr", "alpha", "functional", "basis", 'converged',
                  "energy", "geotype"]  ### keys that identify a complex in matching.
 csd_attr_id = ["refcode", "metal", "charge", "spin", "functional", "basis", 'converged',
@@ -22,7 +22,7 @@ mongo_attr_from_run_nan = ["energy", "ss_target", "ss_act", 'alphaHOMO', 'betaHO
                            'displace_rms_hist', 'displace_rms_hist',
                            'trust_radius_hist', 'step_qual_hist', 'expected_delE_hist',
                            'water_cont', 'thermo_cont',
-                           'solvent', 'vertIP', 'vertEA', 'functionalsSP']
+                           'solvent', 'vertIP', 'vertEA', 'functionalsSP', 'd3_energy']
 SP_keys = ['solvent', 'vertIP', 'vertEA', 'functionalsSP']
 mongo_attr_other = ["date", "author", "geotype", "opt_geo", "init_geo", "prog_geo",
                     "RACs", "initRACs", "dftrun", "tag", "subtag", "unique_name",
@@ -102,12 +102,10 @@ class TMC():
                     setattr(self, attr, getattr(self.this_run, attr))
         ## Get job flags
         for attr in mongo_attr_flags:
-            setattr(self, attr, np.nan)
-        for attr in mongo_attr_flags:
             try:
                 setattr(self, attr, getattr(self.this_run, attr))
             except:
-                pass
+                setattr(self, attr, np.nan)
         ## Get geometries
         self.opt_geo = self.this_run.mol.returnxyz() if self.this_run.mol else "undef"
         self.init_geo = self.this_run.init_mol.returnxyz() if self.this_run.init_mol else "undef"

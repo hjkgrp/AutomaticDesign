@@ -1,7 +1,7 @@
 import os
 import glob
 import numpy as np
-from molSimplify.job_manager.tools import textfile
+from molSimplify.job_manager.classes import textfile
 
 
 def bind_direct(this_run, jobname, basedir, case, keyinout, suffix=''):
@@ -39,8 +39,11 @@ def bind_with_search(this_run, jobname, basedir, case, keyinout, ref=False):
                         else:
                             getattr(this_run, case).update({key: False})
                     else:
+                        d3_energy = 0
+                        if "d3opt_flag" in this_run.__dict__ and this_run.d3opt_flag:
+                            d3_energy = this_run.d3_energy
                         if not energy == None:
-                            getattr(this_run, case).update({key: energy - this_run.energy})
+                            getattr(this_run, case).update({key: energy - (this_run.energy - d3_energy)})
                         else:
                             getattr(this_run, case).update({key: False})
 
