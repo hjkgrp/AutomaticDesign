@@ -2,6 +2,7 @@ import os
 import glob
 import numpy as np
 from molSimplify.job_manager.classes import textfile
+from molSimplify.job_manager.manager_io import get_scf_progress
 
 
 def bind_direct(this_run, jobname, basedir, case, keyinout, suffix=''):
@@ -31,21 +32,26 @@ def bind_with_search(this_run, jobname, basedir, case, keyinout, ref=False):
                     key = dirpath.split('/')[-1]
                     output = textfile(outfile)
                     energy = output.wordgrab([keyinout[0]], [keyinout[1]], last_line=True)[0]
-                    if isinstance(energy, str):
-                        energy = float(energy.split(':')[-1])
-                    if not ref:
-                        if not energy == None:
-                            getattr(this_run, case).update({key: energy})
+                    is_oscalliting_scf = get_scf_progress(outfile)
+                    if not is_oscalliting_scf:
+                        if isinstance(energy, str):
+                            energy = float(energy.split(':')[-1])
+                        if not ref:
+                            if not energy == None:
+                                getattr(this_run, case).update({key: energy})
+                            else:
+                                getattr(this_run, case).update({key: False})
                         else:
-                            getattr(this_run, case).update({key: False})
+                            d3_energy = 0
+                            if "d3opt_flag" in this_run.__dict__ and this_run.d3opt_flag:
+                                d3_energy = this_run.d3_energy
+                            if not energy == None:
+                                getattr(this_run, case).update({key: energy - (this_run.energy - d3_energy)})
+                            else:
+                                getattr(this_run, case).update({key: False})
                     else:
-                        d3_energy = 0
-                        if "d3opt_flag" in this_run.__dict__ and this_run.d3opt_flag:
-                            d3_energy = this_run.d3_energy
-                        if not energy == None:
-                            getattr(this_run, case).update({key: energy - (this_run.energy - d3_energy)})
-                        else:
-                            getattr(this_run, case).update({key: False})
+                        print("oscillaing scf: ", outfile)
+                        getattr(this_run, case).update({key: np.nan})
 
 
 def bind_water(this_run, jobname, basedir):

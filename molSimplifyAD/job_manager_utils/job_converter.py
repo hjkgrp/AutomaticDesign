@@ -28,7 +28,7 @@ def collect_base_jobs(path=False):
         for file in sorted(files):
             if (file.split('.')[-1] == 'out') and (not any(c in file for c in list(associated_jobs.keys()))) and (
                     not any(c in dirpath for c in list(associated_jobs.keys()))) and not 'nohup' in file:
-                basejobs.append([dirpath, file.split('.')[0]])
+                basejobs.append([dirpath, '.'.join(file.split('.')[:-1])])
     return basejobs
 
 
@@ -120,7 +120,10 @@ def process_geometry_optimizations(this_run, basedir, outfile, output):
             this_run.init_mol.readfromtxt(get_initgeo(optimpath))
             this_run.mol = mol3D()
             this_run.mol.readfromtxt(get_lastgeo(optimpath))
-            this_run.check_oct_needs_init(debug=False, external=True)
+            try:
+                this_run.check_oct_needs_init(debug=False, external=True)
+            except:
+                print("Warning: falied get geo_check!!!")
             this_run.obtain_rsmd()
             this_run.obtain_ML_dists()
             this_run.get_check_flags()
