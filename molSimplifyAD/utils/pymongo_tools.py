@@ -66,9 +66,9 @@ def query_db_easy(user, pwd, collection='oct', constraints={}, max_entries=None,
     est_num_docs = db.oct.count_documents(constraints)
     num_docs = est_num_docs if max_entries == None else min(est_num_docs, max_entries)
     if loud:
-        print "Estimated number of entries to be pulled: %s" % num_docs
-        print "Estimated pull time: %s sec" % (2.36e-4 * num_docs)  # Empirical fit, as of 2020-01-16
-        print "Estimated pull size: %s MB" % (3.53e-2 * num_docs)  # Empirical fit, as of 2020-01-16
+        print("Estimated number of entries to be pulled: %s" % num_docs)
+        print("Estimated pull time: %s sec" % (2.36e-4 * num_docs))  # Empirical fit, as of 2020-01-16
+        print("Estimated pull size: %s MB" % (3.53e-2 * num_docs))  # Empirical fit, as of 2020-01-16
 
     if dropcols == []:
         cursor = db[collection].find(constraints)
@@ -78,8 +78,8 @@ def query_db_easy(user, pwd, collection='oct', constraints={}, max_entries=None,
     cursor_iterator = itertools.islice(cursor, max_entries)
     results = pd.DataFrame(cursor_iterator)
     if loud:
-        print "Pull finished. Number of entries: %s" % len(results)
-        print "Time for pull: %s sec" % (time.time() - start_time)
+        print("Pull finished. Number of entries: %s" % len(results))
+        print("Time for pull: %s sec" % (time.time() - start_time))
     return results
 
 
