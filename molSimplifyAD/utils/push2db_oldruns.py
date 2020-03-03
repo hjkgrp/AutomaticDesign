@@ -8,6 +8,7 @@ This script is just a scaffold. It has to be modified accordingly to fit one's d
 
 '''
 import os
+from os.path import expanduser
 import glob
 import time
 import pandas as pd
@@ -67,10 +68,12 @@ def rename_ligands(liglist):
     return liglist
 
 
-update_fields = ['alphaHOMO', 'betaHOMO','alphaLUMO', 'betaLUMO', 'status']
+update_fields = ['alphaHOMO', 'betaHOMO', 'alphaLUMO', 'betaLUMO', 'status']
 print(("update_fields: ", update_fields))
 df = pd.read_csv("spectro_all_RACs_format.csv")
-db = connect2db(user='crduan', pwd='duanchenru521',
+home = expanduser("~")
+dbconfig = json.load(open(home + "/.db_config"))
+db = connect2db(user=dbconfig['user'], pwd=dbconfig['pwd'],
                 host='localhost', port=27017,
                 database='tmc', auth=True)
 print(("# of complexes: ", db.oct.count()))
