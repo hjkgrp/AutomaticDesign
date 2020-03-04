@@ -256,7 +256,7 @@ class GA_generation:
     def check_results(self):
         ## load gene fitness dict
         fitkeys = list(self.gene_fitness_dictionary.keys())
-        ## if doing a DFT run, we need to check the filestytem for updates
+        ## if doing a DFT run, we need to check the filesystem for updates
         if self.status_dictionary["DFT"]:
             if isKeyword('job_manager'):
                 setup_configure_file(self.status_dictionary['gen'])
@@ -275,7 +275,7 @@ class GA_generation:
                             break
                 if still_running>0:
                     return
-                run_dict = loop_convert_jobs()
+                run_dict = loop_convert_jobs(gene=True)
                 all_runs = dict()
                 for this_run in run_dict.values():
                     all_runs.update({this_run.name: this_run})
