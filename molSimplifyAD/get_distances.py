@@ -4,7 +4,6 @@
 import csv
 import os
 from molSimplifyAD.ga_tools import *
-#from molSimplifyAD.ga_tools import get_run_dir
 from molSimplifyAD.ga_get_general import get_gen_npool
 
 
