@@ -38,7 +38,7 @@ def resume_run(args):
                 logger(path_dictionary['state_path'], '************************************************')
                 logger(path_dictionary['state_path'], str(datetime.datetime.now()) + ' waking up...yawn')
                 if isKeyword('job_manager'):
-                    live_job_count = get_total_queue_usage()
+                    live_job_count = tools.get_total_queue_usage()
                 else:
                     live_job_count = check_queue_for_live_jobs()
                 logger(path_dictionary['state_path'],
