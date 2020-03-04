@@ -3,7 +3,7 @@ import glob
 import numpy as np
 from molSimplifyAD.post_classes import DFTRun
 from molSimplify.Classes.mol3D import mol3D
-from molSimplifyAD.ga_tools import get_mulliken, rename_ligands
+from molSimplifyAD.ga_tools import get_mulliken, rename_ligands, translate_job_name
 from molSimplifyAD.process_scf import read_molden_file
 from molSimplify.job_manager.tools import textfile, list_active_jobs, extract_optimized_geo
 from molSimplifyAD.job_manager_utils.bind_functions import bind_solvent, bind_water, bind_thermo, bind_vertIP, \
@@ -31,10 +31,14 @@ def collect_base_jobs(path=False):
     return basejobs
 
 
-def common_processing(jobname, basedir, output, outfile, spin):
+def common_processing(jobname, basedir, output, outfile, spin, gene=False):
     this_run = DFTRun(jobname, external=True)
     this_run.name = jobname
     this_run.octahedral = True
+    if gene != False:
+        temp_name = "_".join(jobname.split('_')[0:13]) #stops before job manager extra keywords
+        translate_dict = translate_job_name(temp_name)
+        this_run.gene = translate_dict['gene']
     energy, ss_act, ss_target, tot_time, thermo_grad_error, solvent_cont, tot_step = output.wordgrab(
         ['FINAL', 'S-SQUARED:', 'S-SQUARED:', 'processing', 'Maximum component of gradient is too large',
          'C-PCM contribution to final energy:', 'Optimization Cycle'],
@@ -131,7 +135,7 @@ def process_geometry_optimizations(this_run, basedir, outfile, output):
     return this_run
 
 
-def jobmanager2mAD(job, active_jobs):
+def jobmanager2mAD(job, active_jobs,gene=False):
     this_run = False
     basedir, jobname = job[0], job[1]
     outfile = basedir + '/' + jobname + '.out'
@@ -142,7 +146,7 @@ def jobmanager2mAD(job, active_jobs):
         except:
             print(('Cannot read file: ', outfile))
             return this_run
-        this_run = common_processing(jobname, basedir, output, outfile, spin)
+        this_run = common_processing(jobname, basedir, output, outfile, spin, gene=gene)
         issp = isSP(outfile)
         if not issp:
             this_run = process_geometry_optimizations(this_run, basedir, outfile, output)
@@ -153,12 +157,12 @@ def jobmanager2mAD(job, active_jobs):
     return this_run
 
 
-def loop_convert_jobs(path=False):
+def loop_convert_jobs(path=False, gene=False):
     runs = dict()
     basejobs = collect_base_jobs(path=path)
     active_jobs = list_active_jobs()
     for job in basejobs:
-        this_run = jobmanager2mAD(job, active_jobs)
+        this_run = jobmanager2mAD(job, active_jobs, gene=gene)
         if this_run and this_run.converged:
             runs.update({'/'.join(job): this_run})
     return runs
