@@ -10,7 +10,6 @@ import string
 import numpy
 from molSimplifyAD.ga_tools import *
 from molSimplifyAD.post_classes import *
-from molSimplifyAD.ga_oct_check import *
 
 ########### UNIT CONVERSION
 HF_to_Kcal_mol = 627.509  ###

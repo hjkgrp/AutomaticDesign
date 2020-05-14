@@ -47,7 +47,7 @@ if not os.path.isdir(rundir):
 shutil.copy(lig_list, rundir + lig_list)
 ll = process_ligands_file(rundir + lig_list)
 print(('ligands are: ', ll))
-GA_run = GA_run_defintion()
+GA_run = GA_run_definition()
 GA_run.configure(gen=0, runtype='split', optimize=True, DFT=True, 
 				rundir=rundir, liglist=ll, queue_type='SGE',
                  symclass='weak', use_singlets=True,

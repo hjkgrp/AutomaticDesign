@@ -1,0 +1,25 @@
+mAD is a package for genetic algorithm enabled chemical space exploration, specifically for the realm of octahedral inorganic transition metal chemistry.
+
+mAD is arranged as follows:
+	1. __main__ contains the main starting points that mAD can begin from. This can be either creating a new mAD run, continuing a previous mAD run or moving things to a database.
+	2. From here, there are two places we can go --> 
+		a) ga_create_new.py
+			i) mAD creates a new run by this file. In particular, the folder hierarchy is setup here, and the GA is initialized. By definition, the GA is initialized with random transition metal complexes, which is why mAD requires specialized scripts in order to generate a run with a specific set of transition metal complexes.
+		b) ga_resume_run.py
+			i) This is where mAD goes to resume an existing mAD run.
+				1) This is the first place where there is differentiation of DFT vs. ANN modes. 
+				2) The wakeup routine gets called in order to see what should be run. Wake up routine (in the ga_init script) is meant to analyze the current status of the GA. It picks the best genes, writes the GA status, and then decides whether or not to advance to the next generation or remain in the current generation. The GA can be a DFT GA (slow) or an ANN GA (fast). 
+                    a) If the keyword job manager is used in the .madconfig file (in the initialization), then the job manager will be used for DFT. THIS SHOULD BE THE DEFAULT! Using mADs native mode for doing DFT calculations is likely going to give you limited success. It is a bit hard coded.
+                    b) Throughout the process, you can check statespace/log.txt if you want to see what happened. Everything gets logged.
+
+        c) ga_get_general.py and get_distances.py
+            i) These two functions are focused on the GA. GA get general reports everything about the GA stats (i.e. fitness for each complex, average fitness, etc). It also dumps a human readable CSV that shows which complexes exist in which generation.
+            ii) Similar to ga_get_general, get_distances does all of the computation regarding the distance to training data (i.e. the distance penalty in the 2017 Janet Accelerating Chemical Discovery JPCL manuscript). This is dependent on the studied property, which may be spin and oxidation state dependent.
+
+    3. The above are the barebones pieces of mAD. All other pieces just help with processes mAD executes during the GA, such as mutations and crossover (all found in ga_complex.py), keeping track of a specific GA generation by tracing its diversity, deciding how the fitness should be adjusted (whether or not restrictions should be tighter), or running the ANNs in production mode with geometry free representations (found in ga_main.py).
+        a) ga_main has only one portion that relies on DFT results, and that is the gathering of the funal results dictionary. This is dependent on the gathering of run classes. See the "check_results" bound method of the GA_generation class for details.
+    4. There are a few major files that have to do with DFT. These files are ga_check_jobs (which managed the spawning of new jobs...), post_classes, and process_scf. These files should not be used in lieu of the molSimplify job manager. Therefore, you should not be changing DFT-centered parameters within mAD. That should be done in the job manager.
+    5. ga_check_jobs monitors the status of any live jobs in the queue, submits new jobs, etc. It uses functions that are documented in process_scf, which processes the DFT output files. This should all be done by the job manager.
+    6. After processing all of the jobs, mAD puts together two sets of python classes (DFTRun classes and Comparison classes). We store DFTRun classes in a database. The job manager also makes these run classes. Design logic can be achieved by making comparisons between runs (in some cases -- such as spin splitting energies), and within a single run itself (i.e. frontier orbital energies).
+        i) Thus the comparison class depends on the design problem, whereas the run class does not. mAD's job is to take run classes and aggregate them to carry out design. 
+    MISC NOTES: All fitness functions are implemented in ga_tools. These fitness functions are called in ga_main, where they are adjusted accordingly.

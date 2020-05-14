@@ -109,11 +109,6 @@ class octahedral_complex:
     def _get_random_metal(self):
         n = len(self.metals_list)
         metal_ind = numpy.random.randint(low=0, high=n)
-        # if isOxocatalysis():
-        #     while self.metals_list[metal_ind] in ['cr','co']:
-        #         metal_ind = numpy.random.randint(low = 0,high = n)
-        #         if self.metals_list[metal_ind] in ['fe','mn']:
-        #             break
         self.core = metal_ind
 
     def _get_random_ox(self):
@@ -123,7 +118,6 @@ class octahedral_complex:
     def _get_random_spin(self):
         local_spin_dictionary = spin_dictionary()
         metal_list = get_metals()
-        # metal_key = metal_list[self.metal]
         metal_key = metal_list[self.core]
         these_states = local_spin_dictionary[metal_key][self.ox]
         self.spin = numpy.random.choice(these_states)
@@ -224,9 +218,6 @@ class octahedral_complex:
                         # checks for consistent ordering
                         self.ax_inds.sort(reverse=True)
                         self.ax_ligands = [self.ligands_list[self.ax_inds[0]][0], self.ligands_list[self.ax_inds[1]][0]]
-                        # print('after sorting, ax ligands are')
-                        # print(self.ax_ligands,self.ax_inds)
-                        # time.sleep(5)
                         self.ready_for_assembly = True
                     else:
                         self.ready_for_assembly = False
@@ -1103,6 +1094,11 @@ class octahedral_complex:
 
         geometry_path = path_dictionary["initial_geo_path"] + '/' + mol_name + '.xyz'
 
+        if isKeyword('job_manager'):
+            folder_for_job = path_dictionary["job_manager"] + '/' + mol_name + '/'
+            if not os.path.exists(folder_for_job):
+                os.mkdir(folder_for_job)
+
         ## check if already exists:
         geo_exists = os.path.isfile(path_dictionary["initial_geo_path"] + mol_name + '.xyz')
 
@@ -1136,6 +1132,9 @@ class octahedral_complex:
                         p2.wait()
 
                 assert (os.path.isfile(rundirpath + 'temp' + '/' + mol_name + '.molinp'))
+                if isKeyword('job_manager'):
+                    shutil.copy(rundirpath + 'temp' + '/' + mol_name + '.xyz', folder_for_job + mol_name + '.xyz')
+                    shutil.copy(rundirpath + 'temp' + '/' + mol_name + '.molinp',folder_for_job + mol_name + '.molinp')
                 shutil.move(rundirpath + 'temp' + '/' + mol_name + '.molinp',
                             path_dictionary["molsimplify_inps"] + '/' + mol_name + '.molinp')
                 shutil.move(rundirpath + 'temp' + '/' + mol_name + '.xyz', geometry_path)
@@ -1144,7 +1143,6 @@ class octahedral_complex:
             #         print(call)
             #         sys.exit()
 
-            # if this_GA.config['symclass']=="strong":
 
             with open(rundirpath + 'temp' + '/' + mol_name + '.report', 'r') as report_f:
                 for line in report_f:
@@ -1205,6 +1203,31 @@ class octahedral_complex:
                         newf.writelines("scrdir " + "./" + "\n")
                     else:
                         newf.writelines("scrdir " + scrpath + "\n")
+                if isKeyword('job_manager'):
+                    shutil.copy(rundirpath + 'temp/' + mol_name + '.in',folder_for_job + mol_name +'.in')
+                    with open(folder_for_job + mol_name +'.in','r') as f:
+                        data = f.readlines()
+                        restricted = False
+                        for i, row in enumerate(data):
+                            if 'spin' in row:
+                                if int(row.split()[1]) == 1:
+                                    restricted = True
+                    if restricted:
+                        with open(folder_for_job + mol_name +'.in','w') as f:
+                            for i, row in enumerate(data):
+                                if 'method' in row:
+                                    f.writelines('method b3lyp\n')
+                                else:
+                                    f.writelines(row)
+                    write_job_manager_jobscript(folder_for_job + mol_name +'_jobscript',mol_name)
+                    translate_dict = translate_job_name(mol_name)
+                    metal_list = get_metals()
+                    full_name = "_".join([metal_list[translate_dict['metal']],str(translate_dict['ox']),str(translate_dict['spin']),"_".join([val for val in translate_dict['liglist']]),str(int(translate_dict['ahf'])).zfill(2)])
+                    with open(folder_for_job+'chemical_name','w') as f:
+                        f.writelines('name: '+str(mol_name)+'\n')
+                        f.writelines('gene: '+str(translate_dict['gene'])+' --> '+str(full_name))
+                    with open(folder_for_job+full_name,'w') as f:
+                        f.writelines('')
                 os.remove(rundirpath + 'temp/' + mol_name + '.in')
             else:
                 raise FileNotFoundError(rundirpath + 'temp/' + mol_name + '.in' + 'does not exist.')
@@ -1374,10 +1397,17 @@ class octahedral_complex:
 
     def generate_from_db(self, tmcdoc, mol_name, path_dictionary, charge, spinmult):
         numatoms = len(tmcdoc["init_geo"].split('\n')) - 1
-        init_geopath = path_dictionary["initial_geo_path"] + mol_name + '.xyz'
-        opt_geopath = path_dictionary["optimial_geo_path"] + mol_name + '.xyz'
-        scrpath = path_dictionary["scr_path"] + mol_name
-        outpath = path_dictionary["geo_out_path"] + mol_name + '.out'
+        if isKeyword('job_manager'):
+            init_geopath = path_dictionary["job_manager"] + mol_name + '.xyz'
+            scrpath = path_dictionary["job_manager"]+'scr/'
+            opt_geopath = path_dictionary["job_manager"]+'scr/optimized.xyz'
+            outpath = path_dictionary["job_manager"] + mol_name + '.out'
+        else:
+            init_geopath = path_dictionary["initial_geo_path"] + mol_name + '.xyz'
+            opt_geopath = path_dictionary["optimial_geo_path"] + mol_name + '.xyz'
+            scrpath = path_dictionary["scr_path"] + mol_name
+            outpath = path_dictionary["geo_out_path"] + mol_name + '.out'
+        ensure_dir(scrpath)
         with open(init_geopath, "w") as fo:
             fo.write("%d\n" % numatoms)
             fo.write("====Geometry adopted from the database====\n")
@@ -1386,7 +1416,6 @@ class octahedral_complex:
             fo.write("%d\n" % numatoms)
             fo.write("====Geometry adopted from the database====\n")
             fo.write(tmcdoc["opt_geo"])
-        ensure_dir(scrpath)
         with open(scrpath + '/optim.xyz', "w") as fo:
             fo.write("%d\n" % numatoms)
             fo.write("====Geometry adopted from the database====\n")
