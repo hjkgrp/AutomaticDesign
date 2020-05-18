@@ -13,27 +13,14 @@ mongo_attr_other = ["date", "author", "tag"]
 #       'csd_temperature', 'csd_disordered', 'csd_pub_years',
 #       'is_eq_symmetric', 'ligand_symmetry', 'mol_graph_det', 'lacRACs',
 #       'has_dupe_across_csd', 'dupe_refcode_plus_list']  ### check the names with Michael!!
-mongo_attr_inherent = ['refcode', 'refcode_plus', 'chemical_name_csd', 'h_added_csd_api',
-               'h_trustworthy', 'metal_cn', 'fraction_weight_in_cell', 'metal',
-                      'natoms', 'charge', 'has_csd_user_charges', 'other_comps_in_cell',
-                             'csd_mol2string', 'init_geo', 'initial_collection', 'csd_doi',
-                                    'guess_charge_obmol', 'potential_spins', 'mol_graph_det',
-                                           'max_ligdent', 'ox_csd', 'lig_angles_list',
-                                           'min_lig_angle',
-                                                  'ligcon_syms', 'ligdents', 'odd_even_e_count',
-                                                  'e_count',
-                                                         'csd_color', 'csd_r_factor',
-                                                         'csd_temperature', 'csd_disordered',
-                                                                'csd_pub_years',
-                                                                'number_duplicates_csd',
-                                                                'dupe_refcode_plus_list',
-                                                                       'has_dupe_across_csd',
-                                                                       'representative_duplicate']
+mongo_attr_inherent = ['chemical_formula', 'lig_mol_graph_det', 'denticity', 'con_atom_symbols',
+'natoms', 'rep_mol2string', 'ccdc_csd_refcode_plus_list', 'ccdc_csd_full_refcode_plus_list', 
+'total_count_ccdc_csd', 'total_count_ccdc_csd_full', 'lig_ref_ind_dict']
 # mongo_attr_optional = ["charge", "spin", "ox"]
 # convert_dict = {'':''}
 
 
-class CSDMongo():
+class CSDMongo_ligand():
     '''
     Class that parses useful information of a CSD complex in order to run a calculation.
     Note that this class is designed to interface with CSD database (import CSD complexes to db.csd collection).
