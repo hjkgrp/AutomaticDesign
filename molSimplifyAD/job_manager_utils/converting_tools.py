@@ -3,6 +3,7 @@ import glob
 import numpy as np
 from molSimplifyAD.ga_tools import get_mulliken, rename_ligands, find_files_by_name
 from molSimplifyAD.process_scf import read_molden_file
+from molSimplify.Classes.ligand import get_lig_symmetry
 
 
 def isCSD(job):
@@ -125,6 +126,29 @@ def obtain_wavefunction_molden(this_run):
             this_run.molden = fo.read()
     else:
         this_run.molden_path, this_run.molden = False, False
+
+
+def grab_dipole_moment(outfile):
+    diople_vec, diople_moment = np.nan, np.nan
+    with open(outfile, 'r') as fo:
+        for line in fo:
+            if "DIPOLE MOMENT:" in line:
+                diople_vec = [float(x) for x in line.split('{')[-1].split('}')[0].split(",")]
+                diople_moment = float(line.split('{')[-1].split('}')[1].split()[-2].strip(')'))
+    return diople_vec, diople_moment
+
+
+def get_ligsymmetry_graphdet(optmol):
+    try:
+        ligsymmetry = get_lig_symmetry(optmol)
+    except:
+        ligsymmetry = "undef"
+    try:
+        det = optmol.get_mol_graph_det(oct=True)
+    except:
+        det = "undef"
+    return ligsymmetry, det
+
 
 
 def get_dynamic_feature(this_run):
