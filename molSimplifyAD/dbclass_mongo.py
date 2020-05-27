@@ -21,14 +21,15 @@ mongo_attr_from_run_nan = ["energy", "ss_target", "ss_act", 'alphaHOMO', 'betaHO
                            'grad_max_hist', 'displace_rms_hist',
                            'displace_rms_hist', 'displace_rms_hist',
                            'trust_radius_hist', 'step_qual_hist', 'expected_delE_hist',
-                           'water_cont', 'thermo_cont',
-                           'solvent', 'vertIP', 'vertEA', 'functionalsSP', 'd3_energy']
+                           'water_cont', 'thermo_cont', 'dipole_vec', 'dipole_moment',
+                           'solvent', 'vertIP', 'vertEA', 'functionalsSP', 'd3_energy',
+                           'ligand_symmetry', 'mol_graph_det', 'init_ligand_symmetry', 'init_mol_graph_det']
 SP_keys = ['solvent', 'vertIP', 'vertEA', 'functionalsSP']
 mongo_attr_other = ["date", "author", "geotype", "opt_geo", "init_geo", "prog_geo",
                     "RACs", "initRACs", "dftrun", "tag", "subtag", "unique_name",
-                    "publication", "ligstr"]
+                    "publication", "ligstr", "chemical_name"]
 mongo_attr_actlearn = ["step", "is_training", "status_flag", "target", "descriptors", "opt_geo", "init_geo",
-                       "ligcharge", "unique_name", "name"]
+                       "ligcharge", "unique_name", "name", "chemical_name"]
 mongo_not_web = ["dftrun"]
 wfn_basepath = '/home/data/wfn/'
 dftrun_basepath = '/home/data/dftrun/'
@@ -97,7 +98,10 @@ class TMC():
             setattr(self, attr, np.nan)
             if attr in self.this_run.__dict__:
                 try:
-                    setattr(self, attr, float(getattr(self.this_run, attr)))
+                    if getattr(self.this_run, attr):
+                        setattr(self, attr, float(getattr(self.this_run, attr)))
+                    else:
+                        setattr(self, attr, getattr(self.this_run, attr))
                 except:
                     setattr(self, attr, getattr(self.this_run, attr))
         ## Get job flags
@@ -164,8 +168,16 @@ class TMC():
         name_ele = []
         for key in self.id_keys:
             name_ele.append(key)
-            name_ele.append(str(self.id_doc[key]))
+            if not key == "energy":
+                name_ele.append(str(self.id_doc[key]))
+            else:
+                name_ele.append(repr(self.id_doc[key]))
         self.unique_name = '_'.join(name_ele)
+        name_ele = []
+        for key in ["metal", "ox", "spin", "ligstr", "charge"]:
+            name_ele.append(key)
+            name_ele.append(str(self.id_doc[key]))
+        self.chemical_name = '_'.join(name_ele)
 
     def get_update_fields(self, update_fields):
         if update_fields:

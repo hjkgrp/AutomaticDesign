@@ -11,7 +11,7 @@ import itertools
 from pandas.io.json import json_normalize
 from pymongo import MongoClient
 from molSimplifyAD.dbclass_mongo import tmcMongo, tmcActLearn, mongo_attr_id, mongo_not_web, SP_keys
-from molSimplifyAD.mlclass_mongo import modelActLearn, modelMongo
+from molSimplifyAD.mlclass_mongo import modelActLearn, modelMongo, modelPublished
 from molSimplifyAD.ga_tools import isKeyword
 from molSimplifyAD.dbclass_csd import CSDMongo
 
@@ -66,9 +66,9 @@ def query_db_easy(user, pwd, collection='oct', constraints={}, max_entries=None,
     est_num_docs = db.oct.count_documents(constraints)
     num_docs = est_num_docs if max_entries == None else min(est_num_docs, max_entries)
     if loud:
-        print "Estimated number of entries to be pulled: %s" % num_docs
-        print "Estimated pull time: %s sec" % (2.36e-4 * num_docs)  # Empirical fit, as of 2020-01-16
-        print "Estimated pull size: %s MB" % (3.53e-2 * num_docs)  # Empirical fit, as of 2020-01-16
+        print("Estimated number of entries to be pulled: %s" % num_docs)
+        print("Estimated pull time: %s sec" % (2.36e-4 * num_docs))  # Empirical fit, as of 2020-01-16
+        print("Estimated pull size: %s MB" % (3.53e-2 * num_docs))  # Empirical fit, as of 2020-01-16
 
     if dropcols == []:
         cursor = db[collection].find(constraints)
@@ -78,8 +78,8 @@ def query_db_easy(user, pwd, collection='oct', constraints={}, max_entries=None,
     cursor_iterator = itertools.islice(cursor, max_entries)
     results = pd.DataFrame(cursor_iterator)
     if loud:
-        print "Pull finished. Number of entries: %s" % len(results)
-        print "Time for pull: %s sec" % (time.time() - start_time)
+        print("Pull finished. Number of entries: %s" % len(results))
+        print("Time for pull: %s sec" % (time.time() - start_time))
     return results
 
 
@@ -117,6 +117,21 @@ def query_lowestE_converged(db, collection, constraints):
     return tmcdoc
 
 
+def merge_document_with_new(db, doc1, doc_new, update_fields):
+    for k in doc1:
+        if not k in update_fields:
+            doc_new.update({k: doc1[k]})
+    for k in doc_new:
+        if k in doc1 and not k in update_fields:
+            if not str(doc1[k]) == str(doc_new[k]):
+                raise ValueError("Error on %s. If you want to overwrite existing key-value pairs in the document, add it to the <update_fields>"%k)
+    for k in doc1:
+        if not k in doc_new:
+            raise ValueError("Error on %s. You are removing an existing key-value pair in the document. Please think twice before you do this."%k)
+    print("replacing doc without changing dftrun: ", doc1['_id'], doc1['unique_name'])
+    db.oct.find_one_and_replace({"_id": doc1['_id']}, doc_new)
+
+
 def insert(db, collection, tmc, debug=True):
     repeated, _tmcdoc = check_repeated(db, collection, tmc)
     inserted = False
@@ -127,15 +142,21 @@ def insert(db, collection, tmc, debug=True):
         if debug:
             print(("existed: ", _tmcdoc["unique_name"]))
             print("merging....")
-        _tmc = tmcMongo(document=_tmcdoc, tag=_tmcdoc["tag"], subtag=_tmcdoc["subtag"],
-                        publication=_tmcdoc["publication"])
-        merge_documents(db, collection,
-                        doc1=_tmcdoc, doc2=tmc.document,
-                        update_fields=tmc.update_fields)
-        merge_dftruns(dftrun1=_tmc.this_run,
-                      dftrun2=tmc.this_run,
-                      update_fields=tmc.update_fields)
-        _tmc.write_dftrun(force=True)
+        try:
+            _tmc = tmcMongo(document=_tmcdoc, tag=_tmcdoc["tag"], subtag=_tmcdoc["subtag"],
+                            publication=_tmcdoc["publication"])
+            converted = True
+        except ValueError:
+            converted = False
+            merge_document_with_new(db, doc1=_tmcdoc, doc_new=tmc.document, update_fields=tmc.update_fields)
+        if converted:
+            merge_documents(db, collection,
+                            doc1=_tmcdoc, doc2=tmc.document,
+                            update_fields=tmc.update_fields)
+            merge_dftruns(dftrun1=_tmc.this_run,
+                          dftrun2=tmc.this_run,
+                          update_fields=tmc.update_fields)
+            _tmc.write_dftrun(force=True)
     return inserted
 
 
@@ -190,6 +211,36 @@ def convert2dataframe(db, collection,
     return df
 
 
+def convert2readablecsv(db, collection,
+                        constraints=False, dropRACs=False,
+                        directload=False, normalized=False,
+                        ):
+    dropcols = ['status', 'grad_max_hist', 'tot_step', 'dipole_vec', 'displace_rms_hist',
+                'functional', 'liglist', 'date', 'init_ligand_symmetry', 'outpath',
+                'init_geo', 'old_dynamic_feature', 'initRACs', 'prog_geo', 'dftrun',
+                'geo_check_metrics', 'author', 'wavefunction', 'functionals', 'molden',
+                'terachem_version', 'step_qual_hist', 'basis', 'tot_time', 'solvent',
+                'e_delta_hist', 'scrpath', 'init_mol_graph_det', 'geo_check_metrics_prog',
+                'trust_radius_hist', 'dynamic_feature', 'expected_delE_hist', 'e_hist',
+                'name', 'geo_check_dict', 'geo_opt', 'grad_rms_hist', 'opt_geo', 'd3opt_flag',
+                'csd_doi', 'csd_mol2string', 'dupe_refcode_plus_list', 'diople_vec',
+                'is_csd_init_geo', 'iscsd', 'refcode',
+                ]
+    if dropRACs:
+        dropcols += ["RACs", "lacRACs"]
+    df = convert2dataframe(db, collection,
+                           constraints=constraints, dropcols=dropcols,
+                           directload=directload, normalized=False)
+    ordered_cols = ["chemical_name", "metal", "ox", "spin", "ligstr", "charge", "ligcharge", "alpha",
+                    'refcode_plus', "tag", "subtag", "doi", 'publication', 'energy']
+    if normalized:
+        df = json_normalize(df.to_dict("records"))
+    cols = list(df.columns)
+    cols = ordered_cols + sorted(list(set(cols) - set(ordered_cols)))
+    df = df[cols]
+    return df
+
+
 def iterator2dataframes_withoutruns(iterator, chunk_size, dropcols=["dftrun"], normalized=False):
     records = []
     frames = []
@@ -197,15 +248,15 @@ def iterator2dataframes_withoutruns(iterator, chunk_size, dropcols=["dftrun"], n
         records.append(record)
         if i % chunk_size == chunk_size - 1:
             if not normalized:
-                frames.append(pd.DataFrame(records).drop(dropcols, axis=1))
+                frames.append(pd.DataFrame(records).drop(dropcols, axis=1, errors='ignore'))
             else:
-                frames.append(json_normalize(records).drop(dropcols, axis=1))
+                frames.append(json_normalize(records).drop(dropcols, axis=1, errors='ignore'))
             records = []
     if records:
         if not normalized:
-            frames.append(pd.DataFrame(records).drop(dropcols, axis=1))
+            frames.append(pd.DataFrame(records).drop(dropcols, axis=1, errors='ignore'))
         else:
-            frames.append(json_normalize(records).drop(dropcols, axis=1))
+            frames.append(json_normalize(records).drop(dropcols, axis=1, errors='ignore'))
     return pd.concat(frames)
 
 
@@ -405,6 +456,28 @@ def push_models_actlearn(step, model, database, collection,
         print("A model of step %d has already existed.")
     else:
         db[collection].insert_one(actlearn_model.document)
+    dump_databse(database_name=database,
+                 outpath=outpath,
+                 user=user, pwd=pwd)
+
+
+def push_models_published(model, model_dict, database, collection,
+                          user=False, pwd=False,
+                          host="localhost", port=27017,
+                          auth=False,
+                          outpath='/home/db_backup'):
+    db = connect2db(user, pwd, host, port, database, auth)
+    ensure_collection(db, collection)
+    this_model = modelPublished(model=model, **model_dict)
+    model_id = {"target": this_model.target, "doi": this_model.doi, }
+    if not query_one(db, collection, constraints=model_id) == None:
+        print("A model of has already existed. Please double check...")
+    else:
+        print("pushing...")
+        db[collection].insert_one(this_model.document)
+    db[collection].create_index([("dio", pymongo.ASCENDING),
+                                 ("target", pymongo.ASCENDING)
+                                 ])
     dump_databse(database_name=database,
                  outpath=outpath,
                  user=user, pwd=pwd)
