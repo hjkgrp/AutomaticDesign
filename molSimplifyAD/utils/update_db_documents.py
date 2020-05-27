@@ -35,7 +35,7 @@ def main():
                                  no_cursor_timeout=True).batch_size(10)
     print(("Are you sure to update %s with constraints %s in %s[%s]? (y/n)" % (str(update_fields), str(constraints),
                                                                               database, collection)))
-    _in = input()
+    _in = eval(input())
     if not _in == "y":
         print("Quit. Have a nice day.")
         quit()
@@ -95,7 +95,7 @@ def main():
                         print("Currently does not exist.")
                     print(("Change to: ", new_tmc.document[key]))
                 print("Is this expected? (y/n)")
-                _in = input()
+                _in = eval(input())
                 if _in == "y":
                     confirmed = True
                 else:

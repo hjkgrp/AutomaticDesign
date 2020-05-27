@@ -4,6 +4,7 @@ import uuid
 import numpy as np
 from datetime import datetime
 import getpass
+import keras
 from keras.models import load_model
 
 attr_actlearn = ["model", "step", ]
@@ -13,8 +14,13 @@ attr_mongo_in = ["predictor", "hyperparams", "score_train", "score_test",
                  "len_train", "len_test", "len_tot", "constraints",
                  "history", "tag", "features", "target", "hyperopt",
                  "initialize_weight", "hyperopt_step", "load_latest_model",
-                 "fix_architecture", "direct_retrain"]
+                 "fix_architecture", "direct_retrain",
+                 "x_scaler", "y_scaler", "var_train", "var_test"]
 attr_mongo_undef = ["model", "date", "author"]
+attr_mongo_published = ["publication", "doi", "features", "target",
+                        "name_train", "X_train", "target_train",
+                        "name_test", "X_test", "target_test",
+                        "x_scaler", "y_scaler", "metrics"]
 model_basepath = '/home/data/models/'
 
 
@@ -44,7 +50,12 @@ class MLModel():
         try:
             self.loaded_model = pickle.loads(document["model"])
         except:
-            self.loaded_model = load_model(str(document["model"]))
+            if ".h5" in str(document["model"]):
+                self.loaded_model = load_model(str(document["model"]), compile=False)
+            elif ".pkl" in str(document["model"]):
+                self.loaded_model = pickle.load(open(str(document["model"]), "rb"))
+            else:
+                raise KeyError("Unregonized file type for model.")
 
 
 class modelMongo(MLModel):
@@ -56,7 +67,8 @@ class modelMongo(MLModel):
                 try:
                     setattr(self, attr, kwargs[attr])
                 except:
-                    if attr in ["predictor", "history", "hyperparams", "constraints", "len_tot", "features", "target"]:
+                    if attr in ["predictor", "history", "hyperparams",
+                                "constraints", "len_tot", "features", "target"]:
                         raise KeyError("Error: Key %s does not exist in the input dictionary." % attr)
                     else:
                         print(("Warning: Key %s does not exist in the input dictionary." % attr))
@@ -85,8 +97,13 @@ class modelMongo(MLModel):
                 if not os.path.isdir(model_path):
                     os.makedirs(model_path)
                     created = True
-            self.loaded_model.save(model_path + "model.h5")
-            self.model = model_path + "model.h5"
+            if isinstance(self.loaded_model, keras.engine.training.Model):
+                self.loaded_model.save(model_path + "model.h5")
+                self.model = model_path + "model.h5"
+            else:
+                with open(model_path + "model.pkl", "wb") as fo:
+                    pickle.dump(self.loaded_model, fo)
+                self.model = model_path + "model.pkl"
 
 
 class modelActLearn(MLModel):
@@ -103,3 +120,24 @@ class modelActLearn(MLModel):
                 self.document.update({attr: getattr(self, attr)})
             else:
                 print(("warning: %s does not exist." % attr))
+
+
+class modelPublished(MLModel):
+
+    def __init__(self, model=False, document=False, **kwargs):
+        MLModel.__init__(self, model=model, document=document)
+        for attr in attr_mongo_published:
+            if attr in kwargs:
+                setattr(self, attr, kwargs[attr])
+            else:
+                raise ValueError("key %s is required as an input." % attr)
+        self.model = pickle.dumps(self.loaded_model)
+        self.construct_document()
+
+    def construct_document(self):
+        self.document.update({"model": self.model})
+        for attr in attr_mongo_published:
+            if attr in self.__dict__:
+                self.document.update({attr: getattr(self, attr)})
+            else:
+                raise ValueError("key %s is not an attribute." % attr)
