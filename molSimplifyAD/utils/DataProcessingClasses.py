@@ -436,7 +436,7 @@ class property_frame_processor:
         self.name = name
         if path_to_save:
             if os.path.exists(self.path_to_save+'/'+name+'_'+match_type+'.csv'):
-                decision = input('this file already exists, press y to continue if overwriting.')
+                decision = eval(input('this file already exists, press y to continue if overwriting.'))
                 if decision != 'y':
                     print('User decided not to overwrite present files')
                     raise ValueError
@@ -823,7 +823,7 @@ def summarizeDataTypes(df):
     metals = [i.split('_')[0] for i in complex_names]
     geometries = [identify_geometry(i) for i in complex_names]
     
-    print(count_and_combine_list(metals))
-    print(count_and_combine_list(geometries))
+    print((count_and_combine_list(metals)))
+    print((count_and_combine_list(geometries)))
             
     

@@ -32,29 +32,34 @@ def collect_base_jobs(path=False):
     return basejobs
 
 
-def common_processing(jobname, basedir, output, outfile, spin):
-    this_run = DFTRun(jobname, external=True)
-    this_run.name = jobname
+def common_processing(jobname, basedir, output, outfile, spin, dbname=False):
+    dbname = jobname if dbname == False else dbname
+    this_run = DFTRun(dbname, external=True)
+    this_run.name = dbname
     this_run.octahedral = True
     energy, ss_act, ss_target, tot_time, thermo_grad_error, solvent_cont, tot_step, d3_energy = output.wordgrab(
         ['FINAL', 'S-SQUARED:', 'S-SQUARED:', 'processing', 'Maximum component of gradient is too large',
          'C-PCM contribution to final energy:', 'Optimization Cycle', 'DFTD Dispersion Correction:'],
         [2, 2, 4, 3, 0, 4, 3, -2], last_line=True)
-    iscsd = isCSD(jobname)
+    iscsd = isCSD(dbname)
     this_run.iscsd = iscsd
-    this_run.charge = int(output.wordgrab(['Total charge'], -1)[0][0])
+    this_run.charge = output.wordgrab(['Total charge'], -1)[0][0]
+    try:
+        this_run.charge = int(this_run.charge)
+    except:
+        this_run.charge = False
     if not d3_energy == None:
         this_run.d3opt_flag = True
     else:
         this_run.d3_energy = np.nan
         this_run.d3opt_flag = False
     if not this_run.iscsd:
-        print(("jobname: ", jobname))
-        bind_complex_info(this_run, jobname, spin)
+        print(("jobname: ", dbname))
+        bind_complex_info(this_run, dbname, spin)
     else:
         init_mol = mol3D()
         init_mol.readfromxyz(basedir + '/%s.xyz' % jobname)
-        bind_csd_info(this_run, jobname, spin, init_mol)
+        bind_csd_info(this_run, dbname, spin, init_mol)
     this_run.outpath = outfile
     this_run.tot_time = tot_time
     this_run.alpha = output.wordgrab(['Hartree-Fock exact exchange:'], -1)[0][0] * 100
@@ -70,7 +75,8 @@ def common_processing(jobname, basedir, output, outfile, spin):
     this_run = collect_spin_info(this_run, spin, ss_act, ss_target)
     scrpath = basedir + '/scr/'
     this_run.scrpath_real = scrpath
-    calculate_mulliken_spins(this_run)
+    if os.path.isdir(this_run.scrpath_real):
+        calculate_mulliken_spins(this_run)
     return this_run
 
 
@@ -114,12 +120,20 @@ def process_geometry_optimizations(this_run, basedir, outfile, output):
                 this_run.geopath = scrpath + 'optimized.xyz'
             except:
                 this_run.geopath = optimpath
+            if os.path.isfile(outfile):
+                diople_vec, diople_moment = grab_dipole_moment(outfile)
+                this_run.diople_vec = diople_vec
+                this_run.diople_moment = diople_moment
+            else:
+                raise ValueError("Output file does not exist: ", outfile)
             read_molden_file(this_run)
             obtain_wavefunction_molden(this_run)
             this_run.init_mol = mol3D()
             this_run.init_mol.readfromtxt(get_initgeo(optimpath))
+            this_run.init_ligand_symmetry, this_run.init_mol_graph_det = get_ligsymmetry_graphdet(this_run.init_mol)
             this_run.mol = mol3D()
             this_run.mol.readfromtxt(get_lastgeo(optimpath))
+            this_run.ligand_symmetry, this_run.mol_graph_det = get_ligsymmetry_graphdet(this_run.mol)
             try:
                 this_run.check_oct_needs_init(debug=False, external=True)
             except:
@@ -140,7 +154,7 @@ def process_geometry_optimizations(this_run, basedir, outfile, output):
     return this_run
 
 
-def jobmanager2mAD(job, active_jobs):
+def jobmanager2mAD(job, active_jobs, dbname=False):
     this_run = False
     basedir, jobname = job[0], job[1]
     outfile = basedir + '/' + jobname + '.out'
@@ -151,7 +165,7 @@ def jobmanager2mAD(job, active_jobs):
         except:
             print(('Cannot read file: ', outfile))
             return this_run
-        this_run = common_processing(jobname, basedir, output, outfile, spin)
+        this_run = common_processing(jobname, basedir, output, outfile, spin, dbname)
         issp = isSP(outfile)
         if not issp:
             this_run = process_geometry_optimizations(this_run, basedir, outfile, output)
