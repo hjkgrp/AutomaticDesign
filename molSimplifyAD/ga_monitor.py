@@ -66,13 +66,13 @@ def launch_job(job, sub_num):
         else:
             cmd_script = "launch_script_sp.sh"
             infile = get_infile_from_job(job)
-    use_molsconrtol = check_infile_control(infile)
+    use_molscontrol = check_infile_control(infile)
     if isKeyword("queue_type").lower() == "sge":
         cmd_str = 'qsub -j y -N  ' + name + ' ' + '-o ' + opath + ' ' + '-e ' + epath + ' ' + isKeyword(
-            'rundir') + cmd_script + ' ' + infile + ' ' + str(use_molsconrtol)
+            'rundir') + cmd_script + ' ' + infile + ' ' + str(use_molscontrol)
     else:
         cmd_str = 'sbatch -J' + name + ' ' + ' -o ' + opath + ' ' + '-e ' + epath + ' ' + isKeyword(
-            'rundir') + cmd_script + ' ' + infile + ' ' + str(use_molsconrtol)
+            'rundir') + cmd_script + ' ' + infile + ' ' + str(use_molscontrol)
     print(cmd_str)
     p_sub = subprocess.Popen(cmd_str, shell=True, stdout=subprocess.PIPE)
     ll = p_sub.communicate()[0]

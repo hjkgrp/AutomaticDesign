@@ -15,7 +15,9 @@ import shutil
 # from molSimplify.Classes.globalvars import *
 from molSimplify.python_nn.tf_ANN import *
 from scipy.spatial import distance_matrix
+from molSimplify.job_manager.tools import list_active_jobs
 # ############################
+from molSimplifyAD.job_manager_utils.job_converter import *
 from molSimplifyAD.ga_tools import *
 from molSimplifyAD.ga_complex import *
 from molSimplifyAD.ga_check_jobs import *
@@ -24,7 +26,7 @@ from molSimplifyAD.dbclass_mongo import tmcMongo
 
 
 ########################
-
+# This is the GA generation class, which is what is used to drive any of the GAs (single objective, multiple objective, NSGA). 
 class GA_generation:
     def __init__(self, name):
         path_dictionary = setup_paths()
@@ -142,27 +144,23 @@ class GA_generation:
         this_complex = octahedral_complex(self.ligands_list)
         this_complex.random_gen()
         counter = self.total_counter
-        if True:#try:
-            this_complex.replace_metal(metal_ind)
-            this_complex.replace_ox(ox)
-            this_complex.replace_ligands(inds)
-            if spin != False:
-                this_complex.replace_spin(spin)
-            this_complex.replace_ligands(inds)
-            this_gene = this_complex.name
-            # this_gene = this_complex.name
-            if not this_gene in list(self.genes.values()):
-                ## we can accept this complex
-                self.genes[counter] = this_gene
-                self.gene_compound_dictionary[counter] = this_complex
-                counter += 1
-                self.total_counter = self.total_counter + 1
-                print(('adding eq: ' + str(procd_ligs[0]) + ' and ax ' + str(procd_ligs[4]) + ' + ' + str(procd_ligs[5])))
-            else:
-                print(' this gene is a duplicate and is not added')
-        else:#except:
-            print(('cannot make eq: ' + str(procd_ligs[0]) + ' and ax ' + str(procd_ligs[4]) + ' + ' + str(procd_ligs[5])))
-            sardines
+        this_complex.replace_metal(metal_ind)
+        this_complex.replace_ox(ox)
+        this_complex.replace_ligands(inds)
+        if spin != False:
+            this_complex.replace_spin(spin)
+        this_complex.replace_ligands(inds)
+        this_gene = this_complex.name
+        # this_gene = this_complex.name
+        if not this_gene in list(self.genes.values()):
+            ## we can accept this complex
+            self.genes[counter] = this_gene
+            self.gene_compound_dictionary[counter] = this_complex
+            counter += 1
+            self.total_counter = self.total_counter + 1
+            print(('adding eq: ' + str(procd_ligs[0]) + ' and ax ' + str(procd_ligs[4]) + ' + ' + str(procd_ligs[5])))
+        else:
+            print(' this gene is a duplicate and is not added')
 
     def write_state(self):
         ## first write genes to path
@@ -202,7 +200,8 @@ class GA_generation:
             print((str(emsg)))
 
     def read_state(self):
-        ## first read live info from base directory
+        # Since the GA is adaptive (i.e.) the parameters can change over exploration,
+        # this 
         state_path = self.base_path_dictionary["state_path"] + "/current_status.csv"
         emsg, read_dict = read_dictionary(state_path)
         property_parameter = read_dict['property_parameter']
@@ -257,9 +256,36 @@ class GA_generation:
     def check_results(self):
         ## load gene fitness dict
         fitkeys = list(self.gene_fitness_dictionary.keys())
-        ## if doing a DFT run, we need to check the filestytem for updates
+        ## if doing a DFT run, we need to check the filesystem for updates
         if self.status_dictionary["DFT"]:
-            final_results, all_runs, _ = check_all_current_convergence()
+            if isKeyword('job_manager'):
+                setup_configure_file(self.status_dictionary['gen'])
+                list_of_active_jobs = list_active_jobs()
+                print(list_of_active_jobs)
+                jobs_in_job_manager = get_jobs_in_job_manager(self.status_dictionary['gen'])
+                # the list of jobs in job manager are going to be all the base jobs. Live jobs
+                # may have additional things added on. Thus we must check if any of the jobs are 
+                # still in action (base or derivative).
+                still_running = 0
+                for jobname in jobs_in_job_manager:
+                    for live_jobname in list_of_active_jobs:
+                        if jobname in live_jobname:
+                            still_running += 1
+                        if still_running > 0:
+                            break
+                if still_running>0:
+                    return
+                run_dict = loop_convert_jobs(gene=True)
+                all_runs = dict()
+                for this_run in run_dict.values():
+                    all_runs.update({this_run.name: this_run})
+                if isKeyword('oxocatalysis'):
+                    final_results = process_runs_oxocatalysis(all_runs, spin_dictionary())
+                elif isKeyword('optimize'):
+                    final_results = process_runs_geo(all_runs, spin_dictionary())
+                # This currently lacks support for SP. Must be added in later.
+            else:
+                final_results, all_runs, _ = check_all_current_convergence()
             for genes in list(final_results.keys()):
                 if genes in fitkeys:
                     print(('gene ' + str(genes) + ' already in dict, no action'))
@@ -464,7 +490,7 @@ class GA_generation:
             else:
                 self.job_dispatcher()
             # pass
-        ## if we are using the ANN only, populate the gene-fitnes dictionary
+        ## if we are using the ANN only, populate the gene-fitness dictionary
         if self.status_dictionary["DFT"] == False:
             self.ANN_fitness()
         # sardines

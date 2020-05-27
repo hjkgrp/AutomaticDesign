@@ -2,8 +2,11 @@ from molSimplifyAD.ga_init import *
 from molSimplifyAD.ga_io_control import *
 import os, datetime
 import yaml
+
+# This function generates a new mAD run from a given input file.
+# If an input file is not provided, default arguments are assumed.
 def create_new_run(args):
-    ## create a new run, based on infile OR  defaults
+    ## create a new run, based on infile OR defaults
     configuration = dict()
     ## load defaults
     if args.new =='default':
@@ -20,7 +23,7 @@ def create_new_run(args):
 
     ## ensure unique new rundir exists
     counter = 0
-    org_name =configuration["rundir"]
+    org_name = configuration["rundir"]
     while os.path.isdir(configuration["rundir"]):
         print(('Warning: '+configuration["rundir"]+' already exists, generating unique key...'))
         configuration["rundir"] =  org_name.rstrip('/') +'_'+ str(counter) + '/'
@@ -55,6 +58,8 @@ def create_new_run(args):
                 if keyw in list(configuration.keys()):
                     _m  = configuration[keyw]
                     globals()[keyw] = True if str(_m).lower() == "true" else False
+            # This copies over the launch scripts for different jobs.
+            # These will become irrelevant upon use of the job manager.
             sp_file,geo_file,thermo_file,solvent_file,water_file,PRFO_HAT,PRFO_Oxo = get_launch_script_file(configuration["queue_type"],
                                                                                                             molscontrol=molscontrol)
             shutil.copy(sp_file,configuration["rundir"]+'launch_script_sp.sh')
@@ -81,13 +86,13 @@ def create_new_run(args):
             configuration['runtype'] = "split"
     print(('run config is ' + str(configuration)))
     print((configuration['rundir']))
-    GA_run = GA_run_defintion()
+    GA_run = GA_run_definition()
     GA_run.configure(**configuration)
     GA_run.serialize()
     print((os.getcwd()))
     with switch_to_rundir(configuration['rundir']):
         print((os.getcwd()))
-        t1   = initialize_GA_calc()
+        t1 = initialize_GA_calc()
 
 
 

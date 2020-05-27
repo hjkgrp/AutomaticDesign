@@ -13,13 +13,15 @@ from molSimplifyAD.ga_complex import *
 from molSimplifyAD.ga_main import *
 from molSimplifyAD.process_scf import *
 from molSimplifyAD.post_classes import *
-from molSimplifyAD.ga_oct_check import *
 
 
 #######################
+### This function decides if a job should be post processed or not.
+
 def postprocessJob(job, live_job_dictionary, converged_jobs_dictionary, post_all=False, sp_calc=False):
-    ## function to choos if a job should
-    # GA_run = get_current_GA()
+    # Function to choose if a job should be postprocessed or not.
+    # By default, geometry optimizations are postprocessed, unless they are rendered to be in a final state.
+    # Using the job manager, none of this is really necessary.
     notin_list = ["sp_infiles", "thermo", "solvent", "water", "prfo", "fod"]
     geoopt = True
     for ele in notin_list:
@@ -75,6 +77,7 @@ def check_all_current_convergence(post_all=False):
     ## allocate holder for result list
     final_results = dict()
     all_runs = dict()
+    active_learning_dictionaries = []
     print(('found:  ' + str(len(joblist)) + ' jobs to check'))
     if isKeyword("optimize"):
         print('post processing geometry files')
@@ -141,7 +144,6 @@ def check_all_current_convergence(post_all=False):
                 name_without_HFX = translate_dict['name_without_HFX']
                 ## create run
                 this_run = DFTRun(base_name)
-                print('Here!')
                 # print(isKeyword('single_point'))
                 ## regenerate opt geo
                 this_run.scrpath = path_dictionary["scr_path"] + base_name + "/optim.xyz"
@@ -830,7 +832,6 @@ def check_all_current_convergence(post_all=False):
                     print((str(jobs) + ' is live\n'))
                 print('END OF SP JOB \n *******************\n')
         print('matching DFT runs ... \n')
-        active_learning_dictionaries = []
         if isKeyword('oxocatalysis'):
             all_runs = check_HFX_linearity(all_runs)
             for runkey in list(all_runs.keys()):
@@ -932,3 +933,7 @@ def check_all_current_convergence(post_all=False):
                 writeprops(values, f)
         print('\n**** end of file inspection **** \n')
     return final_results, all_runs, active_learning_dictionaries
+
+#######################
+
+
