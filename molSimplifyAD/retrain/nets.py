@@ -113,12 +113,12 @@ def ANN(hyperspace, input_len, lname, regression=True):
         layers.append(Activation('relu', name='activation-' + str(ii))(layers[-1]))
         layers.append(Dropout(rate=hyperspace['drop_rate'],
                               name='dropout-' + str(ii))(layers[-1]))
-        if hyperspace['res'] and ii:
+        if ('res' in hyperspace.keys()) and (hyperspace['res'] and ii):
             base_lookback = -5
             if hyperspace['bypass']:
                 base_lookback -= 1
             layers.append(Add(name='sum-' + str(ii))([layers[base_lookback], layers[-1]]))
-        if hyperspace['bypass']:
+        if ('bypass' in hyperspace.keys()) and hyperspace['bypass']:
             layers.append(Concatenate(name='concatenate-' + str(ii))([inputlayer, layers[-1]]))
     last_dense, outlayer, loss_weights, loss_type = [], [], [], []
     for ii, ln in enumerate(lname):
@@ -199,8 +199,8 @@ def compile_model(model, hyperspace, lname, regression):
             _loss_type = 'binary_crossentropy'
             metrics = ['accuracy', precision, recall, f1]
         else:
-            _loss_type = 'mse'
-            metrics = ['mae', scaled_mae, r2_val]
+            _loss_type = 'mean_squared_error'
+            metrics = ['mean_absolute_error', scaled_mae, r2_val]
         loss_weights.append(1.0)
         loss_type.append(_loss_type)
     model.compile(loss=loss_type,
