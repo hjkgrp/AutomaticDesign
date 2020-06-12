@@ -31,9 +31,9 @@ mongo_attr_other = ["date", "author", "geotype", "opt_geo", "init_geo", "prog_ge
 mongo_attr_actlearn = ["step", "is_training", "status_flag", "target", "descriptors", "opt_geo", "init_geo",
                        "ligcharge", "unique_name", "name", "chemical_name"]
 mongo_not_web = ["dftrun"]
-wfn_basepath = '/home/data/wfn/'
-dftrun_basepath = '/home/data/dftrun/'
-molden_basepath = '/home/data/molden/'
+wfn_basepath = '/userarchive/data/wfn/'
+dftrun_basepath = '/userarchive/data/dftrun/'
+molden_basepath = '/userarchive/data/molden/'
 
 
 class TMC():

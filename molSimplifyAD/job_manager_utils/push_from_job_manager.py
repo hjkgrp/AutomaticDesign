@@ -6,7 +6,7 @@ def push_job_manager_jobs(basedir, database, collection, tag, subtag,
                           publication=False, user=False, pwd=False,
                           host="localhost", port=27017, auth=False,
                           all_runs_pickle=False, update_fields=False,
-                          outpath='/home/db_backup'):
+                          outpath='/userarchive/db_backup'):
     print("converting jobs to dftrun objects...")
     runs = loop_convert_jobs(basedir)
     print("pushing results...")

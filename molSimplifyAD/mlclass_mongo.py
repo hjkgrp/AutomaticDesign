@@ -21,7 +21,7 @@ attr_mongo_published = ["publication", "doi", "features", "target",
                         "name_train", "X_train", "target_train",
                         "name_test", "X_test", "target_test",
                         "x_scaler", "y_scaler", "metrics"]
-model_basepath = '/home/data/models/'
+model_basepath = '/userarchive/data/models/'
 
 
 class MLModel():

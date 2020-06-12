@@ -242,7 +242,7 @@ class DFTRun(object):
         self.write_geo_dict()
         return flag_oct, flag_list, dict_oct_info
 
-    def get_metal_spin_from_molden(self, mwfpath='/home/jp/Multiwfn/Multiwfn'):
+    def get_metal_spin_from_molden(self, mwfpath='/userarchive/jp/Multiwfn/Multiwfn'):
         ## call molden
         print((mwfpath + ' ' + self.moldenpath))
         proc = subprocess.Popen(mwfpath + ' ' + self.moldenpath, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -521,7 +521,7 @@ class DFTRun(object):
             f_solvent.write('epsilon 78.39 \n')
             f_solvent.write('pcm_radii read \n')
             f_solvent.write('print_ms yes \n')
-            f_solvent.write('pcm_radii_file /home/jp/pcm_radii \n')
+            f_solvent.write('pcm_radii_file /userarchive/jp/pcm_radii \n')
             f_solvent.write('scrdir scr/thermo/  \n')
             f_solvent.write('coordinates ' + self.geopath + ' \n')
             f_solvent.write(guess_string)
@@ -613,7 +613,7 @@ class DFTRun(object):
             f_solvent.write('epsilon ' + str(dielectric) + ' \n')
             f_solvent.write('pcm_radii read \n')
             f_solvent.write('print_ms yes \n')
-            f_solvent.write('pcm_radii_file /home/jp/pcm_radii \n')
+            f_solvent.write('pcm_radii_file /userarchive/jp/pcm_radii \n')
             f_solvent.write('scrdir scr/solvent/  \n')
             f_solvent.write('coordinates ' + self.geopath + ' \n')
             f_solvent.write(guess_string)
@@ -660,7 +660,7 @@ class DFTRun(object):
             f_solvent.write('epsilon ' + str(dielectric) + ' \n')
             f_solvent.write('pcm_radii read \n')
             f_solvent.write('print_ms yes \n')
-            f_solvent.write('pcm_radii_file /home/jp/pcm_radii \n')
+            f_solvent.write('pcm_radii_file /userarchive/jp/pcm_radii \n')
             f_solvent.write('scrdir scr/water/gen_%s/%s/  \n' % (this_gen, this_name))
             f_solvent.write('coordinates ' + self.geopath + ' \n')
             f_solvent.write(guess_string)

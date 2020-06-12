@@ -26,7 +26,7 @@ def check_repeated(db, collection, tmc):
     return repeated, doc
 
 
-def dump_databse(database_name="tmc", outpath='/home/db_backup',
+def dump_databse(database_name="tmc", outpath='/userarchive/db_backup',
                  user=False, pwd=False):
     now = datetime.datetime.now()
     run_cmd = 'mongodump -d %s -o %s -u %s -p %s' % (database_name, outpath, user, pwd)
@@ -301,7 +301,7 @@ def ensure_collection(db, collection):
 def push2db(database, collection, tag, subtag, publication=False,
             user=False, pwd=False, host="localhost", port=27017, auth=False,
             all_runs_pickle=False, update_fields=False, all_runs_list=False,
-            outpath='/home/db_backup'):
+            outpath='/userarchive/db_backup'):
     '''
     Push data to MongoDB.
 
@@ -370,7 +370,7 @@ def push2db(database, collection, tag, subtag, publication=False,
 def push_complex_actlearn(step, all_complexes, database, collection,
                           user=False, pwd=False, host="localhost", port=27017,
                           auth=False, update_fields=False,
-                          outpath='/home/db_backup'):
+                          outpath='/userarchive/db_backup'):
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
     print(('db push is enabled, attempting commit to ', collection))
@@ -423,7 +423,7 @@ def push_models(model, model_dict, database, collection,
                 user=False, pwd=False,
                 host="localhost", port=27017,
                 auth=False,
-                outpath='/home/db_backup'):
+                outpath='/userarchive/db_backup'):
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
     this_model = modelMongo(model=model, **model_dict)
@@ -449,7 +449,7 @@ def push_models_actlearn(step, model, database, collection,
                          user=False, pwd=False,
                          host="localhost", port=27017,
                          auth=False,
-                         outpath='/home/db_backup'):
+                         outpath='/userarchive/db_backup'):
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
     actlearn_model = modelActLearn(step=step, model=model)
@@ -466,7 +466,7 @@ def push_models_published(model, model_dict, database, collection,
                           user=False, pwd=False,
                           host="localhost", port=27017,
                           auth=False,
-                          outpath='/home/db_backup'):
+                          outpath='/userarchive/db_backup'):
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
     this_model = modelPublished(model=model, **model_dict)
@@ -486,7 +486,7 @@ def push_models_published(model, model_dict, database, collection,
 
 def push_csd_complexes(database, tag, csdobj_list, collection="csd",
                        user=False, pwd=False, host="localhost", port=27017, auth=False,
-                       update_fields=False, outpath='/home/db_backup'):
+                       update_fields=False, outpath='/userarchive/db_backup'):
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
     for csdobj in csdobj_list:
@@ -511,7 +511,7 @@ def push_csd_complexes(database, tag, csdobj_list, collection="csd",
 
 def push_ligands(database, tag, csdobj_list, collection="ligands",
                        user=False, pwd=False, host="localhost", port=27017, auth=False,
-                       update_fields=False, outpath='/home/db_backup'):
+                       update_fields=False, outpath='/userarchive/db_backup'):
     db = connect2db(user, pwd, host, port, database, auth)
     ensure_collection(db, collection)
     for csdobj in csdobj_list:
