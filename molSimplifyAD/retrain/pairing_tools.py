@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 
 metal_spin_dictionary = {'cr': {2: [1, 3, 5], 3: [2, 4], 4: [1, 3], 5: [2]},
                          'mn': {2: [2, 4, 6], 3: [1, 3, 5], 4: [2, 4], 5: [1, 3]},
@@ -45,9 +44,29 @@ def target_spin_pairs(metal, ox, num_electrons, start):
             spin2 = spin1 + num_electrons
             success = True
             pairing_name = "%d_I_H" % num_electrons
-    else:
-        raise ValueError("start can only be either <L> or <I>.")
+    # else:
+    #     raise ValueError("start can only be either <L> or <I>.")
     return success, spin1, spin2, pairing_name
+
+
+def spin_manifold_mapping(ind1, spins1, spins2):
+    if ind1 == 0:
+        spin = spins2[0]
+    elif ind1 == len(spins1)-1:
+        spin = spins2[-1]
+    else:
+        spin = spins2[ind1]
+    return spin
+
+
+def target_spin_with_ox(metal, ox, spin, del_ox):
+    check_existence(metal, ox)
+    all_spins = metal_spin_dictionary[metal][ox]
+    if not int(spin) in all_spins:
+        raise KeyError("metal <%s> at ox <%d> does not have this spin multiplicity:"%(metal, ox), spin)
+    spin_ind = all_spins.index(spin)
+    all_spins2 = metal_spin_dictionary[metal][ox+del_ox]
+    return spin_manifold_mapping(spin_ind, all_spins, all_spins2)
 
 
 def find_with_spin(dfgrp, spin, missings, success_pre):
@@ -56,17 +75,19 @@ def find_with_spin(dfgrp, spin, missings, success_pre):
         e = dfgrp.loc[dfgrp['spin'] == spin]['energy'].values[0]
         if not dfgrp.loc[dfgrp['spin'] == spin]['converged'].values[0]:
             success = False
-            missings["not converged"].append(spin)
+            missings["not converged"].append({"spin": spin})
         else:
             if not dfgrp.loc[dfgrp['spin'] == spin]['geo_flag'].values[0] == 1:
                 success = False
-                missings["geo_flag"].append(spin)
+                missings["geo_flag"].append({"spin": spin})
             if not dfgrp.loc[dfgrp['spin'] == spin]['ss_flag'].values[0] == 1:
                 success = False
-                missings["ss_flag"].append(spin)
+                missings["ss_flag"].append({"spin": spin})
     else:
         success = False
-        missings["not exist"].append(spin)
+        missings["not exist"].append({"spin": spin})
+    if success:
+        missings["all_good"].append({"spin": spin})
     success_now = success and success_pre
     return success_now, e, missings
 
@@ -74,28 +95,41 @@ def find_with_spin(dfgrp, spin, missings, success_pre):
 def find_with_ox_spin(dfgrp, ox, spin, missings, success_pre,
                       water=False, solvent=False):
     success, e = True, np.nan
-    if any((row['ox'] == ox and row['spin'] == spin) for _, row in dfgrp.iterrows()):
-        e = dfgrp.loc[(dfgrp['spin'] == spin) & (dfgrp['ox'] == ox)]['energy'].values[0]
-        if not dfgrp.loc[(dfgrp['spin'] == spin) & (dfgrp['ox'] == ox)]['converged'].values[0]:
+    _dfgrp_ox = dfgrp[dfgrp["ox"] == ox]
+    if any(row['spin'] == spin for _, row in _dfgrp_ox.iterrows()):
+        e = _dfgrp_ox.loc[_dfgrp_ox['spin'] == spin]['energy'].values[0]
+        if not _dfgrp_ox.loc[_dfgrp_ox['spin'] == spin]['converged'].values[0]:
             success = False
             missings["not converged"].append({"ox": ox, "spin": spin})
         else:
-            if not dfgrp.loc[dfgrp['spin'] == spin]['geo_flag'].values[0] == 1:
+            if not _dfgrp_ox.loc[_dfgrp_ox['spin'] == spin]['geo_flag'].values[0] == 1:
                 success = False
-                missings["geo_flag"].append(spin)
-            if not dfgrp.loc[dfgrp['spin'] == spin]['ss_flag'].values[0] == 1:
+                missings["geo_flag"].append({"ox": ox, "spin": spin})
+            if not _dfgrp_ox.loc[_dfgrp_ox['spin'] == spin]['ss_flag'].values[0] == 1:
                 success = False
-                missings["ss_flag"].append(spin)
+                missings["ss_flag"].append({"ox": ox, "spin": spin})
             if water:
-                water_cont = dfgrp.loc[(dfgrp['spin'] == spin) & (dfgrp['ox'] == ox)]['water_cont'].values[0]
+                water_cont = _dfgrp_ox.loc[dfgrp['spin'] == spin]['water_cont'].values[0]
                 if np.isnan(water_cont):
                     success = False
                     missings["no water"].append({"ox": ox, "spin": spin})
                 else:
                     e += water_cont
+            elif solvent:
+                try:
+                    solvent_cont = _dfgrp_ox.loc[dfgrp['spin'] == spin]["solvent.%s"%solvent].values[0]
+                except:
+                    solvent_cont = np.nan
+                if np.isnan(solvent_cont):
+                    success = False
+                    missings["no solvent"].append({"ox": ox, "spin": spin})
+                else:
+                    e += solvent_cont
     else:
         success = False
         missings["not exist"].append({"ox": ox, "spin": spin})
+    if success:
+        missings["all_good"].append({"ox": ox, "spin": spin})
     success_now = success_pre and success
     return success_now, e, missings
 

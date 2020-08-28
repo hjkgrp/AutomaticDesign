@@ -1,19 +1,23 @@
-import numpy as np
-import pandas as pd
-from .pairing_func import process_split, process_adiabaticIP_redox
-from .pairing_tools import keep_lowestE
+from pairing_func import process_split, process_adiabaticIP_redox, process_ipea
+from pairing_tools import keep_lowestE
 
-group_conditions = {"split": ['metal', 'ox', 'ligstr'],
+group_conditions = {"split": ['metal', 'ligstr', 'ox'],
                     "redox": ['metal', 'ligstr'],
-                    "adiabaticIP": ['metal', 'ligstr']
+                    "adiabaticIP": ['metal', 'ligstr'],
+                    "IP": ['metal', 'ligstr'],
+                    "EA": ['metal', 'ligstr'],
                     }
 process_funcs = {"split": process_split,
                  "redox": process_adiabaticIP_redox,
                  "adiabaticIP": process_adiabaticIP_redox,
+                 "IP": process_ipea,
+                 "EA": process_ipea,
                  }
 default_kwargs = {"split": {'num_electrons': 4, "start": "L"},
                   "redox": {'ox1': 2, 'ox2': 3, 'use_gs': False, 'water': True, 'solvent': False},
                   "adiabaticIP": {'ox1': 2, 'ox2': 3, 'use_gs': False, 'water': False, 'solvent': False},
+                  "IP": {'ox': 2, 'del_ox': 1, 'water': False, 'solvent': False},
+                  "EA": {'ox': 3, 'del_ox': -1, 'water': False, 'solvent': False},
                   }
 
 
@@ -48,5 +52,5 @@ def pairing(df, case, **kwargs):
             count_nopair += 1
         if (count_success + count_failed + count_nopair) % 100 == 0:
             print(("%d / %d..." % (count_success + count_failed + count_nopair, tot)))
-    print(("success: ", count_success, "failed: ", count_failed, "nopair: ", count_nopair, "total: ", tot))
+    print(("success: ", count_success, "failed: ", count_failed, "no_paired: ", count_nopair, "total: ", tot))
     return dfall, missingall

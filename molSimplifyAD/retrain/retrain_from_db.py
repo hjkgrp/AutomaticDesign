@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pickle
 import tensorflow as tf
 from datetime import datetime
 from keras.models import load_model
@@ -8,10 +9,11 @@ import sklearn.utils
 from molSimplifyAD.utils.pymongo_tools import convert2dataframe, connect2db, push_models
 from pkg_resources import resource_filename, Requirement
 from molSimplify.python_nn.tf_ANN import get_key, load_ANN_variables, load_keras_ann, initialize_model_weights
-from .nets import build_ANN, cal_auc
-from .model_optimization import optimize
-from .calculate_pairing_prop import group_conditions, pairing
-from .pairing_tools import keep_lowestE
+from nets import build_ANN, cal_auc
+from model_optimization import optimize
+from calculate_pairing_prop import group_conditions, pairing
+from pairing_tools import keep_lowestE
+from sklearn.metrics import roc_auc_score, r2_score, mean_absolute_error, accuracy_score
 
 name_converter_dict = {"oxstate": "ox", "spinmult": "spin", "charge_lig": "ligcharge"}
 RACs180 = ['D_lc-I-0-ax', 'D_lc-I-0-eq', 'D_lc-I-1-ax', 'D_lc-I-1-eq', 'D_lc-I-2-ax', 'D_lc-I-2-eq', 'D_lc-I-3-ax',
@@ -89,17 +91,27 @@ def get_model_arch(model):
     return arch
 
 
-def get_latest_model(predictor, db):
-    cursors = db.models.find({"predictor": predictor})
+def load_general_model(model_path):
+    if ".h5" in model_path:
+        loaded_model = load_model(model_path, compile=False)
+    elif ".pkl" in model_path:
+        loaded_model = pickle.load(open(model_path, "rb"))
+    else:
+        raise KeyError("Unregonized file type for model.")
+    return loaded_model
+
+
+def get_latest_model(predictor, db, collection_model):
+    cursors = db[collection_model].find({"predictor": predictor})
     model, newest, newest_doc = False, False, False
     for doc in cursors:
         if model == False:
-            model = load_model(str(doc["model"]), compile=False)
+            model = load_general_model(str(doc["model"]))
             newest = doc['date']
             newest_doc = doc
         else:
             if newest < doc['date']:
-                model = load_model(str(doc["model"]), compile=False)
+                model = load_general_model(str(doc["model"]))
                 newest = doc['date']
                 newest_doc = doc
     print(('Latest model is trained at: ', newest))
@@ -150,6 +162,9 @@ def extract_data_from_db(predictor, db, collection, constraints,
         df, _ = pairing(df, case=lname[0])
     df_use = df[fnames + lname + ['unique_name']]
     shape = df_use.shape[0]
+    # for key in df_use:
+    #     df_use = df_use.dropna(subset=[key])
+    #     print(key, len(df_use))
     df_use = df_use.dropna()
     for key in df_use:
         df_use = df_use[df_use[key] != "undef"]
@@ -158,6 +173,7 @@ def extract_data_from_db(predictor, db, collection, constraints,
 
 
 def normalize_data(df, fnames, lname, predictor, frac=0.8, name=False):
+    print("predictor", predictor)
     np.random.seed(1234)
     X = df[fnames].values
     y = df[lname].values
@@ -178,15 +194,18 @@ def normalize_data(df, fnames, lname, predictor, frac=0.8, name=False):
         y_scaler.fit(y_train)
         y_train = y_scaler.transform(y_train)
         y_test = y_scaler.transform(y_test)
+    else:
+        print("y is not scaled because it is a classification problem.")
+        y_scaler = False
     for ii, ln in enumerate(lname):
         print(("mean in target: %s, train/test: %f/%f" % (ln, np.mean(y_train[:, ii]), np.mean(y_test[:, ii]))))
     if name:
-        return X_train, X_test, y_train, y_test, n_train, n_test
+        return X_train, X_test, y_train, y_test, n_train, n_test, x_scaler, y_scaler
     else:
         return X_train, X_test, y_train, y_test
 
 
-def train_model(predictor, db, lname,
+def train_model(predictor, db, collection_model, lname,
                 X_train, X_test, y_train, y_test,
                 epochs=1000, batch_size=32, hyperopt=False,
                 initialize_weight=True, hyperopt_step=100,
@@ -203,8 +222,8 @@ def train_model(predictor, db, lname,
         if fix_architecture:  # HyperOpt, with a fix architecture but flexible training parameters.
             if not load_latest_model:  # Use molSimplify pretrained model architecture.
                 model = load_keras_ann(predictor)
-            else:  # Use the lastest model achitecture.
-                model, _ = get_latest_model(predictor, db)
+            else:  # Use the latest model achitecture.
+                model, _ = get_latest_model(predictor, db, collection_model)
             if not model == False:
                 if initialize_weight:
                     print("Initializing weights for the final model training...")
@@ -243,13 +262,24 @@ def train_model(predictor, db, lname,
     _y_train, _y_test = list(np.transpose(y_train)), list(np.transpose(y_test))
     history = model.fit(X_train, _y_train, epochs=epochs, verbose=2, batch_size=batch_size)
     results = model.evaluate(X_train, _y_train)
-    res_dict_train = {}
-    for ii, key in enumerate(model.metrics_names):
-        res_dict_train.update({key: results[ii]})
-    results = model.evaluate(X_test, _y_test)
-    res_dict_test = {}
-    for ii, key in enumerate(model.metrics_names):
-        res_dict_test.update({key: results[ii]})
+    hat_y1_train = model.predict(X_train)
+    hat_y1_test = model.predict(X_test)
+    hat_y1_train = y_scaler.inverse_transform(hat_y1_train.reshape(-1, len(lname)))
+    hat_y1_test = y_scaler.inverse_transform(hat_y1_test.reshape(-1, len(lname)))
+    y_train = y_scaler.inverse_transform(y_train.reshape(-1, len(lname)))
+    y_test = y_scaler.inverse_transform(y_test.reshape(-1, len(lname)))
+    # for ii, key in enumerate(model.metrics_names):
+    #     res_dict_train.update({key: results[ii]})
+    # results = model.evaluate(X_test, _y_test)
+    # for ii, key in enumerate(model.metrics_names):
+    #     res_dict_test.update({key: results[ii]})
+    res_dict_train, res_dict_test = {}, {}
+    res_dict_train.update({"r2": r2_score(y_train, hat_y1_train),
+                           "mae": mean_absolute_error(y_train, hat_y1_train),
+                           })
+    res_dict_test.update({"r2": r2_score(y_test, hat_y1_test),
+                          "mae": mean_absolute_error(y_test, hat_y1_test),
+                          })
     if not regression:
         if len(lname) > 1:
             for ii, ln in enumerate(lname):
@@ -263,6 +293,60 @@ def train_model(predictor, db, lname,
     return model, history, res_dict_train, res_dict_test, best_params
 
 
+def train_gpr(predictor, lname,
+              X_train, X_test,
+              y_train, y_test,
+              x_scaler, y_scaler):
+    assert len(lname) == 1
+    try:
+        import GPy
+    except:
+        print("You need yo have GPy installed to train a GPR model.")
+    kernel = GPy.kern.RBF(input_dim=X_train.shape[1], variance=1, lengthscale=1)
+    # kernel = GPy.kern.src.stationary.Matern32(input_dim=X_train.shape[1], variance=1, lengthscale=1)
+    if not "clf" in predictor:
+        gp1 = GPy.models.GPRegression(X_train, y_train.reshape(-1, 1), kernel)
+    else:
+        print("classification!")
+        gp1 = GPy.models.GPClassification(X_train, y_train.reshape(-1, 1), kernel)
+    gp1.optimize(messages=True)
+    hat_y1_train, var_y1_train = gp1.predict(X_train)
+    hat_y1_test, var_y1_test = gp1.predict(X_test)
+    res_dict_train = {}
+    res_dict_test = {}
+    if not "clf" in predictor:
+        hat_y1_train = y_scaler.inverse_transform(hat_y1_train.reshape(-1, 1))
+        hat_y1_test = y_scaler.inverse_transform(hat_y1_test.reshape(-1, 1))
+        y_train = y_scaler.inverse_transform(y_train.reshape(-1, 1))
+        y_test = y_scaler.inverse_transform(y_test.reshape(-1, 1))
+        res_dict_train.update({"r2": r2_score(y_train, hat_y1_train),
+                               "mae": mean_absolute_error(y_train, hat_y1_train),
+                               "var_mean": np.mean(var_y1_train) * y_scaler.var_[0]
+                               })
+        res_dict_test.update({"r2": r2_score(y_test, hat_y1_test),
+                              "mae": mean_absolute_error(y_test, hat_y1_test),
+                              "var_mean": np.mean(var_y1_test) * y_scaler.var_[0]
+                              })
+    else:
+        label_y1_train = [0 if _x[0] < 0.5 else 1 for _x in hat_y1_train]
+        label_y1_test = [0 if _x[0] < 0.5 else 1 for _x in hat_y1_test]
+        res_dict_train.update({"accuracy": accuracy_score(y_train, label_y1_train),
+                               "auc": roc_auc_score(y_train, hat_y1_train),
+                               })
+        res_dict_test.update({"accuracy": accuracy_score(y_test, label_y1_test),
+                              "auc": roc_auc_score(y_test, hat_y1_test),
+                              })
+    print(("train result: ", res_dict_train))
+    print(("test reulst: ", res_dict_test))
+    best_params = {}
+    params_vals = gp1.param_array
+    for ii, param_name in enumerate(gp1.parameter_names_flat()):
+        best_params.update({param_name.replace('.', "_"): params_vals[ii]})
+    print("best_params: ", best_params)
+    history = False
+    return gp1, history, res_dict_train, res_dict_test, best_params
+
+
 def retrain(predictor, user, pwd,
             database, collection, collection_model,
             host="localhost", port=27017, auth=True,
@@ -272,59 +356,85 @@ def retrain(predictor, user, pwd,
             feature_extra=False, target=False,
             initialize_weight=True, hyperopt_step=100,
             load_latest_model=False, fix_architecture=False,
-            direct_retrain=False):
+            direct_retrain=False, use_gpr=False):
     db = connect2db(user, pwd, host, port, database, auth)
     dbquery_time = datetime.now()
     df, fnames, lname = extract_data_from_db(predictor, db, collection,
                                              constraints=constraints,
                                              feature_extra=feature_extra,
                                              target=target)
-    X_train, X_test, y_train, y_test, n_train, n_test = normalize_data(df, fnames, lname, predictor,
-                                                                       frac=frac, name=True)
-    model, history, res_dict_train, res_dict_test, best_params = train_model(predictor, db, lname,
-                                                                             X_train, X_test,
-                                                                             y_train, y_test,
-                                                                             epochs=epochs,
-                                                                             batch_size=batch_size,
-                                                                             hyperopt=hyperopt,
-                                                                             initialize_weight=initialize_weight,
-                                                                             hyperopt_step=hyperopt_step,
-                                                                             load_latest_model=load_latest_model,
-                                                                             fix_architecture=fix_architecture,
-                                                                             direct_retrain=direct_retrain)
+    X_train, X_test, y_train, y_test, n_train, n_test, x_scaler, y_scaler = normalize_data(df, fnames, lname, predictor,
+                                                                                           frac=frac, name=True)
     model_dict = {}
-    model_dict.update({"predictor": predictor,
-                       "constraints": str(constraints),
-                       "hyperopt": hyperopt,
-                       "history": {k: [float(ele) for ele in history.history[k]] for k in history.history},
-                       "hyperparams": best_params,
-                       "dbquery_time": dbquery_time,
-                       "score_train": {k: float(res_dict_train[k]) for k in res_dict_train},
-                       "score_test": {k: float(res_dict_test[k]) for k in res_dict_test},
-                       "name_train": n_train.tolist(),
-                       "name_test": n_test.tolist(),
-                       "target_train": y_train.tolist(),
-                       "target_test": y_test.tolist(),
-                       "pred_train": [model.predict(X_train)[ii].tolist() for ii in range(len(lname))],
-                       "pred_test": [model.predict(X_test)[ii].tolist() for ii in range(len(lname))],
-                       "len_train": y_train.shape[0],
-                       "len_test": y_test.shape[0],
-                       "len_tot": y_train.shape[0] + y_test.shape[0],
-                       "features": fnames,
-                       "target": lname,
-                       "force_push": force_push,
-                       "direct_retrain": direct_retrain,
-                       "tag": tag,
-                       "initialize_weight": initialize_weight,
-                       "hyperopt_step": hyperopt_step,
-                       "load_latest_model": load_latest_model,
-                       "fix_architecture": fix_architecture,
-                       })
+    if not use_gpr:
+        model, history, res_dict_train, res_dict_test, best_params = train_model(predictor, db,
+                                                                                 collection_model, lname,
+                                                                                 X_train, X_test,
+                                                                                 y_train, y_test,
+                                                                                 x_scaler, y_scaler,
+                                                                                 epochs=epochs,
+                                                                                 batch_size=batch_size,
+                                                                                 hyperopt=hyperopt,
+                                                                                 initialize_weight=initialize_weight,
+                                                                                 hyperopt_step=hyperopt_step,
+                                                                                 load_latest_model=load_latest_model,
+                                                                                 fix_architecture=fix_architecture,
+                                                                                 direct_retrain=direct_retrain)
+        pred_train = model.predict(X_train)
+        pred_test = model.predict(X_test)
+        model_dict.update({
+            "history": {k: [float(ele) for ele in history.history[k]] for k in history.history},
+        })
+    else:
+        model, history, res_dict_train, res_dict_test, best_params = train_gpr(predictor, lname,
+                                                                               X_train, X_test,
+                                                                               y_train, y_test,
+                                                                               x_scaler, y_scaler)
+        pred_train, var_train = model.predict(X_train)
+        pred_test, var_test = model.predict(X_test)
+        model_dict.update({
+            "history": history,
+        })
+        if not "clf" in predictor:
+            model_dict.update({
+                "var_train": [var_train[ii].tolist() for ii in range(len(n_train))],
+                "var_test": [var_test[ii].tolist() for ii in range(len(n_test))],
+            })
+    model_dict.update({
+        "predictor": predictor,
+        "constraints": str(constraints),
+        "hyperopt": hyperopt,
+        "hyperparams": best_params,
+        "dbquery_time": dbquery_time,
+        "name_train": n_train.tolist(),
+        "name_test": n_test.tolist(),
+        "target_train": y_train.tolist(),
+        "target_test": y_test.tolist(),
+        "len_train": y_train.shape[0],
+        "len_test": y_test.shape[0],
+        "len_tot": y_train.shape[0] + y_test.shape[0],
+        "score_train": {k: float(res_dict_train[k]) for k in res_dict_train},
+        "score_test": {k: float(res_dict_test[k]) for k in res_dict_test},
+        "pred_train": [pred_train[ii].tolist() for ii in range(len(n_train))],
+        "pred_test": [pred_test[ii].tolist() for ii in range(len(n_test))],
+        "features": fnames,
+        "target": lname,
+        "force_push": force_push,
+        "direct_retrain": direct_retrain,
+        "tag": tag,
+        "initialize_weight": initialize_weight,
+        "hyperopt_step": hyperopt_step,
+        "load_latest_model": load_latest_model,
+        "fix_architecture": fix_architecture,
+        "x_scaler": pickle.dumps(x_scaler),
+        "y_scaler": pickle.dumps(y_scaler),
+    })
     push_models(model, model_dict,
                 database, collection_model,
                 user=user, pwd=pwd,
                 host=host, port=port,
                 auth=auth)
+    return model_dict
 
 
 def check_retrain_inputs(args_dict):
@@ -343,7 +453,7 @@ def retrain_and_push(args_dict):
                     "feature_extra": False, "target": False,
                     "initialize_weight": True, "hyperopt_step": 100,
                     "load_latest_model": False, "fix_architecture": False,
-                    "direct_retrain": False}
+                    "direct_retrain": False, "use_gpr": False}
     for key in args_dict:
         print((key, args_dict[key]))
         globals().update({key: args_dict[key]})
@@ -355,13 +465,14 @@ def retrain_and_push(args_dict):
         for key, v in constraints['date'].items():
             tmp.update({key: datetime(v[0], v[1], v[2], v[3], v[4], v[5], v[6])})
         constraints['date'] = tmp
-    retrain(predictor, user, pwd,
-            database, collection, collection_model,
-            host, port, auth,
-            constraints, frac, epochs,
-            batch_size, force_push,
-            hyperopt, tag,
-            feature_extra, target,
-            initialize_weight, hyperopt_step,
-            load_latest_model, fix_architecture,
-            direct_retrain)
+    model_dict = retrain(predictor, user, pwd,
+                         database, collection, collection_model,
+                         host, port, auth,
+                         constraints, frac, epochs,
+                         batch_size, force_push,
+                         hyperopt, tag,
+                         feature_extra, target,
+                         initialize_weight, hyperopt_step,
+                         load_latest_model, fix_architecture,
+                         direct_retrain, use_gpr)
+    return model_dict

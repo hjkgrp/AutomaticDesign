@@ -4,7 +4,7 @@ from hyperopt import hp, tpe, fmin, Trials, STATUS_OK
 from keras.callbacks import EarlyStopping
 import tensorflow as tf
 
-from .nets import build_ANN, auc_callback, cal_auc, compile_model
+from molSimplifyAD.retrain.nets import build_ANN, auc_callback, cal_auc, compile_model
 
 
 def train_model_hyperopt(hyperspace, X, y, lname,
@@ -14,16 +14,17 @@ def train_model_hyperopt(hyperspace, X, y, lname,
     if tf.__version__ >= tf.__version__ >= '2.0.0':
         tf.compat.v1.disable_eager_execution()  ## disable eager in tf2.0 for faster training
     print(("hyperspace: ", hyperspace))
-    if not model == False:
+    if model == False:
+        print("build...")
         model = build_ANN(hyperspace, X.shape[-1], lname, regression=regression)
     else:
         model = compile_model(model=model, hyperspace=hyperspace,
                               lname=lname, regression=regression)
-    if (not X_val == False) and (not y_val == False):
+    if (isinstance(X_val, bool)) and (isinstance(y_val, bool)):
         X_train, X_val = np.split(X, [int(0.8 * X.shape[0])])
         y_train, y_val = np.split(y, [int(0.8 * X.shape[0])])
         y_train, y_val = list(np.transpose(y_train)), list(np.transpose(y_val))
-    elif (not X_val == False) or (not y_val == False):
+    elif (isinstance(X_val, bool)) or (isinstance(y_val, bool)):
         raise ValueError("Both X_val and y_val need to be specified!")
     else:
         X_train, y_train = X, y
