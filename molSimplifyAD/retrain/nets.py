@@ -123,6 +123,7 @@ def ANN(hyperspace, input_len, lname, regression=True):
     last_dense, outlayer, loss_weights, loss_type = [], [], [], []
     for ii, ln in enumerate(lname):
         last_dense.append(Dense(1, name='dense-last-%d' % ii)(layers[-1]))
+        outlayer.append(0)
         if not regression:
             last_bn = BatchNormalization(name='bn-last-%d' % ii)(last_dense[ii])
             outlayer[ii] = Activation('sigmoid', name='output-%d-%s' % (ii, ln))(last_bn)
@@ -171,6 +172,7 @@ def ANN_tf2(hyperspace, input_len, lname, regression=True):
     last_dense, outlayer, loss_weights, loss_type = [], [], [], []
     for ii, ln in enumerate(lname):
         last_dense.append(Dense(1, name='dense-last-%d' % ii)(layers[-1]))
+        outlayer.append(0)
         if not regression:
             last_bn = BatchNormalization(name='bn-last-%d' % ii)(last_dense[ii])
             outlayer[ii] = tf.keras.layers.Activation('sigmoid', name='activation-last')(last_bn)
