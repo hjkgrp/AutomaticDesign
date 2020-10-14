@@ -1,4 +1,4 @@
-import os, subprocess
+import os, subprocess, sys
 import shutil
 import numpy as np
 import pickle
@@ -6,6 +6,8 @@ import pandas as pd
 import openbabel
 from molSimplifyAD.ga_io_control import *
 
+if sys.version_info[0] >= 3:
+    unicode = str
 ########################
 # This function ensures that desired directories are created.
 def ensure_dir(dir_path):
@@ -209,6 +211,102 @@ def create_generic_infile(job, restart=False, use_old_optimizer=False, custom_ge
         newf.write('scrdir ' + guess_path + '\n')
         newf.write('end\n')
 
+########################
+def output_properties_oxo_external(comp=False, oxocatalysis=False, SASA=False, TS=False, id=True):
+    list_of_props = list()
+    list_of_props.append('name')
+    gene = False
+    if gene:
+        list_of_props.append('gene')
+    list_of_props.append('metal')
+    list_of_props.append('alpha')
+    list_of_props.append('lig1')
+    list_of_props.append('lig2')
+    list_of_props.append('lig3')
+    list_of_props.append('lig4')
+    list_of_props.append('lig5')
+    #if (not oxocatalysis):
+    list_of_props.append('lig6')
+    list_of_prop_names = ['chem_name', 'name_without_HFX','converged', 'status', 'time', 'charge', 'spin',
+                          'energy', 'init_energy','net_metal_spin','del_metal_spin','metal_spin_expected',
+                          'ss_act', 'ss_target', 'ss_flag','hfx_flag','metal_spin_flag','geo_flag',
+                          'ax1_MLB', 'ax2_MLB', 'eq_MLB',
+                          "alphaHOMO", "alphaLUMO", "betaHOMO", "betaLUMO",
+                          'geopath', 'attempted','outpath','scrpath',
+                          'flag_oct', 'flag_list', 'num_coord_metal', 'rmsd_max',
+                          'oct_angle_devi_max', 'max_del_sig_angle', 'dist_del_eq', 'dist_del_all',
+                          'devi_linear_avrg', 'devi_linear_max',
+                          'flag_oct_loose', 'flag_list_loose',
+                          'prog_num_coord_metal', 'prog_rmsd_max',
+                          'prog_oct_angle_devi_max', 'prog_max_del_sig_angle', 'prog_dist_del_eq',
+                          'prog_dist_del_all','empty_ss_act','empty_ss_target',
+                          'prog_devi_linear_avrg', 'prog_devi_linear_max',
+                          'rmsd', 'maxd',
+                          'init_ax1_MLB', 'init_ax2_MLB', 'init_eq_MLB', 'thermo_cont', 'imag', 'solvent_cont',
+                          'water_cont', 'sp_ss_act', 'sp_ss_target',
+                          'terachem_version', 'terachem_detailed_version',
+                          'basis', 'alpha_level_shift', 'beta_level_shift', 'functional', 'mop_energy',
+                          'mop_coord', 'sp_energy', 'empty_sp_energy', 'tot_time', 'tot_step', 'metal_translation',
+                          'e_delta','e_delta_tol', 'grad_rms','grad_rms_tol',
+                          'grad_max','grad_max_tol','displace_rms', 'displace_rms_tol',
+                          'displace_max', 'displace_max_tol']
+    if not comp:
+        list_of_prop_names.append("sub_count")
+    if SASA:
+        list_of_prop_names.append("area")
+    if id:
+        list_of_prop_names.append('_id')
+    #removelist = ['e_delta','e_delta_tol', 'grad_rms','grad_rms_tol',
+    #                      'grad_max','grad_max_tol','displace_rms', 'displace_rms_tol',
+    #                      'displace_max', 'displace_max_tol','name_without_HFX','sub_count']
+    #list_of_props.remove('gene') 
+    #[list_of_prop_names.remove(val) for val in removelist]
+    if TS:
+        list_of_prop_names += ['terachem_version_HAT_TS', 'terachem_detailed_version_HAT_TS', 'basis_HAT_TS',
+                               'tspin_HAT_TS', 'charge_HAT_TS', 'alpha_level_shift_HAT_TS', 'beta_level_shift_HAT_TS',
+                               'energy_HAT_TS', 'time_HAT_TS', 'terachem_version_Oxo_TS',
+                               'terachem_detailed_version_Oxo_TS', 'basis_Oxo_TS', 'tspin_Oxo_TS', 'charge_Oxo_TS',
+                               'alpha_level_shift_Oxo_TS', 'beta_level_shift_Oxo_TS', 'energy_Oxo_TS', 'time_Oxo_TS',
+                               'ss_act_HAT_TS', 'ss_target_HAT_TS', 'eigenvalue_HAT_TS', 'ss_act_Oxo_TS',
+                               'ss_target_Oxo_TS', 'eigenvalue_Oxo_TS', 'init_energy_HAT_TS', 'init_energy_Oxo_TS',
+                               'converged_HAT_TS', 'converged_Oxo_TS', 'attempted_HAT_TS', 'attempted_Oxo_TS']
+    if oxocatalysis:
+        list_of_prop_names += ['net_oxygen_spin','ox']
+        if comp:
+            list_of_props.insert(1, 'job_gene')
+            list_of_props.append('convergence')
+            list_of_prop_names.append('DFT_RUN')
+            for props in list_of_prop_names:
+                for spin_cat in ['LS', 'IS', 'HS']:
+                    for catax in ['x', 'oxo', 'hydroxyl']:
+                        if catax == 'x':
+                            for ox in ['2', '3']:
+                                list_of_props.append("_".join(['ox', str(ox), spin_cat, str(catax), props]))
+                        elif catax == 'oxo':
+                            for ox in ['4', '5']:
+                                list_of_props.append("_".join(['ox', str(ox), spin_cat, str(catax), props]))
+                        else:
+                            for ox in ['3', '4']:
+                                list_of_props.append("_".join(['ox', str(ox), spin_cat, str(catax), props]))
+            list_of_props.append('attempted')
+        else:
+            list_of_props += list_of_prop_names
+    else:
+        spin_loop = ['LS', 'IS', 'HS']
+        if comp:
+            list_of_props.insert(1, 'ox2RN')
+            list_of_props.insert(2, 'ox3RN')
+            list_of_props.insert(3, 'job_gene')
+            for props in list_of_prop_names:
+                for spin_cat in spin_loop:
+                    for ox in ['2', '3']:
+                        list_of_props.append("_".join(['ox', str(ox), spin_cat, props]))
+            list_of_props.append('attempted')
+        else:
+            list_of_props.insert(1, 'number')
+            list_of_props.insert(2, 'ox')
+            list_of_props += list_of_prop_names
+    return list_of_props
 
 ########################
 # This function is used to gather the information present in a given DFTRun class
@@ -355,11 +453,10 @@ def get_ox_states():  # could be made metal dependent like spin
 ########################
 # This function takes in a molden file, and parses the information that contains
 # mulliken spin.
-def get_mulliken(moldenpath, spin, catlig=False, external=False):
+def get_mulliken(moldenpath, spin, catlig=False, external = False, modidx = False):
     net_metal_spin = "undef"
     got_metal = False
     x_flag = False
-    modifier = 0
     if not external:
         if isKeyword('oxocatalysis'):
             oxocatalysis = True
@@ -370,19 +467,21 @@ def get_mulliken(moldenpath, spin, catlig=False, external=False):
             oxocatalysis = False
     else:
         got_oxo = True
-        oxocatalysis = False
+        oxocatalysis = True
     if catlig:  # This only matters for oxocatalysis, where extra info is stored.
         if str(catlig) == "x":
-            oxocatalysis = True
             x_flag = True
             oxo_net_spin = 0
             got_oxo = True
         if str(catlig) in ["[O--]", "oxo"]:
-            oxocatalysis = True
             modifier = 1
         if str(catlig) in ["[OH-]", "hydroxyl"]:
-            oxocatalysis = True
             modifier = 2
+        if str(catlig) in ['methanol']:
+            modifier = 7
+    if modidx:
+        print('overriding modifier')
+        modifier = int(modidx)
     try:  # mullpop will first be parsed
         mullpop_path = os.path.dirname(moldenpath) + '/mullpop'
         if spin == 1:
@@ -400,6 +499,7 @@ def get_mulliken(moldenpath, spin, catlig=False, external=False):
                     net_metal_spin = float(spin_line.split()[-1])
                     got_metal = True
                 if oxocatalysis and ('---' in row) and (not x_flag):
+                    print('catlig',catlig)
                     spin_line = data[-i - (modifier + 1)]
                     oxo_net_spin = float(spin_line.split()[-1])
                     got_oxo = True
@@ -418,8 +518,9 @@ def get_mulliken(moldenpath, spin, catlig=False, external=False):
         proc = subprocess.Popen("multiwfn " + moldenpath, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
         commands = ['7', '5', '1', 'y', 'n']
         newline = os.linesep
-        output = proc.communicate(newline.join(commands))
-        lines = output[0].split('\n')
+        output = proc.communicate(newline.join(commands).encode('utf-8'))
+        output_new = output[0].decode('utf-8')
+        lines = output_new.split('\n')
         try:
             if int(spin) == 1:
                 for num, line in enumerate(lines):
@@ -461,37 +562,146 @@ def get_mulliken(moldenpath, spin, catlig=False, external=False):
                 return [net_metal_spin, oxo_net_spin]
             else:
                 return [net_metal_spin]
+#######################
+def get_mulliken_charge(moldenpath, spin, catlig=False,modidx=False):
+    metal_charge = np.nan
+    got_metal = False
+    x_flag = False
+    got_oxo = True
+    modifier = 0
+    oxocatalysis = False
+    if catlig:  # This only matters for oxocatalysis, where extra info is stored.
+        oxocatalysis = True
+        if str(catlig) == "x":
+            x_flag = True
+            oxygen_charge = np.nan
+            got_oxo = True
+        if str(catlig) in ["[O--]", "oxo"]:
+            modifier = 1
+        if str(catlig) in ["[OH-]", "hydroxyl"]:
+            modifier = 2
+        if str(catlig) in ['methanol']:
+            modifier = 7
+    if modidx:
+        modifier = int(modidx)
+    #try:  # mullpop will first be parsed
+    #    charge_path = os.path.dirname(moldenpath) + '/charge_mull.xls'
+    #    with open(charge_path) as f:
+    #        data = f.readlines()
+    #        if len(data) == 0:
+    #            oxygen_charge = np.nan
+    #            metal_charge = np.nan
+    #        for i, row in enumerate(data):
+    #            if int(row.split()[0]) == 1:
+    #                metal_charge = float(row.split()[2])
+    #            if not x_flag:
+    #                if i == (len(data)-modifier):
+    #                    oxygen_charge = float(row.split()[2])
+    #    return [metal_charge, oxygen_charge]
+    #except:
+    if True:
+        print('mullcharge NOT FOUND')
+        ##### only call multiwfn if the mullpop is not there #####
+        subprocess.call("module load multiwfn/GUI", shell=True)
+        oxygen_charge = np.nan
+        proc = subprocess.Popen("multiwfn " + moldenpath, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+        commands = ['7', '5', '1', 'y', 'n']
+        newline = os.linesep
+        output = proc.communicate(newline.join(commands).encode('utf-8'))
+        output_new = output[0].decode('utf-8')
+        lines = output_new.split('\n')
+        #try:
+        if True:
+            if int(spin) == 1:
+                for num, line in enumerate(lines):
+                    if "Population of atoms" in line:
+                        idx = 4
+                        if len(lines[num + 1].split()) == 7:
+                            idx -= 1
+                        metal_charge = float(lines[num + 1].split()[idx + 3])
+                    if ("Total net" in line) and (not x_flag) and (oxocatalysis):
+                        oxygen_charge = float(float(lines[num - modifier].split()[7]))
+            else:
+                print('Mulliken analyzer fed unrestricted molden file.')
+                for num, line in enumerate(lines):
+                    if "Population of atoms" in line:
+                        idx = 2
+                        if len(lines[num + 2].split()) == 5 and 'Atomic' not in lines[num + 2]:
+                            idx -= 1
+                        metal_charge = float(lines[num + 2].split()[idx + 3])
+                    if ("Total net" in line) and (not x_flag) and (oxocatalysis):
+                        oxygen_charge = float(lines[num - modifier].split()[5])
+            return [metal_charge, oxygen_charge]
+        #except:
+        #    return [np.nan, np.nan]
 
 
 #######################
 # This function uses multiwfn to take in the molden file and return
 # mayer bond valence information about a given transition metal complex.
-def get_mayer_valence(moldenpath):
+def get_mayer_valence(moldenpath,catlig=False,modidx=False):
+    if catlig == 'hydroxyl':
+        modifier = 3
+    elif catlig == 'oxo':
+        modifier = 2
+    if catlig == 'methanol':
+        modifier = 7
+    else:
+        modifier = np.nan
+    if modidx:
+        modifier = int(modidx)+1
     print('getting mayer metrics')
     ##### only call multiwfn if the mullpop is not there #####
     subprocess.call("module load multiwfn/GUI", shell=True)
-    mayer_valence = np.nan
+    metal_mayer_BV = np.nan
+    metal_mayer_TV = np.nan #total valence
+    metal_mayer_FV = np.nan #free valence
+    oxygen_mayer_BV = np.nan
+    oxygen_mayer_TV = np.nan
+    oxygen_mayer_FV = np.nan
     proc = subprocess.Popen("multiwfn " + moldenpath, stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
     commands = ['9', '1']
     newline = os.linesep
-    output = proc.communicate(newline.join(commands))
-    lines = output[0].split('\n')
+    output = proc.communicate(newline.join(commands).encode('utf-8'))
+    output_new = output[0].decode('utf-8')
+    lines = output_new.split('\n')
     start = False
+    #print(lines)
     for num, line in enumerate(lines):
-        if (
-                'Total valences and free valences' in line):  # ('Bond order from mixed alpha&beta density matrix' in line) or ('The total bond order' in line):
+        #print(line)
+        #continue
+        if ('Total valences and free valences' in line):#('Bond order from mixed alpha&beta density matrix' in line) or ('The total bond order' in line):
             start = True
             continue
         elif not start:
             continue
         if start:
-            print(line)
-            print((line.split()))
-            if int(line.split()[1].split('(')[0]) == 1:
-                mayer_BV = float(line.split()[-2]) - float(line.split()[-1])
+            #print('----',line)
+            if len(line) <=1:
+                continue
+            if 'output' in line and not np.isnan(modifier):
+                print('----oxygen section-----')
+                print(lines[num-modifier])
+                oxygen_mayer_TV = float(lines[num-modifier].split()[-2])
+                oxygen_mayer_FV = float(lines[num-modifier].split()[-1])
+                oxygen_mayer_BV = float(lines[num-modifier].split()[-2])-float(lines[num-modifier].split()[-1])
+                print(metal_mayer_TV,metal_mayer_FV,metal_mayer_BV,oxygen_mayer_TV,oxygen_mayer_FV,oxygen_mayer_BV)
+            elif (int(line.split()[1].split('(')[0]) == 1):
+                print('-----metal section----')
+                print(line)
+                print(line.split())
+                metal_mayer_TV = float(line.split()[-2])
+                metal_mayer_FV = float(line.split()[-1])
+                metal_mayer_BV = float(line.split()[-2])-float(line.split()[-1])
+                print(metal_mayer_TV,metal_mayer_FV,metal_mayer_BV,oxygen_mayer_TV,oxygen_mayer_FV,oxygen_mayer_BV)
+            if (not np.isnan(metal_mayer_BV) and not catlig) or (np.isnan(modifier) and not np.isnan(metal_mayer_BV)):
+                print('break metal')
                 break
-    return mayer_BV
-
+            #if (not np.isnan(oxygen_mayer_BV)) and (not np.isnan(metal_mayer_BV)):
+            #    print('break oxygen')
+            #    break
+    #print(metal_mayer_TV,metal_mayer_FV,metal_mayer_BV,oxygen_mayer_TV,oxygen_mayer_FV,oxygen_mayer_BV)
+    return metal_mayer_TV,metal_mayer_FV,metal_mayer_BV,oxygen_mayer_TV,oxygen_mayer_FV,oxygen_mayer_BV
 
 ########################
 # This helper function is called frequently and is the basis for assigning
@@ -577,8 +787,7 @@ def isKeyword(keyword):
     # returned in its base form - Aditya (10/10/2018)                                #
     ##################################################################################
     GA_run = get_current_GA()
-    if isinstance(keyword, basestring):
-        keyword = unicode(keyword, 'utf-8')
+    if isinstance(keyword, str):
         try:
             return GA_run.config[str(keyword)]
         except:
@@ -588,7 +797,7 @@ def isKeyword(keyword):
         return_list = []
         try:
             for i in range(total_len):
-                temp_key = unicode(str(keyword[i]), 'utf-8')
+                temp_key = str(keyword[i])
                 return_list.append(GA_run.config[temp_key])
             return return_list
         except:
@@ -604,7 +813,7 @@ def isKeyword(keyword):
 # DO NOT USE. Use generic "isKeyword" instead.
 def get_optimizer():
     GA_run = get_current_GA()
-    if unicode('old_optimizer', 'utf-8') in list(GA_run.config.keys()):
+    if unicode('old_optimizer') in list(GA_run.config.keys()):
         return GA_run.config["old_optimizer"]
     else:
         print('old_optimizer not set, using default as False')
@@ -669,7 +878,7 @@ def translate_job_name(job):
         liglist = []
         for ind in indlist:
             if hasattr(ligands_dict[int(ind)][0], '__iter__'):
-                liglist.append(ligands_dict[int(ind)][0][0])
+                liglist.append(ligands_dict[int(ind)][0])
             else:
                 liglist.append(ligands_dict[int(ind)][0])
         namelist = [str(metal)]
@@ -1993,13 +2202,98 @@ def check_infile_control(infile):
 def rename_ligands(liglist):
     obConversion = openbabel.OBConversion()
     obConversion.SetInAndOutFormats("smi", "smi")
-    lig_dict = {"c3c(P(c1ccccc1)c2ccccc2)cccc3": "pph3",
-                "c1ccncc1": "pyr",
+    lig_dict = {"c1ccncc1": "pyr",
+                "monoCH3synCH3NH2cyclam":"1CH3CH3NH2cyclam",
+                "monoCF3synCH3NH2cyclam":"1CF3CH3NH2cyclam",
+                "monoNH2synCH3NH2cyclam":"1NH2CH3NH2cyclam",
+                "monoNO2synCH3NH2cyclam":"1nitroCH3NH2cyclam",
+                "monoFsynCH3NH2cyclam":"1FCH3NH2cyclam",
+                "monoBrsynCH3NH2cyclam":"1BrCH3NH2cyclam",
+                "monoClsynCH3NH2cyclam":"1ClCH3NH2cyclam",
+                "monoIsynCH3NH2cyclam":"1ICH3NH2cyclam",
+                "monoSHsynCH3NH2cyclam":"1SHCH3NH2cyclam",
+                "monoOHsynCH3NH2cyclam":"1OHCH3NH2cyclam",
+                "monoCF3synDiCH3cyclam":"1CF3syn2CH3cyclam",
+                "diCH3trans512dionecyclam":"2CH3t512dionecyclam",
+                "diCF3trans512dionecyclam":"2CF3t512dionecyclam",
+                "diNH2trans512dionecyclam":"2NH2t512dionecyclam",
+                "diNO2trans512dionecyclam":"2NO2t512dionecyclam",
+                "diFtrans512dionecyclam":"2Ft512dionecyclam",
+                "diBrtrans512dionecyclam":"2Brt512dionecyclam",
+                "diCltrans512dionecyclam":"2Clt512dionecyclam",
+                "diItrans512dionecyclam":"2It512dionecyclam",
+                "diOHtrans512dionecyclam":"2SHt512dionecyclam",
+                "diSHtrans512dionecyclam":"2OHt512dionecyclam",
+                "monoCH3synCH3NH214TMC":"1CH3synCH3NH214TMC",
+                "monoCF3synCH3NH214TMC":"1CF3synCH3NH214TMC",
+                "monoNH2synCH3NH214TMC":"1NH2synCH3NH214TMC",
+                "monoNO2synCH3NH214TMC":"1NO2synCH3NH214TMC",
+                "monoFsynCH3NH214TMC":"1FsynCH3NH214TMC",
+                "monoBrsynCH3NH214TMC":"1BrsynCH3NH214TMC",
+                "monoClsynCH3NH214TMC":"1ClsynCH3NH214TMC",
+                "monoIsynCH3NH214TMC":"1IsynCH3NH214TMC",
+                "monoSHsynCH3NH214TMC":"1SHsynCH3NH214TMC",
+                "monoOHsynCH3NH214TMC":"1OHsynCH3NH214TMC",
+                "diCNtrans512dionecyclam":"2CNt512dionecyclam",
+                "diCH3cis57dionecyclam":"2CH3c57dionecyclam",
+                "diCF3cis57dionecyclam":"2CF3c57dionecyclam",
+                "diNH2cis57dionecyclam":"2NH2c57dionecyclam",
+                "diNO2cis57dionecyclam":"2NO2c57dionecyclam",
+                "diFcis57dionecyclam":"2Fc57dionecyclam",
+                "diBrcis57dionecyclam":"2Brc57dionecyclam",
+                "diClcis57dionecyclam":"2Clc57dionecyclam",
+                "diIcis57dionecyclam":"2Ic57dionecyclam",
+                "diSHcis57dionecyclam":"2SHc57dionecyclam",
+                "diOHcis57dionecyclam":"2OHc57dionecyclam",
+                "monoCF3cis57dionecyclam":"1CF3c57dionecyclam",
+                "monoCH3cis57dionecyclam":"1CH3c57dionecyclam",
+                "monoNH2cis57dionecyclam":"1NH2c57dionecyclam",
+                "monoBrcis57dionecyclam":"1Brc57dionecyclam",
+                "monoClcis57dionecyclam":"1Clc57dionecyclam",
+                "monoFcis57dionecyclam":"1Fc57dionecyclam",
+                "monoIcis57dionecyclam":"1Ic57dionecyclam",
+                "monoNO2cis57dionecyclam":"1NO2c57dionecyclam",
+                "monoSHcis57dionecyclam":"1SHc57dionecyclam",
+                "monoOHcis57dionecyclam":"1OHc57dionecyclam",
+                "monoCF3trans512dionecyclam":"1CF3t512dionecyclam",
+                "monoCH3trans512dionecyclam":"1CH3t512dionecyclam",
+                "monoNH2trans512dionecyclam":"1NH2t512dionecyclam",
+                "monoBrtrans512dionecyclam":"1Brt512dionecyclam",
+                "monoCltrans512dionecyclam":"1Clt512dionecyclam",
+                "monoFtrans512dionecyclam":"1Ft512dionecyclam",
+                "monoItrans512dionecyclam":"1It512dionecyclam",
+                "monoNO2trans512dionecyclam":"1NO2t512dionecyclam",
+                "monoSHtrans512dionecyclam":"1SHt512dionecyclam",
+                "monoOHtrans512dionecyclam":"1OHt512dionecyclam",
+                "monoNO2synDiCH3cyclam":"1NO2syn2CH3cyclam",
+                "monoNH2synDiCH3cyclam":"1NH2syn2CH3cyclam",
+                "monoCH3synDiCH3cyclam":"1CH3syn2CH3cyclam",
+                "monoCF3synDiCH3cyclam":"1CF3syn2CH3cyclam",
+                "monoFsynDiCH3cyclam":"1Fsyn2CH3cyclam",
+                "monoIsynDiCH3cyclam":"1Isyn2CH3cyclam",
+                "monoBrsynDiCH3cyclam":"1Brsyn2CH3cyclam",
+                "monoClsynDiCH3cyclam":"1Clsyn2CH3cyclam",
+                "monoOHsynDiCH3cyclam":"1OHsyn2CH3cyclam",
+                "monoSHsynDiCH3cyclam":"1SHsyn2CH3cyclam",
+                "monoCNsynCH3NH2cyclam":"1CNsynMeNH3cyclam",
+                "monoFsynCH3NH2cyclam":"1FsynMeNH3cyclam",
+                "monoClsynCH3NH2cyclam":"1ClsynMeNH3cyclam",
+                "monoBrsynCH3NH2cyclam":"1BrsynMeNH3cyclam",
+                "monoIsynCH3NH2cyclam":"1IsynMeNH3cyclam",
+                "monoCH3synCH3NH2cyclam":"1CH3synMeNH3cyclam",
+                "monoCF3synCH3NH2cyclam":"1CF3synMeNH3cyclam",
+                "monoNH2synCH3NH2cyclam":"1NO2synMeNH3cyclam",
+                "monoOHsynCH3NH2cyclam":"1OHsynMeNH3cyclam",
+                "monoSHsynCH3NH2cyclam":"1SHsynMeNH3cyclam",
+                "syn6methyl6amine14TMC":"syn6CH36NH214TMC",
+                "syn6methyl6aminecyclam":"syn6CH36NH2cyclam",
+                "monoCNcis57dionecyclam":"1CNc57dionecyclam",
+                "monoCNtrans512dionecyclam":"1CNt512dionecyclam"
                 }
     liglist_compact = []
     for idx, lig in enumerate(liglist):
         moll = openbabel.OBMol()
-        if lig in list(lig_dict.keys()):
+        if lig in lig_dict.keys():
             liglist_compact.append(lig_dict[lig])
         elif len(lig) > 20:
             if obConversion.ReadString(moll, lig):
@@ -2009,9 +2303,7 @@ def rename_ligands(liglist):
                     "ligand name too long %s. And cannot be read in as SMILES. Please add it in lig_dict at ga_tools.rename_ligands" % lig)
         else:
             liglist_compact.append(lig)
-    return liglist_compact
-
-
+    return liglist_compact    
 #####################
 def find_files_by_name(path, key):
     targets = []
