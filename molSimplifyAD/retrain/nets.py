@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from keras import regularizers
-from keras.layers import Dense, Dropout, Input, BatchNormalization, Activation, Add, Concatenate
+from keras.layers import Dense, Dropout, Input, BatchNormalization, Activation, Add, Concatenate, LeakyReLU
 from keras.models import Model
 from keras.optimizers import Adam
 from sklearn.metrics import roc_auc_score, r2_score
@@ -93,7 +93,7 @@ def cal_auc(model, x, y, ind=None):
 def build_ANN(hyperspace, input_len, lname, regression=True):
     if tf.__version__ >= tf.__version__ >= '2.0.0':
         print("====Tensorflow version >= 2.0.0====")
-        model = ANN_tf2(hyperspace, input_len, regression=regression)
+        model = ANN_tf2(hyperspace, input_len, lname, regression=regression)
     else:
         print("====Tensorflow version < 2.0.0====")
         model = ANN(hyperspace, input_len, lname, regression=regression)
@@ -110,7 +110,7 @@ def ANN(hyperspace, input_len, lname, regression=True):
                             kernel_regularizer=regularizers.l2(hyperspace['reg']),
                             name='dense-' + str(ii))(layers[-1]))
         layers.append(BatchNormalization(name='bn-' + str(ii))(layers[-1]))
-        layers.append(Activation('relu', name='activation-' + str(ii))(layers[-1]))
+        layers.append(LeakyReLU(alpha=0.2, name='activation-' + str(ii))(layers[-1]))
         layers.append(Dropout(rate=hyperspace['drop_rate'],
                               name='dropout-' + str(ii))(layers[-1]))
         if ('res' in hyperspace.keys()) and (hyperspace['res'] and ii):
@@ -122,11 +122,11 @@ def ANN(hyperspace, input_len, lname, regression=True):
             layers.append(Concatenate(name='concatenate-' + str(ii))([inputlayer, layers[-1]]))
     last_dense, outlayer, loss_weights, loss_type = [], [], [], []
     for ii, ln in enumerate(lname):
-        outlayer.append(0)
         last_dense.append(Dense(1, name='dense-last-%d' % ii)(layers[-1]))
+        outlayer.append(0)
         if not regression:
-            outlayer[ii] = BatchNormalization(name='bn-last-%d' % ii)(last_dense[ii])
-            outlayer[ii] = Activation('sigmoid', name='output-%d-%s' % (ii, ln))(outlayer[ii])
+            last_bn = BatchNormalization(name='bn-last-%d' % ii)(last_dense[ii])
+            outlayer[ii] = Activation('sigmoid', name='output-%d-%s' % (ii, ln))(last_bn)
             _loss_type = 'binary_crossentropy'
             metrics = ['accuracy', precision, recall, f1]
         else:
@@ -149,17 +149,17 @@ def ANN(hyperspace, input_len, lname, regression=True):
     return model
 
 
-def ANN_tf2(hyperspace, input_len, regression=True):
+def ANN_tf2(hyperspace, input_len, lname, regression=True):
     np.random.seed(1234)
     inputlayer = tf.keras.Input(shape=(input_len,), name='input')
     layers = [inputlayer]
     for ii in range(len(hyperspace['hidden_size'])):
         layers.append(tf.keras.layers.Dense(hyperspace['hidden_size'][ii],
-                                            kernel_initializer=tf.keras.initializers.he_uniform(),
+                                            # kernel_initializer=tf.keras.initializers.he_uniform(),
                                             kernel_regularizer=tf.keras.regularizers.l2(hyperspace['reg']),
                                             name='dense-' + str(ii))(layers[-1]))
         layers.append(tf.keras.layers.BatchNormalization(name='bn-' + str(ii))(layers[-1]))
-        layers.append(tf.keras.layers.Activation('relu', name='activation-' + str(ii))(layers[-1]))
+        layers.append(tf.keras.layers.LeakyReLU(alpha=0.2, name='activation-' + str(ii))(layers[-1]))
         layers.append(tf.keras.layers.Dropout(rate=hyperspace['drop_rate'],
                                               name='dropout-' + str(ii))(layers[-1]))
         if hyperspace['res'] and ii:
@@ -169,18 +169,24 @@ def ANN_tf2(hyperspace, input_len, regression=True):
             layers.append(tf.keras.layers.Add(name='sum-' + str(ii))([layers[base_lookback], layers[-1]]))
         if hyperspace['bypass']:
             layers.append(tf.keras.layers.Concatenate(name='concatenate-' + str(ii))([inputlayer, layers[-1]]))
-    layers.append(tf.keras.layers.Dense(1, name='dense-last')(layers[-1]))
-    outlayer = tf.keras.layers.BatchNormalization(name='bn-last')(layers[-1])
-    if not regression:
-        outlayer = tf.keras.layers.Activation('sigmoid', name='activation-last')(outlayer)
-        loss_type = tf.keras.losses.BinaryCrossentropy()
-        metrics = [tf.keras.metrics.AUC(name="auc"), 'accuracy',
-                   tf.keras.metrics.Precision(name="precision"), tf.keras.metrics.Recall(name="recall")]
-    else:
-        loss_type = 'mse'
-        metrics = ['mae', tf.keras.metrics.MeanAbsolutePercentageError(name="mape"),
-                   scaled_mae, r2_val]
-    model = tf.keras.Model(inputs=[inputlayer], outputs=[outlayer])
+    last_dense, outlayer, loss_weights, loss_type = [], [], [], []
+    for ii, ln in enumerate(lname):
+        last_dense.append(Dense(1, name='dense-last-%d' % ii)(layers[-1]))
+        outlayer.append(0)
+        if not regression:
+            last_bn = BatchNormalization(name='bn-last-%d' % ii)(last_dense[ii])
+            outlayer[ii] = tf.keras.layers.Activation('sigmoid', name='activation-last')(last_bn)
+            _loss_type = tf.keras.losses.BinaryCrossentropy()
+            metrics = [tf.keras.metrics.AUC(name="auc"), 'accuracy',
+                       tf.keras.metrics.Precision(name="precision"), tf.keras.metrics.Recall(name="recall")]
+        else:
+            outlayer[ii] = BatchNormalization(name='output-%d-%s' % (ii, ln))(last_dense[ii])
+            _loss_type = 'mse'
+            metrics = ['mae', tf.keras.metrics.MeanAbsolutePercentageError(name="mape"),
+                       scaled_mae, r2_val]
+        loss_weights.append(1.0)
+        loss_type.append(_loss_type)
+    model = tf.keras.Model(inputs=[inputlayer], outputs=outlayer)
     model.compile(loss=loss_type,
                   optimizer=tf.keras.optimizers.Adam(learning_rate=hyperspace['lr'],
                                                      beta_1=hyperspace['beta_1'],
@@ -188,7 +194,8 @@ def ANN_tf2(hyperspace, input_len, regression=True):
                                                      decay=hyperspace['decay'],
                                                      amsgrad=hyperspace['amsgrad']
                                                      ),
-                  metrics=metrics)
+                  metrics=metrics,
+                  loss_weights=loss_weights,)
     return model
 
 

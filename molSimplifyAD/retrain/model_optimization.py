@@ -1,24 +1,27 @@
+import sys
 import numpy as np
 from functools import partial
 from hyperopt import hp, tpe, fmin, Trials, STATUS_OK
 from keras.callbacks import EarlyStopping
 import tensorflow as tf
-
+from keras import backend as K
 from molSimplifyAD.retrain.nets import build_ANN, auc_callback, cal_auc, compile_model
+from keras import backend as K
+#K.set_session(tf.Session(config=tf.ConfigProto(intra_op_parallelism_threads=4, inter_op_parallelism_threads=4)))
 
 
 def train_model_hyperopt(hyperspace, X, y, lname,
                          regression=True, epochs=1000,
-                         X_val=False, y_val=False, model=False):
+                         X_val=False, y_val=False, input_model=False):
     np.random.seed(1234)
     if tf.__version__ >= tf.__version__ >= '2.0.0':
         tf.compat.v1.disable_eager_execution()  ## disable eager in tf2.0 for faster training
     print(("hyperspace: ", hyperspace))
-    if model == False:
+    if input_model == False:
         print("build...")
         model = build_ANN(hyperspace, X.shape[-1], lname, regression=regression)
     else:
-        model = compile_model(model=model, hyperspace=hyperspace,
+        model = compile_model(model=input_model, hyperspace=hyperspace,
                               lname=lname, regression=regression)
     if (isinstance(X_val, bool)) and (isinstance(y_val, bool)):
         X_train, X_val = np.split(X, [int(0.8 * X.shape[0])])
@@ -28,9 +31,7 @@ def train_model_hyperopt(hyperspace, X, y, lname,
         raise ValueError("Both X_val and y_val need to be specified!")
     else:
         X_train, y_train = X, y
-    # if not len(lname) > 1:
-    #     y_train, y_val = y_train[0], y_val[0]
-    val_data = [X_val, y_val]
+    val_data = (X_val, y_val)
     earlystop = EarlyStopping(monitor='val_loss',
                               min_delta=0.0,
                               patience=hyperspace['patience'],
@@ -47,7 +48,7 @@ def train_model_hyperopt(hyperspace, X, y, lname,
                         verbose=2,
                         batch_size=hyperspace['batch_size'],
                         validation_data=val_data,
-                        callbacks=cb)
+                        callbacks=cb,)
     if regression:
         obj = 0
         if len(lname) > 1:
@@ -56,7 +57,10 @@ def train_model_hyperopt(hyperspace, X, y, lname,
                 obj += history.history[key][-1]
             obj /= len(lname)
         else:
-            obj = history.history['val_scaled_mae'][-1]
+            if sys.version_info[0] > 2:
+                obj = history.history['val_mae'][-1]
+            else:
+                obj = history.history['val_mean_absolute_error'][-1]
     else:
         if len(lname) > 1:
             val_auc = 0
@@ -65,9 +69,11 @@ def train_model_hyperopt(hyperspace, X, y, lname,
         else:
             val_auc = cal_auc(model, X_val, y_val)
         obj = -val_auc / len(lname)
+    epochs = len(history.history[list(history.history.keys())[0]])
+    K.clear_session()
     return {'loss': obj,
             'status': STATUS_OK,
-            'epochs': len(history.history[list(history.history.keys())[0]])}
+            'epochs': epochs}
 
 
 def optimize(X, y, lname,
