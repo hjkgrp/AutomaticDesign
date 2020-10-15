@@ -1,3 +1,4 @@
+
 import os, subprocess, sys
 import shutil
 import numpy as np
@@ -457,6 +458,7 @@ def get_mulliken(moldenpath, spin, catlig=False, external = False, modidx = Fals
     net_metal_spin = "undef"
     got_metal = False
     x_flag = False
+    modifier, oxo_net_spin = 0, np.nan # set default
     if not external:
         if isKeyword('oxocatalysis'):
             oxocatalysis = True
@@ -482,7 +484,7 @@ def get_mulliken(moldenpath, spin, catlig=False, external = False, modidx = Fals
     if modidx:
         print('overriding modifier')
         modifier = int(modidx)
-    try:  # mullpop will first be parsed
+    if True:  # mullpop will first be parsed
         mullpop_path = os.path.dirname(moldenpath) + '/mullpop'
         if spin == 1:
             net_metal_spin = 0
@@ -491,25 +493,29 @@ def get_mulliken(moldenpath, spin, catlig=False, external = False, modidx = Fals
                 return [net_metal_spin, oxo_net_spin]
             else:
                 return [net_metal_spin]
-        with open(mullpop_path) as f:
-            data = f.readlines()
-            for i, row in enumerate(reversed(data)):
-                if 'Atom' in row:
-                    spin_line = data[-i]
-                    net_metal_spin = float(spin_line.split()[-1])
-                    got_metal = True
-                if oxocatalysis and ('---' in row) and (not x_flag):
-                    print('catlig',catlig)
-                    spin_line = data[-i - (modifier + 1)]
-                    oxo_net_spin = float(spin_line.split()[-1])
-                    got_oxo = True
-                if got_metal and got_oxo:
-                    break
+        if os.path.isfile(mullpop_path):
+            with open(mullpop_path) as f:
+                data = f.readlines()
+                for i, row in enumerate(reversed(data)):
+                    if 'Atom' in row:
+                        spin_line = data[-i]
+                        net_metal_spin = float(spin_line.split()[-1])
+                        got_metal = True
+                    if oxocatalysis and ('---' in row) and (not x_flag):
+                        print('catlig',catlig)
+                        spin_line = data[-i - (modifier + 1)]
+                        try:
+                            oxo_net_spin = float(spin_line.split()[-1])
+                            got_oxo = True
+                        except:
+                            pass
+                    if got_metal and got_oxo:
+                        break
         if oxocatalysis:
             return [net_metal_spin, oxo_net_spin]
         else:
             return [net_metal_spin]
-    except:
+    else:
         print('MULLPOP NOT FOUND')
         ##### only call multiwfn if the mullpop is not there #####
         subprocess.call("module load multiwfn/GUI", shell=True)
