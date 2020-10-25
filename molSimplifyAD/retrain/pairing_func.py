@@ -1,5 +1,5 @@
 import numpy as np
-from pairing_tools import *
+from molSimplifyAD.retrain.pairing_tools import *
 
 
 def process_split(dfgrp, g, **kwargs):

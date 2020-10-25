@@ -1,5 +1,5 @@
-from pairing_func import process_split, process_adiabaticIP_redox, process_ipea
-from pairing_tools import keep_lowestE
+from molSimplifyAD.retrain.pairing_func import process_split, process_adiabaticIP_redox, process_ipea
+from molSimplifyAD.retrain.pairing_tools import keep_lowestE
 
 group_conditions = {"split": ['metal', 'ligstr', 'ox'],
                     "redox": ['metal', 'ligstr'],

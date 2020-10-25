@@ -1,0 +1,117 @@
+{
+  "kernel": {
+    "name": "rbf",
+    "useGPU": false,
+    "lengthscale": [
+      0.2672598763562936
+    ],
+    "active_dims": [
+      0,
+      1
+    ],
+    "ARD": false,
+    "input_dim": 2,
+    "variance": [
+      0.8033364800764883
+    ],
+    "class": "GPy.kern.RBF",
+    "inv_l": false
+  },
+  "name": "gp_classification",
+  "inference_method": {
+    "_ep_approximation": {
+      "log_Z_tilde": 0.3872024725650812,
+      "ga_approx": {
+        "tau": [
+          0.5067171396872139,
+          0.5067171392258367
+        ],
+        "v": [
+          -0.8443670701514066,
+          0.8443670699413722
+        ]
+      },
+      "post_params": {
+        "mu": [
+          -0.404256024190204,
+          0.4042560241712024
+        ],
+        "Sigma": [
+          [
+            0.6433344565553057,
+            0.16456634912170948
+          ],
+          [
+            0.16456634912170948,
+            0.6433344567337651
+          ]
+        ],
+        "L": [
+          [
+            1.2274840690156488,
+            0.0
+          ],
+          [
+            0.15186414455443478,
+            1.218053537749711
+          ]
+        ]
+      },
+      "cav_params": {
+        "tau": [
+          1.0476842910548663,
+          1.0476842915276792
+        ],
+        "v": [
+          0.21599093084494048,
+          -0.21599092757892746
+        ]
+      }
+    },
+    "parallel_updates": false,
+    "max_iters": Infinity,
+    "ep_mode": "alternated",
+    "epsilon": 1e-06,
+    "always_reset": false,
+    "ga_approx_old": {
+      "tau": [
+        0.5067171396872139,
+        0.5067171392258367
+      ],
+      "v": [
+        -0.8443670701514066,
+        0.8443670699413722
+      ]
+    },
+    "loading": true,
+    "eta": 1.0,
+    "delta": 1.0,
+    "class": "GPy.inference.latent_function_inference.expectation_propagation.EP"
+  },
+  "Y": [
+    [
+      0.0
+    ],
+    [
+      1.0
+    ]
+  ],
+  "X": [
+    [
+      0.0,
+      1.0
+    ],
+    [
+      1.0,
+      0.0
+    ]
+  ],
+  "likelihood": {
+    "class": "GPy.likelihoods.Bernoulli",
+    "name": "Bernoulli",
+    "gp_link_dict": {
+      "class": "GPy.likelihoods.link_functions.Probit"
+    }
+  },
+  "class": "GPy.models.GPClassification"
+}

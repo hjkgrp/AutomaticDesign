@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import pymongo
 import itertools
-from pandas.io.json import json_normalize
+from pandas import json_normalize
 from pymongo import MongoClient
 from molSimplifyAD.dbclass_mongo import tmcMongo, tmcActLearn, mongo_attr_id, mongo_not_web, SP_keys
 from molSimplifyAD.mlclass_mongo import modelActLearn, modelMongo, modelPublished
@@ -288,7 +288,7 @@ def ensure_collection(db, collection):
             if sys.version_info[0] < 3:
                 _in = raw_input()
             else:
-                _in = eval(input())
+                _in = input()
             if _in == "y":
                 finish = True
             elif _in == "n":

@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 from functools import partial
-from hyperopt import hp, tpe, fmin, Trials, STATUS_OK
+from hyperopt import hp, tpe, fmin, Trials, STATUS_OK, rand
 from keras.callbacks import EarlyStopping
 import tensorflow as tf
 from keras import backend as K
@@ -26,6 +26,7 @@ def train_model_hyperopt(hyperspace, X, y, lname,
     if (isinstance(X_val, bool)) and (isinstance(y_val, bool)):
         X_train, X_val = np.split(X, [int(0.8 * X.shape[0])])
         y_train, y_val = np.split(y, [int(0.8 * X.shape[0])])
+        print(X_train.shape, y_train.shape)
         y_train, y_val = list(np.transpose(y_train)), list(np.transpose(y_val))
     elif (isinstance(X_val, bool)) or (isinstance(y_val, bool)):
         raise ValueError("Both X_val and y_val need to be specified!")
@@ -35,14 +36,8 @@ def train_model_hyperopt(hyperspace, X, y, lname,
     earlystop = EarlyStopping(monitor='val_loss',
                               min_delta=0.0,
                               patience=hyperspace['patience'],
-                              verbose=2)
+                              verbose=1)
     cb = [earlystop]
-    if not regression:
-        if len(lname) > 1:
-            for ii, ln in enumerate(lname):
-                cb += [auc_callback(training_data=(X_train, y_train[ii]), validation_data=(X_val, y_val[ii]), ind=ii)]
-        else:
-            cb += [auc_callback(training_data=(X_train, y_train), validation_data=(X_val, y_val))]
     history = model.fit(X_train, y_train,
                         epochs=epochs,
                         verbose=2,
@@ -63,15 +58,16 @@ def train_model_hyperopt(hyperspace, X, y, lname,
                 obj = history.history['val_mean_absolute_error'][-1]
     else:
         if len(lname) > 1:
-            val_auc = 0
             for ii, ln in enumerate(lname):
-                val_auc += cal_auc(model, X_val, y_val[ii], ind=ii)
+                key = "val_output-%d-%s_auc" % (ii, ln)
+                obj += history.history[key][-1]
         else:
-            val_auc = cal_auc(model, X_val, y_val)
+            val_auc = history.history['val_auc'][-1]
         obj = -val_auc / len(lname)
     epochs = len(history.history[list(history.history.keys())[0]])
     K.clear_session()
-    return {'loss': obj,
+    # print("obj: ", obj, type(obj))
+    return {'loss': np.float128(obj),
             'status': STATUS_OK,
             'epochs': epochs}
 
@@ -83,12 +79,9 @@ def optimize(X, y, lname,
              model=False):
     np.random.seed(1234)
     if arch == False:
-        architectures = [(64,), (128,), (256,), (512,),
-                         (64, 64),
-                         (128, 128),
+        architectures = [(128, 128),
                          (256, 256),
                          (512, 512),
-                         (64, 64, 64),
                          (128, 128, 128),
                          (256, 256, 256),
                          (512, 512, 512)]
@@ -103,7 +96,7 @@ def optimize(X, y, lname,
                  'beta_1': hp.uniform('beta_1', 0.75, 0.99),
                  'decay': hp.loguniform('decay', np.log(1e-5), np.log(1e-1)),
                  'amsgrad': True,
-                 'patience': 10,
+                 'patience': 50,
                  }
     else:
         space = {'lr': hp.uniform('lr', 1e-5, 1e-3),
@@ -116,7 +109,7 @@ def optimize(X, y, lname,
                  'res': hp.choice('res', ress),
                  'bypass': hp.choice('bypass', bypasses),
                  'amsgrad': True,
-                 'patience': 10,
+                 'patience': 50,
                  }
     objective_func = partial(train_model_hyperopt,
                              X=X,
@@ -126,7 +119,7 @@ def optimize(X, y, lname,
                              epochs=epochs,
                              X_val=X_val,
                              y_val=y_val,
-                             model=model)
+                             input_model=model)
     trials = Trials()
     best_params = fmin(objective_func,
                        space,
@@ -152,6 +145,6 @@ def optimize(X, y, lname,
     returned = train_model_hyperopt(best_params, X, y, lname,
                                     regression=regression, epochs=epochs,
                                     X_val=X_val, y_val=y_val,
-                                    model=model)
+                                    input_model=model)
     best_params.update({'epochs': returned['epochs']})
     return best_params

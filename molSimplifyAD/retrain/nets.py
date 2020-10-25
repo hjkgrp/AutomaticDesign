@@ -47,9 +47,9 @@ def f1(y_true, y_pred):
 class auc_callback(Callback):
     def __init__(self, training_data, validation_data, ind=None):
         self.x = training_data[0]
-        self.y = training_data[1]
+        self.y = np.array(training_data[1])
         self.x_val = validation_data[0]
-        self.y_val = validation_data[1]
+        self.y_val = np.array(validation_data[1])
         self.ind = ind
 
     def on_train_begin(self, logs={}):
@@ -70,8 +70,9 @@ class auc_callback(Callback):
             y_pred = self.model.predict(self.x)
             y_pred_val = self.model.predict(self.x_val)
             ii = 0
-        roc = roc_auc_score(self.y, y_pred)
-        roc_val = roc_auc_score(self.y_val, y_pred_val)
+        # print("111: ", self.y.reshape(-1, 1).shape, y_pred.shape)
+        roc = roc_auc_score(self.y.reshape(-1, 1), y_pred)
+        roc_val = roc_auc_score(self.y_val.reshape(-1, 1), y_pred_val)
         print(('%d: roc-auc: %s - roc-auc_val: %s' % (ii, str(round(roc, 4)), str(round(roc_val, 4)))))
         return
 
@@ -84,14 +85,14 @@ class auc_callback(Callback):
 
 def cal_auc(model, x, y, ind=None):
     if not ind == None:
-        return roc_auc_score(y, model.predict(x)[ind])
+        return roc_auc_score(np.array(y).reshape(-1, 1), model.predict(x)[ind])
     else:
         print(np.array(y).shape)
-        return roc_auc_score(y, model.predict(x))
+        return roc_auc_score(np.array(y).reshape(-1, 1), model.predict(x))
 
 
 def build_ANN(hyperspace, input_len, lname, regression=True):
-    if tf.__version__ >= tf.__version__ >= '2.0.0':
+    if tf.__version__ >= '2.0.0':
         print("====Tensorflow version >= 2.0.0====")
         model = ANN_tf2(hyperspace, input_len, lname, regression=regression)
     else:
@@ -155,7 +156,7 @@ def ANN_tf2(hyperspace, input_len, lname, regression=True):
     layers = [inputlayer]
     for ii in range(len(hyperspace['hidden_size'])):
         layers.append(tf.keras.layers.Dense(hyperspace['hidden_size'][ii],
-                                            # kernel_initializer=tf.keras.initializers.he_uniform(),
+                                            kernel_initializer=tf.keras.initializers.he_uniform(),
                                             kernel_regularizer=tf.keras.regularizers.l2(hyperspace['reg']),
                                             name='dense-' + str(ii))(layers[-1]))
         layers.append(tf.keras.layers.BatchNormalization(name='bn-' + str(ii))(layers[-1]))

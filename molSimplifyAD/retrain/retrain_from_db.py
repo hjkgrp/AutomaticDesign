@@ -1,4 +1,5 @@
 import numpy as np
+import uuid
 import pandas as pd
 import pickle
 import tensorflow as tf
@@ -9,10 +10,10 @@ import sklearn.utils
 from molSimplifyAD.utils.pymongo_tools import convert2dataframe, connect2db, push_models
 from pkg_resources import resource_filename, Requirement
 from molSimplify.python_nn.tf_ANN import get_key, load_ANN_variables, load_keras_ann, initialize_model_weights
-from nets import build_ANN, cal_auc
-from model_optimization import optimize
-from calculate_pairing_prop import group_conditions, pairing
-from pairing_tools import keep_lowestE
+from molSimplifyAD.retrain.nets import build_ANN, cal_auc
+from molSimplifyAD.retrain.model_optimization import optimize
+from molSimplifyAD.retrain.calculate_pairing_prop import group_conditions, pairing
+from molSimplifyAD.retrain.pairing_tools import keep_lowestE
 from sklearn.metrics import roc_auc_score, r2_score, mean_absolute_error, accuracy_score
 
 name_converter_dict = {"oxstate": "ox", "spinmult": "spin", "charge_lig": "ligcharge"}
@@ -45,11 +46,14 @@ if tf.__version__ >= tf.__version__ >= '2.0.0':
     tf.compat.v1.disable_eager_execution()
 
 
-def name_converter(fnames):
+def name_converter(fnames, lac=True):
     fnames_new = []
     for ii, fname in enumerate(fnames):
         if isRAC(fname):
-            fnames_new.append("RACs." + fname)
+            if lac:
+                fnames_new.append("lacRACs." + fname)
+            else:
+                fnames_new.append("RACs." + fname)
         elif fname in list(name_converter_dict.keys()):
             fnames_new.append(name_converter_dict[fname])
         else:
@@ -118,20 +122,81 @@ def get_latest_model(predictor, db, collection_model):
     return model, newest_doc
 
 
+def get_lowE_one(_df_good):
+    _df_good.reset_index()
+    _df_good['energy'] = _df_good['energy'].apply(float)
+    _df_good = _df_good.sort_values(['energy'], ascending=True)
+    _df_add = _df_good.iloc[0]
+    return _df_add
+
+
+def get_unique_complex(df):
+    df = df.replace('undef', np.nan)
+    df = df.replace('lig_mismatch', np.nan)
+    df = df.replace(np.inf, np.nan)
+    ## give up distinguishing  complex with ligand_symmetry or mol_graph_det as np.nan
+    syms, dets = [], []
+    for _, row in df.iterrows():
+        if not isinstance(row['init_ligand_symmetry'], str):
+            syms += [str(uuid.uuid4())]
+        else:
+            syms += [row['init_mol_graph_det']]
+        if not isinstance(row['init_mol_graph_det'], str):
+            dets += [str(uuid.uuid4())]
+        else:
+            dets += [row['init_mol_graph_det']]
+    df['init_ligand_symmetry'] = syms
+    df['init_mol_graph_det'] = dets
+    condition = ['metal', 'spin', 'charge', 'init_ligand_symmetry', 'init_mol_graph_det']
+    gb = df.groupby(condition)
+    tot = len(list(gb.groups.keys()))
+    print("# of unique complexes: ", tot)
+    print("# of repeated: ", df.shape[0] - tot)
+    grp_repeat = []
+    grp_repeat_add, grp_repeat_eliminated = [], []
+    count = 0
+    df_clean = df.copy()
+    for g in list(gb.groups.keys()):
+        dfgrp = gb.get_group(g)
+        if len(dfgrp) > 1:
+            grp_repeat.append(dfgrp)
+            _df_good = dfgrp[(dfgrp["converged"] == True) &(dfgrp["geo_flag"] == 1) & (dfgrp["ss_flag"] == 1)]
+            if len(_df_good):
+                _df_add = get_lowE_one(_df_good)
+            else:
+                _df_good = dfgrp[(dfgrp["converged"] == True) &(dfgrp["geo_flag"] == 1)]
+                if len(_df_good):
+                    _df_add = get_lowE_one(_df_good)
+                else:
+                    _df_good = dfgrp[(dfgrp["converged"] == True)]
+                    if len(_df_good):
+                        _df_add = get_lowE_one(_df_good)
+                    else:
+                        _df_add = get_lowE_one(dfgrp)
+            grp_repeat_add.append(_df_add)
+            _dfgrp_eli = dfgrp[dfgrp['unique_name'] != _df_add['unique_name']]
+            grp_repeat_eliminated.append(_dfgrp_eli)
+            for _idx, _row in _dfgrp_eli.iterrows():
+                df_clean = df_clean[~df_clean['unique_name'].isin(_dfgrp_eli['unique_name'].values)]
+        count += 1
+    return df_clean
+
+
 def extract_data_from_db(predictor, db, collection, constraints,
                          feature_extra=False, target=False):
     print(("Collecting data with constraints: %s..." % constraints))
     df = convert2dataframe(db, collection, constraints=constraints, normalized=True)
     len1 = len(df)
     print("Removing repeated entries and *ONLY* keep the lowestest enegy one...")
-    df = keep_lowestE(df)
+    # df = keep_lowestE(df) # deprecated
+    df = get_unique_complex(df)
     len2 = len(df)
     print("dimension changes: %d -> %d, with %d removed." % (len1, len2, len1 - len2))
     if feature_extra and target:
-        print(("Using custom features RACs-180 + ", feature_extra))
+        print(("Using custom features lacRACs-180 + ", feature_extra))
         print(("Target property: ", target))
         _fnames = RACs180 + feature_extra
-        _fnames = name_converter(_fnames)
+        _fnames = name_converter(_fnames, lac=True)
         fnames, el = [], []
         for key in _fnames:
             df = df[df[key] != "undef"]
@@ -162,7 +227,7 @@ def extract_data_from_db(predictor, db, collection, constraints,
         df, _ = pairing(df, case=lname[0])
     df_use = df[fnames + lname + ['unique_name']]
     shape = df_use.shape[0]
-    # for key in df_use:
+    # for key in df_use: # only use in debugging
     #     df_use = df_use.dropna(subset=[key])
     #     print(key, len(df_use))
     df_use = df_use.dropna()
@@ -207,6 +272,7 @@ def normalize_data(df, fnames, lname, predictor, frac=0.8, name=False):
 
 def train_model(predictor, db, collection_model, lname,
                 X_train, X_test, y_train, y_test,
+                x_scaler, y_scaler,
                 epochs=1000, batch_size=32, hyperopt=False,
                 initialize_weight=True, hyperopt_step=100,
                 load_latest_model=False, fix_architecture=False,
@@ -245,7 +311,8 @@ def train_model(predictor, db, collection_model, lname,
                                        hyperopt_step=hyperopt_step,
                                        epochs=epochs)
         elif direct_retrain:
-            _, newestdoc = get_latest_model(predictor, db)
+            print("directly use the hyperparams of the latest model.")
+            _, newestdoc = get_latest_model(predictor, db, collection_model)
             best_params = newestdoc['hyperparams']
         else:  # HyperOpt both model architecture and training parameters.
             print('HyperOpt EVERYTHING...')
@@ -262,24 +329,25 @@ def train_model(predictor, db, collection_model, lname,
     _y_train, _y_test = list(np.transpose(y_train)), list(np.transpose(y_test))
     history = model.fit(X_train, _y_train, epochs=epochs, verbose=2, batch_size=batch_size)
     results = model.evaluate(X_train, _y_train)
-    hat_y1_train = model.predict(X_train)
-    hat_y1_test = model.predict(X_test)
-    hat_y1_train = y_scaler.inverse_transform(hat_y1_train.reshape(-1, len(lname)))
-    hat_y1_test = y_scaler.inverse_transform(hat_y1_test.reshape(-1, len(lname)))
-    y_train = y_scaler.inverse_transform(y_train.reshape(-1, len(lname)))
-    y_test = y_scaler.inverse_transform(y_test.reshape(-1, len(lname)))
-    # for ii, key in enumerate(model.metrics_names):
-    #     res_dict_train.update({key: results[ii]})
-    # results = model.evaluate(X_test, _y_test)
-    # for ii, key in enumerate(model.metrics_names):
-    #     res_dict_test.update({key: results[ii]})
     res_dict_train, res_dict_test = {}, {}
-    res_dict_train.update({"r2": r2_score(y_train, hat_y1_train),
-                           "mae": mean_absolute_error(y_train, hat_y1_train),
-                           })
-    res_dict_test.update({"r2": r2_score(y_test, hat_y1_test),
-                          "mae": mean_absolute_error(y_test, hat_y1_test),
-                          })
+    for ii, key in enumerate(model.metrics_names):
+        res_dict_train.update({key: results[ii]})
+    results = model.evaluate(X_test, _y_test)
+    for ii, key in enumerate(model.metrics_names):
+        res_dict_test.update({key: results[ii]})
+    if regression:
+        hat_y1_train = model.predict(X_train)
+        hat_y1_test = model.predict(X_test)
+        hat_y1_train = y_scaler.inverse_transform(hat_y1_train.reshape(-1, len(lname)))
+        hat_y1_test = y_scaler.inverse_transform(hat_y1_test.reshape(-1, len(lname)))
+        y_train = y_scaler.inverse_transform(y_train.reshape(-1, len(lname)))
+        y_test = y_scaler.inverse_transform(y_test.reshape(-1, len(lname)))
+        res_dict_train.update({"r2": r2_score(y_train, hat_y1_train),
+                               "mae": mean_absolute_error(y_train, hat_y1_train),
+                               })
+        res_dict_test.update({"r2": r2_score(y_test, hat_y1_test),
+                              "mae": mean_absolute_error(y_test, hat_y1_test),
+                              })
     if not regression:
         if len(lname) > 1:
             for ii, ln in enumerate(lname):
@@ -288,8 +356,8 @@ def train_model(predictor, db, collection_model, lname,
         else:
             res_dict_train.update({"auc": cal_auc(model, X_train, y_train)})
             res_dict_test.update({"auc": cal_auc(model, X_test, y_test)})
-    print(("train result: ", res_dict_train))
-    print(("test reulst: ", res_dict_test))
+    print(("train results: ", res_dict_train))
+    print(("test results: ", res_dict_test))
     return model, history, res_dict_train, res_dict_test, best_params
 
 

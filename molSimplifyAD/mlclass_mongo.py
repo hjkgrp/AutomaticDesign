@@ -68,7 +68,8 @@ class modelMongo(MLModel):
                     setattr(self, attr, kwargs[attr])
                 except:
                     if attr in ["predictor", "history", "hyperparams",
-                                "constraints", "len_tot", "features", "target"]:
+                                "constraints", "len_tot", "features",
+                                "target", "x_scaler", "y_scaler"]:
                         raise KeyError("Error: Key %s does not exist in the input dictionary." % attr)
                     else:
                         print(("Warning: Key %s does not exist in the input dictionary." % attr))
