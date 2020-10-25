@@ -26,7 +26,7 @@ mongo_attr_from_run_nan = ["energy", "ss_target", "ss_act", 'alphaHOMO', 'betaHO
                            'ligand_symmetry', 'mol_graph_det', 'init_ligand_symmetry', 'init_mol_graph_det']
 SP_keys = ['solvent', 'vertIP', 'vertEA', 'functionalsSP']
 mongo_attr_other = ["date", "author", "geotype", "opt_geo", "init_geo", "prog_geo",
-                    "RACs", "initRACs", "dftrun", "tag", "subtag", "unique_name",
+                    "RACs", "initRACs", "lacRACs", "init_lacRACs", "dftrun", "tag", "subtag", "unique_name",
                     "publication", "ligstr", "chemical_name"]
 mongo_attr_actlearn = ["step", "is_training", "status_flag", "target", "descriptors", "opt_geo", "init_geo",
                        "ligcharge", "unique_name", "name", "chemical_name"]
@@ -78,6 +78,7 @@ class TMC():
         self.inherit_from_run()
         self.cal_initRAC()
         self.cal_RAC()
+        self.cal_lacRACs()
         self.construct_identity()
         self.make_unique_name()
 
@@ -151,6 +152,16 @@ class TMC():
             self.RACs = descriptor_dict
         except:
             self.RACs = {}
+
+    def cal_lacRACs(self):
+        try:
+            self.init_lacRACs = self.this_run.init_mol.get_features(lac=True, force_generate=True)
+        except:
+            self.init_lacRACs = {}
+        try:
+            self.lacRACs = self.this_run.mol.get_features(lac=True, force_generate=True)
+        except:
+            self.lacRACs = self.init_lacRACs
 
     def get_id_keys(self):
         if 'iscsd' in self.this_run.__dict__ and self.this_run.iscsd == True:
