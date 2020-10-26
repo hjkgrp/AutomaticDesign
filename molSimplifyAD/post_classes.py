@@ -214,7 +214,7 @@ class DFTRun(object):
         self.write_geo_dict()
         return flag_oct, flag_list, dict_oct_info
 
-    def check_oct_needs_init(self, debug=False, external=False):
+    def check_oct_needs_init(self, debug=False, external=False, use_initmol=True):
         if not external:
             geo_check_dict = isKeyword("geo_check_dict")
             if geo_check_dict and "dict_oct_check_st" in geo_check_dict:
@@ -229,13 +229,21 @@ class DFTRun(object):
             oct_st, oneempty_st = dict_oct_check_st, dict_oneempty_check_st
 
         if self.octahedral:
-            flag_oct, flag_list, dict_oct_info = self.mol.IsOct(self.init_mol,
-                                                                dict_check=oct_st,
-                                                                debug=debug)
+            if use_initmol:
+                flag_oct, flag_list, dict_oct_info = self.mol.IsOct(self.init_mol,
+                                                                    dict_check=oct_st,
+                                                                    debug=debug)
+            else:
+                flag_oct, flag_list, dict_oct_info = self.mol.IsOct(dict_check=oct_st,
+                                                                    debug=debug)
         else:
-            flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(self.init_mol,
-                                                                      dict_check=oneempty_st,
-                                                                      debug=debug)
+            if use_initmol:
+                flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(self.init_mol,
+                                                                          dict_check=oneempty_st,
+                                                                          debug=debug)
+            else:
+                flag_oct, flag_list, dict_oct_info = self.mol.IsStructure(dict_check=oneempty_st,
+                                                                          debug=debug)
         self.flag_oct = flag_oct
         self.flag_list = flag_list
         self.dict_geo_check = dict_oct_info

@@ -136,14 +136,16 @@ def process_geometry_optimizations(this_run, basedir, outfile, output):
             obtain_wavefunction_molden(this_run)
             this_run.init_mol = mol3D()
             this_run.init_mol.readfromtxt(get_initgeo(optimpath))
-            this_run.init_ligand_symmetry, this_run.init_mol_graph_det = get_ligsymmetry_graphdet(this_run.init_mol)
             this_run.mol = mol3D()
             this_run.mol.readfromtxt(get_lastgeo(optimpath))
-            this_run.ligand_symmetry, this_run.mol_graph_det = get_ligsymmetry_graphdet(this_run.mol)
             try:
-                this_run.check_oct_needs_init(debug=False, external=True)
+                use_initmol = False if this_run.iscsd else True
+                this_run.check_oct_needs_init(debug=False, external=True, use_initmol=use_initmol)
             except:
                 print("Warning: falied get geo_check!!!")
+            ### Note that we should put get_ligsymmetry_graphdet to avoid building the graph for this_run.init_mol before the geocheck
+            this_run.init_ligand_symmetry, this_run.init_mol_graph_det = get_ligsymmetry_graphdet(this_run.init_mol)
+            this_run.ligand_symmetry, this_run.mol_graph_det = get_ligsymmetry_graphdet(this_run.mol)
             this_run.obtain_rsmd()
             this_run.obtain_ML_dists()
             this_run.get_check_flags()
