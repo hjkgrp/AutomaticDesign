@@ -13,8 +13,6 @@ from pymongo import MongoClient
 from molSimplifyAD.dbclass_mongo import tmcMongo, tmcActLearn, mongo_attr_id, mongo_not_web, SP_keys
 from molSimplifyAD.mlclass_mongo import modelActLearn, modelMongo, modelPublished
 from molSimplifyAD.ga_tools import isKeyword
-from molSimplifyAD.dbclass_csd import CSDMongo
-from molSimplifyAD.dbclass_ligand import CSDMongo_ligand
 
 
 def check_repeated(db, collection, tmc):
@@ -478,57 +476,6 @@ def push_models_published(model, model_dict, database, collection,
         db[collection].insert_one(this_model.document)
     db[collection].create_index([("dio", pymongo.ASCENDING),
                                  ("target", pymongo.ASCENDING)
-                                 ])
-    dump_databse(database_name=database,
-                 outpath=outpath,
-                 user=user, pwd=pwd)
-
-
-def push_csd_complexes(database, tag, csdobj_list, collection="csd",
-                       user=False, pwd=False, host="localhost", port=27017, auth=False,
-                       update_fields=False, outpath='/userarchive/db_backup'):
-    db = connect2db(user, pwd, host, port, database, auth)
-    ensure_collection(db, collection)
-    for csdobj in csdobj_list:
-        csdmongo = CSDMongo(csdobj, tag=tag, update_fields=update_fields)
-        _doc = query_one(db, collection, constraints={"refcode_plus": csdmongo.document["refcode_plus"]})
-        if not _doc == None:
-            print("A csd complex (%s) has already existed. merging with update_fields as: " % (
-                csdmongo.document["refcode_plus"]), update_fields)
-            merge_documents(db, collection,
-                            doc1=_doc,
-                            doc2=csdmongo.document,
-                            update_fields=csdmongo.update_fields)
-        else:
-            db[collection].insert_one(csdmongo.document)
-    db[collection].create_index([("Refcode", pymongo.ASCENDING),
-                                 ("date", pymongo.ASCENDING)
-                                 ])
-    dump_databse(database_name=database,
-                 outpath=outpath,
-                 user=user, pwd=pwd)
-
-
-def push_ligands(database, tag, csdobj_list, collection="ligands",
-                       user=False, pwd=False, host="localhost", port=27017, auth=False,
-                       update_fields=False, outpath='/userarchive/db_backup'):
-    db = connect2db(user, pwd, host, port, database, auth)
-    ensure_collection(db, collection)
-    for csdobj in csdobj_list:
-        csdmongo = CSDMongo_ligand(csdobj, tag=tag, update_fields=update_fields)
-        _doc = query_one(db, collection, constraints={"lig_mol_graph_det":
-            csdmongo.document["lig_mol_graph_det"]})
-        if not _doc == None:
-            print("A csd complex (%s) has already existed. merging with update_fields as: " % (
-                csdmongo.document["lig_mol_graph_det"]), update_fields)
-            merge_documents(db, collection,
-                            doc1=_doc,
-                            doc2=csdmongo.document,
-                            update_fields=csdmongo.update_fields)
-        else:
-            db[collection].insert_one(csdmongo.document)
-    db[collection].create_index([("lig_id", pymongo.ASCENDING),
-                                 ("date", pymongo.ASCENDING)
                                  ])
     dump_databse(database_name=database,
                  outpath=outpath,
