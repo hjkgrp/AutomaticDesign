@@ -1051,9 +1051,9 @@ class octahedral_complex:
         smicat = False  # holder for connection atoms calls for SMILES ligands
         # print(self.lig_occs)
         purified_ligands = [self.ligands[i] for i in range(6) if self.lig_occs[i] > 0]
-        # print(purified_ligands)
-
+        #print(purified_ligands)
         liglist, smicat = SMILES_converter(purified_ligands)
+        #liglist = purified_ligands
         ligalign = 0
         # print(liglist,smicat)
         if self.lig_occs == [1, 0, 1, 0, 1, 0]:
