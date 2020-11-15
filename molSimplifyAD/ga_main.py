@@ -591,7 +591,7 @@ class GA_generation:
                 print('-------------------RUNTYPE is invalid!--------------------')
 
             if set_fitness:
-                print('setting fitness~~~~~~~~~~~~~~~~~~~~~~~')
+                #print('setting fitness~~~~~~~~~~~~~~~~~~~~~~~')
                 if self.status_dictionary['scoring_function'] == "prop+dist":
                     fitness = find_prop_dist_fitness(this_prop, self.status_dictionary['property_parameter'],
                                                      this_dist, self.status_dictionary['distance_parameter'])
@@ -602,7 +602,7 @@ class GA_generation:
                     # print('gene:', gene)
                     # print('prop:', this_prop)
                     # print('dist:', this_dist)
-                    print(('fitness:', fitness))
+                    # print(('fitness:', fitness))
                     if runtype in ['gap', 'homo','oxo20','homo_empty']:
                         print(('this_spin', this_spin))
                     print('-----------')
@@ -876,7 +876,7 @@ class GA_generation:
         mean_dist = 0
         npool = int(self.status_dictionary['npool'])
         for i in range(0, npool):
-            print((full_gene_info[genes_list[i]][1]))
+            #print((full_gene_info[genes_list[i]][1]))
             if type(full_gene_info[genes_list[i]][1]) == list:
                 if int(full_gene_info[genes_list[i]][1][0])==10000 or int(full_gene_info[genes_list[i]][1][1])==10000:
                     npool -= 1
@@ -945,7 +945,7 @@ class GA_generation:
         healthy = True
         ## read in scoring function info
         dist_score = ("dist" in self.status_dictionary['scoring_function'])
-        print((self.status_dictionary['distance_parameter']))
+        #print((self.status_dictionary['distance_parameter']))
         if type(self.status_dictionary['distance_parameter']) == list:
             dist_param = self.status_dictionary['distance_parameter']
         else:
@@ -955,7 +955,7 @@ class GA_generation:
 
         ## print mean_distance, mean_fitness, and diversity
         full_gene_info = self.get_full_values(curr_gen)
-        print(('-----------FULL GENE INFO IN DECIDE',full_gene_info))
+        #print(('-----------FULL GENE INFO IN DECIDE',full_gene_info))
 
         mean_dist = float(self.calc_mean_dist(self.genes, full_gene_info))
         diversity = self.get_diversity()
