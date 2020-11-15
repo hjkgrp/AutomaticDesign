@@ -860,15 +860,15 @@ def translate_job_name(job):
         eqlig_ind = int(ll[6])
         axlig1_ind = int(ll[7])
         axlig2_ind = int(ll[8])
-        if hasattr(ligands_dict[int(eqlig_ind)][0], '__iter__'):  # SMILEs string
+        if isinstance(ligands_dict[int(eqlig_ind)], tuple) or isinstance(ligands_dict[int(eqlig_ind)], list):#hasattr(ligands_dict[int(eqlig_ind)][0], '__iter__'):  # SMILEs string
             eqlig = ligands_dict[int(eqlig_ind)][0][0]
         else:
             eqlig = ligands_dict[int(eqlig_ind)][0]
-        if hasattr(ligands_dict[int(axlig1_ind)][0], '__iter__'):  # SMILEs string
+        if isinstance(ligands_dict[int(axlig1_ind)], tuple) or isinstance(ligands_dict[int(axlig1_ind)], list):#hasattr(ligands_dict[int(axlig1_ind)][0], '__iter__'):  # SMILEs string
             axlig1 = ligands_dict[int(axlig1_ind)][0][0]
         else:
             axlig1 = ligands_dict[int(axlig1_ind)][0]
-        if hasattr(ligands_dict[int(axlig2_ind)][0], '__iter__'):  # SMILEs string
+        if isinstance(ligands_dict[int(axlig2_ind)], tuple) or isinstance(ligands_dict[int(axlig2_ind)], list):#hasattr(ligands_dict[int(axlig2_ind)][0], '__iter__'):  # SMILEs string
             axlig2 = ligands_dict[int(axlig2_ind)][0][0]
         else:
             axlig2 = ligands_dict[int(axlig2_ind)][0]
@@ -897,7 +897,7 @@ def translate_job_name(job):
             chem_namelist.append(str(spin))
         for i in indlist:
             namelist.append(str(i))
-            if hasattr(ligands_dict[int(i)][0], '__iter__'):  # SMILEs string
+            if isinstance(ligands_dict[int(i)][0],tuple) or isinstance(ligands_dict[int(i)][0],list):#hasattr(ligands_dict[int(i)][0], '__iter__'):  # SMILEs string
                 lig = ligands_dict[int(i)][0][0]
             else:
                 lig = ligands_dict[int(i)][0]
@@ -962,7 +962,7 @@ def SMILES_converter(ligands):
     liglist = ''
     smicat = ''
     for lig in ligands:
-        if not hasattr(lig, '__iter__'):  # test if SMILES:
+        if not (isinstance(lig, tuple) or isinstance(lig, list)):  # test if SMILES:
             liglist += " " + str(lig).strip("'[]'")
         elif hasattr(lig, '__iter__'):  # this is the mark of SMILES strings:
             liglist += " " + "'" + str(lig[0]) + "'"
