@@ -11,8 +11,6 @@ from molSimplifyAD.job_manager_utils.bind_functions import bind_solvent, bind_wa
     bind_ligdissociate, bind_vertEA, bind_functionals
 from molSimplifyAD.job_manager_utils.converting_tools import *
 
-from job_manager_utils.converting_tools import collect_spin_info
-
 associated_jobs = {'solvent': bind_solvent,
                    'watercont': bind_water,
                    'thermo': bind_thermo,
@@ -20,7 +18,6 @@ associated_jobs = {'solvent': bind_solvent,
                    'vertEA': bind_vertEA,
                    'functionals': bind_functionals,
                    'dissociation': bind_ligdissociate}
-
 
 def collect_base_jobs(path=False):
     if not path:
