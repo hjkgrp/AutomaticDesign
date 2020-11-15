@@ -11,6 +11,8 @@ from molSimplifyAD.job_manager_utils.bind_functions import bind_solvent, bind_wa
     bind_ligdissociate, bind_vertEA, bind_functionals
 from molSimplifyAD.job_manager_utils.converting_tools import *
 
+from job_manager_utils.converting_tools import collect_spin_info
+
 associated_jobs = {'solvent': bind_solvent,
                    'watercont': bind_water,
                    'thermo': bind_thermo,
@@ -48,6 +50,7 @@ def common_processing(jobname, basedir, output, outfile, spin,
          'C-PCM contribution to final energy:', 'Optimization Cycle', 'DFTD Dispersion Correction:'],
         [2, 2, 4, 3, 0, 4, 3, -2], last_line=True)
     iscsd = isCSD(dbname)
+    this_run.isMutation = isMutation(dbname)
     this_run.iscsd = iscsd
     this_run.charge = output.wordgrab(['Total charge'], -1)[0][0]
     try:
@@ -59,7 +62,7 @@ def common_processing(jobname, basedir, output, outfile, spin,
     else:
         this_run.d3_energy = np.nan
         this_run.d3opt_flag = False
-    if not this_run.iscsd:
+    if not (this_run.iscsd or this_run.isMutation):
         print(("jobname: ", dbname))
         bind_complex_info(this_run, dbname, spin)
     else:
@@ -139,7 +142,7 @@ def process_geometry_optimizations(this_run, basedir, outfile, output):
             this_run.mol = mol3D()
             this_run.mol.readfromtxt(get_lastgeo(optimpath))
             try:
-                use_initmol = False if this_run.iscsd else True
+                use_initmol = False if (this_run.iscsd or this_run.isMutation) else True
                 this_run.check_oct_needs_init(debug=False, external=True, use_initmol=use_initmol)
             except:
                 print("Warning: falied get geo_check!!!")

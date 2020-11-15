@@ -223,7 +223,7 @@ def convert2readablecsv(db, collection,
                 'trust_radius_hist', 'dynamic_feature', 'expected_delE_hist', 'e_hist',
                 'name', 'geo_check_dict', 'geo_opt', 'grad_rms_hist', 'opt_geo', 'd3opt_flag',
                 'csd_doi', 'csd_mol2string', 'dupe_refcode_plus_list', 'diople_vec',
-                'is_csd_init_geo', 'iscsd', 'refcode',
+                'is_csd_init_geo', 'iscsd', 'isMutation', 'refcode',
                 ]
     if dropRACs:
         dropcols += ["RACs", "lacRACs"]
