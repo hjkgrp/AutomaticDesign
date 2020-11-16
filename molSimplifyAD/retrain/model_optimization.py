@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 from functools import partial
-from hyperopt import hp, tpe, fmin, Trials, STATUS_OK, rand
+#from hyperopt import hp, tpe, fmin, Trials, STATUS_OK, rand
 from keras.callbacks import EarlyStopping
 import tensorflow as tf
 from keras import backend as K
