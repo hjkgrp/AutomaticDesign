@@ -13,7 +13,7 @@ import shutil
 # from molSimplify.Classes.atom3D import *
 # from molSimplify.Informatics.RACassemble import *
 # from molSimplify.Classes.globalvars import *
-from molSimplify.python_nn.tf_ANN import *
+#from molSimplify.python_nn.tf_ANN import *
 from scipy.spatial import distance_matrix
 from molSimplify.job_manager.tools import list_active_jobs
 # ############################
@@ -21,8 +21,8 @@ from molSimplifyAD.job_manager_utils.job_converter import *
 from molSimplifyAD.ga_tools import *
 from molSimplifyAD.ga_complex import *
 from molSimplifyAD.ga_check_jobs import *
-from molSimplifyAD.utils.pymongo_tools import *#connect2db, query_one, query_lowestE_converged, convert2dataframe
-from molSimplifyAD.dbclass_mongo import tmcMongo
+#from molSimplifyAD.utils.pymongo_tools import connect2db, query_one, query_lowestE_converged, convert2dataframe
+#from molSimplifyAD.dbclass_mongo import tmcMongo
 
 
 ########################
