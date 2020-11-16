@@ -8,7 +8,7 @@ import os
 import random
 import shutil
 from molSimplifyAD.ga_complex import *
-#from molSimplifyAD.ga_main import *
+from molSimplifyAD.ga_main import *
 from molSimplifyAD.ga_check_jobs import *
 from molSimplifyAD.ga_io_control import *
 def initialize_GA_calc(path = ''):
