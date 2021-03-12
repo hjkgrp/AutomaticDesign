@@ -38,9 +38,11 @@ def bind_complex_info(this_run, name, spin):
 
 def bind_csd_info(this_run, name, spin, init_mol):
     nn = name.split('_')
-    this_run.refcode, possible_suffix, this_run.spin = nn[0], nn[1], int(spin)
-    if possible_suffix.isdigit():
-        this_run.refcode += '-%s' % possible_suffix
+    this_run.refcode, _, this_run.spin = nn[0], nn[1], int(spin)
+    if "comp_" in name:
+        possible_suffix = name.split("comp_")[1].split("_")[0]
+        if possible_suffix.isdigit():
+            this_run.refcode += '_comp_%s' % possible_suffix
     this_run.liglist, this_run.liglist_compact = [this_run.refcode], [this_run.refcode]
     this_run.ligcharge = False
     this_run.metal = init_mol.getAtom(init_mol.findMetal()[0]).symbol().lower()
