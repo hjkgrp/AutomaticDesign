@@ -9,7 +9,7 @@ mongo_attr_from_run_undef = ["name", "metal", "ox", "spin", "liglist",
                              "alpha", "functional", "basis", "status", 'converged', 'charge',
                              'terachem_version', "ligcharge", "dynamic_feature", "geo_check_dict",
                              "scrpath", "outpath", "geo_opt", "geo_check_metrics", "geo_check_metrics_prog",
-                             'wavefunction', 'molden', 'iscsd']
+                             'wavefunction', 'molden', 'iscsd', 'isMutation']
 mongo_attr_flags = ["geo_flag", "ss_flag", "metal_spin_flag", "d3opt_flag"]
 mongo_attr_id = ["metal", "ox", "spin", "ligstr", "alpha", "functional", "basis", 'converged',
                  "energy", "geotype"]  ### keys that identify a complex in matching.

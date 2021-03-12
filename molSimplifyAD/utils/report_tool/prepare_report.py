@@ -2,7 +2,7 @@
 import numpy as np
 from string import Template
 import os, sys, shutil, glob, subprocess
-from molSimplifyAD.ga_tools import *
+#from molSimplifyAD.ga_tools import *
 from molSimplifyAD.ga_io_control import *
 from molSimplify.Classes.mol3D import *
 from molSimplify.Classes.ligand import *

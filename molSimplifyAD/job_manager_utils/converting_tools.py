@@ -14,6 +14,8 @@ def isCSD(job):
             break
     return iscsd
 
+def isMutation(job):
+    return ('mutation' in job)
 
 def isSP(outfile):
     issp = False
@@ -75,7 +77,7 @@ def calculate_mulliken_spins(this_run):
     multiwfnpath = find_files_by_name(this_run.scrpath_real, ".molden")
     if len(multiwfnpath) > 0:
         multiwfnpath = multiwfnpath[0]
-        if this_run.iscsd:
+        if (this_run.iscsd or this_run.isMutation):
             mulliken_spin_list = get_mulliken(
                 multiwfnpath, this_run.spin, external=True)
         else:

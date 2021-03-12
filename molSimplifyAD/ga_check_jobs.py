@@ -10,7 +10,7 @@ import shutil
 import pickle
 from molSimplifyAD.ga_tools import *
 from molSimplifyAD.ga_complex import *
-from molSimplifyAD.ga_main import *
+#from molSimplifyAD.ga_main import *
 from molSimplifyAD.process_scf import *
 from molSimplifyAD.post_classes import *
 

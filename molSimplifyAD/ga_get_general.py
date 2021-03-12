@@ -35,7 +35,7 @@ def get_gen_npool(data_dir):
                 lastgen = int(row[1].strip('\n'))
             elif row[0] == "npool":
                 npool = int(row[1].strip('\n'))
-        print(('lastgen is ', lastgen))
+        #print(('lastgen is ', lastgen))
     return lastgen, npool
 
 
@@ -89,16 +89,16 @@ def gen_gene_fitness_csv(base_path, generation, end_results, sumt):
 
 
 def human_readable_csv(base_path, generation, end_results):
-    print((base_path, generation, end_results))
-    print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ HR CSV $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
+    #print((base_path, generation, end_results))
+    #print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ HR CSV $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
     from molSimplifyAD.get_distances import find_distances
     # from molSimplifyAD.ga_main import * ## It is commented out because of python3 incompatability.
     gene_dist_dict, _, gene_prop_dict, gene_name_dict = find_distances()
-    print('----')
-    print(('THIS IS NAMEDICT', gene_name_dict))
-    print('in HR CSV point 1')
+    #print('----')
+    #print(('THIS IS NAMEDICT', gene_name_dict))
+    #print('in HR CSV point 1')
     csv_results_path = base_path + "human_readable_results.csv"
-    print('AT HRCSV!!!!')
+    #print('AT HRCSV!!!!')
     with open(csv_results_path, write_mode(generation)) as fo:
         writer = csv.writer(fo)
         # print('didnt fail here')
@@ -160,7 +160,7 @@ def get_freq_fitness(lastgen, npool):
         gene_template = get_gene_template()
         runtype = isKeyword("runtype")
         for generation in range(lastgen + 1):
-            print(('------GENERATION IN XRANGE IS ' + str(generation)))
+            #print(('------GENERATION IN XRANGE IS ' + str(generation)))
             ANN_dir = isKeyword('rundir') + "ANN_output/gen_" + str(generation) + "/ANN_results.csv"
             # print('here1')
             emsg, ANN_dict = read_ANN_results_dictionary(ANN_dir)
@@ -255,7 +255,7 @@ def get_freq_fitness(lastgen, npool):
         print(ANN_prop_dict)
 
     generation = 0
-    print(('------------!!!!! ASSIGNED GENERATION ' + str(generation) + ' !!!!!-------------'))
+    #print(('------------!!!!! ASSIGNED GENERATION ' + str(generation) + ' !!!!!-------------'))
     while (generation == 0 or generation < lastgen):
         print(('@@@@@@@@@@@@@@@@@@@@@@@@ GENERATION @@@@@@@@@@@@@@@@@@@@@@@@@@: ' + str(generation)))
         end_results = []
@@ -314,7 +314,7 @@ def get_freq_fitness(lastgen, npool):
                     sumt += temp.frequency * float(fitness)
                     temp.fitness = format(float(fitness), '.12f')
                     print((temp.summary()))
-        print('got to this point 2')
+        #print('got to this point 2')
         ## Write a summary file for the property, distance, and fitness.
         # print('_____________________________________________________________________Entered part 3.')
         sum_results = []

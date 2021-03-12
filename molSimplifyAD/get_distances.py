@@ -97,7 +97,7 @@ def find_distances():
                 # geneName = "_".join(keys.split('_')[4:10])
                 metal = get_metals()[metal]
                 chem_name = translate_dict['chem_name']
-                print(chem_name)
+                #print(chem_name)
                 if gene in list(gene_dist_dict.keys()):
                     pass
                 else:
@@ -157,10 +157,10 @@ def find_distances():
     emsg = write_dictionary(gene_dist_dict, write_path)
     if emsg:
         print(emsg)
-    print('Now printing all dictionaries (dist, prop, name)')
-    print(gene_dist_dict)
-    print(gene_prop_dict)
-    print(gene_name_dict)
+    #print('Now printing all dictionaries (dist, prop, name)')
+    #print(gene_dist_dict)
+    #print(gene_prop_dict)
+    #print(gene_name_dict)
     return gene_dist_dict, npool, gene_prop_dict, gene_name_dict
 
 
@@ -168,7 +168,7 @@ def mean_distances(gene_dist_dict):
     lastgen, npool = get_gen_npool(isKeyword('rundir'))
     mean_dist_dict = dict()
     dist_dict = gene_dist_dict
-    print(dist_dict)
+    #print(dist_dict)
     dist_sum = 0
     curr_gen = 0
     read_path = isKeyword('rundir') + "statespace/all_results.csv"
@@ -205,6 +205,6 @@ def mean_distances(gene_dist_dict):
 # Uses the same directory as get_general, which is get_run_dir() from ga_tools
 def format_distances():
     gene_dist_dict, npool, _, _ = find_distances()
-    print('DONE with find distances')
+    #print('DONE with find distances')
     mean_distances(gene_dist_dict)
-    print('DONE with mean distances')
+    #print('DONE with mean distances')

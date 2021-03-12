@@ -7,7 +7,8 @@ from sklearn import decomposition
 from matplotlib.pyplot import figure, imshow, axis
 from matplotlib.image import imread
 from molSimplifyAD.utils.report_tool.prepare_report import *
-from molSimplifyAD.ga_init import *
+from molSimplifyAD.ga_io_control import GA_run_definition
+from molSimplifyAD.ga_main import GA_generation
 #from IPython.display import Image
 from pymol.cgo import *
 from pymol import cmd
@@ -17,6 +18,7 @@ import matplotlib.tri as tri
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 #from IPython import display
+import operator
 from scipy.spatial import ConvexHull
 from scipy.interpolate import UnivariateSpline
 from matplotlib import gridspec
@@ -119,7 +121,7 @@ def get_info_from_ga(mad_path):
     ## function to load object from a specified mad path
     current_wd = os.getcwd()
     os.chdir(mad_path)
-    GA_run = GA_run_defintion()
+    GA_run = GA_run_definition()
     GA_run.deserialize(os.getcwd() + '/.madconfig')
     new_tree = GA_generation('current_gen')
     ## read in info
@@ -136,7 +138,7 @@ def translate_gene_names_into_chemistry(mad_path,genes):
         print(('translating gene into words : ' + g))
         
         
-    GA_run = GA_run_defintion()
+    GA_run = GA_run_definition()
     GA_run.deserialize(os.getcwd() + '/.madconfig')
     new_tree = GA_generation('current_gen')
     ## read in info
