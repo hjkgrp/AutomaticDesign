@@ -27,7 +27,7 @@ mongo_attr_from_run_nan = ["energy", "ss_target", "ss_act", 'alphaHOMO', 'betaHO
 SP_keys = ['solvent', 'vertIP', 'vertEA', 'functionalsSP']
 mongo_attr_other = ["date", "author", "geotype", "opt_geo", "init_geo", "prog_geo",
                     "RACs", "initRACs", "lacRACs", "init_lacRACs", "dftrun", "tag", "subtag", "unique_name",
-                    "publication", "ligstr", "chemical_name"]
+                    "publication", "ligstr", "chemical_name", "additional_kwargs"]
 mongo_attr_actlearn = ["step", "is_training", "status_flag", "target", "descriptors", "opt_geo", "init_geo",
                        "ligcharge", "unique_name", "name", "chemical_name"]
 mongo_not_web = ["dftrun"]
@@ -185,10 +185,16 @@ class TMC():
                 name_ele.append(repr(self.id_doc[key]))
         self.unique_name = '_'.join(name_ele)
         name_ele = []
-        for key in ["metal", "ox", "spin", "ligstr", "charge"]:
+        if 'iscsd' in self.this_run.__dict__ and self.this_run.iscsd == True:
+            list_keys = ["metal", "spin", "refcode", "charge"]
+        else:
+            list_keys = ["metal", "ox", "spin", "ligstr", "charge"]
+        for key in list_keys:
             name_ele.append(key)
             name_ele.append(str(self.id_doc[key]))
         self.chemical_name = '_'.join(name_ele)
+        if "additional_kwargs" in self.this_run.__dict__ and isinstance(self.this_run.additional_kwargs, dict):
+            self.additional_kwargs = self.this_run.additional_kwargs
 
     def get_update_fields(self, update_fields):
         if update_fields:
