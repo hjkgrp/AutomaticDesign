@@ -184,6 +184,24 @@ def get_unique_complex(df):
 
 def extract_data_from_db(predictor, db, collection, constraints,
                          feature_extra=False, target=False):
+    '''
+    Prepare a dataframe from group database
+
+    Parameters
+    ---
+        predictor: str, name of the predictor (you can create your own name for your model)
+        db: database, group database
+        collection: str, name of the complex collection of the database
+        constraints: dict, constraints for querying the database
+        feature_extra: boolean or list, features other than RACs-155
+        target: boolean or list, names of the target property
+
+    Returns
+    ---
+        df_use: dataframe, a dataframe with features and targets of all complexes the fulfill constraints
+        fnames: list, names of features
+        lname: list, name of targets
+    '''
     print(("Collecting data with constraints: %s..." % constraints))
     df = convert2dataframe(db, collection, constraints=constraints, normalized=True)
     len1 = len(df)
@@ -238,6 +256,29 @@ def extract_data_from_db(predictor, db, collection, constraints,
 
 
 def normalize_data(df, fnames, lname, predictor, frac=0.8, name=False):
+    '''
+    Normalize features and targets (if not classification), x_p = (x - mean(x))/std(x)
+
+    Parameters
+    ---
+        df: dataframe, a dataframe with features and targets of all complexes the fulfill constraints
+        fnames: list, names of features
+        lname: list, name of targets
+        predictor: str, name of the predictor (you can create your own name for your model)
+        frac: float, fraction of data being used as training data
+        name: boolean, whether to return the names of the complexes as returns
+
+    Returns
+    ---
+        X_train: np.array, training features
+        X_test: np.array, test features
+        y_train: np.array, training targets
+        y_test: np.array, test targets
+        n_train: np.array, training names
+        n_test: np.array, test names
+        x_scaler: scikit-learn standard scaler object, for features
+        y_scaler: scikit-learn standard scaler object, for targets
+    '''
     print("predictor", predictor)
     np.random.seed(1234)
     X = df[fnames].values
@@ -277,6 +318,38 @@ def train_model(predictor, db, collection_model, lname,
                 initialize_weight=True, hyperopt_step=100,
                 load_latest_model=False, fix_architecture=False,
                 direct_retrain=False):
+    '''
+    train an ANN model
+
+    Parameters
+    ---
+        predictor: str, name of the predictor (you can create your own name for your model)
+        db: database, group database
+        collection_model: str, name of the model collection of the database
+        lname: list, name of targets
+        X_train: np.array, training features
+        X_test: np.array, test features
+        y_train: np.array, training targets
+        y_test: np.array, test targets
+        x_scaler: scikit-learn standard scaler object, for features
+        y_scaler: scikit-learn standard scaler object, for targets
+        epochs: int, maximum epochs during the model training
+        batch_size: int, batch size
+        hyperopt: boolean, whether to do a hyperparameter optimization
+        initialize_weight: boolean, whether to initialize weight for each model from scratch
+        hyperopt_step: int, number of steps for hyperopt
+        load_latest_model: boolean, whether to load the lastest model as the seed model
+        fix_architecture: boolean, whether to fix the architect (as the latest model) during hyperopt
+        direct_retrain: boolean, whether to directly use the hyperparams of the latest model
+
+    Returns
+    ---
+        model: keras.model, optimized model
+        history: keras.history, training history of the opt model
+        res_dict_train: dict, performance on training data
+        res_dict_test: dict, performance on test data
+        best_params: dict, best hyperparameters
+    '''
     regression = False if 'clf' in predictor else True
     if not hyperopt:  # load molSimplify model and training parameters directly.
         model = load_keras_ann(predictor)
@@ -425,6 +498,40 @@ def retrain(predictor, user, pwd,
             initialize_weight=True, hyperopt_step=100,
             load_latest_model=False, fix_architecture=False,
             direct_retrain=False, use_gpr=False):
+    '''
+    Main routine of db-based model retraining.
+
+    Parameters
+    ---
+        predictor: str, name of the predictor (you can create your own name for your model)
+        usr: str, username of your group db account
+        pwd: str, password of your group db account
+        database: str, name of the group database ("tmc")
+        collection: str, name of the complex collection of the database
+        collection_model: str, name of the model collection of the database
+        host: str, host of db
+        port: int, port of db
+        auth: boolean, always true
+        constraints: dict, constraints for querying the database
+        frac: float, fraction of data being used as training data
+        epochs: int, maximum epochs during the model training
+        batch_size: int, batch size
+        force_push: boolean, whether to force push the optimized model
+        hyperopt: boolean, whether to do a hyperparameter optimization
+        tag: str, tag of your model
+        feature_extra: boolean or list, features other than RACs-155
+        target: boolean or list, names of the target property
+        initialize_weight: boolean, whether to initialize weight for each model from scratch
+        hyperopt_step: int, number of steps for hyperopt
+        load_latest_model: boolean, whether to load the lastest model as the seed model
+        fix_architecture: boolean, whether to fix the architect (as the latest model) during hyperopt
+        direct_retrain: boolean, whether to directly use the hyperparams of the latest model
+        use_gpr: boolean, whether to use gpr instead of ann.
+
+    Returns
+    ---
+        model_dict: dict, a dictionary for optimized model info
+    '''
     db = connect2db(user, pwd, host, port, database, auth)
     dbquery_time = datetime.now()
     df, fnames, lname = extract_data_from_db(predictor, db, collection,

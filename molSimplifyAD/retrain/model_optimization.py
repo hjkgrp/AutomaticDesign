@@ -13,6 +13,25 @@ from keras import backend as K
 def train_model_hyperopt(hyperspace, X, y, lname,
                          regression=True, epochs=1000,
                          X_val=False, y_val=False, input_model=False):
+    '''
+    Train a NN model and return information required in hyperopt
+
+    Parameters
+    ---
+        hyperspace: dict, possible hyperparameter space
+        X: np.array, features or inputs
+        y: np.array, targets
+        lname: str, name of the target property
+        regression: boolean, whether it is a regression task
+        epochs: int, maximum epochs during the model training
+        X_val: boolean or np.array, validation features
+        y_val: boolean or np.array, validation targets
+        input_model: boolean for keras.model, can start with a input model instead of building from scratch.
+
+    Returns
+    ---
+        a dictionary that hyperopt uses to proceed its Bayesian optimization.
+    '''
     np.random.seed(1234)
     if tf.__version__ >= tf.__version__ >= '2.0.0':
         tf.compat.v1.disable_eager_execution()  ## disable eager in tf2.0 for faster training
@@ -77,6 +96,22 @@ def optimize(X, y, lname,
              arch=False, epochs=1000,
              X_val=False, y_val=False,
              model=False):
+    '''
+    Model hyperparameter optimization.
+    
+    Parameters
+    ---
+        X: np.array, features
+        y: np.array, targets
+        lname: str, name of the target property
+        regression: boolean, whether it is a regression task
+        hyperopt_step: int, number of steps for hyperopt
+        arch: boolean or list, whether to use a fix architecture
+        epochs: int, maximum epochs during the model training
+        X_val: boolean or np.array, validation features
+        y_val: boolean or np.array, validation targets
+        model: boolean for keras.model, can start with a input model instead of building from scratch.
+    '''
     np.random.seed(1234)
     if arch == False:
         architectures = [(128, 128),

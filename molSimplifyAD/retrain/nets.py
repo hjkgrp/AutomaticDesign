@@ -7,10 +7,11 @@ from keras.optimizers import Adam
 from sklearn.metrics import roc_auc_score, r2_score
 import keras.backend as K
 from keras.callbacks import Callback
+import tensorflow_addons as tfa
 
 
 def scaled_mae(y_true, y_pred):
-    return K.mean(K.abs(y_pred - y_true)) / (K.max(y_true) - K.min(y_true))
+    return K.mean(K.abs(y_pred - y_true)) / (K.max(y_true) - K.min(y_true) + K.epsilon())
 
 
 def mape(y_true, y_pred):
@@ -45,6 +46,7 @@ def f1(y_true, y_pred):
 
 
 class auc_callback(Callback):
+    ## Only for tensorflow 1.x where the AUC metric is not available.
     def __init__(self, training_data, validation_data, ind=None):
         self.x = training_data[0]
         self.y = np.array(training_data[1])
@@ -92,6 +94,20 @@ def cal_auc(model, x, y, ind=None):
 
 
 def build_ANN(hyperspace, input_len, lname, regression=True):
+    '''
+    Build a fully-connected neural network.
+
+    Parameters
+    ---
+        hyperspace: dict, a dictionary of hyperparameters
+        input_len: int, length of the feeature vector
+        lname: str, name of the target property
+        regression: boolean, whether it is a regression task
+
+    Returns
+    ---
+        model: keras.model object
+    '''
     if tf.__version__ >= '2.0.0':
         print("====Tensorflow version >= 2.0.0====")
         model = ANN_tf2(hyperspace, input_len, lname, regression=regression)
@@ -183,7 +199,7 @@ def ANN_tf2(hyperspace, input_len, lname, regression=True):
         else:
             outlayer[ii] = BatchNormalization(name='output-%d-%s' % (ii, ln))(last_dense[ii])
             _loss_type = 'mse'
-            metrics = ['mae', tf.keras.metrics.MeanAbsolutePercentageError(name="mape"),
+            metrics = ['mae', tf.keras.metrics.MeanAbsolutePercentageError(name="mape"), 
                        scaled_mae, r2_val]
         loss_weights.append(1.0)
         loss_type.append(_loss_type)
@@ -231,6 +247,7 @@ def lr_decay(epoch, initial_lrate=0.1, drop=0.75, epochs_drop=10):
 
 
 def createKerasModel(config_dict, d, p):
+    ### JP's old function, can probably be deprecated.
     layerlist = []
     fistinput = Input(shape=(d,), name='input')
     layerlist.append(fistinput)
