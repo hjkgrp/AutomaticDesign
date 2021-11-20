@@ -985,7 +985,7 @@ class property_frame_processor:
 
         # build the complex mol3D from parts...
         this_complex = assemble_connectivity_from_parts(metal_mol,custom_ligand_dict)
-        descriptor_names, descriptors = get_descriptor_vector(this_complex,custom_ligand_dict,ox_modifer,NumB=True,Zeff=True)
+        descriptor_names, descriptors = get_descriptor_vector(this_complex,custom_ligand_dict,ox_modifer,NumB=True,Gval=True)
         descriptor_names.append('complex')
         descriptors.append(complex_name)
         descriptor_names.append('ox')
