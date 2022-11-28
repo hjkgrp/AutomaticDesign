@@ -7,7 +7,6 @@ from keras.optimizers import Adam
 from sklearn.metrics import roc_auc_score, r2_score
 import keras.backend as K
 from keras.callbacks import Callback
-import tensorflow_addons as tfa
 
 
 def scaled_mae(y_true, y_pred):
